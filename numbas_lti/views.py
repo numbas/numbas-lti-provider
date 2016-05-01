@@ -7,6 +7,7 @@ from django_auth_lti.patch_reverse import patch_reverse
 from django.views import generic
 from django.core.urlresolvers import reverse
 from django import http
+import json
 
 patch_reverse()
 
@@ -61,3 +62,26 @@ class ManageResourceView(generic.detail.DetailView):
 class RunExamView(generic.detail.DetailView):
     model = Exam
     template_name = 'numbas_lti/run_exam.html'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(RunExamView,self).get_context_data(*args,**kwargs)
+
+        context['scorm_cmi'] = json.dumps({
+            'cmi.mode': 'normal',
+            'cmi.entry': 'ab-initio',
+            'cmi.suspend_data': '',
+            'cmi.objectives._count': 0,
+            'cmi.interactions._count': 0,
+            'cmi.learner_name': self.request.user.get_full_name(),
+            'cmi.learner_id': self.request.user.username,
+            'cmi.location': '',
+            'cmi.score.raw': 0,
+            'cmi.score.scaled': 0,
+            'cmi.score.min': 0,
+            'cmi.score.max': 0,
+            'cmi.total_time': 0,
+            'cmi.completion_status': '',
+            'cmi.success_status': ''
+        })
+        
+        return context

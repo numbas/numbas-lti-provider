@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.db import models
 from django.dispatch import receiver
+from django.contrib.auth.models import User
+
 import os
 import shutil
-
 from zipfile import ZipFile
 from lxml import etree
 
@@ -52,3 +53,24 @@ class Resource(models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.tool_consumer_instance_guid,self.resource_link_id)
+
+class Attempt(models.Model):
+    resource = models.ForeignKey(Resource)
+    exam = models.ForeignKey(Exam)  # need to keep track of both resource and exam in case the exam later gets overwritten
+    user = models.ForeignKey(User)
+    start_time = models.DateTimeField(auto_now_add=True)
+
+class ScormElement(models.Model):
+    attempt = models.ForeignKey(Attempt)
+    key = models.CharField(max_length=200)
+    value = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)
+    current = models.BooleanField(default=True) # is this the latest version?
+
+@receiver(models.signals.post_save,sender=ScormElement)
+def set_current_scorm_element(sender,instance,created,**kwargs):
+    ne = instance
+    if created:
+        for oe in ScormElement.objects.filter(attempt=ne.attempt, key=ne.key, current=True).exclude(pk=ne.pk):
+            oe.current = False
+            oe.save()
