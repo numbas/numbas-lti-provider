@@ -1,0 +1,8 @@
+{% extends "numbas_lti/base.html" %}
+
+{% block content %}
+<h1>{{resource}}</h1>
+{% if resource.exam %}
+<a href="{% url 'run_exam' resource.exam.pk %}">{{resource.exam}}</a>
+{% endif %}
+{% endblock content %}

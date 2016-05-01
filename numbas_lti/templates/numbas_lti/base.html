@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+    <style type="text/css">
+        footer {
+            margin-top: 2em;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+{% block content %}
+{% endblock content %}
+
+<footer>
+    <table>
+        {% for k,v in request.LTI.items %}
+        <tr><td>{{k}}</td><td>{{v}}</td></tr>
+        {% endfor %}
+    </table>
+</footer>
+</body>
+</html>

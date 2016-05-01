@@ -1,0 +1,9 @@
+{% extends "numbas_lti/base.html" %}
+
+{% block content %}
+    <h1>{{title}}</h1>
+    <p>{% if user.is_anonymous %}anon{% else %}{{user.get_full_name}}{% endif %}</p>
+    <p>Resource {{resource}}</p>
+    <p><a href="{% url 'view2' %}">View 2</a></p>
+    <p><a href="{% url 'create_exam' %}">Create Exam</a></p>
+{% endblock content %}

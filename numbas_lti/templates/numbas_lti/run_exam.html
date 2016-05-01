@@ -1,0 +1,6 @@
+{% extends "numbas_lti/base.html" %}
+
+{% block content %}
+<h1>{{exam.title}}</h1>
+<iframe width="100%" height="800" src="{{exam.extracted_url}}/index.html"></iframe>
+{% endblock content %}
