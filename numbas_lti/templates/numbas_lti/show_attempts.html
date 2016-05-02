@@ -1,0 +1,10 @@
+{% extends "numbas_lti/base.html" %}
+
+{% block content %}
+<ol>
+    {% for attempt in object_list %}
+    <li><a href="{% url 'run_attempt' pk=attempt.pk %}">{{attempt.start_time}}</a> ({{attempt.completion_status}})</li>
+    {% endfor %}
+</ol>
+<a href="{% url 'new_attempt' %}">New attempt</a>
+{% endblock content %}

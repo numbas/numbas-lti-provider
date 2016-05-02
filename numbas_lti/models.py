@@ -54,18 +54,45 @@ class Resource(models.Model):
     def __str__(self):
         return '{} {}'.format(self.tool_consumer_instance_guid,self.resource_link_id)
 
+COMPLETION_CHOICES = [
+    ('incomplete','Incomplete'),
+    ('complete','Complete'),
+]
+
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource)
     exam = models.ForeignKey(Exam)  # need to keep track of both resource and exam in case the exam later gets overwritten
     user = models.ForeignKey(User)
     start_time = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-start_time',]
+
+    @property
+    def completion_status(self):
+        try:
+            status = self.scormelements.current().filter(key='cmi.completion_status').get()
+        except ScormElement.DoesNotExist:
+            return 'not attempted'
+
+        return status.value
+
+class ScormElementManager(models.Manager):
+    use_for_related_fields = True
+    def current(self):
+        return self.filter(current=True)
+
 class ScormElement(models.Model):
-    attempt = models.ForeignKey(Attempt)
+    objects = ScormElementManager()
+
+    attempt = models.ForeignKey(Attempt,related_name='scormelements')
     key = models.CharField(max_length=200)
     value = models.TextField()
     time = models.DateTimeField(auto_now_add=True)
     current = models.BooleanField(default=True) # is this the latest version?
+
+    def __str__(self):
+        return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def set_current_scorm_element(sender,instance,created,**kwargs):

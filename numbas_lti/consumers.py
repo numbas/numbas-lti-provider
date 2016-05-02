@@ -28,12 +28,19 @@ def ws_disconnect(message):
 
 @enforce_ordering(slight=True)
 @channel_session_user_from_http
-def scorm_connect(message):
+def scorm_connect(message,pk):
     print("CONNECT SCORM",message.user)
     print(message.content['path'])
 
-@channel_session
-def scorm_set_element(message):
+@channel_session_user
+def scorm_set_element(message,pk):
     print("SET")
-    data = json.parse(message['text'])
+    print(pk)
+    data = json.loads(message.content['text'])
     print(data)
+    attempt = Attempt.objects.get(pk=pk)
+    ScormElement.objects.create(
+        attempt = attempt,
+        key = data['key'], 
+        value = data['value']
+    )
