@@ -1,0 +1,7 @@
+Django>=1.9
+oauthlib>=1.1.1
+lxml==3.6
+channels>=0.12
+git+git://github.com/christianp/django-auth-lti@oauthlib#egg=django_auth_lti
+requests==2.10
+requests-oauthlib==0.6

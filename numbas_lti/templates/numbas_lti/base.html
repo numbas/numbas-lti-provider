@@ -3,9 +3,12 @@
 <head>
     <style type="text/css">
         footer {
-            margin-top: 2em;
+            border-top: 1px solid black;
+            margin-top: 10em;
             font-size: 0.8rem;
             font-family: monospace;
+            max-height: 15em;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -15,11 +18,27 @@
 {% endblock content %}
 
 <footer>
+{% if request.POST %}
+    <h2>POST</h2>
+    <table>
+        {% for k,v in request.POST.items %}
+        <tr><td>{{k}}</td><td>{{v}}</td></tr>
+        {% endfor %}
+    </table>
+{% endif %}
+    <h2>LTI info</h2>
+    <p>sourcedId: {{request.user.lti_data.lis_result_sourcedid}}</p>
+    <p>outcome url: {{request.user.lti_data.lis_outcome_service_url}}</p>
+{% if not request.LTI.items %}
+    <p>No LTI data</p>
+{% else %}
     <table>
         {% for k,v in request.LTI.items %}
         <tr><td>{{k}}</td><td>{{v}}</td></tr>
         {% endfor %}
     </table>
+{% endif %}
+
 </footer>
 </body>
 </html>

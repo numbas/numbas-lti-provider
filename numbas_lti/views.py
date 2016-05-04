@@ -6,6 +6,7 @@ from django_auth_lti.const import LEARNER, INSTRUCTOR
 from django_auth_lti.patch_reverse import patch_reverse
 from django.views import generic
 from django.core.urlresolvers import reverse
+from django.core.exceptions import PermissionDenied
 from django import http
 import json
 
@@ -13,23 +14,30 @@ patch_reverse()
 
 from functools import wraps
 
-from .models import Resource, Exam, Attempt, ScormElement
+from .models import LTIUserData, Resource, Exam, Attempt, ScormElement
 
 # Create your views here.
 @csrf_exempt
 def index(request):
-    is_instructor = 'Instructor' in request.LTI.get('roles')
-
     context = {
-        'title': 'Hi',
-        'resource': request.resource,
-        'is_instructor': is_instructor,
+        'entry_url': request.build_absolute_uri(reverse('lti_entry')),
     }
     return render(request,'numbas_lti/index.html',context)
 
-def view2(request):
-    is_instructor = 'Instructor' in request.LTI.get('roles')
-    if is_instructor:
+def request_is_instructor(request):
+    return 'Instructor' in request.LTI.get('roles')
+
+@csrf_exempt
+def lti_entry(request):
+    user_data,_ = LTIUserData.objects.get_or_create(
+        user=request.user,
+        resource=request.resource
+    )
+    user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
+    user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
+    user_data.save()
+
+    if request_is_instructor(request):
         if not request.resource.exam:
             return redirect(reverse('create_exam'))
         else:
@@ -93,7 +101,7 @@ class ShowAttemptsView(generic.list.ListView):
     model = Attempt
     template_name = 'numbas_lti/show_attempts.html'
 
-    ordering = ['-start_time']
+    ordering = ['start_time']
 
     def get_queryset(self):
         return Attempt.objects.filter(resource=self.request.resource,user=self.request.user)
@@ -123,8 +131,19 @@ class RunAttemptView(generic.detail.DetailView):
 
         attempt = self.get_object()
 
+        if attempt.completion_status=='completed':
+            mode = 'review'
+        else:
+            mode = 'normal'
+
+        if attempt.user != self.request.user:
+            if request_is_instructor(self.request):
+                mode = 'review'
+            else:
+                raise PermissionDenied("You're not allowed to review this attempt.")
+
         scorm_cmi = {
-            'cmi.mode': 'normal' if attempt.completion_status!='completed' else 'review',
+            'cmi.mode': mode,
             'cmi.entry': 'ab-initio' if attempt.completion_status=='not attempted' else 'resume',
             'cmi.suspend_data': '',
             'cmi.objectives._count': 0,
@@ -140,8 +159,14 @@ class RunAttemptView(generic.detail.DetailView):
             'cmi.completion_status': attempt.completion_status,
             'cmi.success_status': ''
         }
-        for e in attempt.scormelements.filter(current=True):
-            scorm_cmi[e.key] = e.value
+        # TODO only get the latest values of elements, somehow
+
+        latest_elements = {}
+
+        for e in attempt.scormelements.all().order_by('time'):
+            latest_elements[e.key] = e.value
+
+        scorm_cmi.update(latest_elements)
         
         context['scorm_cmi'] = json.dumps(scorm_cmi)
 

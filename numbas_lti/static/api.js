@@ -4,7 +4,7 @@ function SCORM_API(data,attempt_pk) {
 	this.data = data;
 
     var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-    var socket = this.socket = new WebSocket(ws_scheme + '://' + window.location.host + "/attempt/"+attempt_pk+"/scorm_api");
+    var socket = this.socket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/attempt/"+attempt_pk+"/scorm_api");
 
     this.queue = [];
 
@@ -33,6 +33,10 @@ function SCORM_API(data,attempt_pk) {
     for(var key in this.data) {
         this.check_key_counts_something(key);
     }
+
+    this.interval_send_queue = setInterval(function() {
+        sc.send_queue();
+    },50);
 }
 SCORM_API.prototype = {
 	initialized: false,
@@ -63,13 +67,21 @@ SCORM_API.prototype = {
     },
 
     send_queue: function() {
-        if(this.socket.readyState!=this.socket.OPEN) {
+        if(!this.queue.length || this.socket.readyState!=WebSocket.OPEN) {
             return;
         }
-        var d;
-        while(d=this.queue.pop()) {
-            this.socket.send(JSON.stringify(d));
+
+        var seen_keys = {};
+        var oqueue = [];
+        for(var i=this.queue.length-1;i>=0;i--) {
+            var key = this.queue[i].key;
+            if(!seen_keys[key]) {
+                seen_keys[key] = true;
+                oqueue.push(this.queue[i]);
+            }
         }
+        this.socket.send(JSON.stringify(oqueue));
+        this.queue = [];
     },
 
 	Initialize: function(b) {
@@ -101,7 +113,12 @@ SCORM_API.prototype = {
 	},
 
 	GetValue: function(key) {
-		return this.data[key];
+		var v = this.data[key];
+        if(v===undefined) {
+            return '';
+        } else {
+            return v;
+        }
 	},
 
 	SetValue: function(key,value) {
@@ -109,7 +126,6 @@ SCORM_API.prototype = {
 		this.data[key] = value;
         this.check_key_counts_something(key);
         this.queue.push({key:key,value:value});
-        this.send_queue();
 	},
 
     Commit: function(s) {

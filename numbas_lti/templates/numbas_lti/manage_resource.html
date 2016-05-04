@@ -1,8 +1,38 @@
 {% extends "numbas_lti/base.html" %}
 
 {% block content %}
-<h1>{{resource}}</h1>
 {% if resource.exam %}
-<a href="{% url 'run_exam' resource.exam.pk %}">{{resource.exam}}</a>
+    <h1>{{resource.exam.title}}</h1>
+    <p><a href="{% url 'run_exam' resource.exam.pk %}">Test run (no data saved)</a></p>
+    <p><a href="{{resource.exam.package.url}}">Download exam package</a></p>
+
+    {% if resource.attempts.count %}
+    <h2>Attempts</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Start time</th>
+                <th></th>
+                <th>Completion status</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attempt in resource.attempts.all %}
+            <tr>
+                <td>{{attempt.user.get_full_name}}</td>
+                <td>{{attempt.start_time}}</td>
+                <td><a target="review_attempt" href="{% url 'run_attempt' attempt.pk %}">Review</a>{% if attempt.exam != resource.exam %}old{% endif %}</td>
+                <td>{{attempt.completion_status}}</td>
+                <td>{{attempt.raw_score}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% else %}
+    <h1>{{resource}}</h1>
+    <p>No exam has been uploaded yet. <a href="{% url 'create_exam' %}">Upload one now.</a></p>
 {% endif %}
 {% endblock content %}

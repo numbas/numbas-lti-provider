@@ -2,6 +2,8 @@
 
 {% block content %}
 <h1>Upload an exam</h1>
+<p>This resource doesn't have a Numbas exam package associated with it yet.</p>
+<p>Please upload one now.</p>
 <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
     {% csrf_token %}
     {{form}}

@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^view2$', views.view2, name='view2'),
+    url(r'^lti_entry$', views.lti_entry, name='lti_entry'),
     url(r'^exam/create$', views.CreateExamView.as_view(), name='create_exam'),
     url(r'^exam/(?P<pk>\d+)/run$', views.RunExamView.as_view(), name='run_exam'),
 
