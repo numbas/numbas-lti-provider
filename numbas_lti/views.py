@@ -162,7 +162,7 @@ def new_attempt(request):
     if not request.resource.can_start_new_attempt(request.user):
         raise PermissionDenied("You can't start a new attempt at this exam")
 
-    if Attempt.objects.filter(resource=request.resource,user=request.user).count()==request.resource.max_attempts:
+    if Attempt.objects.filter(resource=request.resource,user=request.user).count() == request.resource.max_attempts > 0:
         AccessToken.objects.filter(resource=request.resource,user=request.user).first().delete()
 
     attempt = Attempt.objects.create(
