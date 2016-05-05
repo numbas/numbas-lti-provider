@@ -1,0 +1,14 @@
+{% extends "numbas_lti/base.html" %}
+
+{% block content %}
+<h1>Settings</h1>
+<form method="POST" action="{% url 'resource_settings' resource.pk %}">
+    {% csrf_token %}
+    {% for field in form %}
+    <div>
+        <label>{{field.label}} {{field}}</label>
+    </div>
+    {% endfor %}
+    <p><button type="submit">Save</button> <a href="{% url 'manage_resource' resource.pk %}">Cancel</a></p>
+</form>
+{% endblock %}
