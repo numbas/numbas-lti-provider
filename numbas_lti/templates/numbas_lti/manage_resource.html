@@ -3,8 +3,12 @@
 {% block content %}
 {% if resource.exam %}
     <h1>{{resource.exam.title}}</h1>
-    <p><a href="{% url 'run_exam' resource.exam.pk %}">Test run (no data saved)</a></p>
-    <p><a href="{{resource.exam.package.url}}">Download exam package</a></p>
+    <ul>
+        <li><a href="{% url 'run_exam' resource.exam.pk %}">Test run (no data saved)</a></li>
+        <li><a href="{{resource.exam.package.url}}">Download exam package</a></li>
+        <li><a href="{% url 'create_exam' %}">Replace exam package</a></li>
+        <li><a href="{% url 'resource_settings' resource.pk %}">Settings</a></li>
+    </ul>
 
     {% if resource.attempts.count %}
     <h2>Attempts</h2>
@@ -23,7 +27,7 @@
             <tr>
                 <td>{{attempt.user.get_full_name}}</td>
                 <td>{{attempt.start_time}}</td>
-                <td><a target="review_attempt" href="{% url 'run_attempt' attempt.pk %}">Review</a>{% if attempt.exam != resource.exam %}old{% endif %}</td>
+                <td><a target="review_attempt" href="{% url 'run_attempt' attempt.pk %}">Review</a>{% if attempt.exam != resource.exam %} (old exam){% endif %}</td>
                 <td>{{attempt.completion_status}}</td>
                 <td>{{attempt.raw_score}}</td>
             </tr>
@@ -31,6 +35,29 @@
         </tbody>
     </table>
     {% endif %}
+
+    <h2>Students</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Attempts</th>
+                <td>Access tokens</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student,score,attempts,access_tokens in student_summary %}
+            <tr>
+                <td>{{student.get_full_name}}</td>
+                <td>{{score}}</td>
+                <td>{{attempts}}</td>
+                <td>{{access_tokens}}</td>
+                <td><a href="{% url 'grant_access_token' student.pk %}">Grant access token</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% else %}
     <h1>{{resource}}</h1>
     <p>No exam has been uploaded yet. <a href="{% url 'create_exam' %}">Upload one now.</a></p>

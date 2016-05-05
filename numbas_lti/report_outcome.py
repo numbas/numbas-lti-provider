@@ -47,11 +47,12 @@ def report_outcome(attempt):
 
     message_identifier = uuid.uuid4().int & (1<<64)-1
     user_data = attempt.user.lti_data.get(resource=attempt.resource)
+    result = attempt.resource.grade_user(attempt.user)
 
     print("Posting {}".format(attempt.scaled_score))
     r = requests.post(
             user_data.lis_outcome_service_url,
-            data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=attempt.scaled_score),
+            data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
             auth=OAuth1('clp','dude',signature_type='auth_header',client_class=BodyHashClient, force_include_body=True),
             headers={'Content-Type': 'application/xml'}
         )

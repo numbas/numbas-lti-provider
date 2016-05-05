@@ -1,9 +1,11 @@
+from django.contrib.auth.models import User
 from django.shortcuts import render,redirect
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
 from django_auth_lti.decorators import lti_role_required
 from django_auth_lti.const import LEARNER, INSTRUCTOR
 from django_auth_lti.patch_reverse import patch_reverse
+from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django.views import generic
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
@@ -14,7 +16,8 @@ patch_reverse()
 
 from functools import wraps
 
-from .models import LTIUserData, Resource, Exam, Attempt, ScormElement
+from .models import LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement
+from .forms import ResourceSettingsForm
 
 # Create your views here.
 @csrf_exempt
@@ -48,7 +51,10 @@ def lti_entry(request):
         else:
             return redirect(reverse('show_attempts'))
 
-class CreateExamView(generic.edit.CreateView):
+class MustBeInstructorMixin(LTIRoleRestrictionMixin):
+    allowed_roles = ['Instructor']
+
+class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
     fields = ['package']
     template_name = 'numbas_lti/create_exam.html'
@@ -62,10 +68,43 @@ class CreateExamView(generic.edit.CreateView):
     def get_success_url(self):
         return reverse('manage_resource',args=(self.request.resource.pk,))
 
-class ManageResourceView(generic.detail.DetailView):
+class ManageResourceView(MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/manage_resource.html'
     context_object_name = 'resource'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(ManageResourceView,self).get_context_data(*args,**kwargs)
+
+        resource = self.get_object()
+        context['student_summary'] = [
+            (
+                student,
+                resource.grade_user(student),
+                Attempt.objects.filter(user=student,resource=resource).count(),
+                AccessToken.objects.filter(user=student,resource=resource).count(),
+            ) 
+            for student in resource.students().all()
+        ]
+
+        return context
+
+class ResourceSettingsView(MustBeInstructorMixin,generic.edit.UpdateView):
+    model = Resource
+    form_class = ResourceSettingsForm
+    template_name = 'numbas_lti/resource_settings.html'
+    context_object_name = 'resource'
+
+    def get_success_url(self):
+        return reverse('manage_resource',args=(self.get_object().pk,))
+
+
+@lti_role_required(['Instructor'])
+def grant_access_token(request,user_id):
+    user = User.objects.get(id=user_id)
+    AccessToken.objects.create(user=user,resource=request.resource)
+
+    return redirect(reverse('manage_resource',args=(request.resource.pk,)))
 
 class RunExamView(generic.detail.DetailView):
     """
@@ -112,7 +151,20 @@ class ShowAttemptsView(generic.list.ListView):
         else:
             return super(ShowAttemptsView,self).dispatch(request,*args,**kwargs)
 
+    def get_context_data(self,*args,**kwargs):
+        context = super(ShowAttemptsView,self).get_context_data(*args,**kwargs)
+
+        context['can_start_new_attempt'] = self.request.resource.can_start_new_attempt(self.request.user)
+        
+        return context
+
 def new_attempt(request):
+    if not request.resource.can_start_new_attempt(request.user):
+        raise PermissionDenied("You can't start a new attempt at this exam")
+
+    if Attempt.objects.filter(resource=request.resource,user=request.user).count()==request.resource.max_attempts:
+        AccessToken.objects.filter(resource=request.resource,user=request.user).first().delete()
+
     attempt = Attempt.objects.create(
         resource = request.resource,
         exam = request.resource.exam,

@@ -6,5 +6,5 @@
     <li><a href="{% url 'run_attempt' pk=attempt.pk %}">{{attempt.start_time}}</a> ({{attempt.completion_status}})</li>
     {% endfor %}
 </ol>
-<a href="{% url 'new_attempt' %}">New attempt</a>
+{% if can_start_new_attempt %}<a href="{% url 'new_attempt' %}">New attempt</a>{% endif %}
 {% endblock content %}
