@@ -109,8 +109,8 @@ class AccessToken(models.Model):
 class LTIUserData(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
-    lis_result_sourcedid = models.CharField(max_length=200,default='')
-    lis_outcome_service_url = models.TextField(default='')
+    lis_result_sourcedid = models.CharField(max_length=200,default='',blank=True,null=True)
+    lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
