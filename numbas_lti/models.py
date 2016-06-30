@@ -11,6 +11,10 @@ import shutil
 from zipfile import ZipFile
 from lxml import etree
 
+class LTIConsumer(models.Model):
+    key = models.CharField(max_length=100)
+    secret = models.CharField(max_length=100)
+
 class ExtractPackageMixin(object):
     extract_folder = 'extracted_zips'
 

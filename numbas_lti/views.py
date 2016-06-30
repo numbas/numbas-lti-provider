@@ -23,7 +23,7 @@ from .forms import ResourceSettingsForm
 @csrf_exempt
 def index(request):
     context = {
-        'entry_url': request.build_absolute_uri(reverse('lti_entry')),
+        'entry_url': request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True)),
     }
     return render(request,'numbas_lti/index.html',context)
 
@@ -44,7 +44,7 @@ def lti_entry(request):
         if not request.resource.exam:
             return redirect(reverse('create_exam'))
         else:
-            return redirect(reverse('manage_resource',args=(request.resource.pk,)))
+            return redirect(reverse('dashboard',args=(request.resource.pk,)))
     else:
         if not request.resource.exam:
             return render(request,'numbas_lti/exam_not_set_up.html',{})
@@ -54,10 +54,18 @@ def lti_entry(request):
 class MustBeInstructorMixin(LTIRoleRestrictionMixin):
     allowed_roles = ['Instructor']
 
+class ManagementViewMixin(object):
+    def get_context_data(self,*args,**kwargs):
+        context = super(ManagementViewMixin,self).get_context_data(*args,**kwargs)
+        context.update({
+            'management_tab': self.management_tab
+        })
+        return context
+
 class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
     fields = ['package']
-    template_name = 'numbas_lti/create_exam.html'
+    template_name = 'numbas_lti/management/create_exam.html'
 
     def form_valid(self,form):
         self.object = form.save()
@@ -66,15 +74,20 @@ class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('manage_resource',args=(self.request.resource.pk,))
+        return reverse('dashboard',args=(self.request.resource.pk,))
 
-class ManageResourceView(MustBeInstructorMixin,generic.detail.DetailView):
+class ReplaceExamView(ManagementViewMixin,CreateExamView):
+    management_tab = 'settings'
+    template_name = 'numbas_lti/management/replace_exam.html'
+
+class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
-    template_name = 'numbas_lti/manage_resource.html'
+    template_name = 'numbas_lti/management/dashboard.html'
     context_object_name = 'resource'
+    management_tab = 'dashboard'
 
     def get_context_data(self,*args,**kwargs):
-        context = super(ManageResourceView,self).get_context_data(*args,**kwargs)
+        context = super(DashboardView,self).get_context_data(*args,**kwargs)
 
         resource = self.get_object()
         context['student_summary'] = [
@@ -89,14 +102,15 @@ class ManageResourceView(MustBeInstructorMixin,generic.detail.DetailView):
 
         return context
 
-class ResourceSettingsView(MustBeInstructorMixin,generic.edit.UpdateView):
+class ResourceSettingsView(ManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource
     form_class = ResourceSettingsForm
-    template_name = 'numbas_lti/resource_settings.html'
+    template_name = 'numbas_lti/management/resource_settings.html'
     context_object_name = 'resource'
+    management_tab = 'settings'
 
     def get_success_url(self):
-        return reverse('manage_resource',args=(self.get_object().pk,))
+        return reverse('dashboard',args=(self.get_object().pk,))
 
 
 @lti_role_required(['Instructor'])
@@ -104,7 +118,7 @@ def grant_access_token(request,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=request.resource)
 
-    return redirect(reverse('manage_resource',args=(request.resource.pk,)))
+    return redirect(reverse('dashboard',args=(request.resource.pk,)))
 
 class RunExamView(generic.detail.DetailView):
     """

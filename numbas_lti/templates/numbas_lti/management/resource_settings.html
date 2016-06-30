@@ -1,0 +1,15 @@
+{% extends "numbas_lti/management/base.html" %}
+
+{% block management_content %}
+<h1>Settings</h1>
+<form method="POST" action="{% url 'resource_settings' resource.pk %}">
+    {% csrf_token %}
+    {% for field in form %}
+    <div>
+        <label>{{field.label}} {{field}}</label>
+    </div>
+    {% endfor %}
+        <a href="{% url 'replace_exam' resource.pk %}">Replace exam package</a>
+    <p><button type="submit">Save</button> <a href="{% url 'dashboard' resource.pk %}">Cancel</a></p>
+</form>
+{% endblock management_content %}

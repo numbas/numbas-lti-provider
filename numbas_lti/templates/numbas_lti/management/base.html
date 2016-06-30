@@ -1,0 +1,22 @@
+{% extends "numbas_lti/base.html" %}
+
+{% block content %}
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="{% url 'dashboard' request.resource.pk %}">{{request.resource.exam.title}}</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'dashboard' request.resource.pk %}">Dashboard</a></li>
+                <li><a>Attempts</a></li>
+                <li class="{% if management_tab == 'settings' %}active{% endif %}"><a href="{% url 'resource_settings' request.resource.pk %}">Settings</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="{% url 'run_exam' resource.exam.pk %}">Test run</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% block management_content %}{% endblock %}
+{% endblock content %}

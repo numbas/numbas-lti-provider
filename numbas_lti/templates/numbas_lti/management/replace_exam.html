@@ -1,0 +1,10 @@
+{% extends "numbas_lti/management/base.html" %}
+
+{% block management_content %}
+<h1>Replace exam</h1>
+<form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
+    {% csrf_token %}
+    {{form}}
+    <button type="submit">Submit</button> <a href="{% url 'dashboard' request.resource.pk %}">Cancel</a>
+</form>
+{% endblock management_content %}

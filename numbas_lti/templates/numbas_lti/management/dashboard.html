@@ -1,0 +1,58 @@
+{% extends "numbas_lti/management/base.html" %}
+
+{% block management_content %}
+    <h1>{{resource.exam.title}}</h1>
+    <ul>
+        <li><a href="{% url 'run_exam' resource.exam.pk %}">Test run (no data saved)</a></li>
+        <li><a href="{{resource.exam.package.url}}">Download exam package</a></li>
+    </ul>
+
+    {% if resource.attempts.count %}
+    <h2>Attempts</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Start time</th>
+                <th></th>
+                <th>Completion status</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attempt in resource.attempts.all %}
+            <tr>
+                <td>{{attempt.user.get_full_name}}</td>
+                <td>{{attempt.start_time}}</td>
+                <td><a target="review_attempt" href="{% url 'run_attempt' attempt.pk %}">Review</a>{% if attempt.exam != resource.exam %} (old exam){% endif %}</td>
+                <td>{{attempt.completion_status}}</td>
+                <td>{{attempt.raw_score}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <h2>Students</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Attempts</th>
+                <td>Access tokens</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student,score,attempts,access_tokens in student_summary %}
+            <tr>
+                <td>{{student.get_full_name}}</td>
+                <td>{{score}}</td>
+                <td>{{attempts}}</td>
+                <td>{{access_tokens}}</td>
+                <td><a href="{% url 'grant_access_token' student.pk %}">Grant access token</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock management_content %}
