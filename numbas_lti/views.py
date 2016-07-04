@@ -203,7 +203,7 @@ class RunExamView(generic.detail.DetailView):
         Run an exam without saving any attempt data
     """
     model = Exam
-    template_name = 'numbas_lti/run_exam.html'
+    template_name = 'numbas_lti/management/run_exam.html'
 
     def get_context_data(self,*args,**kwargs):
         context = super(RunExamView,self).get_context_data(*args,**kwargs)
