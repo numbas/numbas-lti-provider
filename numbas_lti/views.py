@@ -10,6 +10,8 @@ from django.views import generic
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django import http
+from django.http import StreamingHttpResponse
+import csv
 import json
 
 patch_reverse()
@@ -118,11 +120,77 @@ class ResourceSettingsView(ManagementViewMixin,MustBeInstructorMixin,generic.edi
     def get_success_url(self):
         return reverse('dashboard',args=(self.get_object().pk,))
 
+class EchoFile(object):
+    def write(self,value):
+        return value
+
+class CSVView(object):
+    def get_rows(self):
+        raise NotImplementedError()
+    def get_filename(self):
+        raise NotImplementedError()
+
+    def render_to_response(self,context):
+        buffer = EchoFile()
+        writer = csv.writer(buffer)
+        rows = self.get_rows()
+        response = StreamingHttpResponse((writer.writerow(row) for row in rows),content_type="text/csv")
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(self.get_filename())
+        return response
+
+class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
+    model = Resource
+    def get_rows(self):
+        resource = self.object
+        rows = (
+            (
+                student.first_name,
+                student.last_name,
+                student.email,
+                resource.grade_user(student)*100
+            ) 
+            for student in resource.students().all()
+        )
+        return rows
+
+    def get_filename(self):
+        return "{}-scores.csv".format(self.object.slug)
+
+class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
+    model = Resource
+    def get_rows(self):
+        resource = self.object
+        num_questions = resource.num_questions()
+
+        headers = ['First name','Last name','Email','Start time','Completed?','Total score','Percentage']+['Question {}'.format(i+1) for i in range(num_questions)]
+        yield headers
+
+        for attempt in resource.attempts.all():
+            row = [
+                attempt.user.first_name,
+                attempt.user.last_name,
+                attempt.user.email,
+                attempt.start_time,
+                attempt.completion_status,
+                attempt.raw_score,
+                attempt.scaled_score*100,
+            ]+[attempt.question_score(n) for n in range(num_questions)]
+            yield row
+
+    def get_filename(self):
+        return "{}-attempts.csv".format(self.object.slug)
 
 @lti_role_required(['Instructor'])
 def grant_access_token(request,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=request.resource)
+
+    return redirect(reverse('dashboard',args=(request.resource.pk,)))
+
+@lti_role_required(['Instructor'])
+def remove_access_token(request,user_id):
+    user = User.objects.get(id=user_id)
+    AccessToken.objects.filter(user=user,resource=request.resource).first().delete()
 
     return redirect(reverse('dashboard',args=(request.resource.pk,)))
 

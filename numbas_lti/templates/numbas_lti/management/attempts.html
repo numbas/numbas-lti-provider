@@ -3,6 +3,7 @@
 {% block management_content %}
     {% if resource.attempts.count %}
     <h2>Attempts</h2>
+    <a href="{% url 'attempts_csv' resource.pk %}">Download attempts summary as CSV</a>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -25,5 +26,7 @@
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p>No students have attempted this exam yet.</p>
     {% endif %}
 {% endblock management_content %}

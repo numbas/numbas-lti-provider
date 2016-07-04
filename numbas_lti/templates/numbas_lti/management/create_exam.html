@@ -1,4 +1,5 @@
 {% extends "numbas_lti/base.html" %}
+{% load bootstrap %}
 
 {% block content %}
 <h1>Upload an exam</h1>
@@ -8,7 +9,7 @@
 {% endif %}
 <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
     {% csrf_token %}
-    {{form}}
-    <button type="submit">Submit</button>
+    {{form|bootstrap}}
+    <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 {% endblock content %}

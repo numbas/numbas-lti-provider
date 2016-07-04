@@ -13,7 +13,11 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/settings$', views.ResourceSettingsView.as_view(), name='resource_settings'),
     url(r'^resource/(?P<pk>\d+)/replace$', views.ReplaceExamView.as_view(), name='replace_exam'),
 
+    url(r'^resource/(?P<pk>\d+)/scores.csv$', views.ScoresCSV.as_view(), name='scores_csv'),
+    url(r'^resource/(?P<pk>\d+)/attempts.csv$', views.AttemptsCSV.as_view(), name='attempts_csv'),
+
     url(r'grant_access_token/(?P<user_id>\d+)$', views.grant_access_token, name='grant_access_token'),
+    url(r'remove_access_token/(?P<user_id>\d+)$', views.remove_access_token, name='remove_access_token'),
 
     url(r'^show_attempts$', views.ShowAttemptsView.as_view(), name='show_attempts'),
     url(r'^new_attempt$', views.new_attempt, name='new_attempt'),

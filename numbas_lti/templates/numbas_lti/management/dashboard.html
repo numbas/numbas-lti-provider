@@ -1,28 +1,35 @@
 {% extends "numbas_lti/management/base.html" %}
+{% load percentage %}
 
 {% block management_content %}
     {% if resource.attempts.count %}
     <h2>Students</h2>
+    <a href="{% url 'scores_csv' resource.pk %}">Download scores as CSV</a>
     <table class="table">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Score</th>
                 <th>Attempts</th>
-                <td>Access tokens</td>
+                <th colspan="2">Access tokens</th>
             </tr>
         </thead>
         <tbody>
             {% for student,score,attempts,access_tokens in student_summary %}
             <tr>
                 <td>{{student.get_full_name}}</td>
-                <td>{{score}}</td>
+                <td>{{score|percentage}}</td>
                 <td>{{attempts}}</td>
                 <td>{{access_tokens}}</td>
-                <td><a href="{% url 'grant_access_token' student.pk %}">Grant access token</a></td>
+                <td>
+                    <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' student.pk %}" title="Grant an access token"><span class="glyphicon glyphicon-plus"></span></a>
+                    {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' student.pk %}" title="Remove an access token"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p>No students have attempted this exam yet.</p>
     {% endif %}
 {% endblock management_content %}

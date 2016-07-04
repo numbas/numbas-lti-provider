@@ -3,19 +3,13 @@
 
 {% block management_content %}
 <legend>Settings</legend>
+<ul class="list-inline">
+    <li><a href="{% url 'replace_exam' resource.pk %}">Replace exam package</a></li>
+    <li><a href="{{resource.exam.package.url}}">Download exam package</a></li>
+</ul>
 <form method="POST" action="{% url 'resource_settings' resource.pk %}">
     {% csrf_token %}
     {{form|bootstrap}}
-    {% for field in form %}
-    <div class="form-group">
-        <label for="{{field.auto_id}}">{{field.label}}</label>
-        {{field}}
-    </div>
-    {% endfor %}
-    <ul class="list-unstyled">
-        <li><a href="{% url 'replace_exam' resource.pk %}">Replace exam package</a></li>
-        <li><a href="{{resource.exam.package.url}}">Download exam package</a></li>
-    </ul>
-    <p><button type="submit">Save</button> <a href="{% url 'dashboard' resource.pk %}">Cancel</a></p>
+    <p><button class="btn btn-primary" type="submit">Save</button> <a class="btn btn-link" href="{% url 'dashboard' resource.pk %}">Cancel</a></p>
 </form>
 {% endblock management_content %}

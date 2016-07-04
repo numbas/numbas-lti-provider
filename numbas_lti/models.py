@@ -3,6 +3,7 @@ from django.db import models
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
+from django.utils.text import slugify
 
 from .report_outcome import report_outcome
 
@@ -10,10 +11,14 @@ import os
 import shutil
 from zipfile import ZipFile
 from lxml import etree
+import re
 
 class LTIConsumer(models.Model):
     key = models.CharField(max_length=100)
     secret = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.key
 
 class ExtractPackageMixin(object):
     extract_folder = 'extracted_zips'
@@ -74,6 +79,13 @@ class Resource(models.Model):
         else:
             return '{} {} - no exam uploaded'.format(self.tool_consumer_instance_guid,self.resource_link_id)
 
+    @property
+    def slug(self):
+        if self.exam:
+            return slugify(self.exam.title)
+        else:
+            return 'resource'
+
     def grade_user(self,user):
         methods = {
             'highest': self.grade_highest,
@@ -99,6 +111,15 @@ class Resource(models.Model):
         if self.max_attempts==0:
             return True
         return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
+
+    def num_questions(self):
+        re_objective_id_key = r'^cmi.objectives.(\d+).id$'
+        top_key = ScormElement.objects.filter(attempt__resource=self,key__regex=re_objective_id_key).aggregate(models.Max('key'))['key__max']
+        if top_key is None:
+            return 0
+        else:
+            n = re.match(re_objective_id_key,top_key).group(1)
+            return int(n)+1
 
 COMPLETION_STATUSES = [
     ('not attempted','Not attempted'),
@@ -132,6 +153,13 @@ class Attempt(models.Model):
     def raw_score(self):
         try:
             return float(self.scormelements.current('cmi.score.raw').value)
+        except ScormElement.DoesNotExist:
+            return 0
+
+    def question_score(self,n):
+        try:
+            element = self.scormelements.current('cmi.objectives.{}.score.raw'.format(n))
+            return element.value
         except ScormElement.DoesNotExist:
             return 0
 
