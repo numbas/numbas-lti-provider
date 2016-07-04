@@ -1,8 +1,7 @@
-{% extends "numbas_lti/base.html" %}
+{% extends "numbas_lti/management/base.html" %}
 {% load staticfiles %}
 
-{% block content %}
-<h1>{{exam.title}}</h1>
+{% block management_content %}
 <iframe id="scorm-player" width="100%" height="800" src="{{exam.extracted_url}}/index.html"></iframe>
 
 
@@ -35,4 +34,4 @@
 		setInterval(resize_iframe,500);
 	});
 </script>
-{% endblock content %}
+{% endblock management_content %}

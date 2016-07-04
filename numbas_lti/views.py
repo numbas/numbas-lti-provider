@@ -198,12 +198,14 @@ def remove_access_token(request,user_id):
 
     return redirect(reverse('dashboard',args=(request.resource.pk,)))
 
-class RunExamView(generic.detail.DetailView):
+class RunExamView(ManagementViewMixin,generic.detail.DetailView):
     """
         Run an exam without saving any attempt data
     """
+    management_tab = 'test_run'
     model = Exam
     template_name = 'numbas_lti/management/run_exam.html'
+    context_object_name = 'exam'
 
     def get_context_data(self,*args,**kwargs):
         context = super(RunExamView,self).get_context_data(*args,**kwargs)
