@@ -33,6 +33,10 @@ def request_is_instructor(request):
     return 'Instructor' in request.LTI.get('roles')
 
 @csrf_exempt
+def no_resource(request):
+    return render(request,'numbas_lti/error_no_resource.html',{})
+
+@csrf_exempt
 def lti_entry(request):
     user_data,_ = LTIUserData.objects.get_or_create(
         user=request.user,
