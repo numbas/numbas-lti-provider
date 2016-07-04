@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^exam/(?P<pk>\d+)/run$', views.RunExamView.as_view(), name='run_exam'),
 
     url(r'^resource/(?P<pk>\d+)$', views.DashboardView.as_view(), name='dashboard'),
+    url(r'^resource/(?P<pk>\d+)/attempts$', views.AllAttemptsView.as_view(), name='manage_attempts'),
     url(r'^resource/(?P<pk>\d+)/settings$', views.ResourceSettingsView.as_view(), name='resource_settings'),
     url(r'^resource/(?P<pk>\d+)/replace$', views.ReplaceExamView.as_view(), name='replace_exam'),
 

@@ -55,6 +55,8 @@ class MustBeInstructorMixin(LTIRoleRestrictionMixin):
     allowed_roles = ['Instructor']
 
 class ManagementViewMixin(object):
+    context_object_name = 'resource'
+
     def get_context_data(self,*args,**kwargs):
         context = super(ManagementViewMixin,self).get_context_data(*args,**kwargs)
         context.update({
@@ -83,7 +85,6 @@ class ReplaceExamView(ManagementViewMixin,CreateExamView):
 class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/dashboard.html'
-    context_object_name = 'resource'
     management_tab = 'dashboard'
 
     def get_context_data(self,*args,**kwargs):
@@ -101,6 +102,11 @@ class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.Det
         ]
 
         return context
+
+class AllAttemptsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/attempts.html'
+    management_tab = 'attempts'
 
 class ResourceSettingsView(ManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource

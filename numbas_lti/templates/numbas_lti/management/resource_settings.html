@@ -1,15 +1,21 @@
 {% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
 
 {% block management_content %}
-<h1>Settings</h1>
+<legend>Settings</legend>
 <form method="POST" action="{% url 'resource_settings' resource.pk %}">
     {% csrf_token %}
+    {{form|bootstrap}}
     {% for field in form %}
-    <div>
-        <label>{{field.label}} {{field}}</label>
+    <div class="form-group">
+        <label for="{{field.auto_id}}">{{field.label}}</label>
+        {{field}}
     </div>
     {% endfor %}
-        <a href="{% url 'replace_exam' resource.pk %}">Replace exam package</a>
+    <ul class="list-unstyled">
+        <li><a href="{% url 'replace_exam' resource.pk %}">Replace exam package</a></li>
+        <li><a href="{{resource.exam.package.url}}">Download exam package</a></li>
+    </ul>
     <p><button type="submit">Save</button> <a href="{% url 'dashboard' resource.pk %}">Cancel</a></p>
 </form>
 {% endblock management_content %}
