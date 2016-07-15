@@ -1,0 +1,68 @@
+{% extends "numbas_lti/management/base.html" %}
+
+{% block management_content %}
+<h2>
+    Attempt by {{attempt.user.get_full_name}}
+</h2>
+<h3>
+    <small>Started {{attempt.start_time|date:"Y-m-d H:i:s"}}</small>
+</h3>
+
+<div class="search">
+    <label>Search for an element: <input class="form-control" id="query" type="text"></label>
+    <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">Answers</button>
+    <button class="btn btn-default quick-query" data-query="(result|weighting)$">Part scores</button>
+    <button class="btn btn-default quick-query" data-query="score.(raw|max)">Question scores</button>
+</div>
+
+<table class="table" id="elements">
+    <colgroup>
+        <col>
+        <col style="width:10em;">
+        <col style="width:10em;">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Key</th>
+            <th>Time</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key,elements in keys %}
+        {% for element in elements %}
+            {% if forloop.counter0 == 0 or show_stale_elements %}
+            <tr data-key="{{key}}">
+                <td class="key">{% if forloop.counter0 == 0 %}{{key}}{% endif %}</td>
+                <td class="time">{{element.time|date:"Y-m-d H:i:s"}}</td>
+                <td class="value">{{element.value}}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+    function filter_rows(query) {
+        var re = new RegExp(query);
+        query = query.toLowerCase();
+        var rows = document.querySelectorAll('#elements tbody tr');
+        Array.prototype.map.apply(rows,[function(row) {
+            var key = row.getAttribute('data-key');
+            row.classList.toggle('hidden',!re.test(key));
+        }]);
+    }
+    var search = document.getElementById('query');
+    search.addEventListener('input',function() {
+        filter_rows(this.value);
+    });
+    document.querySelector('.search').addEventListener('click',function(e) {
+        if(!e.target.classList.contains('quick-query')) {
+            return;
+        }
+        
+        search.value = e.target.getAttribute('data-query');
+        filter_rows(search.value);
+    });
+</script>
+{% endblock management_content %}

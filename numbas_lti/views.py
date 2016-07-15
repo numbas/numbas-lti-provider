@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.http import StreamingHttpResponse
+from itertools import groupby
 import csv
 import json
 
@@ -183,6 +184,19 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
 
     def get_filename(self):
         return "{}-attempts.csv".format(self.object.slug)
+
+class AttemptSCORMListing(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
+    model = Attempt
+    management_tab = 'attempts'
+    template_name = 'numbas_lti/management/attempt_scorm_listing.html'
+    context_object_name = 'attempt'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
+
+        context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time'),key=lambda x:x.key)]
+
+        return context
 
 @lti_role_required(['Instructor'])
 def grant_access_token(request,user_id):

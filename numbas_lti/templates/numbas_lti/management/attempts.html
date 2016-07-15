@@ -19,7 +19,10 @@
             <tr>
                 <td>{{attempt.user.get_full_name}}</td>
                 <td>{{attempt.start_time}}</td>
-                <td><a target="review_attempt" href="{% url 'run_attempt' attempt.pk %}">Review</a>{% if attempt.exam != resource.exam %} (old exam){% endif %}</td>
+                <td>
+                    <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}">Review</a>{% if attempt.exam != resource.exam %} (old exam){% endif %}
+                    <a class="btn btn-link"href="{% url 'attempt_scorm_listing' attempt.pk %}">SCORM data</a>
+                </td>
                 <td>{{attempt.completion_status}}</td>
                 <td>{{attempt.raw_score}}</td>
             </tr>
