@@ -63,6 +63,12 @@ GRADING_METHODS = [
     ('last','Last attempt'),
 ]
 
+REPORT_TIMES = [
+    ('immediately','Immediately'),
+    ('oncompletion','On completion'),
+    ('manually','Manually, by instructor'),
+]
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
     tool_consumer_instance_guid = models.CharField(max_length=300)
@@ -70,6 +76,8 @@ class Resource(models.Model):
 
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name='Grading method')
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name='Include incomplete attempts in grading')
+    show_incomplete_marks = models.BooleanField(default=True,verbose_name='Show score of in-progress attempts to students')
+    report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name='When to report scores back')
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name='Maximum attempts per user')
 
@@ -149,12 +157,22 @@ class Attempt(models.Model):
     class Meta:
         ordering = ['-start_time',]
 
+    def get_element_default(self,key,default=None):
+        try:
+            return self.scormelements.current(key).value
+        except ScormElement.DoesNotExist:
+            return default
+
+    def completed(self):
+        return self.completion_status=='completed'
+
     @property
     def raw_score(self):
-        try:
-            return float(self.scormelements.current('cmi.score.raw').value)
-        except ScormElement.DoesNotExist:
-            return 0
+        return float(self.get_element_default('cmi.score.raw',0))
+
+    @property
+    def max_score(self):
+        return float(self.get_element_default('cmi.score.max',0))
 
     def question_score(self,n):
         try:
@@ -212,7 +230,8 @@ def scorm_set_score(sender,instance,created,**kwargs):
 
     instance.attempt.scaled_score = float(instance.value)
     instance.attempt.save()
-    report_outcome(instance.attempt)
+    if instance.attempt.resource.report_mark_time == 'immediately':
+        report_outcome_for_attempt(instance.attempt)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -221,4 +240,5 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
     instance.attempt.completion_status = instance.value
     instance.attempt.save()
-    report_outcome(instance.attempt)
+    if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
+        report_outcome_for_attempt(instance.attempt)

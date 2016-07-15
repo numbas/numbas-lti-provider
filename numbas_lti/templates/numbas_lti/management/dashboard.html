@@ -3,9 +3,21 @@
 
 {% block management_content %}
     {% if resource.attempts.count %}
+
+    <div>
+        <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> Report scores back to VLE</a>
+    </div>
+
+    <p><strong>{{resource.attempts.count}}</strong> attempt{{resource.attempts.count|pluralize}} by <strong>{{students.count}}</strong> student{{students.count|pluralize}}.</p>
+
     <h2>Students</h2>
-    <a href="{% url 'scores_csv' resource.pk %}">Download scores as CSV</a>
-    <table class="table">
+
+    <p><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> Download scores as CSV</a></p>
+
+    <div>
+        <label>Search for a student: <input id="query" type="text" class="form-control"></label>
+    </div>
+    <table class="table" id="students">
         <thead>
             <tr>
                 <th>Name</th>
@@ -16,7 +28,7 @@
         </thead>
         <tbody>
             {% for student,score,attempts,access_tokens in student_summary %}
-            <tr>
+            <tr data-student="{{student.get_full_name}}">
                 <td>{{student.get_full_name}}</td>
                 <td>{{score|percentage}}</td>
                 <td>{{attempts}}</td>
@@ -29,6 +41,22 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <script>
+        function filter_rows(query) {
+            query = query.toLowerCase();
+            var re = new RegExp(query);
+            var rows = document.querySelectorAll('#students tbody tr');
+            Array.prototype.map.apply(rows,[function(row) {
+                var name = row.getAttribute('data-student').toLowerCase();
+                row.classList.toggle('hidden',!re.test(name));
+            }]);
+        }
+        var search = document.getElementById('query');
+        search.addEventListener('input',function() {
+            filter_rows(this.value);
+        });
+    </script>
     {% else %}
     <p>No students have attempted this exam yet.</p>
     {% endif %}

@@ -3,9 +3,13 @@ from channels.handler import AsgiHandler
 from channels import Group
 from channels.sessions import channel_session,enforce_ordering
 from channels.auth import http_session_user, channel_session_user, channel_session_user_from_http
+from channels.generic import BaseConsumer
 import json
 
-from .models import Attempt,ScormElement
+from django.contrib.auth.models import User
+
+from .models import Attempt,ScormElement,Resource
+from .report_outcome import report_outcome
 
 @enforce_ordering(slight=True)
 @channel_session_user_from_http
@@ -28,3 +32,9 @@ def scorm_set_element(message,pk):
             value = element['value']
         )
     print("DONE")
+
+def report_scores(message,**kwargs):
+    print("REPORT CONSUMER")
+    resource = Resource.objects.get(pk=message['pk'])
+    for user in User.objects.filter(attempts__resource=resource).distinct():
+        report_outcome(resource,user)

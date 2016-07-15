@@ -17,7 +17,10 @@ class BodyHashClient(Client):
         params.append(('oauth_body_hash', to_unicode(digest)))
         return params
 
-def report_outcome(attempt):
+def report_outcome_for_attempt(attempt):
+    report_outcome(attempt.resource,attempt.user)
+
+def report_outcome(resource,user):
 
     template = """<?xml version = "1.0" encoding = "UTF-8"?>
     <imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0">
@@ -46,11 +49,10 @@ def report_outcome(attempt):
     """
 
     message_identifier = uuid.uuid4().int & (1<<64)-1
-    user_data = attempt.user.lti_data.get(resource=attempt.resource)
-    result = attempt.resource.grade_user(attempt.user)
+    user_data = user.lti_data.get(resource=resource)
+    result = resource.grade_user(user)
 
     if user_data.lis_result_sourcedid:
-        print("Posting {}".format(attempt.scaled_score))
         r = requests.post(
                 user_data.lis_outcome_service_url,
                 data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),

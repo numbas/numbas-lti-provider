@@ -5,4 +5,4 @@ from .models import Resource
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_incomplete_marks','report_mark_time']

@@ -3,8 +3,13 @@
 {% block management_content %}
     {% if resource.attempts.count %}
     <h2>Attempts</h2>
-    <a href="{% url 'attempts_csv' resource.pk %}">Download attempts summary as CSV</a>
-    <table class="table table-striped">
+
+    <p><a class="btn btn-info" href="{% url 'attempts_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> Download attempts summary as CSV</a></p>
+
+    <div>
+        <label>Search for a student: <input id="query" type="text" class="form-control"></label>
+    </div>
+    <table id="attempts" class="table table-striped">
         <thead>
             <tr>
                 <th>Student</th>
@@ -16,19 +21,35 @@
         </thead>
         <tbody>
             {% for attempt in resource.attempts.all %}
-            <tr>
+            <tr data-student="{{attempt.user.get_full_name}}">
                 <td>{{attempt.user.get_full_name}}</td>
                 <td>{{attempt.start_time}}</td>
                 <td>
-                    <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}">Review</a>{% if attempt.exam != resource.exam %} (old exam){% endif %}
-                    <a class="btn btn-link"href="{% url 'attempt_scorm_listing' attempt.pk %}">SCORM data</a>
+                    <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> Review</span></a>{% if attempt.exam != resource.exam %} (old exam){% endif %}
+                    <a class="btn btn-link"href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> SCORM data</span></a>
                 </td>
-                <td>{{attempt.completion_status}}</td>
+                <td><span class="{% if attempt.completion_status == 'completed' %}text-success{% endif %}">{{attempt.completion_status}}</span></td>
                 <td>{{attempt.raw_score}}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <script>
+        function filter_rows(query) {
+            query = query.toLowerCase();
+            var re = new RegExp(query);
+            var rows = document.querySelectorAll('#attempts tbody tr');
+            Array.prototype.map.apply(rows,[function(row) {
+                var name = row.getAttribute('data-student').toLowerCase();
+                row.classList.toggle('hidden',!re.test(name));
+            }]);
+        }
+        var search = document.getElementById('query');
+        search.addEventListener('input',function() {
+            filter_rows(this.value);
+        });
+    </script>
     {% else %}
     <p>No students have attempted this exam yet.</p>
     {% endif %}

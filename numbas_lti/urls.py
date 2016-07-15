@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/attempts$', views.AllAttemptsView.as_view(), name='manage_attempts'),
     url(r'^resource/(?P<pk>\d+)/settings$', views.ResourceSettingsView.as_view(), name='resource_settings'),
     url(r'^resource/(?P<pk>\d+)/replace$', views.ReplaceExamView.as_view(), name='replace_exam'),
+    url(r'^resource/(?P<pk>\d+)/report_scores$', views.ReportAllScoresView.as_view(), name='report_scores'),
 
     url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
 

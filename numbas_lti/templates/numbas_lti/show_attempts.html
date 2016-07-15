@@ -1,10 +1,35 @@
 {% extends "numbas_lti/base.html" %}
+{% load percentage %}
 
 {% block content %}
-<ol>
-    {% for attempt in object_list %}
-    <li><a href="{% url 'run_attempt' pk=attempt.pk %}">{{attempt.start_time}}</a> ({{attempt.completion_status}})</li>
-    {% endfor %}
-</ol>
-{% if can_start_new_attempt %}<a href="{% url 'new_attempt' %}">New attempt</a>{% endif %}
+<h2>Your attempts</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Attempt</th>
+            <th>Start time</th>
+            <th>Score</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attempt in object_list %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{attempt.start_time}}</td>
+            <td>{% if attempt.completed or attempt.resource.show_incomplete_marks %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>In progress</em>{% endif %}</td>
+            <td>
+                <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
+                    {% if attempt.completed %}
+                        <span class="glyphicon glyphicon-apple"></span> Review this attempt
+                    {% else %}
+                        <span class="glyphicon glyphicon-play"></span> Continue
+                    {% endif %}
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if can_start_new_attempt %}<a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> Start a new attempt</a>{% endif %}
 {% endblock content %}

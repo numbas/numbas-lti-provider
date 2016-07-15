@@ -8,12 +8,12 @@
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'dashboard' request.resource.pk %}">Dashboard</a></li>
-                <li class="{% if management_tab == 'attempts' %}active{% endif %}"><a href="{% url 'manage_attempts' request.resource.pk %}">Attempts</a></li>
-                <li class="{% if management_tab == 'settings' %}active{% endif %}"><a href="{% url 'resource_settings' request.resource.pk %}">Settings</a></li>
+                <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'dashboard' request.resource.pk %}"><span class="glyphicon glyphicon-dashboard"></span> Dashboard</a></li>
+                <li class="{% if management_tab == 'attempts' %}active{% endif %}"><a href="{% url 'manage_attempts' request.resource.pk %}"><span class="glyphicon glyphicon-stats"></span> Attempts</a></li>
+                <li class="{% if management_tab == 'settings' %}active{% endif %}"><a href="{% url 'resource_settings' request.resource.pk %}"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li class="{% if management_tab == 'test_run' %}active{% endif %}"><a href="{% url 'run_exam' request.resource.exam.pk %}">Test run</a></li>
+                <li class="{% if management_tab == 'test_run' %}active{% endif %}"><a href="{% url 'run_exam' request.resource.exam.pk %}"><span class="glyphicon glyphicon-play"></span> Test run</a></li>
             </ul>
         </div>
     </div>

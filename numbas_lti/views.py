@@ -12,6 +12,7 @@ from django.core.exceptions import PermissionDenied
 from django import http
 from django.http import StreamingHttpResponse
 from itertools import groupby
+from channels import Channel
 import csv
 import json
 
@@ -39,6 +40,12 @@ def no_resource(request):
 
 @csrf_exempt
 def lti_entry(request):
+
+    try:
+        request.resource
+    except AttributeError:
+        return no_resource(request)
+
     user_data,_ = LTIUserData.objects.get_or_create(
         user=request.user,
         resource=request.resource
@@ -98,6 +105,9 @@ class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.Det
         context = super(DashboardView,self).get_context_data(*args,**kwargs)
 
         resource = self.get_object()
+
+        context['students'] = User.objects.filter(attempts__resource=resource).distinct()
+
         context['student_summary'] = [
             (
                 student,
@@ -195,8 +205,19 @@ class AttemptSCORMListing(MustBeInstructorMixin,ManagementViewMixin,generic.deta
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 
         context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time'),key=lambda x:x.key)]
+        context['show_stale_elements'] = True
 
         return context
+
+class ReportAllScoresView(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
+    model = Resource
+    management_tab = 'dashboard'
+    template_name = 'numbas_lti/management/report_all_scores.html'
+    context_object_name = 'resource'
+
+    def get(self,*args,**kwargs):
+        Channel("report.all_scores").send({'pk':self.get_object().pk})
+        return super(ReportAllScoresView,self).get(*args,**kwargs)
 
 @lti_role_required(['Instructor'])
 def grant_access_token(request,user_id):
