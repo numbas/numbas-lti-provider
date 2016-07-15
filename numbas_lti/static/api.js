@@ -4,7 +4,7 @@ function SCORM_API(data,attempt_pk) {
 	this.data = data;
 
     var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-    var socket = this.socket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/attempt/"+attempt_pk+"/scorm_api");
+    var socket = this.socket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/websocket/attempt/"+attempt_pk+"/scorm_api");
 
     this.queue = [];
 
