@@ -11,8 +11,10 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.http import StreamingHttpResponse
+from django.utils.translation import ugettext_lazy as _, ugettext
 from itertools import groupby
 from channels import Channel
+import datetime
 import csv
 import json
 
@@ -20,7 +22,7 @@ patch_reverse()
 
 from functools import wraps
 
-from .models import LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement
+from .models import LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess
 from .forms import ResourceSettingsForm
 
 # Create your views here.
@@ -107,11 +109,15 @@ class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.Det
         resource = self.get_object()
 
         context['students'] = User.objects.filter(attempts__resource=resource).distinct()
+        last_report_process = resource.report_processes.first()
+        if last_report_process and (not last_report_process.dismissed):
+            context['last_report_process'] = last_report_process
 
         context['student_summary'] = [
             (
                 student,
                 resource.grade_user(student),
+                student.lti_data.get(resource=resource),
                 Attempt.objects.filter(user=student,resource=resource).count(),
                 AccessToken.objects.filter(user=student,resource=resource).count(),
             ) 
@@ -169,7 +175,7 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
         return rows
 
     def get_filename(self):
-        return "{}-scores.csv".format(self.object.slug)
+        return _("{slug}-scores.csv").format(slug=self.object.slug)
 
 class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource
@@ -177,7 +183,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
         resource = self.object
         num_questions = resource.num_questions()
 
-        headers = ['First name','Last name','Email','Start time','Completed?','Total score','Percentage']+['Question {}'.format(i+1) for i in range(num_questions)]
+        headers = [_(x) for x in ['First name','Last name','Email','Start time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
         yield headers
 
         for attempt in resource.attempts.all():
@@ -193,7 +199,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
             yield row
 
     def get_filename(self):
-        return "{}-attempts.csv".format(self.object.slug)
+        return _("{sluf}-attempts.csv").format(slug=self.object.slug)
 
 class AttemptSCORMListing(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
     model = Attempt
@@ -233,7 +239,31 @@ def remove_access_token(request,user_id):
 
     return redirect(reverse('dashboard',args=(request.resource.pk,)))
 
-class RunExamView(ManagementViewMixin,generic.detail.DetailView):
+class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
+    model = ReportProcess
+
+    def render_to_response(self,context):
+        process = self.get_object()
+        process.dismissed = True
+        process.save()
+        return redirect(reverse('dashboard',args=(process.resource.pk,)))
+
+class DeleteAttemptView(MustBeInstructorMixin,ManagementViewMixin,generic.edit.DeleteView):
+    model = Attempt
+    context_object_name = 'attempt'
+    management_tab = 'attempts'
+    template_name = 'numbas_lti/management/delete_attempt.html'
+
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        self.object.deleted = True
+        self.object.save()
+        return http.HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('manage_attempts',args=(self.request.resource.pk,))
+
+class RunExamView(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
     """
         Run an exam without saving any attempt data
     """
@@ -289,7 +319,7 @@ class ShowAttemptsView(generic.list.ListView):
 
 def new_attempt(request):
     if not request.resource.can_start_new_attempt(request.user):
-        raise PermissionDenied("You can't start a new attempt at this exam")
+        raise PermissionDenied(ugettext("You can't start a new attempt at this exam"))
 
     if Attempt.objects.filter(resource=request.resource,user=request.user).count() == request.resource.max_attempts > 0:
         AccessToken.objects.filter(resource=request.resource,user=request.user).first().delete()
@@ -321,7 +351,7 @@ class RunAttemptView(generic.detail.DetailView):
             if request_is_instructor(self.request):
                 mode = 'review'
             else:
-                raise PermissionDenied("You're not allowed to review this attempt.")
+                raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
 
         scorm_cmi = {
             'cmi.mode': mode,
@@ -352,3 +382,4 @@ class RunAttemptView(generic.detail.DetailView):
         context['scorm_cmi'] = json.dumps(scorm_cmi)
 
         return context
+

@@ -13,14 +13,16 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/settings$', views.ResourceSettingsView.as_view(), name='resource_settings'),
     url(r'^resource/(?P<pk>\d+)/replace$', views.ReplaceExamView.as_view(), name='replace_exam'),
     url(r'^resource/(?P<pk>\d+)/report_scores$', views.ReportAllScoresView.as_view(), name='report_scores'),
-
-    url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
-
     url(r'^resource/(?P<pk>\d+)/scores.csv$', views.ScoresCSV.as_view(), name='scores_csv'),
     url(r'^resource/(?P<pk>\d+)/attempts.csv$', views.AttemptsCSV.as_view(), name='attempts_csv'),
 
+    url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
+    url(r'^attempt/(?P<pk>\d+)/delete$', views.DeleteAttemptView.as_view(), name='delete_attempt'),
+
     url(r'grant_access_token/(?P<user_id>\d+)$', views.grant_access_token, name='grant_access_token'),
     url(r'remove_access_token/(?P<user_id>\d+)$', views.remove_access_token, name='remove_access_token'),
+
+    url(r'report-process/(?P<pk>\d+)/dismiss$', views.DismissReportProcessView.as_view(), name='dismiss_report_process'),
 
     url(r'^show_attempts$', views.ShowAttemptsView.as_view(), name='show_attempts'),
     url(r'^new_attempt$', views.new_attempt, name='new_attempt'),

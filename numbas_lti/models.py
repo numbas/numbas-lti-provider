@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
 from django.utils.text import slugify
+from django.utils.translation import ugettext_lazy as _
 
 from .report_outcome import report_outcome
 
@@ -59,14 +60,19 @@ def set_exam_name_from_package(sender,instance,**kwargs):
 
 
 GRADING_METHODS = [
-    ('highest','Highest score'),
-    ('last','Last attempt'),
+    ('highest',_('Highest score')),
+    ('last',_('Last attempt')),
 ]
 
 REPORT_TIMES = [
-    ('immediately','Immediately'),
-    ('oncompletion','On completion'),
-    ('manually','Manually, by instructor'),
+    ('immediately',_('Immediately')),
+    ('oncompletion',_('On completion')),
+    ('manually',_('Manually, by instructor')),
+]
+REPORTING_STATUSES = [
+    ('reporting',_('Reporting scores')),
+    ('error',_('Error encountered')),
+    ('complete',_('All scores reported')),
 ]
 
 class Resource(models.Model):
@@ -74,18 +80,19 @@ class Resource(models.Model):
     tool_consumer_instance_guid = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)
 
-    grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name='Grading method')
-    include_incomplete_attempts = models.BooleanField(default=True,verbose_name='Include incomplete attempts in grading')
-    show_incomplete_marks = models.BooleanField(default=True,verbose_name='Show score of in-progress attempts to students')
-    report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name='When to report scores back')
+    grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
+    include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
+    show_incomplete_marks = models.BooleanField(default=True,verbose_name=_('Show score of in-progress attempts to students?'))
+    report_incomplete_marks = models.BooleanField(default=True,verbose_name=_('Count scores for incomplete attempts?'))
+    report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
 
-    max_attempts = models.PositiveIntegerField(default=0,verbose_name='Maximum attempts per user')
+    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
 
     def __str__(self):
         if self.exam:
             return str(self.exam)
         else:
-            return '{} {} - no exam uploaded'.format(self.tool_consumer_instance_guid,self.resource_link_id)
+            return _('{} {} - no exam uploaded').format(self.tool_consumer_instance_guid,self.resource_link_id)
 
     @property
     def slug(self):
@@ -100,6 +107,8 @@ class Resource(models.Model):
             'last': self.grade_last,
         }
         attempts = self.attempts.filter(user=user)
+        if not self.report_incomplete_marks:
+            attempts = attempts.filter(completion_status='completed')
         if not self.include_incomplete_attempts:
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():
@@ -129,10 +138,20 @@ class Resource(models.Model):
             n = re.match(re_objective_id_key,top_key).group(1)
             return int(n)+1
 
+class ReportProcess(models.Model):
+    resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
+    status = models.CharField(max_length=10,choices=REPORTING_STATUSES,default='reporting',verbose_name=_("Current status of the process"))
+    time = models.DateTimeField(auto_now_add=True,verbose_name=_("Time the reporting process started"))
+    response = models.TextField(blank=True,verbose_name=_("Description of any error"))
+    dismissed = models.BooleanField(default=False,verbose_name=_('Has the result of this process been dismissed by the instructor?'))
+
+    class Meta:
+        ordering = ['-time',]
+
 COMPLETION_STATUSES = [
-    ('not attempted','Not attempted'),
-    ('incomplete','Incomplete'),
-    ('completed','Complete'),
+    ('not attempted',_('Not attempted')),
+    ('incomplete',_('Incomplete')),
+    ('completed',_('Complete')),
 ]
 
 class AccessToken(models.Model):
@@ -144,6 +163,11 @@ class LTIUserData(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
     lis_result_sourcedid = models.CharField(max_length=200,default='',blank=True,null=True)
     lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
+    last_reported_score = models.FloatField(default=0)
+
+class AttemptManager(models.Manager):
+    def get_queryset(self):
+        return super(AttemptManager,self).get_queryset().filter(deleted=False)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
@@ -153,6 +177,10 @@ class Attempt(models.Model):
 
     completion_status = models.CharField(max_length=20,choices=COMPLETION_STATUSES,default='not attempted')
     scaled_score = models.FloatField(default=0)
+
+    deleted = models.BooleanField(default=False)
+
+    objects = AttemptManager()
 
     class Meta:
         ordering = ['-start_time',]
@@ -219,7 +247,6 @@ def set_current_scorm_element(sender,instance,created,**kwargs):
     ne = instance
     if created:
         for oe in ne.attempt.scormelements.current().filter(key=ne.key).exclude(pk=ne.pk):
-            print("not current",oe.pk,ne.pk)
             oe.current = False
             oe.save()
 

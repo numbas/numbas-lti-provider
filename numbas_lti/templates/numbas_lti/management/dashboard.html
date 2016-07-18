@@ -4,11 +4,29 @@
 {% block management_content %}
     {% if resource.attempts.count %}
 
-    <div>
-        <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> Report scores back to VLE</a>
-    </div>
-
     <p><strong>{{resource.attempts.count}}</strong> attempt{{resource.attempts.count|pluralize}} by <strong>{{students.count}}</strong> student{{students.count|pluralize}}.</p>
+
+    {% if last_report_process %}
+        {% if last_report_process.status == 'reporting' %}
+        <div class="alert alert-info">Scores are currently being reported back to the grade book.</div>
+        {% elif last_report_process.status == 'complete' %}
+        <div class="alert alert-success">
+            <p>Scores were successfully reported back to the grade book.</p>
+            <p><a class="btn btn-success btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">Dismiss this message</a></p>
+        </div>
+        {% elif last_report_process.status == 'error' %}
+        <div class="alert alert-danger">
+            <p>An error was encountered while reporting scores back to the grade book:</p>
+            <pre>{{last_report_process.response}}</pre>
+            <p>Report this error to your VLE's administrator.</p>
+            <p><a class="btn btn-danger btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">Dismiss this message</a></p>
+        </div>
+        {% endif %}
+    {% else %}
+        <div>
+            <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> Report scores back to VLE</a>
+        </div>
+    {% endif %}
 
     <h2>Students</h2>
 
@@ -27,10 +45,15 @@
             </tr>
         </thead>
         <tbody>
-            {% for student,score,attempts,access_tokens in student_summary %}
+            {% for student,score,lti_data,attempts,access_tokens in student_summary %}
             <tr data-student="{{student.get_full_name}}">
                 <td>{{student.get_full_name}}</td>
-                <td>{{score|percentage}}</td>
+                <td>
+                    {{score|percentage}}
+                    {% if lti_data.last_reported_score != score %}
+                        <span class="glyphicon glyphicon-warning-sign" title="This score has not been reported to the grade book yet."></span>
+                    {% endif %}
+                </td>
                 <td>{{attempts}}</td>
                 <td>{{access_tokens}}</td>
                 <td>

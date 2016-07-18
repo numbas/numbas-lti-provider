@@ -1,9 +1,10 @@
 {% extends "numbas_lti/base.html" %}
+{% load i18n %}
 
 {% block content %}
     <div class="container">
-    <h1>Numbas LTI provider</h1>
-    <p>Use this URL:</p>
-    <pre>{{entry_url}}</pre>
+        <h1>{% trans "Numbas LTI provider" %}</h1>
+        <p>{% trans "Use this URL:" %}</p>
+        <pre>{{entry_url}}</pre>
     </div>
 {% endblock content %}

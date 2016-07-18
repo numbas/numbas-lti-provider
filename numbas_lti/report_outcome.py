@@ -59,4 +59,6 @@ def report_outcome(resource,user):
                 auth=OAuth1('clp','dude',signature_type='auth_header',client_class=BodyHashClient, force_include_body=True),
                 headers={'Content-Type': 'application/xml'}
             )
-        print(r.status_code)
+        user_data.last_reported_score = result
+        user_data.save()
+        return r

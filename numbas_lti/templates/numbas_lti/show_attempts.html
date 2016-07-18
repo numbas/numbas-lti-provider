@@ -1,14 +1,15 @@
 {% extends "numbas_lti/base.html" %}
 {% load percentage %}
+{% load i18n %}
 
 {% block content %}
-<h2>Your attempts</h2>
+<h2>{% trans "Your attempts" %}</h2>
 <table class="table">
     <thead>
         <tr>
-            <th>Attempt</th>
-            <th>Start time</th>
-            <th>Score</th>
+            <th>{% trans "Attempt" %}</th>
+            <th>{% trans "Start time" %}</th>
+            <th>{% trans "Score" %}</th>
             <th></th>
         </tr>
     </thead>
@@ -17,13 +18,13 @@
         <tr>
             <td>{{forloop.counter}}</td>
             <td>{{attempt.start_time}}</td>
-            <td>{% if attempt.completed or attempt.resource.show_incomplete_marks %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>In progress</em>{% endif %}</td>
+            <td>{% if attempt.completed or attempt.resource.show_incomplete_marks %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>{% trans "In progress" %}</em>{% endif %}</td>
             <td>
                 <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
                     {% if attempt.completed %}
-                        <span class="glyphicon glyphicon-apple"></span> Review this attempt
+                        <span class="glyphicon glyphicon-apple"></span> {% trans "Review this attempt" %}
                     {% else %}
-                        <span class="glyphicon glyphicon-play"></span> Continue
+                        <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
                     {% endif %}
                 </a>
             </td>
@@ -31,5 +32,5 @@
         {% endfor %}
     </tbody>
 </table>
-{% if can_start_new_attempt %}<a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> Start a new attempt</a>{% endif %}
+{% if can_start_new_attempt %}<a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% trans "Start a new attempt" %}</a>{% endif %}
 {% endblock content %}
