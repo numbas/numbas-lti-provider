@@ -1,47 +1,48 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load percentage %}
+{% load i18n %}
 
 {% block management_content %}
     {% if resource.attempts.count %}
 
-    <p><strong>{{resource.attempts.count}}</strong> attempt{{resource.attempts.count|pluralize}} by <strong>{{students.count}}</strong> student{{students.count|pluralize}}.</p>
+    <p><strong>{{resource.attempts.count}}</strong> {% blocktrans count counter=resource.attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
 
     {% if last_report_process %}
         {% if last_report_process.status == 'reporting' %}
-        <div class="alert alert-info">Scores are currently being reported back to the grade book.</div>
+        <div class="alert alert-info">{% trans "Scores are currently being reported back to the grade book" %}.</div>
         {% elif last_report_process.status == 'complete' %}
         <div class="alert alert-success">
-            <p>Scores were successfully reported back to the grade book.</p>
-            <p><a class="btn btn-success btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">Dismiss this message</a></p>
+            <p>{% trans "Scores were successfully reported back to the grade book." %}</p>
+            <p><a class="btn btn-success btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
         </div>
         {% elif last_report_process.status == 'error' %}
         <div class="alert alert-danger">
-            <p>An error was encountered while reporting scores back to the grade book:</p>
+            <p>{% trans "An error was encountered while reporting scores back to the grade book:" %}</p>
             <pre>{{last_report_process.response}}</pre>
-            <p>Report this error to your VLE's administrator.</p>
-            <p><a class="btn btn-danger btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">Dismiss this message</a></p>
+            <p>{% trans "Report this error to your VLE's administrator." %}</p>
+            <p><a class="btn btn-danger btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
         </div>
         {% endif %}
     {% else %}
         <div>
-            <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> Report scores back to VLE</a>
+            <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>
         </div>
     {% endif %}
 
-    <h2>Students</h2>
+    <h2>{% trans "Student progress" %}</h2>
 
-    <p><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> Download scores as CSV</a></p>
+    <p><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></p>
 
     <div>
-        <label>Search for a student: <input id="query" type="text" class="form-control"></label>
+        <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
     </div>
     <table class="table" id="students">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Score</th>
-                <th>Attempts</th>
-                <th colspan="2">Access tokens</th>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Score" %}</th>
+                <th>{% trans "Attempts" %}</th>
+                <th colspan="2">{% trans "Access tokens" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -51,14 +52,14 @@
                 <td>
                     {{score|percentage}}
                     {% if lti_data.last_reported_score != score %}
-                        <span class="glyphicon glyphicon-warning-sign" title="This score has not been reported to the grade book yet."></span>
+                    <span class="glyphicon glyphicon-warning-sign" title="{% trans "This score has not been reported to the grade book yet." %}"></span>
                     {% endif %}
                 </td>
                 <td>{{attempts}}</td>
                 <td>{{access_tokens}}</td>
                 <td>
-                    <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' student.pk %}" title="Grant an access token"><span class="glyphicon glyphicon-plus"></span></a>
-                    {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' student.pk %}" title="Remove an access token"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
+                    <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' student.pk %}" title="{% trans "Grant an access token" %}"><span class="glyphicon glyphicon-plus"></span></a>
+                    {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' student.pk %}" title="{% trans "Remove an access token" %}"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -81,6 +82,6 @@
         });
     </script>
     {% else %}
-    <p>No students have attempted this exam yet.</p>
+        <p>{% trans "No students have attempted this exam yet." %}</p>
     {% endif %}
 {% endblock management_content %}

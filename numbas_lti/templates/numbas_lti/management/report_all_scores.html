@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/base.html" %}
+{% load i18n %}
 
 {% block management_content %}
-<p>Scores are now being reported back to the LTI consumer. If there are lots of students, this might take a minute or two.</p>
-<p><a class="btn btn-primary" href="{% url 'dashboard' resource.pk %}">Back to dashboard</a></p>
+<p>{% trans "Scores are now being reported back to the LTI consumer. If there are lots of students, this might take a minute or two." %}</p>
+<p><a class="btn btn-primary" href="{% url 'dashboard' resource.pk %}">{% trans "Back to dashboard" %}</a></p>
 {% endblock management_content %}

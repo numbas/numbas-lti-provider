@@ -1,15 +1,16 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load bootstrap %}
+{% load i18n %}
 
 {% block management_content %}
-<legend>Settings</legend>
+<legend>{% trans "Settings" %}</legend>
 <ul class="list-inline">
-    <li><a class="btn btn-warning" href="{% url 'replace_exam' resource.pk %}"><span class="glyphicon glyphicon-refresh"></span> Replace exam package</a></li>
-    <li><a class="btn btn-info" href="{{resource.exam.package.url}}"><span class="glyphicon glyphicon-save"></span> Download exam package</a></li>
+    <li><a class="btn btn-warning" href="{% url 'replace_exam' resource.pk %}"><span class="glyphicon glyphicon-refresh"></span> {% trans "Replace exam package" %}</a></li>
+    <li><a class="btn btn-info" href="{{resource.exam.package.url}}"><span class="glyphicon glyphicon-save"></span> {% trans "Download exam package" %}</a></li>
 </ul>
 <form method="POST" action="{% url 'resource_settings' resource.pk %}">
     {% csrf_token %}
     {{form|bootstrap}}
-    <p><button class="btn btn-primary" type="submit">Save</button> <a class="btn btn-link" href="{% url 'dashboard' resource.pk %}">Cancel</a></p>
+    <p><button class="btn btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url 'dashboard' resource.pk %}">{% trans "Cancel" %}</a></p>
 </form>
 {% endblock management_content %}

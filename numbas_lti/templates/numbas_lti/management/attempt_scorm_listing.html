@@ -1,18 +1,19 @@
 {% extends "numbas_lti/management/base.html" %}
+{% load i18n %}
 
 {% block management_content %}
 <h2>
-    Attempt by {{attempt.user.get_full_name}}
+    {% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %}
 </h2>
 <h3>
-    <small>Started {{attempt.start_time|date:"Y-m-d H:i:s"}}</small>
+    <small>{% blocktrans with time=attempt.start_time|date:"Y-m-d H:i:s" %}Started {{time}}{% endblocktrans %}</small>
 </h3>
 
 <div class="search">
-    <label>Search for an element: <input class="form-control" id="query" type="text"></label>
-    <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">Answers</button>
-    <button class="btn btn-default quick-query" data-query="(result|weighting)$">Part scores</button>
-    <button class="btn btn-default quick-query" data-query="score.(raw|max)">Question scores</button>
+    <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text"></label>
+    <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">{% trans "Answers" %}</button>
+    <button class="btn btn-default quick-query" data-query="(result|weighting)$">{% trans "Part scores" %}</button>
+    <button class="btn btn-default quick-query" data-query="score.(raw|max)">{% trans "Question scores" %}</button>
 </div>
 
 <table class="table" id="elements">

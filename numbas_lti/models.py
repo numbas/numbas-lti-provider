@@ -83,7 +83,6 @@ class Resource(models.Model):
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
     show_incomplete_marks = models.BooleanField(default=True,verbose_name=_('Show score of in-progress attempts to students?'))
-    report_incomplete_marks = models.BooleanField(default=True,verbose_name=_('Count scores for incomplete attempts?'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
@@ -107,8 +106,6 @@ class Resource(models.Model):
             'last': self.grade_last,
         }
         attempts = self.attempts.filter(user=user)
-        if not self.report_incomplete_marks:
-            attempts = attempts.filter(completion_status='completed')
         if not self.include_incomplete_attempts:
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():

@@ -1,23 +1,24 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load percentage %}
+{% load i18n %}
 
 {% block management_content %}
     {% if resource.attempts.count %}
-    <h2>Attempts</h2>
+    <h2>{% trans "Attempts" %}</h2>
 
-    <p><a class="btn btn-info" href="{% url 'attempts_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> Download attempts summary as CSV</a></p>
+    <p><a class="btn btn-info" href="{% url 'attempts_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</a></p>
 
     <div>
-        <label>Search for a student: <input id="query" type="text" class="form-control"></label>
+        <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
     </div>
     <table id="attempts" class="table table-striped">
         <thead>
             <tr>
-                <th>Student</th>
-                <th>Start time</th>
+                <th>{% trans "Student" %}</th>
+                <th>{% trans "Start time" %}</th>
                 <th></th>
-                <th>Completion status</th>
-                <th>Score</th>
+                <th>{% trans "Completion status" %}</th>
+                <th>{% trans "Score" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -26,9 +27,9 @@
                 <td>{{attempt.user.get_full_name}}</td>
                 <td>{{attempt.start_time}}</td>
                 <td>
-                    <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> Review</span></a>{% if attempt.exam != resource.exam %} (old exam){% endif %}
-                    <a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> SCORM data</span></a>
-                    <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> Delete</span></a>
+                    <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% trans "(old exam)" %}{% endif %}
+                    <a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "SCORM data" %}</span></a>
+                    <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
                 </td>
                 <td><span class="{% if attempt.completion_status == 'completed' %}text-success{% endif %}">{{attempt.completion_status}}</span></td>
                 <td>{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})</td>

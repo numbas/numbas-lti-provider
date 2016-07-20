@@ -1,10 +1,11 @@
 {% extends "numbas_lti/management/base.html" %}
+{% load i18n %}
 
 {% block management_content %}
-<h1>Replace exam</h1>
+<h1>{% trans "Replace exam" %}</h1>
 <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
     {% csrf_token %}
     {{form}}
-    <button type="submit">Submit</button> <a href="{% url 'dashboard' request.resource.pk %}">Cancel</a>
+    <button type="submit">{% trans "Submit" %}</button> <a href="{% url 'dashboard' request.resource.pk %}">{% trans "Cancel" %}</a>
 </form>
 {% endblock management_content %}

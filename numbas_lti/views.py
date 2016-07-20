@@ -199,7 +199,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
             yield row
 
     def get_filename(self):
-        return _("{sluf}-attempts.csv").format(slug=self.object.slug)
+        return _("{slug}-attempts.csv").format(slug=self.object.slug)
 
 class AttemptSCORMListing(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
     model = Attempt
