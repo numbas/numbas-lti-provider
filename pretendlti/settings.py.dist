@@ -52,7 +52,7 @@ MIDDLEWARE_CLASSES = [
     'numbas_lti.middleware.NumbasLTIResourceMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = ['django_auth_lti.backends.LTIAuthBackend']
+AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend']
 
 ROOT_URLCONF = 'pretendlti.urls'
 
@@ -109,6 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
+LOCALE_PATHS = (os.path.join(BASE_DIR,'locale'),)
 
 TIME_ZONE = 'UTC'
 
@@ -135,10 +136,3 @@ CHANNEL_LAYERS = {
         "ROUTING": "pretendlti.routing.channel_routing",
     },
 }
-
-# LTI config
-# dict of
-#   'consumer_key': 'consumer_secret'
-LTI_OAUTH_CREDENTIALS = {
-}
-
