@@ -53,12 +53,15 @@ def report_outcome(resource,user):
     result = resource.grade_user(user)
 
     if user_data.lis_result_sourcedid:
-        r = requests.post(
-                user_data.lis_outcome_service_url,
-                data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
-                auth=OAuth1('clp','dude',signature_type='auth_header',client_class=BodyHashClient, force_include_body=True),
-                headers={'Content-Type': 'application/xml'}
-            )
-        user_data.last_reported_score = result
-        user_data.save()
-        return r
+        try:
+            r = requests.post(
+                    user_data.lis_outcome_service_url,
+                    data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
+                    auth=OAuth1('clp','dude',signature_type='auth_header',client_class=BodyHashClient, force_include_body=True),
+                    headers={'Content-Type': 'application/xml'}
+                )
+            user_data.last_reported_score = result
+            user_data.save()
+            return r
+        except requests.exceptions.ConnectionError:
+            return

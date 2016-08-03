@@ -7,6 +7,7 @@ from channels.generic import BaseConsumer
 import json
 
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext as _
 
 from .models import Attempt,ScormElement,Resource, ReportProcess
 from .report_outcome import report_outcome
@@ -19,8 +20,8 @@ def scorm_connect(message,pk):
 @channel_session_user
 def scorm_set_element(message,pk):
     data = json.loads(message.content['text'])
+    attempt = Attempt.objects.get(pk=pk)
     for element in data:
-        attempt = Attempt.objects.get(pk=pk)
         ScormElement.objects.create(
             attempt = attempt,
             key = element['key'], 
@@ -30,12 +31,19 @@ def scorm_set_element(message,pk):
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
     process = ReportProcess.objects.create(resource=resource)
+
     for user in User.objects.filter(attempts__resource=resource).distinct():
         request = report_outcome(resource,user)
-        if request.status_code != 200:
+        if request is None:
+            process.status = 'error'
+            process.response = _("Error making connection to LTI provider")
+            process.save()
+            return
+        elif request.status_code != 200:
             process.status = 'error'
             process.response = request.text
             process.save()
             return
+
     process.status = 'complete'
     process.save()
