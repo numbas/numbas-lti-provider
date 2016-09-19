@@ -48,14 +48,16 @@ def lti_entry(request):
     except AttributeError:
         return no_resource(request)
 
+    client_key = request.POST.get('oauth_consumer_key')
+    consumer = LTIConsumer.objects.get(key=client_key)
+
     user_data,_ = LTIUserData.objects.get_or_create(
         user=request.user,
-        resource=request.resource
+        resource=request.resource,
+        consumer=consumer
     )
     user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
-    client_key = request.POST.get('oauth_consumer_key')
-    user_data.consumer = LTIConsumer.objects.get(key=client_key)
     user_data.save()
 
     if request_is_instructor(request):
