@@ -6,7 +6,7 @@ import requests
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
-from .report_outcome import report_outcome
+from .report_outcome import report_outcome,report_outcome_for_attempt
 
 import os
 import shutil
@@ -156,6 +156,7 @@ class AccessToken(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_tokens')
 
 class LTIUserData(models.Model):
+    consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
     lis_result_sourcedid = models.CharField(max_length=200,default='',blank=True,null=True)

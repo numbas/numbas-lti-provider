@@ -22,7 +22,7 @@ patch_reverse()
 
 from functools import wraps
 
-from .models import LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess
+from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess
 from .forms import ResourceSettingsForm
 
 # Create your views here.
@@ -54,6 +54,8 @@ def lti_entry(request):
     )
     user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
+    client_key = request.POST.get('oauth_consumer_key')
+    user_data.consumer = LTIConsumer.objects.get(key=client_key)
     user_data.save()
 
     if request_is_instructor(request):
