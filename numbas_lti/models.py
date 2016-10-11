@@ -127,7 +127,7 @@ class Resource(models.Model):
         return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
 
     def num_questions(self):
-        re_objective_id_key = r'^cmi.objectives.(\d+).id$'
+        re_objective_id_key = r'^cmi.objectives.([0-9]+).id$'
         top_key = ScormElement.objects.filter(attempt__resource=self,key__regex=re_objective_id_key).aggregate(models.Max('key'))['key__max']
         if top_key is None:
             return 0
