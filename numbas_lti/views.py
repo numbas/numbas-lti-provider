@@ -167,18 +167,19 @@ class CSVView(object):
 class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource
     def get_rows(self):
+        headers = [_(x) for x in ['First name','Last name','Email','Username','Percentage']]
+        yield headers
+
         resource = self.object
-        rows = (
-            (
+        for student in resource.students().all():
+            user_data = LTIUserData.objects.get(resource=resource,user=student)
+            yield (
                 student.first_name,
                 student.last_name,
                 student.email,
-                student.lti_data.consumer_user_id,
+                user_data.consumer_user_id,
                 resource.grade_user(student)*100
-            ) 
-            for student in resource.students().all()
-        )
-        return rows
+            )
 
     def get_filename(self):
         return _("{slug}-scores.csv").format(slug=self.object.slug)
@@ -189,15 +190,16 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
         resource = self.object
         num_questions = resource.num_questions()
 
-        headers = [_(x) for x in ['First name','Last name','Email','Start time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
+        headers = [_(x) for x in ['First name','Last name','Email','Username','Start time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
         yield headers
 
         for attempt in resource.attempts.all():
+            user_data = LTIUserData.objects.get(resource=resource,user=attempt.user)
             row = [
                 attempt.user.first_name,
                 attempt.user.last_name,
                 attempt.user.email,
-                attempt.user.lti_data.consumer_user_id,
+                user_data.consumer_user_id,
                 attempt.start_time,
                 attempt.completion_status,
                 attempt.raw_score,
