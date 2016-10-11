@@ -18,9 +18,4 @@ class Migration(migrations.Migration):
             name='consumer',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='numbas_lti.LTIConsumer'),
         ),
-        migrations.AddField(
-            model_name='ltiuserdata',
-            name='consumer_user_id',
-            field=models.TextField(blank=True, default='', null=True),
-        ),
     ]
