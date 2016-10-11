@@ -156,12 +156,13 @@ class AccessToken(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_tokens')
 
 class LTIUserData(models.Model):
-    consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE)
+    consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
     lis_result_sourcedid = models.CharField(max_length=200,default='',blank=True,null=True)
     lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
     last_reported_score = models.FloatField(default=0)
+    consumer_user_id = models.TextField(default='',blank=True,null=True)
 
 class AttemptManager(models.Manager):
     def get_queryset(self):

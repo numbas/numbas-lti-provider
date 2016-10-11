@@ -54,7 +54,8 @@ def lti_entry(request):
     user_data,_ = LTIUserData.objects.get_or_create(
         user=request.user,
         resource=request.resource,
-        consumer=consumer
+        consumer=consumer,
+        consumer_user_id = request.LTI.get('user_id')
     )
     user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
@@ -172,6 +173,7 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 student.first_name,
                 student.last_name,
                 student.email,
+                student.lti_data.consumer_user_id,
                 resource.grade_user(student)*100
             ) 
             for student in resource.students().all()
@@ -195,6 +197,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 attempt.user.first_name,
                 attempt.user.last_name,
                 attempt.user.email,
+                attempt.user.lti_data.consumer_user_id,
                 attempt.start_time,
                 attempt.completion_status,
                 attempt.raw_score,
