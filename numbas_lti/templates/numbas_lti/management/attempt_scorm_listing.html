@@ -1,5 +1,11 @@
 {% extends "numbas_lti/management/base.html" %}
+{% load staticfiles %}
 {% load i18n %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% static 'attempt_scorm_listing.css' %}">
+{%endblock stylesheets %}
 
 {% block management_content %}
 <h2>
@@ -10,10 +16,13 @@
 </h3>
 
 <div class="search">
-    <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text"></label>
+    <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>
     <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">{% trans "Answers" %}</button>
     <button class="btn btn-default quick-query" data-query="(result|weighting)$">{% trans "Part scores" %}</button>
     <button class="btn btn-default quick-query" data-query="score.(raw|max)">{% trans "Question scores" %}</button>
+</div>
+<div>
+    <label><input type="checkbox" data-bind="checked: most_recent_only"> Most recent value only</label>
 </div>
 
 <table class="table" id="elements">
@@ -29,7 +38,7 @@
             <th>Value</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="initial-data">
         {% for key,elements in keys %}
         {% for element in elements %}
             {% if forloop.counter0 == 0 or show_stale_elements %}
@@ -42,28 +51,21 @@
         {% endfor %}
         {% endfor %}
     </tbody>
+    <tbody id="dynamic-data" data-bind="foreach: show_elements">
+        <!-- ko foreach: elements -->
+        <tr data-bind="css: {first: $index()==0}">
+            <td class="key" data-bind="text: key"></td>
+            <td class="time" data-bind="text: time"></td>
+            <td class="value" data-bind="text: value"></td>
+        </tr>
+        <!-- /ko -->
+    </tbody>
 </table>
+
+<script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+<script type="text/javascript" src="{% static 'reconnecting-websocket.min.js' %}"></script>
 <script>
-    function filter_rows(query) {
-        var re = new RegExp(query);
-        query = query.toLowerCase();
-        var rows = document.querySelectorAll('#elements tbody tr');
-        Array.prototype.map.apply(rows,[function(row) {
-            var key = row.getAttribute('data-key');
-            row.classList.toggle('hidden',!re.test(key));
-        }]);
-    }
-    var search = document.getElementById('query');
-    search.addEventListener('input',function() {
-        filter_rows(this.value);
-    });
-    document.querySelector('.search').addEventListener('click',function(e) {
-        if(!e.target.classList.contains('quick-query')) {
-            return;
-        }
-        
-        search.value = e.target.getAttribute('data-query');
-        filter_rows(search.value);
-    });
+    var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
 </script>
+<script src="{% static 'attempt_scorm_listing.js' %}"></script>
 {% endblock management_content %}

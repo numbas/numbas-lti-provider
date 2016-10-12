@@ -50,6 +50,7 @@ def lti_entry(request):
 
     client_key = request.POST.get('oauth_consumer_key')
     consumer = LTIConsumer.objects.get(key=client_key)
+    print("Client key: {}\nConsumer: {}".format(client_key,consumer))
 
     user_data,_ = LTIUserData.objects.get_or_create(
         user=request.user,

@@ -5,7 +5,9 @@
     <head>
         <title>{% trans "Numbas LTI Provider" %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% block stylesheets %}
         <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
+        {% endblock stylesheets %}
         <style type="text/css">
             footer {
                 border-top: 1px solid black;

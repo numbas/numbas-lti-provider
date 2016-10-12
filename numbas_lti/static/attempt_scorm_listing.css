@@ -1,0 +1,3 @@
+#elements tr:not(.first) .key {
+    color: transparent;
+}

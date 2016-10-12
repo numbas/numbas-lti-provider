@@ -49,7 +49,7 @@ def report_outcome(resource,user):
     """
 
     message_identifier = uuid.uuid4().int & (1<<64)-1
-    user_data = user.lti_data.get(resource=resource)
+    user_data = user.lti_data.filter(resource=resource).first()
     result = resource.grade_user(user)
 
     if user_data.lis_result_sourcedid:

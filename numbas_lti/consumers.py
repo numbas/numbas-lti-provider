@@ -4,6 +4,7 @@ from channels import Group
 from channels.sessions import channel_session,enforce_ordering
 from channels.auth import http_session_user, channel_session_user, channel_session_user_from_http
 from channels.generic import BaseConsumer
+from channels.generic.websockets import WebsocketConsumer
 import json
 
 from django.contrib.auth.models import User
@@ -47,3 +48,9 @@ def report_scores(message,**kwargs):
 
     process.status = 'complete'
     process.save()
+
+class AttemptScormListingConsumer(WebsocketConsumer):
+    def connection_groups(self,pk,**kwargs):
+        print("Connected to: {}".format(pk))
+        attempt = Attempt.objects.get(pk=pk)
+        return [attempt.channels_group()]

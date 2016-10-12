@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 import requests
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from channels import Group
 
 from .report_outcome import report_outcome,report_outcome_for_attempt
 
@@ -13,6 +14,7 @@ import shutil
 from zipfile import ZipFile
 from lxml import etree
 import re
+import json
 
 class LTIConsumer(models.Model):
     key = models.CharField(max_length=100)
@@ -208,6 +210,9 @@ class Attempt(models.Model):
         except ScormElement.DoesNotExist:
             return 0
 
+    def channels_group(self):
+        return 'attempt-{}'.format(self.pk)
+
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
         """ Return the last value of this field """
@@ -241,13 +246,15 @@ class ScormElement(models.Model):
     def __str__(self):
         return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))
 
-#@receiver(models.signals.post_save,sender=ScormElement)
-def set_current_scorm_element(sender,instance,created,**kwargs):
-    ne = instance
-    if created:
-        for oe in ne.attempt.scormelements.current().filter(key=ne.key).exclude(pk=ne.pk):
-            oe.current = False
-            oe.save()
+@receiver(models.signals.post_save,sender=ScormElement)
+def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
+    Group(instance.attempt.channels_group()).send({
+        "text": json.dumps({
+            'key': instance.key,
+            'value': instance.value,
+            'time': instance.time.strftime('%Y-%m-%d %H:%M:%S'),
+        })
+    })
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_score(sender,instance,created,**kwargs):
