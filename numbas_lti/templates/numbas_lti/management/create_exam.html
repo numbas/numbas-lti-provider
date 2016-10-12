@@ -3,14 +3,23 @@
 {% load i18n %}
 
 {% block content %}
-<h1>{% trans "Upload an exam" %}</h1>
-{% if not request.resource.exam %}
-<p>{% trans "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
-<p>{% trans "Please upload one now." %}</p>
-{% endif %}
-<form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
-    {% csrf_token %}
-    {{form|bootstrap}}
-    <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
-</form>
+<div class="container">
+        <div class="jumbotron">
+    <header>
+        <h1>{% trans "New Numbas activity" %}</h1>
+    </header>
+
+    <main>
+            <p>{% trans "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
+            <p>{% trans "Please upload one now." %}</p>
+            <p>{% trans "To obtain an exam package, find your exam in the Numbas editor and click <em>\"Download SCORM package\"</em>." %}</p>
+
+        <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
+            {% csrf_token %}
+            {{form|bootstrap}}
+            <button type="submit" class="btn btn-lg btn-primary">{% trans "Submit" %}</button>
+        </form>
+    </main>
+        </div>
+</div>
 {% endblock content %}

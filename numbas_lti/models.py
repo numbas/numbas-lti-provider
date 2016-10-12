@@ -46,7 +46,7 @@ def extract_package(sender,instance,**kwargs):
 # Create your models here.
 class Exam(ExtractPackageMixin,models.Model):
     title = models.CharField(max_length=300)
-    package = models.FileField(upload_to='exams/')
+    package = models.FileField(upload_to='exams/',verbose_name='Package file')
 
     def __str__(self):
         return self.title
