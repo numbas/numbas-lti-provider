@@ -1,0 +1,18 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <div class="jumbotron">
+        <header>
+            <h1>{% trans "Activity not yet set up" %}</h1>
+        </header>
+
+        <main>
+            <p>{% trans "The instructor hasn't set up this activity yet." %}</p>
+            <p>{% trans "Please come back later." %}</p>
+        </main>
+    </div>
+</div>
+{% endblock content %}
+
