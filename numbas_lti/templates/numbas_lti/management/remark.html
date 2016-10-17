@@ -1,0 +1,150 @@
+{% extends "numbas_lti/management/attempt_base.html" %}
+{% load percentage %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block stylesheets %}
+{{block.super}}
+<style>
+    table#parts {
+        width: auto;
+    }
+    .control form {
+        display: inline-block;
+    }
+    .monospace {
+        font-family: monospace;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block javascripts %}
+{{block.super}}
+    <script src="{% static 'zepto/zepto.js' %}"></script>
+
+    <script>
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+    function post(url,data) {
+        var fd = new FormData();
+        if(data) {
+            for(var x in data) {
+                fd.append(x,data[x]);
+            }
+        }
+        return fetch(url,{
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            body: fd
+        }).then(function(r){return r.json()});
+    }
+
+    $(function() {
+        // Create remark
+        $('#parts').on('click','.control form.remark-part',function(e) {
+            e.preventDefault();
+            var form = e.currentTarget;
+            var url = form.getAttribute('action');
+            var part = form.querySelector('[name=path]').value;
+            post(url,{part:part}).then(function(d) {
+                $(form).parents('tr').addClass('warning');
+                $(form).parents('.control').html(d.html);
+            });
+        });
+
+        // Update remark
+        $('#parts').on('change','.control form.update-part input',function(e) {
+            e.preventDefault();
+            var select = e.currentTarget;
+            var score = select.value;
+            if(!isNaN(parseFloat(score))) {
+                var form = $(select).parents('form')[0];
+                var url = form.getAttribute('action');
+                post(url,{score:score}).then(function(d) {});
+            }
+        });
+
+        // cancel remark
+        $('#parts').on('click','.control form.cancel-remark button',function(e) {
+            e.preventDefault();
+            var form = $(e.currentTarget).parents('form')[0];
+            var url = form.getAttribute('action');
+            post(url).then(function(d) {
+                $(form).parents('tr').removeClass('warning');
+                $(form).parents('.control').html(d.html);
+            });
+        });
+
+        //Prevent form submit
+        $('#parts').on('submit','form',function(e) {
+            e.preventDefault();
+            return false;
+        });
+    });
+
+    </script>
+{% endblock javascripts %}
+
+{% block attempt_content %}
+    <h3>{% trans "Remark question parts" %}</h3>
+
+    <table id="parts" class="table table-hover table-condensed">
+        <colgroup>
+            <col class="question">
+            <col class="part">
+            <col class="gap">
+            <col class="control">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>{% trans "Question" %}</th>
+                <th>{% trans "Part" %}</th>
+                <th>{% trans "Gap" %}</th>
+                <th>{% trans "Score" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in parts %}
+            <tr class="{% if part.remark %}warning{% endif %}">
+                <td>{% if part.p == None %}{{part.q}}{% endif %}</td>
+                <td>{% if part.p and part.g == None %}{{part.p}}{% endif %}</td>
+                <td>{% if part.g %}{{part.g}}{% endif %}</td>
+                <td class="score">
+                    {% if part.p %}
+                    <span class="control">
+                        {% if part.remark %}
+                            {% with form=part.form remark=part.remark max_score=part.max_score %}
+                                {% include "numbas_lti/management/remark/remarked.html" %}
+                            {% endwith %}
+                        {% else %}
+                            {% with path=part.path score=part.score max_score=part.max_score remark=part.remark discount=part.discount parent_remarked=part.parent_remarked %}
+                            {% include "numbas_lti/management/remark/not_remarked.html" %}
+                            {% endwith %}
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </table>
+{% endblock attempt_content %}

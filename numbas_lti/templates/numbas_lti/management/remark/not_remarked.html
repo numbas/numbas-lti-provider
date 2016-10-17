@@ -1,0 +1,17 @@
+{% load i18n %}
+{% if discount %}
+    <em>{% trans "Discounted" %}</em>
+{% else %}
+    {% if not parent_remarked %}
+    <form method="POST" action="{% url 'remark_part' attempt.pk %}" class="form-inline remark-part">
+        <input type="hidden" name="path" value="{{path}}">
+        <button title="{% trans "Remark this part" %}" class="btn btn-link btn-sm">
+            <span class="glyphicon glyphicon-minus-sign text-warning"></span> 
+            <span class="sr-only">{% trans "Remark this part" %}</span>
+        </button>
+        <span class="monospace">{{score}} / {{max_score}}</span>
+    </form>
+    {% else %}
+        <em>{% trans "Parent part remarked" %}
+    {% endif %}
+{% endif %}

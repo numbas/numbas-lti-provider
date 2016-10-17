@@ -1,4 +1,4 @@
-{% extends "numbas_lti/management/base.html" %}
+{% extends "numbas_lti/management/attempt_base.html" %}
 {% load staticfiles %}
 {% load i18n %}
 
@@ -7,14 +7,7 @@
     <link rel="stylesheet" href="{% static 'attempt_scorm_listing.css' %}">
 {%endblock stylesheets %}
 
-{% block management_content %}
-<h2>
-    {% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %}
-</h2>
-<h3>
-    <small>{% blocktrans with time=attempt.start_time|date:"Y-m-d H:i:s" %}Started {{time}}{% endblocktrans %}</small>
-</h3>
-
+{% block attempt_content %}
 <div class="search">
     <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>
     <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">{% trans "Answers" %}</button>
@@ -68,4 +61,4 @@
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
 </script>
 <script src="{% static 'attempt_scorm_listing.js' %}"></script>
-{% endblock management_content %}
+{% endblock attempt_content %}

@@ -1,0 +1,8 @@
+{% load i18n %}
+<form method="POST" action="{% url 'discount_part' resource.pk %}" class="form-inline discount-part">
+    <input type="hidden" name="path" value="{{path}}">
+    <button title="{% trans "Discount this part" %}" class="btn btn-link btn-sm">
+        <span class="glyphicon glyphicon-minus-sign text-warning"></span> 
+        <span class="sr-only">{% trans "Discount this part" %}</span>
+    </button>
+</form>

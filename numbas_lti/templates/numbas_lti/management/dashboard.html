@@ -29,59 +29,69 @@
         </div>
     {% endif %}
 
-    <h2>{% trans "Student progress" %}</h2>
+    <section>
+        <h2>{% trans "Marking" %}</h2>
+        <div>
+            <a class="btn btn-danger" href="{% url 'discount_parts' resource.pk %}"><span class="glyphicon glyphicon-minus-sign"></span> {% trans "Discount question parts" %}</a>
+        </div>
+        <p class="help-block">{% trans "You can remark individual attempts on the attempts page." %}</p>
+    </section>
 
-    <p><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></p>
+    <section>
+        <h2>{% trans "Student progress" %}</h2>
 
-    <div>
-        <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
-    </div>
-    <table class="table" id="students">
-        <thead>
-            <tr>
-                <th>{% trans "Name" %}</th>
-                <th>{% trans "Score" %}</th>
-                <th>{% trans "Attempts" %}</th>
-                <th colspan="2">{% trans "Access tokens" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for student,score,lti_data,attempts,access_tokens in student_summary %}
-            <tr data-student="{{student.get_full_name}}">
-                <td>{{student.get_full_name}}</td>
-                <td>
-                    {{score|percentage}}
-                    {% if lti_data.last_reported_score != score %}
-                    <span class="glyphicon glyphicon-warning-sign" title="{% trans "This score has not been reported to the grade book yet." %}"></span>
-                    {% endif %}
-                </td>
-                <td>{{attempts}}</td>
-                <td>{{access_tokens}}</td>
-                <td>
-                    <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' student.pk %}" title="{% trans "Grant an access token" %}"><span class="glyphicon glyphicon-plus"></span></a>
-                    {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' student.pk %}" title="{% trans "Remove an access token" %}"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <p><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></p>
 
-    <script>
-        function filter_rows(query) {
-            query = query.toLowerCase();
-            var re = new RegExp(query);
-            var rows = document.querySelectorAll('#students tbody tr');
-            Array.prototype.map.apply(rows,[function(row) {
-                var name = row.getAttribute('data-student').toLowerCase();
-                row.classList.toggle('hidden',!re.test(name));
-            }]);
-        }
-        var search = document.getElementById('query');
-        search.addEventListener('input',function() {
-            filter_rows(this.value);
-        });
-    </script>
-    {% else %}
-        <p>{% trans "No students have attempted this exam yet." %}</p>
-    {% endif %}
+        <div>
+            <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
+        </div>
+        <table class="table" id="students">
+            <thead>
+                <tr>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Score" %}</th>
+                    <th>{% trans "Attempts" %}</th>
+                    <th colspan="2">{% trans "Access tokens" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student,score,lti_data,attempts,access_tokens in student_summary %}
+                <tr data-student="{{student.get_full_name}}">
+                    <td>{{student.get_full_name}}</td>
+                    <td>
+                        {{score|percentage}}
+                        {% if lti_data.last_reported_score != score %}
+                        <span class="glyphicon glyphicon-warning-sign" title="{% trans "This score has not been reported to the grade book yet." %}"></span>
+                        {% endif %}
+                    </td>
+                    <td>{{attempts}}</td>
+                    <td>{{access_tokens}}</td>
+                    <td>
+                        <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' student.pk %}" title="{% trans "Grant an access token" %}"><span class="glyphicon glyphicon-plus"></span></a>
+                        {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' student.pk %}" title="{% trans "Remove an access token" %}"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+            function filter_rows(query) {
+                query = query.toLowerCase();
+                var re = new RegExp(query);
+                var rows = document.querySelectorAll('#students tbody tr');
+                Array.prototype.map.apply(rows,[function(row) {
+                    var name = row.getAttribute('data-student').toLowerCase();
+                    row.classList.toggle('hidden',!re.test(name));
+                }]);
+            }
+            var search = document.getElementById('query');
+            search.addEventListener('input',function() {
+                filter_rows(this.value);
+            });
+        </script>
+        {% else %}
+            <p>{% trans "No students have attempted this exam yet." %}</p>
+        {% endif %}
+    </section>
 {% endblock management_content %}

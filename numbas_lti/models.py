@@ -15,6 +15,7 @@ from zipfile import ZipFile
 from lxml import etree
 import re
 import json
+from collections import defaultdict
 
 class LTIConsumer(models.Model):
     key = models.CharField(max_length=100)
@@ -137,6 +138,34 @@ class Resource(models.Model):
             n = re.match(re_objective_id_key,top_key).group(1)
             return int(n)+1
 
+    def part_hierarchy(self):
+        """
+            Returns an object
+                {
+                    question_num: {
+                        part_num: {
+                            gaps: [list of gap indices],
+                            steps: [list of step indices]
+                        }
+                    }
+                }
+        """
+        paths = sorted(set(e['value'] for e in ScormElement.objects.filter(attempt__resource=self,key__regex=r'cmi.interactions.\d+.id').values('value')),key=lambda x:(len(x),x))
+        re_path = re.compile(r'q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
+        out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
+        for path in paths:
+            m = re_path.match(path)
+            if m is None:
+                print(path)
+            p = out[m.group(1)][m.group(2)]
+            if m.group(3):
+                p['gaps'].append(m.group(3))
+            elif m.group(4):
+                p['steps'].append(m.group(4))
+    
+        return out
+
+
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
     status = models.CharField(max_length=10,choices=REPORTING_STATUSES,default='reporting',verbose_name=_("Current status of the process"))
@@ -197,21 +226,151 @@ class Attempt(models.Model):
 
     @property
     def raw_score(self):
+        if self.remarked_parts.exists() or self.resource.discounted_parts.exists():
+            total = 0
+            for i in range(self.resource.num_questions()):
+                total += self.question_score(i)
+            return total
+
         return float(self.get_element_default('cmi.score.raw',0))
 
     @property
     def max_score(self):
+        if self.resource.discounted_parts.exists():
+            total = 0
+            for i in range(self.resource.num_questions()):
+                total += self.question_max_score(i)
+            return total
+
         return float(self.get_element_default('cmi.score.max',0))
 
-    def question_score(self,n):
+    def part_discount(self,part):
+        return self.resource.discounted_parts.filter(part=part).first()
+
+    def part_paths(self):
+        return self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id')
+
+    def part_hierarchy(self):
+        """
+            Returns an object
+                {
+                    question_num: {
+                        part_num: {
+                            gaps: [list of gap indices],
+                            steps: [list of step indices]
+                        }
+                    }
+                }
+        """
+        paths = sorted(set(e['value'] for e in self.part_paths().values('value')),key=lambda x:(len(x),x))
+        re_path = re.compile(r'q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
+        out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
+        for path in paths:
+            m = re_path.match(path)
+            if m is None:
+                print(path)
+            p = out[m.group(1)][m.group(2)]
+            if m.group(3):
+                p['gaps'].append(m.group(3))
+            elif m.group(4):
+                p['steps'].append(m.group(4))
+
+        return out
+
+    def part_gaps(self,part):
+        if not re.match(r'q\d+p\d+$',part):
+            return None
+        gaps = self.part_paths().filter(value__startswith=part+'g')
+        return set([g['value'] for g in gaps.values('value')])
+
+    def part_interaction_id(self,part):
+        id_element = self.part_paths().filter(value=part).get()
+        n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
+        return n
+
+    def part_score(self,part):
+        discounted = self.part_discount(part)
+        if discounted:
+            return self.part_max_score(part)
+
+        remarked = self.remarked_parts.filter(part=part)
+        if remarked.exists():
+            return remarked.get().score
+
+        if self.remarked_parts.filter(part__startswith=part+'g').exists() or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
+            gaps = self.part_gaps(part)
+            return sum(self.part_score(g) for g in gaps)
+
         try:
-            element = self.scormelements.current('cmi.objectives.{}.score.raw'.format(n))
-            return element.value
+            id = self.part_interaction_id(part)
         except ScormElement.DoesNotExist:
             return 0
 
+        score = self.get_element_default('cmi.interactions.{}.result'.format(id),0)
+        return float(score)
+
+    def part_max_score(self,part):
+        discounted = self.part_discount(part)
+        if discounted:
+            if discounted.behaviour == 'remove':
+                return 0
+
+        if DiscountPart.objects.filter(part__startswith=part+'g').exists():
+            gaps = self.part_gaps(part)
+            return sum(self.part_max_score(g) for g in gaps)
+
+        try:
+            id = self.part_interaction_id(part)
+        except ScormElement.DoesNotExist:
+            return 0
+
+        return float(self.get_element_default('cmi.interactions.{}.weighting'.format(id),0))
+
+    def question_score(self,n):
+        qid = 'q{}'.format(n)
+        if self.remarked_parts.filter(part__startswith=qid).exists() or self.resource.discounted_parts.filter(part__startswith=qid).exists():
+            question_parts = self.part_paths().filter(value__startswith=qid)
+            total = 0
+            for p in question_parts:
+                part = p.value
+                if re.match(r'^q{}p\d+$'.format(n),part):
+                    total += self.part_score(part)
+            return total
+        else:
+            score = self.get_element_default('cmi.objectives.{}.score.raw'.format(n),0)
+        return float(score)
+
+    def question_max_score(self,n):
+        qid = 'q{}'.format(n)
+        if self.resource.discounted_parts.filter(part__startswith=qid).exists():
+            question_parts = self.part_paths().filter(value__startswith=qid)
+            total = 0
+            for p in question_parts:
+                part = p.value
+                if re.match(r'^q{}p\d+$'.format(n),part):
+                    total += self.part_max_score(part)
+            return total
+        else:
+            score = self.get_element_default('cmi.objectives.{}.score.max'.format(n),0)
+        return float(score)
+
     def channels_group(self):
         return 'attempt-{}'.format(self.pk)
+
+class RemarkPart(models.Model):
+    attempt = models.ForeignKey(Attempt,related_name='remarked_parts')
+    part = models.CharField(max_length=20)
+    score = models.FloatField()
+
+DISCOUNT_BEHAVIOURS = [
+    ('remove','Remove from total'),
+    ('fullmarks','Award everyone full credit'),
+]
+
+class DiscountPart(models.Model):
+    resource = models.ForeignKey(Resource,related_name='discounted_parts')
+    part = models.CharField(max_length=20)
+    behaviour = models.CharField(max_length=10,choices=DISCOUNT_BEHAVIOURS,default='remove')
 
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):

@@ -28,6 +28,7 @@
                 <td>{{attempt.start_time}}</td>
                 <td>
                     <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% trans "(old exam)" %}{% endif %}
+                    <a class="btn btn-link" href="{% url 'remark_parts' attempt.pk %}"><span class="text-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Remark" %}</span></a>
                     <a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "SCORM data" %}</span></a>
                     <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
                 </td>

@@ -10,20 +10,22 @@ from django.views import generic
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django import http
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse, JsonResponse
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.template.loader import get_template
 from itertools import groupby
 from channels import Channel
 import datetime
 import csv
 import json
+import string
 
 patch_reverse()
 
 from functools import wraps
 
-from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess
-from .forms import ResourceSettingsForm
+from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess, RemarkPart, DiscountPart
+from .forms import ResourceSettingsForm, DiscountPartBehaviourForm, RemarkPartScoreForm
 
 # Create your views here.
 @csrf_exempt
@@ -131,6 +133,229 @@ class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.Det
         ]
 
         return context
+
+class DiscountPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/discount.html'
+    context_object_name = 'resource'
+    management_tab = 'dashboard'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(DiscountPartsView,self).get_context_data(*args,**kwargs)
+
+        resource = self.get_object()
+        hierarchy = resource.part_hierarchy()
+        out = []
+        fst = lambda x:x[0]
+
+        def row(q,p=None,g=None):
+            qnum = int(q)+1
+            path = 'q{}'.format(q)
+            if p is not None:
+                pletter = string.ascii_lowercase[int(p)]
+                path += 'p{}'.format(p)
+                if g is not None:
+                    path += 'g{}'.format(g)
+            else:
+                pletter = None
+
+            out = {
+                'q': qnum,
+                'p': pletter,
+                'g': g,
+                'path': path,
+            }
+            if p is not None:
+                discount = DiscountPart.objects.filter(resource=resource,part=path).first()
+                out.update({
+                    'discount': discount,
+                    'form': DiscountPartBehaviourForm(instance=discount)
+                })
+
+            return out
+
+        for i,q in sorted(hierarchy.items(),key=fst):
+            qnum = int(i)+1
+            out.append(row(i))
+
+            for j,p in sorted(q.items(),key=fst):
+                out.append(row(i,j))
+
+                for g in p['gaps']:
+                    out.append(row(i,j,g))
+
+        for i,q in sorted(hierarchy.items(),key=fst):
+            out.append({
+                'q': qnum,
+                'p': None,
+                'g': None,
+                'path': 'q{}'.format(i),
+                'discount': False
+            })
+            for j,p in sorted(q.items(),key=fst):
+                pletter = string.ascii_lowercase[int(j)]
+                path = 'q{}p{}'.format(i,j)
+                discount = DiscountPart.objects.filter(resource=resource,part=path).first()
+                out.append({
+                    'q': qnum,
+                    'p': pletter,
+                    'g': None,
+                    'path': path,
+                    'discount': discount,
+                    'form': DiscountPartBehaviourForm(instance=discount)
+                })
+                for g in p['gaps']:
+                    gpath = path+'g{}'.format(g)
+                    discount = DiscountPart.objects.filter(resource=resource,part=path).first()
+                    out.append({
+                        'q': qnum,
+                        'p': pletter,
+                        'g': g,
+                        'bits': (i,j,g),
+                        'path': gpath,
+                        'discount': discount,
+                        'form': DiscountPartBehaviourForm(instance=discount)
+                    })
+        context['parts'] = out
+
+        return context
+
+class DiscountPartView(MustBeInstructorMixin,generic.base.View):
+
+    def post(self,request,pk,*args,**kwargs):
+        resource = Resource.objects.get(pk=pk)
+        part = request.POST['part']
+        discount,created = DiscountPart.objects.get_or_create(resource=resource,part=part)
+        template = get_template('numbas_lti/management/discount/discounted.html')
+        html = template.render({'resource':resource,'discount':discount,'form':DiscountPartBehaviourForm(instance=discount)})
+        return JsonResponse({'pk':discount.pk,'created':created, 'behaviour': discount.behaviour, 'html':html})
+
+class DiscountPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
+    model = DiscountPart
+
+    def delete(self,*args,**kwargs):
+        discount = self.get_object()
+        discount.delete()
+
+        resource = discount.resource
+        template = get_template('numbas_lti/management/discount/not_discounted.html')
+        html = template.render({'resource':resource})
+        return JsonResponse({'html':html})
+
+class DiscountPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
+    model = DiscountPart
+    form_class = DiscountPartBehaviourForm
+
+    def form_valid(self,form,*args,**kwargs):
+        self.object = form.save()
+        return JsonResponse({})
+
+class RemarkPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+    model = Attempt
+    template_name = 'numbas_lti/management/remark.html'
+    context_object_name = 'attempt'
+    management_tab = 'attempts'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(RemarkPartsView,self).get_context_data(*args,**kwargs)
+
+        attempt = self.get_object()
+        hierarchy = attempt.part_hierarchy()
+        out = []
+        fst = lambda x:x[0]
+
+        def row(q,p=None,g=None,parent=None):
+            qnum = int(q)+1
+            path = 'q{}'.format(q)
+            if p is not None:
+                pletter = string.ascii_lowercase[int(p)]
+                path += 'p{}'.format(p)
+                if g is not None:
+                    path += 'g{}'.format(g)
+            else:
+                pletter = None
+
+            remark = RemarkPart.objects.filter(attempt=attempt,part=path).first()
+            out = {
+                'q': qnum,
+                'p': pletter,
+                'g': g,
+                'path': path,
+            }
+            if parent is not None and parent['discount'] is not None:
+                discount = parent['discount']
+            else:
+                discount = attempt.part_discount(path)
+
+            if p is not None:
+                out.update({
+                    'score': attempt.part_score(path),
+                    'max_score': attempt.part_max_score(path),
+                    'discount': discount,
+                    'remark': remark,
+                    'parent_remarked': parent is not None and parent['remark'] is not None,
+                    'form': RemarkPartScoreForm(instance=remark)
+                })
+
+            return out
+
+        for i,q in sorted(hierarchy.items(),key=fst):
+            qnum = int(i)+1
+            out.append(row(i))
+
+            for j,p in sorted(q.items(),key=fst):
+                prow = row(i,j)
+                out.append(prow)
+
+                for g in p['gaps']:
+                    out.append(row(i,j,g,prow))
+
+        context['parts'] = out
+
+        return context
+
+class RemarkPartView(MustBeInstructorMixin,generic.base.View):
+
+    def post(self,request,pk,*args,**kwargs):
+        attempt = Attempt.objects.get(pk=pk)
+        part = request.POST['part']
+
+        remark,created = RemarkPart.objects.get_or_create(attempt=attempt,part=part,score=attempt.part_score(part))
+
+        template = get_template('numbas_lti/management/remark/remarked.html')
+        html = template.render({
+            'attempt':attempt,
+            'remark':remark,
+            'form':RemarkPartScoreForm(instance=remark)
+        })
+
+        return JsonResponse({
+            'pk':remark.pk,
+            'created':created, 
+            'score': remark.score, 
+            'html':html
+        })
+
+class RemarkPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
+    model = RemarkPart
+
+    def delete(self,*args,**kwargs):
+        remark = self.get_object()
+        remark.delete()
+
+        attempt = remark.attempt
+        template = get_template('numbas_lti/management/remark/not_remarked.html')
+        html = template.render({'attempt':attempt,'score':attempt.part_score(remark.part)})
+        return JsonResponse({'html':html})
+
+class RemarkPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
+    model = RemarkPart
+    form_class = RemarkPartScoreForm
+
+    def form_valid(self,form,*args,**kwargs):
+        self.object = form.save()
+        return JsonResponse({})
+
 
 class AllAttemptsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
