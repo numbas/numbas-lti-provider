@@ -6,6 +6,6 @@
         <span class="sr-only">{% trans "Restore the original mark" %}</span>
     </button>
 </form>
-<form method="POST" action="{% url 'remark_part_update' remark.pk %}" class="form-inline update-part">
-    {{form|bootstrap_inline}} <span class="monospace">/ {{max_score}}</span>
+<form method="POST" action="{% url 'remark_part_update' remark.pk %}" class="form-inline update-remark">
+    {{form|bootstrap_inline}} <span class="monospace">/ {{max_score}}</span> {{path}}
 </form>

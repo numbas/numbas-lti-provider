@@ -157,11 +157,15 @@ class Resource(models.Model):
             m = re_path.match(path)
             if m is None:
                 print(path)
-            p = out[m.group(1)][m.group(2)]
+            question_index = m.group(1)
+            part_index = m.group(2)
+            gap_index = m.group(3)
+            step_index = m.group(4)
+            p = out[question_index][part_index]
             if m.group(3):
-                p['gaps'].append(m.group(3))
+                p['gaps'].append(step_index)
             elif m.group(4):
-                p['steps'].append(m.group(4))
+                p['steps'].append(gap_index)
     
         return out
 

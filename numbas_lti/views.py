@@ -183,39 +183,7 @@ class DiscountPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail
 
                 for g in p['gaps']:
                     out.append(row(i,j,g))
-
-        for i,q in sorted(hierarchy.items(),key=fst):
-            out.append({
-                'q': qnum,
-                'p': None,
-                'g': None,
-                'path': 'q{}'.format(i),
-                'discount': False
-            })
-            for j,p in sorted(q.items(),key=fst):
-                pletter = string.ascii_lowercase[int(j)]
-                path = 'q{}p{}'.format(i,j)
-                discount = DiscountPart.objects.filter(resource=resource,part=path).first()
-                out.append({
-                    'q': qnum,
-                    'p': pletter,
-                    'g': None,
-                    'path': path,
-                    'discount': discount,
-                    'form': DiscountPartBehaviourForm(instance=discount)
-                })
-                for g in p['gaps']:
-                    gpath = path+'g{}'.format(g)
-                    discount = DiscountPart.objects.filter(resource=resource,part=path).first()
-                    out.append({
-                        'q': qnum,
-                        'p': pletter,
-                        'g': g,
-                        'bits': (i,j,g),
-                        'path': gpath,
-                        'discount': discount,
-                        'form': DiscountPartBehaviourForm(instance=discount)
-                    })
+        
         context['parts'] = out
 
         return context
@@ -264,7 +232,7 @@ class RemarkPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.D
         out = []
         fst = lambda x:x[0]
 
-        def row(q,p=None,g=None,parent=None):
+        def row(q,p=None,g=None,parent=None,has_gaps=False):
             qnum = int(q)+1
             path = 'q{}'.format(q)
             if p is not None:
@@ -294,7 +262,8 @@ class RemarkPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.D
                     'discount': discount,
                     'remark': remark,
                     'parent_remarked': parent is not None and parent['remark'] is not None,
-                    'form': RemarkPartScoreForm(instance=remark)
+                    'form': RemarkPartScoreForm(instance=remark),
+                    'has_gaps': has_gaps
                 })
 
             return out
@@ -304,7 +273,8 @@ class RemarkPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.D
             out.append(row(i))
 
             for j,p in sorted(q.items(),key=fst):
-                prow = row(i,j)
+                has_gaps = len(p['gaps'])>0
+                prow = row(i,j,has_gaps=has_gaps)
                 out.append(prow)
 
                 for g in p['gaps']:
@@ -326,7 +296,8 @@ class RemarkPartView(MustBeInstructorMixin,generic.base.View):
         html = template.render({
             'attempt':attempt,
             'remark':remark,
-            'form':RemarkPartScoreForm(instance=remark)
+            'form':RemarkPartScoreForm(instance=remark),
+            'max_score': remark.attempt.part_max_score(part),
         })
 
         return JsonResponse({
@@ -345,7 +316,12 @@ class RemarkPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
 
         attempt = remark.attempt
         template = get_template('numbas_lti/management/remark/not_remarked.html')
-        html = template.render({'attempt':attempt,'score':attempt.part_score(remark.part)})
+        html = template.render({
+            'attempt':attempt,
+            'score':attempt.part_score(remark.part),
+            'max_score':attempt.part_max_score(remark.part),
+            'path':remark.part,
+        })
         return JsonResponse({'html':html})
 
 class RemarkPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):

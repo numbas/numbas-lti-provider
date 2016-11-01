@@ -9,6 +9,14 @@
     table#parts {
         width: auto;
     }
+    table#parts .question-id {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    table#parts .not-first-appearance {
+        color: #ccc;
+    }
+
     .control form {
         display: inline-block;
     }
@@ -120,9 +128,9 @@
         </thead>
         <tbody>
             {% for part in parts %}
-            <tr class="{% if part.discount %}warning{% endif %}">
-                <td>{% if part.p == None %}{{part.q}}{% endif %}</td>
-                <td>{% if part.p and part.g == None %}{{part.p}}{% endif %}</td>
+            <tr class="{% if part.p == None %}info{% endif %} {% if part.discount %}warning{% endif %}">
+                <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
+                <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
                 <td>{% if part.g %}{{part.g}}{% endif %}</td>
                 <td>
                     {% if part.p %}

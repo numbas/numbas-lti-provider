@@ -6,9 +6,23 @@
 {% block stylesheets %}
 {{block.super}}
 <style>
+    .remark-part {
+        cursor: pointer;
+    }
+    table#parts .form-inline.update-remark input.form-control {
+        width: 6em;
+    }
     table#parts {
         width: auto;
     }
+    table#parts .question-id {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    table#parts .not-first-appearance {
+        color: #ccc;
+    }
+
     .control form {
         display: inline-block;
     }
@@ -124,13 +138,14 @@
         </thead>
         <tbody>
             {% for part in parts %}
-            <tr class="{% if part.remark %}warning{% endif %}">
-                <td>{% if part.p == None %}{{part.q}}{% endif %}</td>
-                <td>{% if part.p and part.g == None %}{{part.p}}{% endif %}</td>
+            <tr class="{% if part.p == None %}info{% endif %} {% if part.discount %}warning{% endif %}">
+                <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
+                <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
                 <td>{% if part.g %}{{part.g}}{% endif %}</td>
                 <td class="score">
                     {% if part.p %}
                     <span class="control">
+                        {% if not part.has_gaps %}
                         {% if part.remark %}
                             {% with form=part.form remark=part.remark max_score=part.max_score %}
                                 {% include "numbas_lti/management/remark/remarked.html" %}
@@ -139,6 +154,7 @@
                             {% with path=part.path score=part.score max_score=part.max_score remark=part.remark discount=part.discount parent_remarked=part.parent_remarked %}
                             {% include "numbas_lti/management/remark/not_remarked.html" %}
                             {% endwith %}
+                        {% endif %}
                         {% endif %}
                     </span>
                     {% endif %}
