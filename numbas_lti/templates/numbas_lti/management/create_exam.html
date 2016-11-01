@@ -2,6 +2,15 @@
 {% load bootstrap %}
 {% load i18n %}
 
+{% block javascripts %}
+{{block.super}}
+<script>
+    document.getElementById('id_package').addEventListener('change',function() {
+        document.querySelector('button[type=submit]').removeAttribute('disabled');
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
         <div class="jumbotron">
@@ -17,7 +26,7 @@
         <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
             {% csrf_token %}
             {{form|bootstrap}}
-            <button type="submit" class="btn btn-lg btn-primary">{% trans "Submit" %}</button>
+            <button disabled type="submit" class="btn btn-lg btn-primary">{% trans "Submit" %}</button>
         </form>
     </main>
         </div>
