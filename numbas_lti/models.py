@@ -216,11 +216,15 @@ class Attempt(models.Model):
     scaled_score = models.FloatField(default=0)
 
     deleted = models.BooleanField(default=False)
+    broken = models.BooleanField(default=False)
 
     objects = AttemptManager()
 
     class Meta:
         ordering = ['-start_time',]
+
+    def __str__(self):
+        return 'Attempt by "{}" on "{}"'.format(self.user,self.resource)
 
     def get_element_default(self,key,default=None):
         try:

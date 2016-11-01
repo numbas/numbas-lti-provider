@@ -126,7 +126,7 @@ class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.Det
                 student,
                 resource.grade_user(student),
                 student.lti_data.filter(resource=resource).last(),
-                Attempt.objects.filter(user=student,resource=resource).count(),
+                Attempt.objects.filter(user=student,resource=resource).exclude(broken=True).count(),
                 AccessToken.objects.filter(user=student,resource=resource).count(),
             ) 
             for student in resource.students().all()
@@ -513,7 +513,7 @@ class ShowAttemptsView(generic.list.ListView):
     ordering = ['start_time']
 
     def get_queryset(self):
-        return Attempt.objects.filter(resource=self.request.resource,user=self.request.user)
+        return Attempt.objects.filter(resource=self.request.resource,user=self.request.user).exclude(broken=True)
 
     def dispatch(self,request,*args,**kwargs):
         if not self.get_queryset().exists():
@@ -554,6 +554,26 @@ class RunAttemptView(generic.detail.DetailView):
 
         attempt = self.get_object()
 
+        if attempt.completion_status=='not attempted':
+            entry = 'ab-initio'
+        elif attempt.scormelements.filter(key='cmi.suspend_data').exists():
+            entry = 'resume'
+        else:
+            # Not enough data was saved last time. Mark this attempt as broken, and create a new one.
+            # This isn't ideal, because what's happening isn't made clear to the student, but this should only occur when the student didn't really start the attempt they're resuming
+            broken_attempt = attempt
+            broken_attempt.broken = True
+            broken_attempt.save()
+
+            context['attempt'] = attempt
+            attempt = Attempt.objects.create(
+                resource = broken_attempt.resource,
+                exam = broken_attempt.exam,
+                user = broken_attempt.user
+            )
+            entry = 'ab-initio'
+
+
         if attempt.completion_status=='completed':
             mode = 'review'
         else:
@@ -570,7 +590,7 @@ class RunAttemptView(generic.detail.DetailView):
 
         scorm_cmi = {
             'cmi.mode': mode,
-            'cmi.entry': 'ab-initio' if attempt.completion_status=='not attempted' else 'resume',
+            'cmi.entry': entry,
             'cmi.suspend_data': '',
             'cmi.objectives._count': 0,
             'cmi.interactions._count': 0,
@@ -585,6 +605,7 @@ class RunAttemptView(generic.detail.DetailView):
             'cmi.completion_status': attempt.completion_status,
             'cmi.success_status': ''
         }
+
         # TODO only fetch the latest values of elements from the DB, somehow
 
         latest_elements = {}

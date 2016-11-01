@@ -32,7 +32,7 @@
                     <a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "SCORM data" %}</span></a>
                     <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
                 </td>
-                <td><span class="{% if attempt.completion_status == 'completed' %}text-success{% endif %}">{{attempt.completion_status}}</span></td>
+                <td>{% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completion_status == 'completed' %}text-success{% endif %}">{{attempt.completion_status}}</span>{% endif %}</td>
                 <td>{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})</td>
             </tr>
             {% endfor %}
