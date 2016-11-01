@@ -138,6 +138,9 @@ class Resource(models.Model):
             n = re.match(re_objective_id_key,top_key).group(1)
             return int(n)+1
 
+    def user_data(self,user):
+        return LTIUserData.objects.filter(resource=self,user=user).last()
+
     def part_hierarchy(self):
         """
             Returns an object

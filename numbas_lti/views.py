@@ -125,7 +125,7 @@ class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.Det
             (
                 student,
                 resource.grade_user(student),
-                student.lti_data.get(resource=resource),
+                student.lti_data.filter(resource=resource).last(),
                 Attempt.objects.filter(user=student,resource=resource).count(),
                 AccessToken.objects.filter(user=student,resource=resource).count(),
             ) 
@@ -374,7 +374,7 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
 
         resource = self.object
         for student in resource.students().all():
-            user_data = LTIUserData.objects.get(resource=resource,user=student)
+            user_data = resource.user_data(student)
             yield (
                 student.first_name,
                 student.last_name,
@@ -396,7 +396,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
         yield headers
 
         for attempt in resource.attempts.all():
-            user_data = LTIUserData.objects.get(resource=resource,user=attempt.user)
+            user_data = resource.use_data(attempt.user)
             row = [
                 attempt.user.first_name,
                 attempt.user.last_name,
@@ -524,6 +524,7 @@ class ShowAttemptsView(generic.list.ListView):
     def get_context_data(self,*args,**kwargs):
         context = super(ShowAttemptsView,self).get_context_data(*args,**kwargs)
 
+        context['resource'] = self.request.resource
         context['can_start_new_attempt'] = self.request.resource.can_start_new_attempt(self.request.user)
         
         return context
@@ -564,14 +565,17 @@ class RunAttemptView(generic.detail.DetailView):
             else:
                 raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
 
+        user = attempt.user
+        user_data = attempt.resource.user_data(user)
+
         scorm_cmi = {
             'cmi.mode': mode,
             'cmi.entry': 'ab-initio' if attempt.completion_status=='not attempted' else 'resume',
             'cmi.suspend_data': '',
             'cmi.objectives._count': 0,
             'cmi.interactions._count': 0,
-            'cmi.learner_name': self.request.user.get_full_name(),
-            'cmi.learner_id': self.request.user.username,
+            'cmi.learner_name': user.get_full_name(),
+            'cmi.learner_id': user_data.consumer_user_id,
             'cmi.location': '',
             'cmi.score.raw': 0,
             'cmi.score.scaled': 0,
@@ -581,7 +585,7 @@ class RunAttemptView(generic.detail.DetailView):
             'cmi.completion_status': attempt.completion_status,
             'cmi.success_status': ''
         }
-        # TODO only get the latest values of elements, somehow
+        # TODO only fetch the latest values of elements from the DB, somehow
 
         latest_elements = {}
 

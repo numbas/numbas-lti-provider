@@ -3,34 +3,41 @@
 {% load i18n %}
 
 {% block content %}
-<h2>{% trans "Your attempts" %}</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>{% trans "Attempt" %}</th>
-            <th>{% trans "Start time" %}</th>
-            <th>{% trans "Score" %}</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for attempt in object_list %}
-        <tr>
-            <td>{{forloop.counter}}</td>
-            <td>{{attempt.start_time}}</td>
-            <td>{% if attempt.completed or attempt.resource.show_incomplete_marks %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>{% trans "In progress" %}</em>{% endif %}</td>
-            <td>
-                <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
-                    {% if attempt.completed %}
-                        <span class="glyphicon glyphicon-apple"></span> {% trans "Review this attempt" %}
-                    {% else %}
-                        <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
-                    {% endif %}
-                </a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% if can_start_new_attempt %}<a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% trans "Start a new attempt" %}</a>{% endif %}
+<main class="container">
+    <h2>{{resource}}</h2>
+    <p class="lead">
+        {% blocktrans with name=user.get_full_name %} Hi {{name}}.{% endblocktrans %}
+        {% trans "You have already attempted this activity." %}
+        <br>
+        {% blocktrans count num_attempts=object_list|length %}You can resume or review your previous attempt{% plural %}You can resume or review your previous attempts{% endblocktrans %}{% if can_start_new_attempt %}{% trans ", or start a new one" %}{% endif %}.
+    </p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{% trans "Start time" %}</th>
+                <th>{% trans "Score" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attempt in object_list %}
+            <tr>
+                <td>{{attempt.start_time}}</td>
+                <td>{% if attempt.completed or attempt.resource.show_incomplete_marks %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>{% trans "In progress" %}</em>{% endif %}</td>
+                <td>
+                    <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
+                        {% if attempt.completed %}
+                            <span class="glyphicon glyphicon-apple"></span> {% trans "Review this attempt" %}
+                        {% else %}
+                            <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
+                        {% endif %}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if can_start_new_attempt %}<a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% trans "Start a new attempt" %}</a>{% endif %}
+</main>
 {% endblock content %}
