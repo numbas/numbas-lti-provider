@@ -47,6 +47,10 @@ def no_websockets(request):
     return render(request,'numbas_lti/no_websockets.html')
 
 @csrf_exempt
+def not_authorized(request):
+    return render(request,'numbas_lti/not_authorized.html')
+
+@csrf_exempt
 def lti_entry(request):
 
     try:

@@ -37,4 +37,5 @@ urlpatterns = [
     url(r'^run_attempt/(?P<pk>\d+)$', views.RunAttemptView.as_view(), name='run_attempt'),
 
     url(r'^no-websockets$', views.no_websockets, name='no_websockets'),
+    url(r'^not-authorized$', views.not_authorized, name='not_authorized'),
 ]
