@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from .models import Attempt,ScormElement,Resource, ReportProcess
-from .report_outcome import report_outcome
+from .report_outcome import report_outcome, ReportOutcomeException
 
 @enforce_ordering(slight=True)
 @channel_session_user_from_http
@@ -34,15 +34,11 @@ def report_scores(message,**kwargs):
     process = ReportProcess.objects.create(resource=resource)
 
     for user in User.objects.filter(attempts__resource=resource).distinct():
-        request = report_outcome(resource,user)
-        if request is None:
+        try:
+            request = report_outcome(resource,user)
+        except ReportOutcomeException as e:
             process.status = 'error'
-            process.response = _("Error making connection to LTI provider")
-            process.save()
-            return
-        elif request.status_code != 200:
-            process.status = 'error'
-            process.response = request.text
+            process.response = e.message
             process.save()
             return
 

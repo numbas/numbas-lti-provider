@@ -1,6 +1,7 @@
 from requests_oauthlib import OAuth1
 import requests
 import uuid
+from django.utils.translation import ugettext as _
 
 from hashlib import sha1
 from base64 import b64encode
@@ -8,17 +9,23 @@ from base64 import b64encode
 from oauthlib.oauth1 import Client
 from oauthlib.common import to_unicode
 
-class BodyHashClient(Client):
-    # from https://github.com/requests/requests-oauthlib/issues/125
+from lxml import etree
 
-    def get_oauth_params(self, request):
-        params = super(BodyHashClient, self).get_oauth_params(request)
-        digest = b64encode(sha1(request.body.encode('UTF-8')).digest())
-        params.append(('oauth_body_hash', to_unicode(digest)))
-        return params
+class ReportOutcomeException(Exception):
+    pass
+
+class ReportOutcomeConnectionError(ReportOutcomeException):
+    message = _("Error making connection to LTI consumer")
+    def __init__(self,connection_error):
+        self.error = connection_error
+
+class ReportOutcomeFailure(ReportOutcomeException):
+    def __init__(self,consumer_message):
+        self.consumer_message = consumer_message
+        self.message = _('Outcome report failed; the LTI consumer said: {}').format(self.consumer_message)
 
 def report_outcome_for_attempt(attempt):
-    report_outcome(attempt.resource,attempt.user)
+    return report_outcome(attempt.resource,attempt.user)
 
 def report_outcome(resource,user):
 
@@ -57,11 +64,28 @@ def report_outcome(resource,user):
             r = requests.post(
                     user_data.lis_outcome_service_url,
                     data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
-                    auth=OAuth1(user_data.consumer.key,user_data.consumer.secret,signature_type='auth_header',client_class=BodyHashClient, force_include_body=True),
+                    auth=OAuth1(user_data.consumer.key,user_data.consumer.secret,signature_type='auth_header',client_class=Client, force_include_body=True),
                     headers={'Content-Type': 'application/xml'}
                 )
-            user_data.last_reported_score = result
-            user_data.save()
-            return r
-        except requests.exceptions.ConnectionError:
-            return
+
+            if r.status_code!=200:
+                raise ReportOutcomeFailure(r.text)
+
+            namespaces = {'ims':'http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0'}
+            try:
+                xml = etree.fromstring(r.content)
+            except etree.XMLSyntaxError:
+                raise ReportOutcomeFailure('Response is not an XML document: {}'.format(r.text))
+            except Exception as e:
+                raise ReportOutcomeFailure('{}\n\n{}'.format(e,r.text))
+            status = xml.find('./ims:imsx_POXHeader/ims:imsx_POXResponseHeaderInfo/ims:imsx_statusInfo',namespaces=namespaces)
+            code = status.find('ims:imsx_codeMajor',namespaces=namespaces).text
+            if code=='success':
+                user_data.last_reported_score = result
+                user_data.save()
+                return r
+            else:
+                description = status.find('ims:imsx_description',namespaces=namespaces).text
+                raise ReportOutcomeFailure(description)
+        except requests.exceptions.ConnectionError as e:
+            raise ReportOutcomeConnectionError(e)
