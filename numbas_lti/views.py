@@ -585,6 +585,8 @@ class RunAttemptView(generic.detail.DetailView):
             else:
                 raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
 
+        context['mode'] = mode
+
         user = attempt.user
         user_data = attempt.resource.user_data(user)
 

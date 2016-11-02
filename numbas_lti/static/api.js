@@ -3,6 +3,9 @@ function SCORM_API(data,attempt_pk) {
 
 	this.data = data;
 
+    this.mode = data['cmi.mode'];
+    this.allow_set = this.mode=='normal';
+
     var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
     var socket = this.socket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/websocket/attempt/"+attempt_pk+"/scorm_api");
 
@@ -122,6 +125,9 @@ SCORM_API.prototype = {
 	},
 
 	SetValue: function(key,value) {
+        if(!this.allow_set) {
+            return;
+        }
         value = (value+'');
 		this.data[key] = value;
         this.check_key_counts_something(key);
