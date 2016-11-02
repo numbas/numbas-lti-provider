@@ -43,6 +43,10 @@ def no_resource(request):
     return render(request,'numbas_lti/error_no_resource.html',{})
 
 @csrf_exempt
+def no_websockets(request):
+    return render(request,'numbas_lti/no_websockets.html')
+
+@csrf_exempt
 def lti_entry(request):
 
     try:

@@ -1,0 +1,17 @@
+{% extends "numbas_lti/base.html" %}
+{% load percentage %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <div class="alert alert-warning">
+    <header>
+        <h1><span class="glyphicon glyphicon-exclamation-sign"></span> {% trans "Incompatible browser" %}</h1>
+    </header>
+
+    <main>
+        <p>{% trans "Your browser does not support WebSockets, which are required. Please try a different browser - Google Chrome or Mozilla Firefox will work." %}</p>
+    </main>
+    </div>
+</div>
+{% endblock content %}

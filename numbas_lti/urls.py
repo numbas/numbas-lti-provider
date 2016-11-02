@@ -35,4 +35,6 @@ urlpatterns = [
     url(r'^show_attempts$', views.ShowAttemptsView.as_view(), name='show_attempts'),
     url(r'^new_attempt$', views.new_attempt, name='new_attempt'),
     url(r'^run_attempt/(?P<pk>\d+)$', views.RunAttemptView.as_view(), name='run_attempt'),
+
+    url(r'^no-websockets$', views.no_websockets, name='no_websockets'),
 ]
