@@ -1,0 +1,25 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Delete an LTI consumer</h1>
+    </header>
+
+    <main>
+        <p>
+            {% blocktrans with key=consumer.key%}Are you sure you want to delete the LTI consumer <code>{{key}}</code>?{% endblocktrans %}
+        </p>
+        <p class="text-danger">{% trans "All attempt data accessed through this consumer will be deleted." %}</p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <p>
+                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this consumer" %}</button>
+                <a class="btn btn-link" href="{% url 'list_consumers' %}">Cancel</a>
+            </p>
+        </form>
+    </main>
+</div>
+{% endblock content %}

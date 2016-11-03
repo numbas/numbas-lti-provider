@@ -1,10 +1,16 @@
 from django.conf.urls import url
+from django.contrib import auth
 
 from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^lti_entry$', views.lti_entry, name='lti_entry'),
+
+    url(r'^login$', auth.views.login, name='login'),
+
+    url(r'^create-superuser$', views.CreateSuperuserView.as_view(), name='create_superuser'),
+
     url(r'^exam/create$', views.CreateExamView.as_view(), name='create_exam'),
     url(r'^exam/(?P<pk>\d+)/run$', views.RunExamView.as_view(), name='run_exam'),
 
@@ -38,4 +44,8 @@ urlpatterns = [
 
     url(r'^no-websockets$', views.no_websockets, name='no_websockets'),
     url(r'^not-authorized$', views.not_authorized, name='not_authorized'),
+
+    url(r'^consumers$', views.ListConsumersView.as_view(), name='list_consumers'),
+    url(r'^consumers/create$', views.CreateConsumerView.as_view(), name='create_consumer'),
+    url(r'^consumers/(?P<pk>\d+)/delete$', views.DeleteConsumerView.as_view(), name='delete_consumer'),
 ]

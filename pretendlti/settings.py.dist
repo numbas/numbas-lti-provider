@@ -53,7 +53,7 @@ MIDDLEWARE_CLASSES = [
     'numbas_lti.middleware.NumbasLTIResourceMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend']
+AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend','django.contrib.auth.backends.ModelBackend']
 
 ROOT_URLCONF = 'pretendlti.urls'
 

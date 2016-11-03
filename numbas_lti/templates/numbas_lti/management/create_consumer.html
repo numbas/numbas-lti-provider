@@ -1,0 +1,20 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Add a new LTI consumer</h1>
+    </header>
+
+    <main>
+        <p class="lead">{% trans "Instructors will use the consumer key you enter below, and the automatically-generated consumer secret, to add the Numbas LTI tool to their course." %}</p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            {{form|bootstrap}}
+            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add consumer" %}</button>
+        </form>
+    </main>
+</div>
+{% endblock content %}

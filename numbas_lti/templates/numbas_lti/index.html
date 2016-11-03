@@ -2,9 +2,22 @@
 {% load i18n %}
 
 {% block content %}
-    <div class="container">
+<div class="container">
+    <header>
         <h1>{% trans "Numbas LTI provider" %}</h1>
-        <p>{% trans "Use this URL:" %}</p>
+    </header>
+    <main>
+    {{user}}
+        <p class="lead">
+            {% blocktrans %}
+            Welcome to the Numbas LTI tool provider. To use this tool, you need a <strong>consumer key</strong> and <strong>consumer secret</strong>.
+            The site administrator can create these for you.
+            {% endblocktrans %}
+        </p>
+        <p>{% trans "Here is this tool's Launch URL:" %}</p>
         <pre>{{entry_url}}</pre>
-    </div>
+
+        <p class="pull-right"><a href="{% url 'list_consumers' %}"><span class="glyphicon glyphicon-list"></span> {% trans "Manage consumers (login required)" %}</a></p>
+    </main>
+</div>
 {% endblock content %}
