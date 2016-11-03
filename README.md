@@ -80,7 +80,7 @@ The final step is to create a link between your VLE and the tool provider.
 
 Follow Blackboard's instructions ["How to add a new Basic LTI tool provider"](http://library.blackboard.com/ref/df5b20ed-ce8d-4428-a595-a0091b23dda3/Content/_admin_app_system/admin_app_basic_lti_tool_providers.htm). 
 
-* The **Provider domain** is your launch URL/
+* The **Provider domain** is your launch URL.
 * The **Tool provider key** is your consumer key.
 * The **Tool provider secret** is your consumer secret.
 
