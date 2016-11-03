@@ -68,7 +68,7 @@ Open the tool's homepage in your browser. You'll be guided through the process o
 
 Once that's done, you'll see something like the following:
 
-!["Manage consumers" screen](manage_consumers.png)
+!["Manage consumers" screen](doc/manage_consumers.png)
 
 That page shows the three pieces of information you need to give to your VLE: the **launch URL**, the **consumer key** and the **consumer secret**.
 
