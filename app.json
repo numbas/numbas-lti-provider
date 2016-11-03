@@ -6,6 +6,20 @@
   "keywords": ["numbas","lti","e-assessment"],
   "scripts": {
     "postdeploy": "python manage.py migrate"
-  }
+  },
+  "formation": [
+    {
+      "process": "web",
+      "quantity": 1
+    },
+    {
+      "process": "worker",
+      "quantity": 1
+    }
+  ],
+  "addons": [
+    "heroku-redis:hobby-dev",
+    "postgres:hobby-dev"
+  ]
 }
 
