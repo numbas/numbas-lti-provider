@@ -22,7 +22,7 @@ The set-up process looks like this:
 
 The quickest way of setting up the software is through Heroku. Click on the button - it'll take about five minutes from start to finish.
 
-[https://www.herokucdn.com/deploy/button.svg](https://heroku.com/deploy?template=https://github.com/numbas/numbas-lti-provider/tree/heroku)
+[![Deploy Numbas LTI tool provider to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/numbas/numbas-lti-provider/tree/heroku)
 
 ### In a Vagrant virtual machine
 
