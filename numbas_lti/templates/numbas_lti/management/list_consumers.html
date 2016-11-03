@@ -1,0 +1,46 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Manage LTI consumers" %}</h1>
+    </header>
+    <main>
+        {% if object_list.exists %}
+            <div>
+                <p>{% trans "The configured LTI consumers are listed below. To access this tool, use the launch URL below, and the corresponding consumer key and consumer secret." %}</p>
+                <p>{% trans "Here is this tool's Launch URL:" %}</p>
+                <pre>{{entry_url}}</pre>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Consumer key" %}</th>
+                        <th>{% trans "Consumer secret" %}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for consumer in object_list %}
+                    <tr>
+                        <td><code>{{consumer.key}}</code></td>
+                        <td><code>{{consumer.secret}}</code></td>
+                        <td><a href="{% url 'delete_consumer' consumer.pk %}" title="{% trans "Delete this consumer" %}" class="btn btn-link"><span class="text-danger glyphicon glyphicon-trash"></span></a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p><a href="{% url 'create_consumer' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add a new LTI consumer" %}</a></p>
+        {% else %}
+            <div class="alert alert-warning">
+                <p>{% trans "No LTI consumers have been set up yet." %}</p>
+                <p><a href="{% url 'create_consumer' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add a new LTI consumer" %}</a></p>
+            </div>
+        {% endif %}
+
+        <div class="pull-right"><a href="/admin"><span class="glyphicon glyphicon-cog"></span> {% trans "Admin site" %}</a></div>
+    </main>
+
+</div>
+{% endblock content %}

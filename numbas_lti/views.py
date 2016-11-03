@@ -1,4 +1,6 @@
+from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.shortcuts import render,redirect
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
@@ -7,7 +9,7 @@ from django_auth_lti.const import LEARNER, INSTRUCTOR
 from django_auth_lti.patch_reverse import patch_reverse
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django.views import generic
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.http import StreamingHttpResponse, JsonResponse
@@ -25,13 +27,17 @@ patch_reverse()
 from functools import wraps
 
 from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess, RemarkPart, DiscountPart
-from .forms import ResourceSettingsForm, DiscountPartBehaviourForm, RemarkPartScoreForm
+from .forms import ResourceSettingsForm, DiscountPartBehaviourForm, RemarkPartScoreForm, CreateSuperuserForm, CreateConsumerForm
 
-# Create your views here.
+def get_lti_entry_url(request):
+    return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
+
 @csrf_exempt
 def index(request):
+    if not User.objects.filter(is_superuser=True).exists():
+        return redirect(reverse('create_superuser'))
     context = {
-        'entry_url': request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True)),
+        'entry_url': get_lti_entry_url(request),
     }
     return render(request,'numbas_lti/index.html',context)
 
@@ -42,13 +48,11 @@ def request_is_instructor(request):
 def no_resource(request):
     return render(request,'numbas_lti/error_no_resource.html',{})
 
-@csrf_exempt
-def no_websockets(request):
-    return render(request,'numbas_lti/no_websockets.html')
+def static_view(template_name):
+    return generic.TemplateView.as_view(template_name=template_name)
 
-@csrf_exempt
-def not_authorized(request):
-    return render(request,'numbas_lti/not_authorized.html')
+no_websockets = static_view('numbas_lti/no_websockets.html')
+not_authorized = static_view('numbas_lti/not_authorized.html')
 
 @csrf_exempt
 def lti_entry(request):
@@ -95,6 +99,30 @@ class ManagementViewMixin(object):
             'management_tab': self.management_tab
         })
         return context
+
+class CreateSuperuserView(generic.edit.CreateView):
+    model = User
+    form_class = CreateSuperuserForm
+    template_name = 'numbas_lti/management/create_superuser.html'
+
+    def form_valid(self,form):
+        self.object = form.save()
+        user = authenticate(username=self.object.username,password=form.cleaned_data['password1'])
+        print(user)
+        login(self.request,user)
+        return redirect(self.get_success_url())
+
+    def dispatch(self,request,*args,**kwargs):
+        if User.objects.filter(is_superuser=True).exists():
+            return redirect(reverse('index'))
+        else:
+            return super(CreateSuperuserView,self).dispatch(request,*args,**kwargs)
+
+    def get_success_url(self):
+        if LTIConsumer.objects.exists():
+            return reverse('list_consumers')
+        else:
+            return reverse('create_consumer')
 
 class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
@@ -629,3 +657,34 @@ class RunAttemptView(generic.detail.DetailView):
 
         return context
 
+class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin):
+    permission_required = ('numbas_lti.add_consumer',)
+    login_url = reverse_lazy('login')
+
+class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
+    model = LTIConsumer
+    template_name = 'numbas_lti/management/list_consumers.html'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(ListConsumersView,self).get_context_data(*args,**kwargs)
+        context['entry_url'] = get_lti_entry_url(self.request)
+        return context
+
+class CreateConsumerView(ConsumerManagementMixin,generic.edit.CreateView):
+    model = LTIConsumer
+    template_name = 'numbas_lti/management/create_consumer.html'
+    form_class = CreateConsumerForm
+    success_url = reverse_lazy('list_consumers')
+
+class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
+    model = LTIConsumer
+    context_object_name = 'consumer'
+    template_name = 'numbas_lti/management/confirm_delete_consumer.html'
+    success_url = reverse_lazy('list_consumers')
+
+    def form_valid(self,form):
+        consumer = self.get_object()
+        consumer.deleted = True
+        consumer.save()
+
+        return redirect(self.get_success_url())

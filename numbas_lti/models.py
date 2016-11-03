@@ -17,9 +17,16 @@ import re
 import json
 from collections import defaultdict
 
+class NotDeletedManager(models.Manager):
+    def get_queryset(self):
+        return super(NotDeletedManager,self).get_queryset().filter(deleted=False)
+
 class LTIConsumer(models.Model):
-    key = models.CharField(max_length=100)
-    secret = models.CharField(max_length=100)
+    key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
+    secret = models.CharField(max_length=100,verbose_name=_('Consumer secret'))
+    deleted = models.BooleanField(default=False)
+
+    objects = NotDeletedManager()
 
     def __str__(self):
         return self.key
@@ -202,10 +209,6 @@ class LTIUserData(models.Model):
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
 
-class AttemptManager(models.Manager):
-    def get_queryset(self):
-        return super(AttemptManager,self).get_queryset().filter(deleted=False)
-
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
     exam = models.ForeignKey(Exam,on_delete=models.CASCADE,related_name='attempts')  # need to keep track of both resource and exam in case the exam later gets overwritten
@@ -218,7 +221,7 @@ class Attempt(models.Model):
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
 
-    objects = AttemptManager()
+    objects = NotDeletedManager()
 
     class Meta:
         ordering = ['-start_time',]
