@@ -19,7 +19,7 @@
   ],
   "addons": [
     "heroku-redis:hobby-dev",
-    "postgres:hobby-dev"
+    "heroku-postgresql:hobby-dev"
   ]
 }
 
