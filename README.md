@@ -70,7 +70,7 @@ Once that's done, you'll see something like the following:
 
 !["Manage consumers" screen](doc/manage_consumers.png)
 
-That page shows the three pieces of information you need to give to your VLE: the **launch URL**, the **consumer key** and the **consumer secret**.
+That page shows the three pieces of information you need to give to your VLE: the **launch URL**, the **consumer key** and the **shared secret**.
 
 ## Add the tool to your VLE
 
@@ -82,7 +82,7 @@ Follow Blackboard's instructions ["How to add a new Basic LTI tool provider"](ht
 
 * The **Provider domain** is your launch URL.
 * The **Tool provider key** is your consumer key.
-* The **Tool provider secret** is your consumer secret.
+* The **Tool provider secret** is your shared secret.
 
 ### With Moodle
 
@@ -95,7 +95,7 @@ If you have administrator privileges on Moodle, you can add the tool as an activ
 * Set **Tool name** to "Numbas".
 * The **Tool base URL** is your launch URL.
 * The **Consumer key** is your consumer key.
-* The **Shared secret** is your consumer secret.
+* The **Shared secret** is your shared secret.
 * Under *Tool configuration usage*, select "Show in activity chooser when adding an external tool".
 
 Now you can add a Numbas exam in any course by clicking "Add an activity or resource" and selecting "Numbas".
