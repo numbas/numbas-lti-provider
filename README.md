@@ -24,6 +24,8 @@ The quickest way of setting up the software is through Heroku. Click on the butt
 
 [![Deploy Numbas LTI tool provider to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/numbas/numbas-lti-provider/tree/heroku)
 
+Heroku gives you 1,000 free hours of uptime per month, and limits the size of your app's database. To keep the app running continuously, and store more data, you have to pay. The minimum "always-up" setup looks to cost around $30 per month.
+
 ### In a Vagrant virtual machine
 
 [Vagrant](https://www.vagrantup.com/) provides an easy way of managing virtual machines on your computer. You might want to use this if you're trying out the software on a Windows PC, or want to run the tool in a self-contained environment, separate from your other software.
