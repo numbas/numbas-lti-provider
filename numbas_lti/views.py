@@ -60,14 +60,14 @@ not_authorized = static_view('numbas_lti/not_authorized.html')
 
 @csrf_exempt
 def config_xml(request):
-	return render(request,
-		'numbas_lti/config.xml',
-		{
-			'entry_url': get_lti_entry_url(request),
-			'icon': request.build_absolute_uri(static('icon.png')),
-		}, 
-		content_type='application/xml' 
-	)
+    return render(request,
+        'numbas_lti/config.xml',
+        {
+            'entry_url': get_lti_entry_url(request),
+            'icon': request.build_absolute_uri(static('icon.png')),
+        }, 
+        content_type='application/xml' 
+    )
 
 @csrf_exempt
 def lti_entry(request):
@@ -684,6 +684,7 @@ class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
         context = super(ListConsumersView,self).get_context_data(*args,**kwargs)
         context['entry_url'] = get_lti_entry_url(self.request)
         context['config_url'] = get_config_url(self.request)
+        context['icon_url'] = self.request.build_absolute_uri(static('icon.png'))
         return context
 
 class CreateConsumerView(ConsumerManagementMixin,generic.edit.CreateView):
