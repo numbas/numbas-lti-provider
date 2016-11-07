@@ -28,35 +28,7 @@ The quickest way of setting up the software is through Heroku. Click on the butt
 
 [Vagrant](https://www.vagrantup.com/) provides an easy way of managing virtual machines on your computer. You might want to use this if you're trying out the software on a Windows PC, or want to run the tool in a self-contained environment, separate from your other software.
 
-*I set up Vagrant to forward port 443 on the host machine to port 443 on the VM. I think this might only work on Windows. I'm not sure how to get it running on a different port - I had problems with the nginx proxy.*
-
-Create a directory for the vagrant VM:
-
-```
-mkdir numbas_lti
-cd numbas_lti
-```
-
-Edit `Vagrantfile`:
-
-```
-VAGRANTFILE_API_VERSION = "2"
-
-Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "ubuntu/xenial64"
-
-  config.vm.network :forwarded_port, host: 443, guest: 443
-end
-```
-
-Start vagrant and ssh into it:
-
-```
-vagrant up
-vagrant ssh
-```
-
-Once you've got a shell on the VM, follow the "on your own server" installation instructions below.
+* [Vagrant set-up instructions](doc/vagrant.md)
 
 ### On your own server
 
