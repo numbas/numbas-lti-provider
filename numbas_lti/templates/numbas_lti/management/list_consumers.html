@@ -11,7 +11,9 @@
             <div>
                 <p>{% trans "The configured LTI consumers are listed below. To access this tool, use the launch URL below, and the corresponding consumer key and consumer secret." %}</p>
                 <p>{% trans "Here is this tool's Launch URL:" %}</p>
-                <pre>{{entry_url}}</pre>
+				<pre>{{entry_url}}</pre>
+				<p>{% trans "Alternately, here's the automatic configuration URL:" %}</p>
+				<pre>{{config_url}}</pre>
             </div>
             <table class="table">
                 <thead>

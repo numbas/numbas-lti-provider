@@ -21,6 +21,7 @@ import datetime
 import csv
 import json
 import string
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 patch_reverse()
 
@@ -31,6 +32,9 @@ from .forms import ResourceSettingsForm, DiscountPartBehaviourForm, RemarkPartSc
 
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
+
+def get_config_url(request):
+    return request.build_absolute_uri(reverse('config_xml',exclude_resource_link_id=True))
 
 @csrf_exempt
 def index(request):
@@ -53,6 +57,17 @@ def static_view(template_name):
 
 no_websockets = static_view('numbas_lti/no_websockets.html')
 not_authorized = static_view('numbas_lti/not_authorized.html')
+
+@csrf_exempt
+def config_xml(request):
+	return render(request,
+		'numbas_lti/config.xml',
+		{
+			'entry_url': get_lti_entry_url(request),
+			'icon': request.build_absolute_uri(static('icon.png')),
+		}, 
+		content_type='application/xml' 
+	)
 
 @csrf_exempt
 def lti_entry(request):
@@ -668,6 +683,7 @@ class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
     def get_context_data(self,*args,**kwargs):
         context = super(ListConsumersView,self).get_context_data(*args,**kwargs)
         context['entry_url'] = get_lti_entry_url(self.request)
+        context['config_url'] = get_config_url(self.request)
         return context
 
 class CreateConsumerView(ConsumerManagementMixin,generic.edit.CreateView):
