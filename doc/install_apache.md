@@ -11,3 +11,7 @@ First, install packages and set up users:
 * Run [deploy.sh](deploy.sh) to set up the database and start the server.
 
 The server is now running at `https://localhost`.
+
+## Updating the software
+
+You should keep the software up-to-date with any bugfixes or new features. Run [update.sh](update.sh) to update the software.
