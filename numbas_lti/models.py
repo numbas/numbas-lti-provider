@@ -23,7 +23,7 @@ class NotDeletedManager(models.Manager):
 
 class LTIConsumer(models.Model):
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
-    secret = models.CharField(max_length=100,verbose_name=_('Consumer secret'))
+    secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
 
     objects = NotDeletedManager()

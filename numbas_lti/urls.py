@@ -48,4 +48,6 @@ urlpatterns = [
     url(r'^consumers$', views.ListConsumersView.as_view(), name='list_consumers'),
     url(r'^consumers/create$', views.CreateConsumerView.as_view(), name='create_consumer'),
     url(r'^consumers/(?P<pk>\d+)/delete$', views.DeleteConsumerView.as_view(), name='delete_consumer'),
+
+	url(r'^config.xml$', views.config_xml, name='config_xml'),
 ]
