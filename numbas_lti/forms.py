@@ -1,9 +1,15 @@
 from django.forms import ModelForm
+from django import forms
 
-from .models import Resource, DiscountPart, RemarkPart, LTIConsumer
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer
+
+from django.core.files import File
+from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+import os
+import requests
 
 from django.utils.crypto import get_random_string
 import string
@@ -47,3 +53,25 @@ class CreateConsumerForm(ModelForm):
         if commit:
             consumer.save()
         return consumer
+
+class CreateExamForm(ModelForm):
+    retrieve_url = forms.URLField(required=False,widget=forms.HiddenInput())
+    package = forms.FileField(required=False)
+    class Meta:
+        model = Exam
+        fields = ['package']
+
+    def clean(self):
+        cleaned_data = super(CreateExamForm,self).clean()
+        if not (cleaned_data.get('retrieve_url') or cleaned_data.get('package')):
+            raise forms.ValidationError("No exam selected")
+
+    def save(self,commit=True):
+        exam = super(CreateExamForm,self).save(commit=False)
+        retrieve_url = self.cleaned_data.get('retrieve_url')
+        if retrieve_url:
+            zip = requests.get(retrieve_url+'?scorm').content
+            exam.package.save('exam.zip',File(BytesIO(zip)))
+        if commit:
+            exam.save()
+        return exam

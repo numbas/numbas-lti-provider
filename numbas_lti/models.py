@@ -5,7 +5,9 @@ from django.contrib.auth.models import User
 import requests
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.core import validators
 from channels import Group
+from django.utils import timezone
 
 from .report_outcome import report_outcome,report_outcome_for_attempt
 
@@ -448,3 +450,25 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     instance.attempt.save()
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
         report_outcome_for_attempt(instance.attempt)
+
+class EditorLink(models.Model):
+    url = models.URLField(verbose_name='Base URL of the editor')
+    projects = models.CharField(max_length=200,default='',verbose_name='IDs of projects to scan for exams',validators=[validators.validate_comma_separated_integer_list])
+    cached_available_exams = models.TextField(blank=True,editable=False,verbose_name='Cached JSON list of available exams from this editor')
+    last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name='Time of last cache update')
+
+    def update_cache(self):
+        r = requests.get('{}/api/available-exams'.format(self.url))
+        self.cached_available_exams = r.text
+        self.last_cache_update = timezone.now()
+
+    @property
+    def available_exams(self):
+        if self.cached_available_exams:
+            return json.loads(self.cached_available_exams)
+        else:
+            return []
+
+@receiver(models.signals.pre_save,sender=EditorLink)
+def update_editor_cache_before_save(sender,instance,**kwargs):
+    instance.update_cache()

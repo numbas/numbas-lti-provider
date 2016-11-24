@@ -4,31 +4,65 @@
 
 {% block javascripts %}
 {{block.super}}
-<script>
-    document.getElementById('id_package').addEventListener('change',function() {
-        document.querySelector('button[type=submit]').removeAttribute('disabled');
-    });
-</script>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-        <div class="jumbotron">
-    <header>
-        <h1>{% trans "New Numbas activity" %}</h1>
-    </header>
-
     <main>
+        <div class="jumbotron">
+            <h1>{% trans "New Numbas activity" %}</h1>
             <p>{% trans "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
-            <p>{% trans "Please upload one now." %}</p>
-            <p>{% trans "To obtain an exam package, find your exam in the Numbas editor and click <em>\"Download SCORM package\"</em>." %}</p>
-
-        <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
-            {% csrf_token %}
-            {{form|bootstrap}}
-            <button disabled type="submit" class="btn btn-lg btn-primary">{% trans "Submit" %}</button>
-        </form>
-    </main>
+            {% if editor_links.exists %}
+                <p>{% trans "Please upload one now or select from the list of ready-to-use exams." %}</p>
+            {% else %}
+                <p>{% trans "Please upload one now." %}
+            {% endif %}
         </div>
+
+        <div class="row">
+            <div class="col-sm-12 col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2 class="panel-title"><span class="glyphicon glyphicon-import"></span> {% trans "Upload an exam package" %}</h2>
+                    </div>
+                    <div class="panel-body">
+                        <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
+                            <p>{% trans "To obtain an exam package, find your exam in the Numbas editor and click <em>\"Download SCORM package\"</em>." %}</p>
+                            {% if editor_links.count = 1 %}
+                            <p class="text-center"><a class="btn btn-link" target="_blank" href="{{editor_links.first.url}}"><span class="glyphicon glyphicon-new-window"></span> {% trans "Click here to open the Numbas editor." %}</a></p>
+                            {% endif %}
+                            {% csrf_token %}
+                            {{form|bootstrap}}
+                            <button type="submit" class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-import"></span> {% trans "Submit" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2 class="panel-title"><span class="glyphicon glyphicon-transfer"></span> {% trans "Select a ready-made exam" %}</h2>
+                    </div>
+                    <ul class="list-group">
+                        {% for exam in exams %}
+                        <li class="list-group-item">
+                            <h3><a href="{{exam.edit}}">{{exam.name}}</a> </h3>
+                            <p>by <a target="_blank" href="{{exam.author.profile}}">{{exam.author.full_name}}</a></p>
+                            <form method="POST" class="form-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="retrieve_url" value="{{exam.download}}">
+                                <p>
+                                    <a target="_blank" class="btn btn-default" href="{{exam.preview}}"><span class="glyphicon glyphicon-play"></span></a>
+                                    <button class="btn btn-primary" type="submit">{% trans "Use this" %}</button>
+                                </p>
+                            </form>
+                            <div class="description">{{exam.metadata.description|safe}}</div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 {% endblock content %}

@@ -22,13 +22,14 @@ import csv
 import json
 import string
 from django.contrib.staticfiles.templatetags.staticfiles import static
+import requests
 
 patch_reverse()
 
 from functools import wraps
 
-from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess, RemarkPart, DiscountPart
-from .forms import ResourceSettingsForm, DiscountPartBehaviourForm, RemarkPartScoreForm, CreateSuperuserForm, CreateConsumerForm
+from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess, RemarkPart, DiscountPart, EditorLink
+from .forms import ResourceSettingsForm, DiscountPartBehaviourForm, RemarkPartScoreForm, CreateSuperuserForm, CreateConsumerForm, CreateExamForm
 
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
@@ -79,7 +80,6 @@ def lti_entry(request):
 
     client_key = request.POST.get('oauth_consumer_key')
     consumer = LTIConsumer.objects.get(key=client_key)
-    print("Client key: {}\nConsumer: {}".format(client_key,consumer))
 
     user_data,_ = LTIUserData.objects.get_or_create(
         user=request.user,
@@ -141,8 +141,19 @@ class CreateSuperuserView(generic.edit.CreateView):
 
 class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
-    fields = ['package']
     template_name = 'numbas_lti/management/create_exam.html'
+    form_class = CreateExamForm
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(CreateExamView,self).get_context_data(*args,**kwargs)
+
+        context['editor_links'] = EditorLink.objects.all()
+        available_exams = []
+        for el in EditorLink.objects.all():
+            available_exams += el.available_exams
+        context['exams'] = available_exams
+
+        return context
 
     def form_valid(self,form):
         self.object = form.save()
@@ -685,6 +696,7 @@ class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
         context['entry_url'] = get_lti_entry_url(self.request)
         context['config_url'] = get_config_url(self.request)
         context['icon_url'] = self.request.build_absolute_uri(static('icon.png'))
+
         return context
 
 class CreateConsumerView(ConsumerManagementMixin,generic.edit.CreateView):
