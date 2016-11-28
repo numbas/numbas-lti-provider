@@ -20,6 +20,12 @@
     </div>
 </nav>
 <main class="container">
+{% for message in messages %}
+<div class="alert alert-info">
+    {{message}}
+</div>
+{%endfor %}
+
 {% block management_content %}{% endblock %}
 </main>
 {% endblock content %}
