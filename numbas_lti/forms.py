@@ -55,11 +55,14 @@ class CreateConsumerForm(ModelForm):
         return consumer
 
 class CreateExamForm(ModelForm):
-    retrieve_url = forms.URLField(required=False,widget=forms.HiddenInput())
     package = forms.FileField(required=False)
     class Meta:
         model = Exam
-        fields = ['package']
+        fields = ['package','retrieve_url','rest_url']
+        widgets = {
+            'retrieve_url': forms.HiddenInput(),
+            'rest_url': forms.HiddenInput(),
+        }
 
     def clean(self):
         cleaned_data = super(CreateExamForm,self).clean()
@@ -71,6 +74,7 @@ class CreateExamForm(ModelForm):
         retrieve_url = self.cleaned_data.get('retrieve_url')
         if retrieve_url:
             zip = requests.get(retrieve_url+'?scorm').content
+            exam.retrieve_url = retrieve_url
             exam.package.save('exam.zip',File(BytesIO(zip)))
         if commit:
             exam.save()

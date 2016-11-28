@@ -15,6 +15,7 @@ from django import http
 from django.http import StreamingHttpResponse, JsonResponse
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.template.loader import get_template
+from django.contrib import messages
 from itertools import groupby
 from channels import Channel
 import datetime
@@ -167,6 +168,19 @@ class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
 class ReplaceExamView(ManagementViewMixin,CreateExamView):
     management_tab = 'settings'
     template_name = 'numbas_lti/management/replace_exam.html'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(ReplaceExamView,self).get_context_data(*args,**kwargs)
+        context['current_exam'] = self.request.resource.exam
+
+        return context
+
+    def form_valid(self,form):
+        response = super(CreateExamView,self).form_valid(form)
+
+        messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
+
+        return response
 
 class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource

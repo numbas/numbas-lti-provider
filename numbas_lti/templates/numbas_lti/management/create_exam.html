@@ -2,8 +2,37 @@
 {% load bootstrap %}
 {% load i18n %}
 
+{% block stylesheets %}
+{{block.super}}
+<style type="text/css">
+    .available-exam.exclude {
+        display: none;
+    }
+</style>
+{% endblock stylesheets %}
+
 {% block javascripts %}
 {{block.super}}
+<script>
+    function filter_exams(query) {
+        query = query.toLowerCase().trim();
+        Array.prototype.forEach.apply(document.querySelectorAll('.available-exam'),[function(e) {
+            var name = e.getAttribute('data-name');
+            var match = query.length==0 || name.toLowerCase().indexOf(query)>=0;
+            console.log(e,match);
+            e.classList.toggle('exclude',!match);
+        }]);
+    }
+
+
+    $(document).ready(function() {
+        var exam_search = document.getElementById('exam-search');
+        exam_search.addEventListener('input',function() {
+            var q = exam_search.value;
+            filter_exams(q);
+        });
+    });
+</script>
 {% endblock %}
 
 {% block content %}
@@ -43,20 +72,26 @@
                     <div class="panel-heading">
                         <h2 class="panel-title"><span class="glyphicon glyphicon-transfer"></span> {% trans "Select a ready-made exam" %}</h2>
                     </div>
+                    <div class="panel-heading">
+                        <div class="form">
+                            <input class="form-control" type="text" placeholder="{% trans "Search" %}" id="exam-search">
+                        </div>
+                    </div>
                     <ul class="list-group">
                         {% for exam in exams %}
-                        <li class="list-group-item">
+                        <li class="list-group-item available-exam" data-name="{{exam.name|escape}}">
                             <h3><a href="{{exam.edit}}">{{exam.name}}</a> </h3>
                             <p>by <a target="_blank" href="{{exam.author.profile}}">{{exam.author.full_name}}</a></p>
+                            <div class="description">{{exam.metadata.description|safe}}</div>
                             <form method="POST" class="form-inline">
                                 {% csrf_token %}
                                 <input type="hidden" name="retrieve_url" value="{{exam.download}}">
+                                <input type="hidden" name="rest_url" value="{{exam.url}}">
                                 <p>
-                                    <a target="_blank" class="btn btn-default" href="{{exam.preview}}"><span class="glyphicon glyphicon-play"></span></a>
-                                    <button class="btn btn-primary" type="submit">{% trans "Use this" %}</button>
+                                    <a target="_blank" class="btn btn-default" href="{{exam.preview}}"><span class="glyphicon glyphicon-play"></span> {% trans "Preview" %}</a>
+                                    <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-import"></span> {% trans "Use this" %}</button>
                                 </p>
                             </form>
-                            <div class="description">{{exam.metadata.description|safe}}</div>
                         </li>
                         {% endfor %}
                     </ul>

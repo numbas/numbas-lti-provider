@@ -59,6 +59,8 @@ def extract_package(sender,instance,**kwargs):
 class Exam(ExtractPackageMixin,models.Model):
     title = models.CharField(max_length=300)
     package = models.FileField(upload_to='exams/',verbose_name='Package file')
+    retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
+    rest_url = models.URLField(blank=True,default='',verbose_name='URL of the exam on the editor\'s REST API')
 
     def __str__(self):
         return self.title
