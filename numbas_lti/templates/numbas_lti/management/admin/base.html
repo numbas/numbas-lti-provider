@@ -1,0 +1,28 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="{% if management_tab == 'consumers' %}active{% endif %}"><a href="{% url 'list_consumers' %}"><span class="glyphicon glyphicon-tasks"></span> {% trans "LTI Consumers" %}</a></li>
+                <li class="{% if management_tab == 'editor-links' %}active{% endif %}"><a href="{% url 'list_editorlinks' %}"><span class="glyphicon glyphicon-transfer"></span> {% trans "Editor links" %}</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="pull-right"><a href="/admin"><span class="glyphicon glyphicon-cog"></span> {% trans "Admin site" %}</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<main class="container">
+{% for message in messages %}
+<div class="alert alert-info">
+    {{message}}
+</div>
+{%endfor %}
+
+{% block management_content %}{% endblock %}
+</main>
+{% endblock content %}
+

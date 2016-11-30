@@ -1,0 +1,24 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block management_content %}
+<div class="container">
+    <header>
+        <h1>Delete an editor connection</h1>
+    </header>
+
+    <main>
+        <p>
+            {% blocktrans with key=consumer.key%}Are you sure you want to delete the connection to {{editorlink}}?{% endblocktrans %}
+        </p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <p>
+                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this connection" %}</button>
+                <a class="btn btn-link" href="{% url 'list_editorlinks' %}">Cancel</a>
+            </p>
+        </form>
+    </main>
+</div>
+{% endblock management_content %}

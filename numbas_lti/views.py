@@ -16,6 +16,7 @@ from django.http import StreamingHttpResponse, JsonResponse
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.template.loader import get_template
 from django.contrib import messages
+from django.forms.models import inlineformset_factory
 from itertools import groupby
 from channels import Channel
 import datetime
@@ -29,8 +30,8 @@ patch_reverse()
 
 from functools import wraps
 
-from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess, RemarkPart, DiscountPart, EditorLink
-from .forms import ResourceSettingsForm, DiscountPartBehaviourForm, RemarkPartScoreForm, CreateSuperuserForm, CreateConsumerForm, CreateExamForm
+from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess, RemarkPart, DiscountPart, EditorLink, EditorLinkProject
+from . import forms
 
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
@@ -107,8 +108,6 @@ class MustBeInstructorMixin(LTIRoleRestrictionMixin):
     allowed_roles = ['Instructor']
 
 class ManagementViewMixin(object):
-    context_object_name = 'resource'
-
     def get_context_data(self,*args,**kwargs):
         context = super(ManagementViewMixin,self).get_context_data(*args,**kwargs)
         context.update({
@@ -116,15 +115,17 @@ class ManagementViewMixin(object):
         })
         return context
 
+class ResourceManagementViewMixin(ManagementViewMixin):
+    context_object_name = 'resource'
+
 class CreateSuperuserView(generic.edit.CreateView):
     model = User
-    form_class = CreateSuperuserForm
+    form_class = forms.CreateSuperuserForm
     template_name = 'numbas_lti/management/create_superuser.html'
 
     def form_valid(self,form):
         self.object = form.save()
         user = authenticate(username=self.object.username,password=form.cleaned_data['password1'])
-        print(user)
         login(self.request,user)
         return redirect(self.get_success_url())
 
@@ -143,7 +144,7 @@ class CreateSuperuserView(generic.edit.CreateView):
 class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
     template_name = 'numbas_lti/management/create_exam.html'
-    form_class = CreateExamForm
+    form_class = forms.CreateExamForm
 
     def get_context_data(self,*args,**kwargs):
         context = super(CreateExamView,self).get_context_data(*args,**kwargs)
@@ -165,7 +166,7 @@ class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
     def get_success_url(self):
         return reverse('dashboard',args=(self.request.resource.pk,))
 
-class ReplaceExamView(ManagementViewMixin,CreateExamView):
+class ReplaceExamView(ResourceManagementViewMixin,CreateExamView):
     management_tab = 'settings'
     template_name = 'numbas_lti/management/replace_exam.html'
 
@@ -182,7 +183,7 @@ class ReplaceExamView(ManagementViewMixin,CreateExamView):
 
         return response
 
-class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class DashboardView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/dashboard.html'
     management_tab = 'dashboard'
@@ -210,7 +211,7 @@ class DashboardView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.Det
 
         return context
 
-class DiscountPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class DiscountPartsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/discount.html'
     context_object_name = 'resource'
@@ -245,7 +246,7 @@ class DiscountPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail
                 discount = DiscountPart.objects.filter(resource=resource,part=path).first()
                 out.update({
                     'discount': discount,
-                    'form': DiscountPartBehaviourForm(instance=discount)
+                    'form': forms.DiscountPartBehaviourForm(instance=discount)
                 })
 
             return out
@@ -271,7 +272,7 @@ class DiscountPartView(MustBeInstructorMixin,generic.base.View):
         part = request.POST['part']
         discount,created = DiscountPart.objects.get_or_create(resource=resource,part=part)
         template = get_template('numbas_lti/management/discount/discounted.html')
-        html = template.render({'resource':resource,'discount':discount,'form':DiscountPartBehaviourForm(instance=discount)})
+        html = template.render({'resource':resource,'discount':discount,'form':forms.DiscountPartBehaviourForm(instance=discount)})
         return JsonResponse({'pk':discount.pk,'created':created, 'behaviour': discount.behaviour, 'html':html})
 
 class DiscountPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
@@ -288,13 +289,13 @@ class DiscountPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
 
 class DiscountPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
     model = DiscountPart
-    form_class = DiscountPartBehaviourForm
+    form_class = forms.DiscountPartBehaviourForm
 
     def form_valid(self,form,*args,**kwargs):
         self.object = form.save()
         return JsonResponse({})
 
-class RemarkPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class RemarkPartsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
     template_name = 'numbas_lti/management/remark.html'
     context_object_name = 'attempt'
@@ -338,7 +339,7 @@ class RemarkPartsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.D
                     'discount': discount,
                     'remark': remark,
                     'parent_remarked': parent is not None and parent['remark'] is not None,
-                    'form': RemarkPartScoreForm(instance=remark),
+                    'form': forms.RemarkPartScoreForm(instance=remark),
                     'has_gaps': has_gaps
                 })
 
@@ -372,7 +373,7 @@ class RemarkPartView(MustBeInstructorMixin,generic.base.View):
         html = template.render({
             'attempt':attempt,
             'remark':remark,
-            'form':RemarkPartScoreForm(instance=remark),
+            'form':forms.RemarkPartScoreForm(instance=remark),
             'max_score': remark.attempt.part_max_score(part),
         })
 
@@ -402,21 +403,21 @@ class RemarkPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
 
 class RemarkPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
     model = RemarkPart
-    form_class = RemarkPartScoreForm
+    form_class = forms.RemarkPartScoreForm
 
     def form_valid(self,form,*args,**kwargs):
         self.object = form.save()
         return JsonResponse({})
 
 
-class AllAttemptsView(ManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class AllAttemptsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/attempts.html'
     management_tab = 'attempts'
 
-class ResourceSettingsView(ManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+class ResourceSettingsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource
-    form_class = ResourceSettingsForm
+    form_class = forms.ResourceSettingsForm
     template_name = 'numbas_lti/management/resource_settings.html'
     context_object_name = 'resource'
     management_tab = 'settings'
@@ -488,7 +489,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     def get_filename(self):
         return _("{slug}-attempts.csv").format(slug=self.object.slug)
 
-class AttemptSCORMListing(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
+class AttemptSCORMListing(MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     model = Attempt
     management_tab = 'attempts'
     template_name = 'numbas_lti/management/attempt_scorm_listing.html'
@@ -502,7 +503,7 @@ class AttemptSCORMListing(MustBeInstructorMixin,ManagementViewMixin,generic.deta
 
         return context
 
-class ReportAllScoresView(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
+class ReportAllScoresView(MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     model = Resource
     management_tab = 'dashboard'
     template_name = 'numbas_lti/management/report_all_scores.html'
@@ -535,7 +536,7 @@ class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
         process.save()
         return redirect(reverse('dashboard',args=(process.resource.pk,)))
 
-class DeleteAttemptView(MustBeInstructorMixin,ManagementViewMixin,generic.edit.DeleteView):
+class DeleteAttemptView(MustBeInstructorMixin,ResourceManagementViewMixin,generic.edit.DeleteView):
     model = Attempt
     context_object_name = 'attempt'
     management_tab = 'attempts'
@@ -550,7 +551,7 @@ class DeleteAttemptView(MustBeInstructorMixin,ManagementViewMixin,generic.edit.D
     def get_success_url(self):
         return reverse('manage_attempts',args=(self.request.resource.pk,))
 
-class RunExamView(MustBeInstructorMixin,ManagementViewMixin,generic.detail.DetailView):
+class RunExamView(MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     """
         Run an exam without saving any attempt data
     """
@@ -697,13 +698,14 @@ class RunAttemptView(generic.detail.DetailView):
 
         return context
 
-class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin):
-    permission_required = ('numbas_lti.add_consumer',)
+class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,ManagementViewMixin):
+    permission_required = ('numbas_lti.add_lticonsumer',)
     login_url = reverse_lazy('login')
+    management_tab = 'consumers'
 
 class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
     model = LTIConsumer
-    template_name = 'numbas_lti/management/list_consumers.html'
+    template_name = 'numbas_lti/management/admin/list_consumers.html'
 
     def get_context_data(self,*args,**kwargs):
         context = super(ListConsumersView,self).get_context_data(*args,**kwargs)
@@ -715,14 +717,14 @@ class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
 
 class CreateConsumerView(ConsumerManagementMixin,generic.edit.CreateView):
     model = LTIConsumer
-    template_name = 'numbas_lti/management/create_consumer.html'
-    form_class = CreateConsumerForm
+    template_name = 'numbas_lti/management/admin/create_consumer.html'
+    form_class = forms.CreateConsumerForm
     success_url = reverse_lazy('list_consumers')
 
 class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
     model = LTIConsumer
     context_object_name = 'consumer'
-    template_name = 'numbas_lti/management/confirm_delete_consumer.html'
+    template_name = 'numbas_lti/management/admin/confirm_delete_consumer.html'
     success_url = reverse_lazy('list_consumers')
 
     def form_valid(self,form):
@@ -731,3 +733,103 @@ class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
         consumer.save()
 
         return redirect(self.get_success_url())
+
+class EditorLinkManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,ManagementViewMixin):
+    permission_required = ('numbas_lti.add_editorlink',)
+    management_tab = 'editor-links'
+    login_url = reverse_lazy('login')
+
+class ListEditorLinksView(EditorLinkManagementMixin,generic.list.ListView):
+    model = EditorLink
+    template_name = 'numbas_lti/management/admin/list_editorlinks.html'
+
+class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
+    template_name = 'numbas_lti/management/admin/edit_editorlink.html'
+    model = EditorLink
+    fields = ['name']
+    success_url = reverse_lazy('list_editorlinks')
+
+    def projectformset(self,*args,**kwargs):
+        if 'initial' in kwargs:
+            extra = len(kwargs['initial'])
+        else:
+            extra = 0
+        factory = inlineformset_factory(
+            EditorLink,
+            EditorLinkProject,
+            form=forms.EditorLinkProjectForm,
+            can_delete=False,
+            extra=extra
+        )
+        return factory(*args,**kwargs)
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(UpdateEditorLinkView,self).get_context_data(*args,**kwargs)
+
+        if 'project_form' not in kwargs:
+            selected_projects = [p.remote_id for p in self.object.projects.all()]
+
+            projects_data = requests.get('{}/api/projects'.format(self.object.url)).json()
+            projects = []
+            for p in projects_data:
+                projects.append({
+                    'name': p['name'],
+                    'description': p['description'],
+                    'remote_id': p['pk'],
+                    'homepage': p['homepage'],
+                    'rest_url': p['url'],
+                    'use': p['pk'] in selected_projects,
+                })
+
+            context['project_form'] = self.projectformset(initial=projects)
+
+        return context
+
+    def post(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        project_form = self.projectformset(self.request.POST)
+        form = self.get_form()
+        if project_form.is_valid():
+            return self.form_valid(form,project_form)
+        else:
+            return self.form_invalid(form,project_form)
+
+    def form_valid(self,form,project_form):
+        form.save()
+        self.object.projects.all().delete()
+        for pform in project_form:
+            if pform.cleaned_data['use']:
+                pform.instance.editor = self.object
+                link = pform.save()
+        Channel("editorlink.update_cache").send({'pk':self.object.pk,'bounce':False})
+
+        return http.HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self,form,project_form):
+        return self.render_to_response(self.get_context_data(form=form,project_form=project_form))
+
+class CreateEditorLinkView(EditorLinkManagementMixin,generic.edit.CreateView):
+    model = EditorLink
+    form_class = forms.CreateEditorLinkForm
+    template_name = 'numbas_lti/management/admin/create_editorlink.html'
+
+    def form_valid(self,form):
+        editorlink = self.object = form.save()
+        messages.add_message(self.request,messages.SUCCESS,_('Connected to {} at {}.'.format(editorlink.name,editorlink.url)))
+        return http.HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('edit_editorlink',args=(self.object.pk,))
+
+class DeleteEditorLinkView(EditorLinkManagementMixin,generic.edit.DeleteView):
+    model = EditorLink
+    template_name = 'numbas_lti/management/admin/confirm_delete_editorlink.html'
+    success_url = reverse_lazy('list_editorlinks')
+    context_object_name = 'editorlink'
+
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        self.object.delete()
+        messages.add_message(self.request,messages.SUCCESS,_('The connection to {} has been deleted.'.format(self.object.name)))
+        return http.HttpResponseRedirect(success_url)

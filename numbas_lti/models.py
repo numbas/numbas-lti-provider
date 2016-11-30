@@ -6,8 +6,9 @@ import requests
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.core import validators
-from channels import Group
+from channels import Group, Channel
 from django.utils import timezone
+from datetime import timedelta
 
 from .report_outcome import report_outcome,report_outcome_for_attempt
 
@@ -169,8 +170,6 @@ class Resource(models.Model):
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
-            if m is None:
-                print(path)
             question_index = m.group(1)
             part_index = m.group(2)
             gap_index = m.group(3)
@@ -285,8 +284,6 @@ class Attempt(models.Model):
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
-            if m is None:
-                print(path)
             p = out[m.group(1)][m.group(2)]
             if m.group(3):
                 p['gaps'].append(m.group(3))
@@ -454,22 +451,45 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
         report_outcome_for_attempt(instance.attempt)
 
 class EditorLink(models.Model):
-    url = models.URLField(verbose_name='Base URL of the editor')
-    projects = models.CharField(max_length=200,default='',verbose_name='IDs of projects to scan for exams',validators=[validators.validate_comma_separated_integer_list])
+    name = models.CharField(max_length=200,verbose_name='Editor name')
+    url = models.URLField(verbose_name='Base URL of the editor',unique=True)
     cached_available_exams = models.TextField(blank=True,editable=False,verbose_name='Cached JSON list of available exams from this editor')
     last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name='Time of last cache update')
 
-    def update_cache(self):
-        r = requests.get('{}/api/available-exams'.format(self.url))
+    def __str__(self):
+        return self.name
+
+    def update_cache(self,bounce=True):
+        if bounce and self.time_since_last_update().seconds<30:
+            return
+
+        project_pks = [str(p.remote_id) for p in self.projects.all()]
+        r = requests.get('{}/api/available-exams'.format(self.url),{'projects':project_pks})
+
         self.cached_available_exams = r.text
         self.last_cache_update = timezone.now()
 
+    def time_since_last_update(self):
+        if self.last_cache_update is None:
+            return timedelta.max
+        return timezone.now() - self.last_cache_update
+
     @property
     def available_exams(self):
+        if self.time_since_last_update().seconds> 30:
+            Channel("editorlink.update_cache").send({'pk':self.pk})
         if self.cached_available_exams:
             return json.loads(self.cached_available_exams)
         else:
             return []
+
+class EditorLinkProject(models.Model):
+    editor = models.ForeignKey(EditorLink,on_delete=models.CASCADE,related_name='projects',verbose_name='Editor that this project belongs to')
+    name = models.CharField(max_length=200,verbose_name='Name of the project')
+    description = models.TextField(verbose_name='Description of the project')
+    remote_id = models.IntegerField(verbose_name='ID of the project on the editor')
+    homepage = models.URLField(verbose_name='URL of the project\'s homepage on the editor')
+    rest_url = models.URLField(verbose_name='URL of the project on the editor\'s REST API')
 
 @receiver(models.signals.pre_save,sender=EditorLink)
 def update_editor_cache_before_save(sender,instance,**kwargs):

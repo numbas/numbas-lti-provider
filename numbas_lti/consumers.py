@@ -10,7 +10,7 @@ import json
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
-from .models import Attempt,ScormElement,Resource, ReportProcess
+from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
 
 @enforce_ordering(slight=True)
@@ -47,6 +47,11 @@ def report_scores(message,**kwargs):
 
 class AttemptScormListingConsumer(WebsocketConsumer):
     def connection_groups(self,pk,**kwargs):
-        print("Connected to: {}".format(pk))
         attempt = Attempt.objects.get(pk=pk)
         return [attempt.channels_group()]
+
+def update_editorlink(message,**kwargs):
+    editorlink = EditorLink.objects.get(pk=message['pk'])
+
+    editorlink.update_cache(bounce=message.get('bounce',False))
+    editorlink.save()

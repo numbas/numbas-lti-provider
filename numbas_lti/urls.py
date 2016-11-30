@@ -49,5 +49,10 @@ urlpatterns = [
     url(r'^consumers/create$', views.CreateConsumerView.as_view(), name='create_consumer'),
     url(r'^consumers/(?P<pk>\d+)/delete$', views.DeleteConsumerView.as_view(), name='delete_consumer'),
 
+    url(r'^editorlinks$', views.ListEditorLinksView.as_view(), name='list_editorlinks'),
+    url(r'^editorlinks/create$', views.CreateEditorLinkView.as_view(), name='create_editorlink'),
+    url(r'^editorlink/(?P<pk>\d+)/edit$', views.UpdateEditorLinkView.as_view(), name='edit_editorlink'),
+    url(r'^editorlink/(?P<pk>\d+)/delete$', views.DeleteEditorLinkView.as_view(), name='delete_editorlink'),
+
 	url(r'^config.xml$', views.config_xml, name='config_xml'),
 ]
