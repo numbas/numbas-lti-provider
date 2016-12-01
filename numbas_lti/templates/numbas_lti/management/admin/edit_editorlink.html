@@ -18,9 +18,13 @@ h3.project-name {
     {{form|bootstrap}}
     <fieldset>
         <h2>{% trans "Select projects to make available" %}</h2>
-        <p>{% trans "Select the projects you'd like to make available below." %}</p>
         <p>{% trans "To appear in this list, a project must be marked \"Visible to non-members\" in the editor." %}</p>
         <p>{% trans "Exams from selected projects will be made available to instructors when they create an activity." %}</p>
+        {% if project_form|length %}
+            <p>{% trans "Select the projects you'd like to make available below." %}</p>
+        {% else %}
+            <p class="alert alert-warning">{% trans "No projects have been made visible - go to the editor and mark a project \"Visible to non-members\" before proceeding." %}</p>
+        {% endif %}
         {{project_form.management_form}}
         {{project_form.non_form_errors}}
         <table class="table">

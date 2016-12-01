@@ -108,7 +108,6 @@ class CreateEditorLinkForm(ModelForm):
             data = response.json()
             if data.get('numbas_editor')!=1:
                 raise Exception("This doesn't seem to be a Numbas editor instance.")
-            print(data)
             self.cleaned_data['name'] = data['site_title']
         except (Exception,json.JSONDecodeError,requests.exceptions.RequestException) as e:
             raise forms.ValidationError("There was an error connecting to this URL: {}".format(e))

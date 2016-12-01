@@ -5,6 +5,10 @@
 {% block stylesheets %}
 {{block.super}}
 <style type="text/css">
+    .available-exams {
+        max-height: 35rem;
+        overflow-y: auto;
+    }
     .available-exam.exclude {
         display: none;
     }
@@ -77,7 +81,7 @@
                             <input class="form-control" type="text" placeholder="{% trans "Search" %}" id="exam-search">
                         </div>
                     </div>
-                    <ul class="list-group">
+                    <ul class="list-group available-exams">
                         {% for exam in exams %}
                         <li class="list-group-item available-exam" data-name="{{exam.name|escape}}">
                             <h3><a href="{{exam.edit}}">{{exam.name}}</a> </h3>
