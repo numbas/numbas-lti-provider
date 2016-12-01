@@ -486,7 +486,7 @@ class EditorLink(models.Model):
 class EditorLinkProject(models.Model):
     editor = models.ForeignKey(EditorLink,on_delete=models.CASCADE,related_name='projects',verbose_name='Editor that this project belongs to')
     name = models.CharField(max_length=200,verbose_name='Name of the project')
-    description = models.TextField(verbose_name='Description of the project')
+    description = models.TextField(blank=True,verbose_name='Description of the project')
     remote_id = models.IntegerField(verbose_name='ID of the project on the editor')
     homepage = models.URLField(verbose_name='URL of the project\'s homepage on the editor')
     rest_url = models.URLField(verbose_name='URL of the project on the editor\'s REST API')
