@@ -463,10 +463,13 @@ class EditorLink(models.Model):
         if bounce and self.time_since_last_update().seconds<30:
             return
 
-        project_pks = [str(p.remote_id) for p in self.projects.all()]
-        r = requests.get('{}/api/available-exams'.format(self.url),{'projects':project_pks})
+        if self.projects.exists():
+            project_pks = [str(p.remote_id) for p in self.projects.all()]
+            r = requests.get('{}/api/available-exams'.format(self.url),{'projects':project_pks})
 
-        self.cached_available_exams = r.text
+            self.cached_available_exams = r.text
+        else:
+            self.cached_available_exams = '[]'
         self.last_cache_update = timezone.now()
 
     def time_since_last_update(self):
