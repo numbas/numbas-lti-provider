@@ -18,12 +18,16 @@
 {% block javascripts %}
 {{block.super}}
 <script>
-    function filter_exams(query) {
+
+    var selected_project = null;
+    var query = '';
+
+    function filter_exams() {
         query = query.toLowerCase().trim();
         Array.prototype.forEach.apply(document.querySelectorAll('.available-exam'),[function(e) {
             var name = e.getAttribute('data-name');
-            var match = query.length==0 || name.toLowerCase().indexOf(query)>=0;
-            console.log(e,match);
+            var project = e.getAttribute('data-project');
+            var match = (selected_project==null || project==selected_project) && (query.length==0 || name.toLowerCase().indexOf(query)>=0);
             e.classList.toggle('exclude',!match);
         }]);
     }
@@ -32,8 +36,13 @@
     $(document).ready(function() {
         var exam_search = document.getElementById('exam-search');
         exam_search.addEventListener('input',function() {
-            var q = exam_search.value;
-            filter_exams(q);
+            query = exam_search.value;
+            filter_exams();
+        });
+        var project_selector = document.getElementById('project-selector');
+        project_selector.addEventListener('change',function() {
+            selected_project = project_selector.value || null;
+            filter_exams();
         });
     });
 </script>
@@ -78,13 +87,26 @@
                         <h2 class="panel-title"><span class="glyphicon glyphicon-transfer"></span> {% trans "Select a ready-made exam" %}</h2>
                     </div>
                     <div class="panel-heading">
-                        <div class="form">
-                            <input class="form-control" type="text" placeholder="{% trans "Search" %}" id="exam-search">
+                        <div class="form form-inline">
+                            <div class="form-group">
+                                <input class="form-control" type="text" placeholder="{% trans "Search" %}" id="exam-search">
+                            </div>
+                            <div class="form-group">
+                                <label for="project-selector">{% trans "in" %}</label>
+                                <select class="form-control" name="project" id="project-selector">
+                                    <option value="">{% trans "All projects" %}</option>
+                                    {% for link in editor_links %}
+                                    {% for project in link.projects.all %}
+                                    <option value="{{project.rest_url|escape}}">{{project.name}}</option>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <ul class="list-group available-exams">
                         {% for exam in exams %}
-                        <li class="list-group-item available-exam" data-name="{{exam.name|escape}}">
+                        <li class="list-group-item available-exam" data-name="{{exam.name|escape}}" data-project="{{exam.project|escape}}">
                             <h3><a href="{{exam.edit}}">{{exam.name}}</a> </h3>
                             <p>by <a target="_blank" href="{{exam.author.profile}}">{{exam.author.full_name}}</a></p>
                             <div class="description">{{exam.metadata.description|safe}}</div>
