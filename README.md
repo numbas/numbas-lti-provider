@@ -15,6 +15,7 @@ The set-up process looks like this:
 * Install the software on your own server, or on the cloud platform Heroku.
 * Complete the initial set-up, creating an admin account and an LTI consumer key.
 * Add the LTI tool to your VLE using the details provided.
+* When you access the tool from your VLE, upload a Numbas SCORM package, and you're done!
 
 ## Installing the software
 

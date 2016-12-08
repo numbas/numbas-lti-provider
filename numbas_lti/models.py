@@ -176,9 +176,9 @@ class Resource(models.Model):
             step_index = m.group(4)
             p = out[question_index][part_index]
             if m.group(3):
-                p['gaps'].append(step_index)
+                p['gaps'].append(gap_index)
             elif m.group(4):
-                p['steps'].append(gap_index)
+                p['steps'].append(step_index)
     
         return out
 
@@ -377,6 +377,15 @@ class RemarkPart(models.Model):
     part = models.CharField(max_length=20)
     score = models.FloatField()
 
+def remark_update_scaled_score(sender,instance,**kwargs):
+    attempt = instance.attempt
+    scaled_score = attempt.raw_score/attempt.max_score
+    if scaled_score != attempt.scaled_score:
+        attempt.scaled_score = scaled_score
+        attempt.save()
+models.signals.post_save.connect(remark_update_scaled_score,sender=RemarkPart)
+models.signals.post_delete.connect(remark_update_scaled_score,sender=RemarkPart)
+
 DISCOUNT_BEHAVIOURS = [
     ('remove','Remove from total'),
     ('fullmarks','Award everyone full credit'),
@@ -386,6 +395,16 @@ class DiscountPart(models.Model):
     resource = models.ForeignKey(Resource,related_name='discounted_parts')
     part = models.CharField(max_length=20)
     behaviour = models.CharField(max_length=10,choices=DISCOUNT_BEHAVIOURS,default='remove')
+
+def discount_update_scaled_score(sender,instance,**kwargs):
+    for attempt in instance.resource.attempts.all():
+        scaled_score = attempt.raw_score/attempt.max_score
+        print(attempt,scaled_score,attempt.scaled_score)
+        if scaled_score != attempt.scaled_score:
+            attempt.scaled_score = scaled_score
+            attempt.save()
+models.signals.post_save.connect(discount_update_scaled_score,sender=DiscountPart)
+models.signals.post_delete.connect(discount_update_scaled_score,sender=DiscountPart)
 
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
