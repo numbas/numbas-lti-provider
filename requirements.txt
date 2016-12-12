@@ -6,3 +6,4 @@ git+git://github.com/christianp/django-auth-lti@oauthlib#egg=django_auth_lti
 requests==2.10
 requests-oauthlib==0.6
 django-bootstrap-form==3.2.1
+simplejson==3.10.0
