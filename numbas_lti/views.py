@@ -20,6 +20,7 @@ from channels import Channel
 import datetime
 import csv
 import json
+import simplejson
 import string
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
@@ -668,7 +669,7 @@ class RunAttemptView(generic.detail.DetailView):
 
         scorm_cmi.update(latest_elements)
         
-        context['scorm_cmi'] = json.dumps(scorm_cmi)
+        context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
 
         return context
 
