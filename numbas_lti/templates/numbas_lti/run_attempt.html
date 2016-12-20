@@ -10,10 +10,29 @@
     #scorm-player {
         border: none;
     }
+    #status-display {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+    }
+    #status-display .status-message {
+        visibility: hidden;
+    }
+    #status-display.unreceived .text-unreceived,
+    #status-display.queued .text-queued,
+    #status-display.disconnected .text-disconnected 
+    {
+        visibility: visible;
+    }
 </style>
 </head>
 <body>
 <iframe id="scorm-player" width="100%" height="100%" src="{{attempt.exam.extracted_url}}/index.html"></iframe>
+<div id="status-display">
+    <span class="status-message text-unreceived">R</span>
+    <span class="status-message text-queued">Q</span>
+    <span class="status-message text-disconnected">D</span>
+</div>
 
 {% if scorm_cmi %}
 <script>
@@ -25,12 +44,22 @@ if(!Modernizr.websockets) {
     window.location = '/no-websockets';
 }
 </script>
-<script type="text/javascript" src="{% static 'reconnecting-websocket.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
+<script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'fetch.js' %}"></script>
 <script type="text/javascript" src="{% static 'api.js' %}"></script>
 <script type="text/javascript">
-    var cmi = {{scorm_cmi|safe}};
-    var sc = new SCORM_API(cmi,{{attempt.pk}});
-    window.API_1484_11 = sc.API_1484_11;
+    try {
+        var cmi = {{scorm_cmi|safe}};
+        var attempt_pk = {{attempt.pk}};
+        var fallback_url = '{% url 'attempt_scorm_data_fallback' attempt.pk %}';
+        var sc = new SCORM_API(cmi,attempt_pk,fallback_url);
+        window.API_1484_11 = sc.API_1484_11;
+    } catch(e) {
+        alert("A connection to the server could not be created. Please report this.");
+        console.log(e.stack);
+//        window.location.href = '{% url 'show_attempts' %}';
+    }
 </script>
 {% endif %}
 <script type="text/javascript">

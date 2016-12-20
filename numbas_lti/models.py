@@ -430,7 +430,7 @@ class ScormElement(models.Model):
     attempt = models.ForeignKey(Attempt,on_delete=models.CASCADE,related_name='scormelements')
     key = models.CharField(max_length=200)
     value = models.TextField()
-    time = models.DateTimeField(auto_now_add=True)
+    time = models.DateTimeField()
     current = models.BooleanField(default=True) # is this the latest version?
 
     class Meta:

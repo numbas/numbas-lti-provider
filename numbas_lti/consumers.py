@@ -6,6 +6,8 @@ from channels.auth import http_session_user, channel_session_user, channel_sessi
 from channels.generic import BaseConsumer
 from channels.generic.websockets import WebsocketConsumer
 import json
+from datetime import datetime
+from django.utils import timezone
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
@@ -20,14 +22,20 @@ def scorm_connect(message,pk):
 
 @channel_session_user
 def scorm_set_element(message,pk):
-    data = json.loads(message.content['text'])
+    print("Receive {}".format(message.content['text']))
+    packet = json.loads(message.content['text'])
     attempt = Attempt.objects.get(pk=pk)
-    for element in data:
+    for element in packet['data']:
         ScormElement.objects.create(
             attempt = attempt,
             key = element['key'], 
-            value = element['value']
+            value = element['value'],
+            time = timezone.make_aware(datetime.fromtimestamp(element['time']))
         )
+    response = {
+        'received': str(packet['id'])
+    }
+    message.reply_channel.send({'text':json.dumps(response)})
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])

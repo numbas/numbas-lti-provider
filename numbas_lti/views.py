@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.shortcuts import render,redirect
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django_auth_lti.decorators import lti_role_required
 from django_auth_lti.const import LEARNER, INSTRUCTOR
 from django_auth_lti.patch_reverse import patch_reverse
@@ -20,6 +21,7 @@ from django.forms.models import inlineformset_factory
 from itertools import groupby
 from channels import Channel
 import datetime
+from django.utils import timezone
 import csv
 import json
 import simplejson
@@ -669,8 +671,6 @@ class RunAttemptView(generic.detail.DetailView):
         user_data = attempt.resource.user_data(user)
 
         scorm_cmi = {
-            'cmi.mode': mode,
-            'cmi.entry': entry,
             'cmi.suspend_data': '',
             'cmi.objectives._count': 0,
             'cmi.interactions._count': 0,
@@ -682,22 +682,49 @@ class RunAttemptView(generic.detail.DetailView):
             'cmi.score.min': 0,
             'cmi.score.max': 0,
             'cmi.total_time': 0,
+            'cmi.success_status': '',
             'cmi.completion_status': attempt.completion_status,
-            'cmi.success_status': ''
         }
+        scorm_cmi = {k: {'value':v,'time':attempt.start_time.timestamp()} for k,v in scorm_cmi.items()}
 
         # TODO only fetch the latest values of elements from the DB, somehow
 
         latest_elements = {}
 
         for e in attempt.scormelements.all().order_by('time'):
-            latest_elements[e.key] = e.value
+            latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
 
         scorm_cmi.update(latest_elements)
+
+        dynamic_cmi = {
+            'cmi.mode': mode,
+            'cmi.entry': entry,
+        }
+        now = datetime.datetime.now().timestamp()
+        dynamic_cmi = {k: {'value':v,'time':now} for k,v in dynamic_cmi.items()}
+        scorm_cmi.update(dynamic_cmi)
         
         context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
 
         return context
+
+@require_POST
+def scorm_data_fallback(request,pk,*args,**kwargs):
+    """ An AJAX fallback to save SCORM data, when the websocket fails """
+    attempt = Attempt.objects.get(pk=pk)
+    batches = json.loads(request.body.decode())
+    done = []
+    for id,elements in batches.items():
+        print(id,len(elements))
+        for element in elements:
+            ScormElement.objects.create(
+                attempt = attempt,
+                key = element['key'], 
+                value = element['value'],
+                time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time']))
+            )
+        done.append(id)
+    return JsonResponse({'received_batches':done})
 
 class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,ManagementViewMixin):
     permission_required = ('numbas_lti.add_lticonsumer',)
