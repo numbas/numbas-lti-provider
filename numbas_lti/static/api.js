@@ -47,12 +47,17 @@ function SCORM_API(data,attempt_pk,fallback_url) {
             break;
         }
         var queued = sc.queue.length>0;
-        var disconnected = sc.socket.readyState!=WebSocket.OPEN;
+        var disconnected = !(sc.socket_is_open() || sc.ajax_is_working());
+
+        var show_warning = (unreceived || queued) && disconnected;
+
+        var ok = !show_warning;
 
         var status_display = document.getElementById('status-display');
-        status_display.classList.toggle('unreceived',unreceived);
-        status_display.classList.toggle('queued',queued);
-        status_display.classList.toggle('disconnected',disconnected);
+        
+        status_display.classList.toggle('ok',ok);
+        status_display.classList.toggle('disconnected',show_warning);
+        status_display.classList.toggle('localstorage-used',sc.localstorage_used||false);
     },50);
 
     /** Periodically send data over the websocket
@@ -108,9 +113,7 @@ SCORM_API.prototype = {
             elements.forEach(function(e) {
                 var d = data[e.key];
                 if(!(e.key in data) || data[e.key].time<e.timestamp()) {
-                    console.log('use '+e.key+' from batch '+id);
                     data[e.key] = {value:e.value,time:e.timestamp()};
-                    console.log(key,data[e.key]);
                 }
             });
         }
@@ -179,7 +182,6 @@ SCORM_API.prototype = {
         this.socket = new RobustWebSocket(ws_url);
 
         this.socket.onmessage = function(e) {
-            console.log('socket message',e.data);
             var d = JSON.parse(e.data);
 
             // The server sends back confirmation of each batch of elements it received.
@@ -190,7 +192,6 @@ SCORM_API.prototype = {
         }
 
         this.socket.onopen = function() {
-            console.log('open');
 
             // resend any batches we didn't get confirmation messages for
             for(var id in sc.sent) {
@@ -199,15 +200,11 @@ SCORM_API.prototype = {
 
             // send the current queue
             sc.send_queue_socket();
-
-            //sc.socket.close();
         }
 
         this.socket.onerror = function() {
-            console.log('error',arguments);
         }
         this.socket.onclose = function() {
-            console.log('close');
         }
 
     },
@@ -225,7 +222,6 @@ SCORM_API.prototype = {
      * @param {number} id
      */
     batch_received: function(id) {
-        console.log('received',id);
         delete sc.sent[id];
         this.set_localstorage();
     },
@@ -241,7 +237,9 @@ SCORM_API.prototype = {
                 data.sent[id] = this.make_batch(this.sent[id]);
             }
             window.localStorage.setItem(this.localstorage_key, JSON.stringify(data));
+            this.localstorage_used = true;
         } catch(e) {
+            this.localstorage_used = false;
         }
     },
 
@@ -292,6 +290,12 @@ SCORM_API.prototype = {
         return this.socket.readyState==WebSocket.OPEN;
     },
 
+    /** Did the last AJAX call succeed?
+     */
+    ajax_is_working: function() {
+        return this.last_ajax_succeeded===undefined || this.last_ajax_succeeded;
+    },
+
     /** Send the queued data model elements, if any, to the server, over the websocket.
      *  If there's nothing to send or the websocket isn't connected, do nothing.
      *  A copy of the sent elements is saved in `this.sent`, so we can resend it if the server doesn't confirm it saved them.
@@ -301,7 +305,6 @@ SCORM_API.prototype = {
             return;
         }
         var id = this.sent_acc++;
-        console.log('sent',id);
         this.send_elements_socket(this.queue,id);
         this.batch_sent(this.queue.slice(),id);
         this.queue = [];
@@ -363,9 +366,7 @@ SCORM_API.prototype = {
             return;
         }
 
-        console.log('send over ajax');
         var csrftoken = getCookie('csrftoken');
-        console.log(csrftoken);
 
         var request = fetch(this.fallback_url, {
             method: 'POST',
@@ -379,16 +380,17 @@ SCORM_API.prototype = {
         request
             .then(
                 function(response) {
+                    sc.last_ajax_succeeded = true;
                     return response.json();
                 },
                 function(error) {
-                    console.log('failed: '+error.message);
+                    console.error('failed to send SCORM data over HTTP: '+error.message);
+                    sc.last_ajax_succeeded = false;
                     return Promise.reject(error.message);
                 }
             )
             .then(
                 function(d) {
-                    console.log(d);
                     d.received_batches.forEach(function(id) {
                         sc.batch_received(id);
                     });
@@ -412,6 +414,11 @@ SCORM_API.prototype = {
 			return false;
 		}
 		this.terminated = true;
+
+        /** Do one last send over HTTP, to make sure any remaining data is saved straight away.
+         */
+        this.send_ajax();
+
 		return true;
 	},
 
