@@ -1,9 +1,16 @@
 from django.forms import ModelForm
+from django import forms
 
-from .models import Resource, DiscountPart, RemarkPart, LTIConsumer
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject
+
+from django.core.files import File
+from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+import os
+import requests
+import json
 
 from django.utils.crypto import get_random_string
 import string
@@ -47,3 +54,68 @@ class CreateConsumerForm(ModelForm):
         if commit:
             consumer.save()
         return consumer
+
+class CreateExamForm(ModelForm):
+    package = forms.FileField(required=False)
+    class Meta:
+        model = Exam
+        fields = ['package','retrieve_url','rest_url']
+        widgets = {
+            'retrieve_url': forms.HiddenInput(),
+            'rest_url': forms.HiddenInput(),
+        }
+
+    def clean(self):
+        cleaned_data = super(CreateExamForm,self).clean()
+        if not (cleaned_data.get('retrieve_url') or cleaned_data.get('package')):
+            raise forms.ValidationError("No exam selected")
+
+    def save(self,commit=True):
+        exam = super(CreateExamForm,self).save(commit=False)
+        retrieve_url = self.cleaned_data.get('retrieve_url')
+        if retrieve_url:
+            zip = requests.get(retrieve_url+'?scorm').content
+            exam.retrieve_url = retrieve_url
+            exam.package.save('exam.zip',File(BytesIO(zip)))
+        if commit:
+            exam.save()
+        return exam
+
+class EditorLinkProjectForm(ModelForm):
+    use = forms.BooleanField(required=False)
+    class Meta:
+        model = EditorLinkProject
+        fields=('name','description','remote_id','homepage','rest_url')
+        widgets = {
+            'name': forms.HiddenInput(),
+            'description': forms.HiddenInput(),
+            'remote_id': forms.HiddenInput(),
+            'homepage': forms.HiddenInput(),
+            'rest_url': forms.HiddenInput(),
+        }
+
+class CreateEditorLinkForm(ModelForm):
+    class Meta:
+        model = EditorLink
+        fields = ['url']
+
+    def clean_url(self):
+        url = self.cleaned_data['url']
+        try:
+            response = requests.get('{}/api/handshake'.format(url))
+            if response.status_code != 200:
+                raise Exception("Request returned HTTP status code {}.".format(response.status_code))
+            data = response.json()
+            if data.get('numbas_editor')!=1:
+                raise Exception("This doesn't seem to be a Numbas editor instance.")
+            self.cleaned_data['name'] = data['site_title']
+        except (Exception,json.JSONDecodeError,requests.exceptions.RequestException) as e:
+            raise forms.ValidationError("There was an error connecting to this URL: {}".format(e))
+        return url
+
+    def save(self,commit=True):
+        editorlink = super(CreateEditorLinkForm,self).save(commit=False)
+        editorlink.name = self.cleaned_data['name']
+        if commit:
+            editorlink.save()
+        return editorlink

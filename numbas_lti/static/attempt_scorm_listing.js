@@ -60,7 +60,7 @@ DataModel.prototype = {
     listen_for_changes: function(url) {
         var dm = this;
         var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-        var socket = this.socket = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + url);
+        var socket = this.socket = new RobustWebSocket(ws_scheme + '://' + window.location.host + url);
 
         socket.onmessage = function(e) {
             var element = JSON.parse(e.data);

@@ -10,10 +10,75 @@
     #scorm-player {
         border: none;
     }
+
+    #status-display {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding: 0.4em 1em;
+        border-radius: 4px 0 0 0;
+        background: hsl(0,90%,50%);
+        color: white;
+        font-family: sans-serif;
+        transition: background-color 0.5s;
+    }
+    #status-display:focus {
+        border-radius: 0;
+    }
+    #status-display.ok {
+        display: none;
+    }
+    #status-display .status-message {
+        display: none;
+    }
+    #status-display:not(.localstorage-used) .text-localstorage-used {
+        display: none;
+    }
+    #status-display:not(:focus) .status-message .text {
+        display: none;
+    }
+    #status-display:hover:not(:focus) {
+        background-color: hsl(10,90%,50%);
+        cursor: pointer;
+    }
+    #status-display:hover:not(:focus) .symbol {
+        animation: wobble 0.3s infinite linear;
+        display: block;
+    }
+    @keyframes wobble {
+        0% {
+            transform: rotate(0deg);
+        }
+        25% {
+            transform: rotate(20deg);
+        }
+        75% {
+            transform: rotate(-20deg);
+        }
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+    #status-display:focus .symbol {
+        display: none;
+    }
+    #status-display.disconnected .text-disconnected {
+        display: block;
+    }
 </style>
 </head>
 <body>
 <iframe id="scorm-player" width="100%" height="100%" src="{{attempt.exam.extracted_url}}/index.html"></iframe>
+<div id="status-display" tabindex="1" class="ok">
+    <span class="symbol">!</span>
+    <span class="status-message text-disconnected">
+        <div class="text">
+            <p>{% trans "There is currently no connection to the server - your attempt data can not be saved to the database." %}</p>
+            <p>{% trans "When the connection is restored, data will be saved to the database." %}</p>
+            <p class="text-localstorage-used">{% trans "Data is being saved locally, so it's safe to close the window now; you'll be able to resume this attempt from the same device when the connection is restored." %}</p>
+        </div>
+    </span>
+</div>
 
 {% if scorm_cmi %}
 <script>
@@ -25,14 +90,26 @@ if(!Modernizr.websockets) {
     window.location = '/no-websockets';
 }
 </script>
-<script type="text/javascript" src="{% static 'reconnecting-websocket.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
+<script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'fetch.js' %}"></script>
+<script type="text/javascript" src="{% static 'polyfills.js' %}"></script>
 <script type="text/javascript" src="{% static 'api.js' %}"></script>
 <script type="text/javascript">
-    var cmi = {{scorm_cmi|safe}};
-    var sc = new SCORM_API(cmi,{{attempt.pk}});
-    window.API_1484_11 = sc.API_1484_11;
+    try {
+        var cmi = {{scorm_cmi|safe}};
+        var attempt_pk = {{attempt.pk}};
+        var fallback_url = '{% url 'attempt_scorm_data_fallback' attempt.pk %}';
+        var sc = new SCORM_API(cmi,attempt_pk,fallback_url);
+        window.API_1484_11 = sc.API_1484_11;
+    } catch(e) {
+        alert("{% trans "A connection to the server could not be created. Please report this." %}");
+        console.error(e.stack);
+        window.location.href = '{% url 'show_attempts' %}';
+    }
 </script>
 {% endif %}
+
 <script type="text/javascript">
 	window.addEventListener('load',function() {
 		var iframe = document.getElementById('scorm-player');
