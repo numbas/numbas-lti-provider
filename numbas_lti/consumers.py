@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from channels.handler import AsgiHandler
 from channels import Group
-from channels.sessions import channel_session,enforce_ordering
+from channels.sessions import channel_session
 from channels.auth import http_session_user, channel_session_user, channel_session_user_from_http
 from channels.generic import BaseConsumer
 from channels.generic.websockets import WebsocketConsumer
@@ -15,7 +15,6 @@ from django.utils.translation import ugettext as _
 from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
 
-@enforce_ordering(slight=True)
 @channel_session_user_from_http
 def scorm_connect(message,pk):
     pass
