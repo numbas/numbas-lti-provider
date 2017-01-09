@@ -49,15 +49,26 @@ function SCORM_API(data,attempt_pk,fallback_url) {
         var queued = sc.queue.length>0;
         var disconnected = !(sc.socket_is_open() || sc.ajax_is_working());
 
-        var show_warning = (unreceived || queued) && disconnected;
+        var ok = !((unreceived || queued) && disconnected);
 
-        var ok = !show_warning;
+        if(!ok) {
+            sc.last_show_warning = new Date();
+        }
+        var show_warning = !ok || (new Date()-sc.last_show_warning)<sc.warning_linger_duration;
 
         var status_display = document.getElementById('status-display');
+
+        function toggle(elem,cls,on) {
+            if(on) {
+                elem.classList.add(cls);
+            } else {
+                elem.classList.remove(cls);
+            }
+        }
         
-        status_display.classList.toggle('ok',ok);
-        status_display.classList.toggle('disconnected',show_warning);
-        status_display.classList.toggle('localstorage-used',sc.localstorage_used||false);
+        toggle(status_display,'ok',ok);
+        toggle(status_display,'disconnected',show_warning);
+        toggle(status_display,'localstorage-used',sc.localstorage_used||false);
     },50);
 
     /** Periodically send data over the websocket
@@ -79,6 +90,10 @@ SCORM_API.prototype = {
     /** Interval when websocket is disconnected to send data over AJAX, in milliseconds
      */
     ajax_period: 5000,
+
+    /** How long the warning message should stay visible after the warning disappears, in milliseconds
+     */
+    warning_linger_duration: 1000,
 
     /** Has the API been initialised?
      */
