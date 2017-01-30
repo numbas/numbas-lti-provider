@@ -23,3 +23,4 @@ haikunator==1.0.1
 msgpack-python==0.4.7
 wheel==0.24.0
 django-bootstrap-form==3.2.1
+simplejson==3.10.0

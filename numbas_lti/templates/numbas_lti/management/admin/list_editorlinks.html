@@ -1,0 +1,55 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block management_content %}
+    {% if object_list.exists %}
+        <div>
+            <p>{% trans "The configured Numbas editor connections are listed below." %}</p>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>{% trans "Editor" %}</th>
+                    <th>{% trans "Projects" %}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in object_list %}
+                <tr>
+                    <td>
+                        <a target="_blank" href="{{link.url}}">
+                            {{link.name}}
+                            <br>
+                            <small>{{link.url}}</small>
+                        </a>
+                    </td>
+                    <td>
+                        {% if link.projects.exists %}
+                        <ul>
+                        {% for project in link.projects.all %}
+                            <li><a target="_blank" href="{{project.homepage}}">{{project.name}}</a></li>
+                        {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p>{% trans "No projects linked yet." %}</p>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        <a class="btn btn-primary" href="{% url 'edit_editorlink' link.pk %}"><span class="glyphicon glyphicon-cog"></span> {% trans "Edit" %}</a>
+                        <a class="btn btn-danger" href="{% url 'delete_editorlink' link.pk %}" title="{% trans "Delete this connection" %}"><span class="glyphicon glyphicon-trash"></span> <span class="sr-only">{% trans "Delete this connection" %}</span></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Connect to a Numbas editor" %}</a></p>
+
+    {% else %}
+        <div class="alert alert-warning">
+            <p>{% trans "No links to Numbas editors have been set up yet." %}</p>
+            <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Connect to a Numbas editor" %}</a></p>
+        </div>
+    {% endif %}
+{% endblock management_content %}

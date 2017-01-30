@@ -15,6 +15,7 @@ The set-up process looks like this:
 * Install the software on your own server, or on the cloud platform Heroku.
 * Complete the initial set-up, creating an admin account and an LTI consumer key.
 * Add the LTI tool to your VLE using the details provided.
+* When you access the tool from your VLE, upload a Numbas SCORM package, and you're done!
 
 ## Installing the software
 
@@ -23,6 +24,8 @@ The set-up process looks like this:
 The quickest way of setting up the software is through Heroku. Click on the button - it'll take about five minutes from start to finish.
 
 [![Deploy Numbas LTI tool provider to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/numbas/numbas-lti-provider/tree/heroku)
+
+Heroku gives you 1,000 free hours of uptime per month, and limits the size of your app's database. To keep the app running continuously, and store more data, you have to pay. The minimum "always-up" setup looks to cost around $30 per month.
 
 ### In a Vagrant virtual machine
 

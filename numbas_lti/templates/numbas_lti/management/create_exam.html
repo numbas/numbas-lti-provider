@@ -2,33 +2,130 @@
 {% load bootstrap %}
 {% load i18n %}
 
+{% block stylesheets %}
+{{block.super}}
+<style type="text/css">
+    .available-exams {
+        max-height: 35rem;
+        overflow-y: auto;
+    }
+    .available-exam.exclude {
+        display: none;
+    }
+</style>
+{% endblock stylesheets %}
+
 {% block javascripts %}
 {{block.super}}
 <script>
-    document.getElementById('id_package').addEventListener('change',function() {
-        document.querySelector('button[type=submit]').removeAttribute('disabled');
+
+    var selected_project = null;
+    var query = '';
+
+    function filter_exams() {
+        query = query.toLowerCase().trim();
+        Array.prototype.forEach.apply(document.querySelectorAll('.available-exam'),[function(e) {
+            var name = e.getAttribute('data-name');
+            var project = e.getAttribute('data-project');
+            var match = (selected_project==null || project==selected_project) && (query.length==0 || name.toLowerCase().indexOf(query)>=0);
+            e.classList.toggle('exclude',!match);
+        }]);
+    }
+
+
+    $(document).ready(function() {
+        var exam_search = document.getElementById('exam-search');
+        exam_search.addEventListener('input',function() {
+            query = exam_search.value;
+            filter_exams();
+        });
+        var project_selector = document.getElementById('project-selector');
+        project_selector.addEventListener('change',function() {
+            selected_project = project_selector.value || null;
+            filter_exams();
+        });
     });
 </script>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-        <div class="jumbotron">
-    <header>
-        <h1>{% trans "New Numbas activity" %}</h1>
-    </header>
-
     <main>
+        <div class="jumbotron">
+            <h1>{% trans "New Numbas activity" %}</h1>
             <p>{% trans "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
-            <p>{% trans "Please upload one now." %}</p>
-            <p>{% trans "To obtain an exam package, find your exam in the Numbas editor and click <em>\"Download SCORM package\"</em>." %}</p>
-
-        <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
-            {% csrf_token %}
-            {{form|bootstrap}}
-            <button disabled type="submit" class="btn btn-lg btn-primary">{% trans "Submit" %}</button>
-        </form>
-    </main>
+            {% if editor_links.exists %}
+                <p>{% trans "Please upload one now or select from the list of ready-to-use exams." %}</p>
+            {% else %}
+                <p>{% trans "Please upload one now." %}
+            {% endif %}
         </div>
+
+        <div class="row">
+            <div class="{% if exams %}col-sm-12 col-md-6{% else %}col-sm-12{% endif %}">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2 class="panel-title"><span class="glyphicon glyphicon-import"></span> {% trans "Upload an exam package" %}</h2>
+                    </div>
+                    <div class="panel-body">
+                        <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
+                            <p>{% trans "To obtain an exam package, find your exam in the Numbas editor and click <em>\"Download SCORM package\"</em>." %}</p>
+                            {% if editor_links.count = 1 %}
+                            <p class="text-center"><a class="btn btn-link" target="_blank" href="{{editor_links.first.url}}"><span class="glyphicon glyphicon-new-window"></span> {% trans "Click here to open the Numbas editor." %}</a></p>
+                            {% endif %}
+                            {% csrf_token %}
+                            {{form|bootstrap}}
+                            <button type="submit" class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-import"></span> {% trans "Submit" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% if exams %}
+            <div class="col-sm-12 col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2 class="panel-title"><span class="glyphicon glyphicon-transfer"></span> {% trans "Select a ready-made exam" %}</h2>
+                    </div>
+                    <div class="panel-heading">
+                        <div class="form form-inline">
+                            <div class="form-group">
+                                <input class="form-control" type="text" placeholder="{% trans "Search" %}" id="exam-search">
+                            </div>
+                            <div class="form-group">
+                                <label for="project-selector">{% trans "in" %}</label>
+                                <select class="form-control" name="project" id="project-selector">
+                                    <option value="">{% trans "All projects" %}</option>
+                                    {% for link in editor_links %}
+                                    {% for project in link.projects.all %}
+                                    <option value="{{project.rest_url|escape}}">{{project.name}}</option>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="list-group available-exams">
+                        {% for exam in exams %}
+                        <li class="list-group-item available-exam" data-name="{{exam.name|escape}}" data-project="{{exam.project|escape}}">
+                            <h3><a href="{{exam.edit}}">{{exam.name}}</a> </h3>
+                            <p>by <a target="_blank" href="{{exam.author.profile}}">{{exam.author.full_name}}</a></p>
+                            <div class="description">{{exam.metadata.description|safe}}</div>
+                            <form method="POST" class="form-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="retrieve_url" value="{{exam.download}}">
+                                <input type="hidden" name="rest_url" value="{{exam.url}}">
+                                <p>
+                                    <a target="_blank" class="btn btn-default" href="{{exam.preview}}"><span class="glyphicon glyphicon-play"></span> {% trans "Preview" %}</a>
+                                    <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-import"></span> {% trans "Use this" %}</button>
+                                </p>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
 </div>
 {% endblock content %}

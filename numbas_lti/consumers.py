@@ -1,33 +1,40 @@
 from django.http import HttpResponse
 from channels.handler import AsgiHandler
 from channels import Group
-from channels.sessions import channel_session,enforce_ordering
+from channels.sessions import channel_session
 from channels.auth import http_session_user, channel_session_user, channel_session_user_from_http
 from channels.generic import BaseConsumer
 from channels.generic.websockets import WebsocketConsumer
 import json
+from datetime import datetime
+from django.utils import timezone
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
-from .models import Attempt,ScormElement,Resource, ReportProcess
+from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
 
-@enforce_ordering(slight=True)
 @channel_session_user_from_http
 def scorm_connect(message,pk):
     pass
 
 @channel_session_user
 def scorm_set_element(message,pk):
-    data = json.loads(message.content['text'])
+    print("Receive {}".format(message.content['text']))
+    packet = json.loads(message.content['text'])
     attempt = Attempt.objects.get(pk=pk)
-    for element in data:
+    for element in packet['data']:
         ScormElement.objects.create(
             attempt = attempt,
             key = element['key'], 
-            value = element['value']
+            value = element['value'],
+            time = timezone.make_aware(datetime.fromtimestamp(element['time']))
         )
+    response = {
+        'received': str(packet['id'])
+    }
+    message.reply_channel.send({'text':json.dumps(response)})
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
@@ -47,6 +54,11 @@ def report_scores(message,**kwargs):
 
 class AttemptScormListingConsumer(WebsocketConsumer):
     def connection_groups(self,pk,**kwargs):
-        print("Connected to: {}".format(pk))
         attempt = Attempt.objects.get(pk=pk)
         return [attempt.channels_group()]
+
+def update_editorlink(message,**kwargs):
+    editorlink = EditorLink.objects.get(pk=message['pk'])
+
+    editorlink.update_cache(bounce=message.get('bounce',False))
+    editorlink.save()

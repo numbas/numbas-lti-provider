@@ -32,6 +32,7 @@ urlpatterns = [
 
     url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
     url(r'^attempt/(?P<pk>\d+)/delete$', views.DeleteAttemptView.as_view(), name='delete_attempt'),
+    url(r'^attempt/(?P<pk>\d+)/scorm_data_fallback$', views.scorm_data_fallback, name='attempt_scorm_data_fallback'),
 
     url(r'grant_access_token/(?P<user_id>\d+)$', views.grant_access_token, name='grant_access_token'),
     url(r'remove_access_token/(?P<user_id>\d+)$', views.remove_access_token, name='remove_access_token'),
@@ -48,6 +49,11 @@ urlpatterns = [
     url(r'^consumers$', views.ListConsumersView.as_view(), name='list_consumers'),
     url(r'^consumers/create$', views.CreateConsumerView.as_view(), name='create_consumer'),
     url(r'^consumers/(?P<pk>\d+)/delete$', views.DeleteConsumerView.as_view(), name='delete_consumer'),
+
+    url(r'^editorlinks$', views.ListEditorLinksView.as_view(), name='list_editorlinks'),
+    url(r'^editorlinks/create$', views.CreateEditorLinkView.as_view(), name='create_editorlink'),
+    url(r'^editorlink/(?P<pk>\d+)/edit$', views.UpdateEditorLinkView.as_view(), name='edit_editorlink'),
+    url(r'^editorlink/(?P<pk>\d+)/delete$', views.DeleteEditorLinkView.as_view(), name='delete_editorlink'),
 
 	url(r'^config.xml$', views.config_xml, name='config_xml'),
 ]

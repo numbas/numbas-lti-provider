@@ -5,7 +5,10 @@ from django.contrib.auth.models import User
 import requests
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-from channels import Group
+from django.core import validators
+from channels import Group, Channel
+from django.utils import timezone
+from datetime import timedelta
 
 from .report_outcome import report_outcome,report_outcome_for_attempt
 
@@ -57,6 +60,8 @@ def extract_package(sender,instance,**kwargs):
 class Exam(ExtractPackageMixin,models.Model):
     title = models.CharField(max_length=300)
     package = models.FileField(upload_to='exams/',verbose_name='Package file')
+    retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
+    rest_url = models.URLField(blank=True,default='',verbose_name='URL of the exam on the editor\'s REST API')
 
     def __str__(self):
         return self.title
@@ -165,17 +170,15 @@ class Resource(models.Model):
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
-            if m is None:
-                print(path)
             question_index = m.group(1)
             part_index = m.group(2)
             gap_index = m.group(3)
             step_index = m.group(4)
             p = out[question_index][part_index]
             if m.group(3):
-                p['gaps'].append(step_index)
+                p['gaps'].append(gap_index)
             elif m.group(4):
-                p['steps'].append(gap_index)
+                p['steps'].append(step_index)
     
         return out
 
@@ -281,8 +284,6 @@ class Attempt(models.Model):
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
-            if m is None:
-                print(path)
             p = out[m.group(1)][m.group(2)]
             if m.group(3):
                 p['gaps'].append(m.group(3))
@@ -376,6 +377,15 @@ class RemarkPart(models.Model):
     part = models.CharField(max_length=20)
     score = models.FloatField()
 
+def remark_update_scaled_score(sender,instance,**kwargs):
+    attempt = instance.attempt
+    scaled_score = attempt.raw_score/attempt.max_score
+    if scaled_score != attempt.scaled_score:
+        attempt.scaled_score = scaled_score
+        attempt.save()
+models.signals.post_save.connect(remark_update_scaled_score,sender=RemarkPart)
+models.signals.post_delete.connect(remark_update_scaled_score,sender=RemarkPart)
+
 DISCOUNT_BEHAVIOURS = [
     ('remove','Remove from total'),
     ('fullmarks','Award everyone full credit'),
@@ -385,6 +395,16 @@ class DiscountPart(models.Model):
     resource = models.ForeignKey(Resource,related_name='discounted_parts')
     part = models.CharField(max_length=20)
     behaviour = models.CharField(max_length=10,choices=DISCOUNT_BEHAVIOURS,default='remove')
+
+def discount_update_scaled_score(sender,instance,**kwargs):
+    for attempt in instance.resource.attempts.all():
+        scaled_score = attempt.raw_score/attempt.max_score
+        print(attempt,scaled_score,attempt.scaled_score)
+        if scaled_score != attempt.scaled_score:
+            attempt.scaled_score = scaled_score
+            attempt.save()
+models.signals.post_save.connect(discount_update_scaled_score,sender=DiscountPart)
+models.signals.post_delete.connect(discount_update_scaled_score,sender=DiscountPart)
 
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
@@ -410,7 +430,7 @@ class ScormElement(models.Model):
     attempt = models.ForeignKey(Attempt,on_delete=models.CASCADE,related_name='scormelements')
     key = models.CharField(max_length=200)
     value = models.TextField()
-    time = models.DateTimeField(auto_now_add=True)
+    time = models.DateTimeField()
     current = models.BooleanField(default=True) # is this the latest version?
 
     class Meta:
@@ -448,3 +468,51 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     instance.attempt.save()
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
         report_outcome_for_attempt(instance.attempt)
+
+class EditorLink(models.Model):
+    name = models.CharField(max_length=200,verbose_name='Editor name')
+    url = models.URLField(verbose_name='Base URL of the editor',unique=True)
+    cached_available_exams = models.TextField(blank=True,editable=False,verbose_name='Cached JSON list of available exams from this editor')
+    last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name='Time of last cache update')
+
+    def __str__(self):
+        return self.name
+
+    def update_cache(self,bounce=True):
+        if bounce and self.time_since_last_update().seconds<30:
+            return
+
+        if self.projects.exists():
+            project_pks = [str(p.remote_id) for p in self.projects.all()]
+            r = requests.get('{}/api/available-exams'.format(self.url),{'projects':project_pks})
+
+            self.cached_available_exams = r.text
+        else:
+            self.cached_available_exams = '[]'
+        self.last_cache_update = timezone.now()
+
+    def time_since_last_update(self):
+        if self.last_cache_update is None:
+            return timedelta.max
+        return timezone.now() - self.last_cache_update
+
+    @property
+    def available_exams(self):
+        if self.time_since_last_update().seconds> 30:
+            Channel("editorlink.update_cache").send({'pk':self.pk})
+        if self.cached_available_exams:
+            return json.loads(self.cached_available_exams)
+        else:
+            return []
+
+class EditorLinkProject(models.Model):
+    editor = models.ForeignKey(EditorLink,on_delete=models.CASCADE,related_name='projects',verbose_name='Editor that this project belongs to')
+    name = models.CharField(max_length=200,verbose_name='Name of the project')
+    description = models.TextField(blank=True,verbose_name='Description of the project')
+    remote_id = models.IntegerField(verbose_name='ID of the project on the editor')
+    homepage = models.URLField(verbose_name='URL of the project\'s homepage on the editor')
+    rest_url = models.URLField(verbose_name='URL of the project on the editor\'s REST API')
+
+@receiver(models.signals.pre_save,sender=EditorLink)
+def update_editor_cache_before_save(sender,instance,**kwargs):
+    instance.update_cache()

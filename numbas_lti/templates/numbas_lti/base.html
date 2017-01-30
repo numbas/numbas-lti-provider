@@ -8,49 +8,10 @@
         {% block stylesheets %}
         <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
         {% endblock stylesheets %}
-        <style type="text/css">
-            footer {
-                border-top: 1px solid black;
-                margin-top: 10em;
-                font-size: 0.8rem;
-                font-family: monospace;
-                max-height:1em;
-                overflow-y:hidden;
-            }
-            footer:focus {
-                max-height: none;
-                overflow-y: auto;
-            }
-        </style>
     </head>
     <body>
         {% block content %}
         {% endblock content %}
-
-<!--
-        <footer tabindex="0">
-        {% if request.POST %}
-            <h2>POST</h2>
-            <table>
-                {% for k,v in request.POST.items %}
-                <tr><td>{{k}}</td><td>{{v}}</td></tr>
-                {% endfor %}
-            </table>
-        {% endif %}
-            <h2>LTI info</h2>
-            <p>sourcedId: {{request.user.lti_data.lis_result_sourcedid}}</p>
-            <p>outcome url: {{request.user.lti_data.lis_outcome_service_url}}</p>
-        {% if not request.LTI.items %}
-            <p>No LTI data</p>
-        {% else %}
-            <table>
-                {% for k,v in request.LTI.items %}
-                <tr><td>{{k}}</td><td>{{v}}</td></tr>
-                {% endfor %}
-            </table>
-        {% endif %}
-        </footer>
-        -->
 
 		{% block javascripts %}
 		<script src="{% static 'jquery/jquery.js' %}"></script>
