@@ -1,5 +1,8 @@
+import zipfile
+
 from django.forms import ModelForm
 from django import forms
+from django.utils.translation import ugettext_lazy as _
 
 from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject
 
@@ -65,10 +68,17 @@ class CreateExamForm(ModelForm):
             'rest_url': forms.HiddenInput(),
         }
 
-    def clean(self):
-        cleaned_data = super(CreateExamForm,self).clean()
-        if not (cleaned_data.get('retrieve_url') or cleaned_data.get('package')):
-            raise forms.ValidationError("No exam selected")
+    def clean_package(self):
+        package = self.cleaned_data['package']
+        try:
+            zip = zipfile.ZipFile(package)
+            zip.getinfo('imsmanifest.xml')
+        except zipfile.BadZipFile:
+            raise forms.ValidationError(_("The uploaded file is not a .zip file"))
+        except KeyError:
+            raise forms.ValidationError(_("The uploaded .zip file does not contain an imsmanifest.xml file - make sure you download a SCORM package from the editor."))
+
+        return package
 
     def save(self,commit=True):
         exam = super(CreateExamForm,self).save(commit=False)
