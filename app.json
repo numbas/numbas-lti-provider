@@ -2,7 +2,7 @@
   "name": "Numbas LTI tool provider",
   "description": "A Basic LTI 1.1 tool provider to run Numbas exams.",
   "repository": "https://github.com/numbas/numbas-lti-provider",
-  "logo": "http://numbas.org.uk/numbas-logo.svg",
+  "logo": "https://numbas.org.uk/numbas-logo.svg",
   "keywords": ["numbas","lti","e-assessment"],
   "scripts": {
     "postdeploy": "python manage.py migrate"
