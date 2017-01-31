@@ -4,4 +4,25 @@
 {% block content %}
 <h1>{% trans "Authentication failed" %}</h1>
 <p>{% trans "The most likely cause is a misconfiguration of your LTI tool, or this request didn't even come through LTI." %}</p>
+
+{% if debug %}
+{% if post_data|length %}
+<h2>POST data</h2>
+<p>You should see some LTI-related items in the table below, such as <code>tool_consumer_instance_name</code> and <code>oauth_signature</code>.</p>
+<p>If those aren't present, it's likely that you haven't arrived via an LTI launch.</p>
+<table>
+    <thead>
+        <tr><th>Key</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+        {% for key,value in post_data %}
+        <tr><td><code>{{key}}</code></td><td><code>{{value}}</code></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<h2>Not a POST request</h2>
+<p>The request to open this page was not a POST request, which is a very strong indication that you didn't arrive as a result of an LTI launch.</p>
+{% endif %}
+{% endif %}
 {% endblock content %}
