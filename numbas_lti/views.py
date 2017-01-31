@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
@@ -56,7 +57,7 @@ def request_is_instructor(request):
 
 @csrf_exempt
 def no_resource(request):
-    return render(request,'numbas_lti/error_no_resource.html',{})
+    return render(request,'numbas_lti/error_no_resource.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 
 def static_view(template_name):
     return generic.TemplateView.as_view(template_name=template_name)
