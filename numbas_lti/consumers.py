@@ -15,13 +15,8 @@ from django.utils.translation import ugettext as _
 from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
 
-@channel_session_user_from_http
-def scorm_connect(message,pk):
-    pass
-
 @channel_session_user
 def scorm_set_element(message,pk):
-    print("Receive {}".format(message.content['text']))
     packet = json.loads(message.content['text'])
     attempt = Attempt.objects.get(pk=pk)
     for element in packet['data']:

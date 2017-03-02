@@ -399,7 +399,6 @@ class DiscountPart(models.Model):
 def discount_update_scaled_score(sender,instance,**kwargs):
     for attempt in instance.resource.attempts.all():
         scaled_score = attempt.raw_score/attempt.max_score
-        print(attempt,scaled_score,attempt.scaled_score)
         if scaled_score != attempt.scaled_score:
             attempt.scaled_score = scaled_score
             attempt.save()

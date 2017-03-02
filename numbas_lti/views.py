@@ -716,7 +716,6 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
     batches = json.loads(request.body.decode())
     done = []
     for id,elements in batches.items():
-        print(id,len(elements))
         for element in elements:
             ScormElement.objects.create(
                 attempt = attempt,
