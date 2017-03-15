@@ -7,6 +7,7 @@ sudo adduser www-data numbas_lti
 sudo adduser ubuntu www-data
 
 # install packages
+sudo apt-get update
 sudo apt-get install apache2 redis-server postgresql postgresql-server-dev-9.5 libxml2-dev libxslt1-dev python-dev lib32z1-dev python3-pip supervisor git
 sudo pip3 install virtualenv
 
