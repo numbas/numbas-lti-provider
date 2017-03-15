@@ -8,8 +8,11 @@ sudo adduser ubuntu www-data
 
 # install packages
 sudo apt-get update
-sudo apt-get install apache2 redis-server postgresql postgresql-server-dev-9.5 libxml2-dev libxslt1-dev python-dev lib32z1-dev python3-pip supervisor git
+sudo apt-get install apache2 redis-server postgresql postgresql-server-dev-9.5 libxml2-dev libxslt1-dev python-dev lib32z1-dev python3-pip supervisor git libapache2-mod-wsgi
 sudo pip3 install virtualenv
+
+# enable apache modules
+sudo a2enmod ssl proxy proxy_wstunnel proxy_http proxy_connect headers rewrite wsgi
 
 # get the numbas-lti-provider code
 sudo git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
