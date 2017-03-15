@@ -33,5 +33,7 @@ cd /srv/numbas-lti-provider
 pip install -r requirements.txt
 pip install asgi_redis psycopg2
 
-sudo -u postgres psql -c "CREATE USER numbas_lti;"
+echo -n Set a password for the numbas_lti postgres user:
+read -s password
+sudo -u postgres psql -c "CREATE USER numbas_lti WITH PASSWORD '$password' CREATEDB;"
 createdb -U numbas_lti numbas_lti
