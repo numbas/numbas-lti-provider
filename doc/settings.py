@@ -97,10 +97,10 @@ if DEBUG:
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'numbas_lti',
         'USER': 'numbas_lti',
-        'PASSWORD': 'GmvFEiJiojtOIdzJjwMb',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '',
     }
