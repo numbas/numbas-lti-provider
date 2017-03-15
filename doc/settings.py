@@ -80,7 +80,7 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': [],
             'level': 'DEBUG',
             'propagate': True,
             },
