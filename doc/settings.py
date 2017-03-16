@@ -39,7 +39,7 @@ MIDDLEWARE_CLASSES = [
     'django_auth_lti.middleware_patched.MultiLTILaunchAuthMiddleware',
     'numbas_lti.middleware.NumbasLTIResourceMiddleware',
 ]
-AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend']
+AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend','django.contrib.auth.backends.ModelBackend']
 
 ROOT_URLCONF = 'pretendlti.urls'
 
@@ -145,7 +145,7 @@ MEDIA_ROOT = '/srv/numbas-lti-media'
 MEDIA_URL = '/media/'
 
 STATIC_ROOT = '/srv/numbas-lti-static'
-STATIC_URL = 'https://mas-numbas-lti.ncl.ac.uk/static/'
+STATIC_URL = '/static/'
 
 # Channels
 
