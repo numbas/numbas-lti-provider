@@ -24,7 +24,8 @@ def scorm_set_element(message,pk):
             attempt = attempt,
             key = element['key'], 
             value = element['value'],
-            time = timezone.make_aware(datetime.fromtimestamp(element['time']))
+            time = timezone.make_aware(datetime.fromtimestamp(element['time'])),
+            counter = element['counter']
         )
     response = {
         'received': str(packet['id'])

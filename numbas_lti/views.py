@@ -502,7 +502,7 @@ class AttemptSCORMListing(MustBeInstructorMixin,ResourceManagementViewMixin,gene
     def get_context_data(self,*args,**kwargs):
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 
-        context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time'),key=lambda x:x.key)]
+        context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time','-counter'),key=lambda x:x.key)]
         context['show_stale_elements'] = True
 
         return context
@@ -692,7 +692,7 @@ class RunAttemptView(generic.detail.DetailView):
 
         latest_elements = {}
 
-        for e in attempt.scormelements.all().order_by('time'):
+        for e in attempt.scormelements.all().order_by('time','counter'):
             latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
 
         scorm_cmi.update(latest_elements)
@@ -721,7 +721,8 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
                 attempt = attempt,
                 key = element['key'], 
                 value = element['value'],
-                time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time']))
+                time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time'])),
+                counter = element['counter']
             )
         done.append(id)
     return JsonResponse({'received_batches':done})

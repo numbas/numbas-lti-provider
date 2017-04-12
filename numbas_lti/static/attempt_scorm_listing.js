@@ -4,9 +4,10 @@ function read_elements() {
     for(var i=0;i<rows.length;i++) {
         var row = rows[i];
         var key = row.getAttribute('data-key');
+        var counter = parseInt(row.getAttribute('data-counter'));
         var time = row.querySelector('.time').textContent;
         var value = row.querySelector('.value').textContent;
-        out.push({key:key,time:time,value:value});
+        out.push({key:key,time:time,value:value,counter:counter});
     }
 
     var initial = document.querySelector('#initial-data');
@@ -34,9 +35,12 @@ function DataModel(elements) {
         var most_recent = this.most_recent_only();
         keys.forEach(function(key) {
             var sorted_elements = this.elements[key].sort(function(a,b) {
-                a = a.time;
-                b = b.time;
-                return a>b ? -1 : b>a ? 1 : 0;
+                var at = a.time;
+                var bt = b.time;
+                var ac = a.counter;
+                var bc = b.counter;
+                // sort by time and then counter
+                return at>bt ? -1 : bt>at ? 1 : ac>bc ? -1 : bc>ac ? 1 : 0;
             });
             if(most_recent) {
                 sorted_elements = sorted_elements.slice(0,1);

@@ -25,6 +25,7 @@ function SCORM_API(data,attempt_pk,fallback_url) {
      *  Maps batch ids to lists of SCORMElements.
      */
     this.sent = {};
+    this.element_acc = 0;
 
     /** An accumulator for the batch IDs
      */
@@ -467,7 +468,7 @@ SCORM_API.prototype = {
         if(changed) {
     		this.data[key] = value;
             this.check_key_counts_something(key);
-            this.queue.push(new SCORMData(key,value, new Date()));
+            this.queue.push(new SCORMData(key,value, new Date(),this.element_acc++));
         }
 	},
 
@@ -478,17 +479,19 @@ SCORM_API.prototype = {
 
 /** A single SCORM data model element, with the time it was set.
  */
-function SCORMData(key,value,time) {
+function SCORMData(key,value,time,counter) {
     this.key = key;
     this.value = value;
     this.time = time;
+    this.counter = counter;
 }
 SCORMData.prototype = {
     as_json: function() {
         return {
             key: this.key,
             value: this.value,
-            time: this.timestamp()
+            time: this.timestamp(),
+            counter: this.counter
         }
     },
 

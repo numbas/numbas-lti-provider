@@ -408,7 +408,7 @@ models.signals.post_delete.connect(discount_update_scaled_score,sender=DiscountP
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
         """ Return the last value of this field """
-        elements = self.filter(key=key).order_by('-time')
+        elements = self.filter(key=key).order_by('-time','-counter')
         if not elements.exists():
             raise ScormElement.DoesNotExist()
         else:
@@ -430,10 +430,11 @@ class ScormElement(models.Model):
     key = models.CharField(max_length=200)
     value = models.TextField()
     time = models.DateTimeField()
+    counter = models.IntegerField(default=0,verbose_name='Element counter to disambiguate elements with the same timestamp')
     current = models.BooleanField(default=True) # is this the latest version?
 
     class Meta:
-        ordering = ['-time']
+        ordering = ['-time','-counter']
 
     def __str__(self):
         return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))

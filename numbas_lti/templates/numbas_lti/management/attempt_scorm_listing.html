@@ -35,7 +35,7 @@
         {% for key,elements in keys %}
         {% for element in elements %}
             {% if forloop.counter0 == 0 or show_stale_elements %}
-            <tr data-key="{{key}}">
+            <tr data-key="{{key}}" data-counter="{{element.counter}}">
                 <td class="key">{% if forloop.counter0 == 0 %}{{key}}{% endif %}</td>
                 <td class="time">{{element.time|date:"Y-m-d H:i:s"}}</td>
                 <td class="value">{{element.value}}</td>
