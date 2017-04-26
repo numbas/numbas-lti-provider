@@ -260,7 +260,7 @@ SCORM_API.prototype = {
     },
 
     /** Load saved information from localStorage.
-     * @returns {object} of the form `{sent: {id: [{key,value,time}]}}`
+     * @returns {object} of the form `{sent: {id: [{key,value,time,counter}]}}`
      */
     get_localstorage: function() {
         try {
@@ -303,7 +303,7 @@ SCORM_API.prototype = {
     /** Is the WebSocket connection open?
      */
     socket_is_open: function() {
-        return this.socket.readyState==WebSocket.OPEN;
+        return this.socket.readyState==WebSocket.OPEN && Object.keys(this.sent).length==0;
     },
 
     /** Did the last AJAX call succeed?
@@ -430,6 +430,7 @@ SCORM_API.prototype = {
 			return false;
 		}
 		this.terminated = true;
+        document.body.classList.add('terminated');
 
         /** Do one last send over HTTP, to make sure any remaining data is saved straight away.
          */

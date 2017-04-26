@@ -1,0 +1,71 @@
+body {
+    margin: 0;
+}
+#scorm-player {
+    border: none;
+}
+
+#status-display {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0.4em 1em;
+    border-radius: 4px 0 0 0;
+    background: hsl(0,90%,50%);
+    color: white;
+    font-family: sans-serif;
+    transition: background-color 0.5s;
+}
+body.terminated #status-display, #status-display:focus {
+    border-radius: 0;
+}
+#status-display.ok {
+    display: none;
+}
+#status-display .status-message {
+    display: none;
+}
+#status-display:not(.localstorage-used) .text-localstorage-used {
+    display: none;
+}
+body:not(.terminated) #status-display:not(:focus) .status-message .text {
+    display: none;
+}
+#status-display:hover:not(:focus) {
+    background-color: hsl(10,90%,50%);
+    cursor: pointer;
+}
+body:not(.terminated) #status-display:hover:not(:focus) .symbol {
+    animation: wobble 0.3s infinite linear;
+    display: block;
+}
+@keyframes wobble {
+    0% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(20deg);
+    }
+    75% {
+        transform: rotate(-20deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+body.terminated #status-display .symbol, #status-display:focus .symbol {
+    display: none;
+}
+#status-display.disconnected .text-disconnected {
+    display: block;
+}
+
+body.terminated #status-display {
+    left: 0;
+    font-size: 1.5rem;
+    padding-bottom: 2em;
+    position: static;
+}
+body.terminated .text-localstorage-used {
+    display: none;
+}
