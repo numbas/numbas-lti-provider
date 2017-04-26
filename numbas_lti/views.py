@@ -722,7 +722,7 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
                 key = element['key'], 
                 value = element['value'],
                 time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time'])),
-                counter = element['counter']
+                counter = element.get('counter',0)
             )
         done.append(id)
     return JsonResponse({'received_batches':done})
