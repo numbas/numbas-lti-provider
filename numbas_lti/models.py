@@ -379,7 +379,10 @@ class RemarkPart(models.Model):
 
 def remark_update_scaled_score(sender,instance,**kwargs):
     attempt = instance.attempt
-    scaled_score = attempt.raw_score/attempt.max_score
+    if attempt.max_score>0:
+        scaled_score = attempt.raw_score/attempt.max_score
+    else:
+        scaled_score = 0
     if scaled_score != attempt.scaled_score:
         attempt.scaled_score = scaled_score
         attempt.save()
