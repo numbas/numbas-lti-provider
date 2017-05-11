@@ -10,7 +10,7 @@ from channels import Group, Channel
 from django.utils import timezone
 from datetime import timedelta
 
-from .report_outcome import report_outcome,report_outcome_for_attempt
+from .report_outcome import report_outcome_for_attempt, ReportOutcomeFailure, ReportOutcomeConnectionError
 
 import os
 import shutil
@@ -460,7 +460,10 @@ def scorm_set_score(sender,instance,created,**kwargs):
     instance.attempt.scaled_score = float(instance.value)
     instance.attempt.save()
     if instance.attempt.resource.report_mark_time == 'immediately':
-        report_outcome_for_attempt(instance.attempt)
+        try:
+            report_outcome_for_attempt(instance.attempt)
+        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
+            pass
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -470,7 +473,10 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     instance.attempt.completion_status = instance.value
     instance.attempt.save()
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        report_outcome_for_attempt(instance.attempt)
+        try:
+            report_outcome_for_attempt(instance.attempt)
+        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
+            pass
 
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name='Editor name')
