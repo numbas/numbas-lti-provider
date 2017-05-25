@@ -32,6 +32,7 @@ urlpatterns = [
 
     url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
     url(r'^attempt/(?P<pk>\d+)/delete$', views.DeleteAttemptView.as_view(), name='delete_attempt'),
+    url(r'^attempt/(?P<pk>\d+)/reopen$', views.ReopenAttemptView.as_view(), name='reopen_attempt'),
     url(r'^attempt/(?P<pk>\d+)/scorm_data_fallback$', views.scorm_data_fallback, name='attempt_scorm_data_fallback'),
 
     url(r'grant_access_token/(?P<user_id>\d+)$', views.grant_access_token, name='grant_access_token'),

@@ -414,6 +414,21 @@ class RemarkPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
         return JsonResponse({})
 
 
+class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
+    model = Attempt
+
+    def get(self, request, *args, **kwargs):
+        attempt = self.get_object()
+        e = ScormElement.objects.create(
+                attempt=attempt,
+                key='cmi.completion_status',
+                value='incomplete',
+                time=timezone.make_aware(datetime.datetime.now()),
+                counter=1
+            )
+        messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
+        return redirect(reverse('manage_attempts',args=(attempt.resource.pk,)))
+
 class AllAttemptsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/attempts.html'
