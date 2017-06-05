@@ -17,6 +17,7 @@
             <tr>
                 <th>{% trans "Start time" %}</th>
                 <th>{% trans "Score" %}</th>
+                <th>{% trans "Status" %}</th>
                 <th></th>
             </tr>
         </thead>
@@ -24,7 +25,7 @@
             {% for attempt in object_list %}
             <tr>
                 <td>{{attempt.start_time}}</td>
-                <td>{% if attempt.completed or attempt.resource.show_incomplete_marks %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>{% trans "In progress" %}</em>{% endif %}</td>
+                <td>{% if attempt.should_show_scores %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>{% trans "In progress" %}</em>{% endif %}</td>
                 <td>
                     <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
                         {% if attempt.completed %}

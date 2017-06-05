@@ -21,7 +21,7 @@ import string
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_incomplete_marks','report_mark_time']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time']
 
 class RemarkPartScoreForm(ModelForm):
     class Meta:

@@ -90,6 +90,12 @@ REPORTING_STATUSES = [
     ('complete',_('All scores reported')),
 ]
 
+SHOW_SCORES_MODES = [
+    ('always',_('Always')),
+    ('complete',_('When attempt is complete')),
+    ('never',_('Never')),
+]
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
     tool_consumer_instance_guid = models.CharField(max_length=300)
@@ -97,7 +103,7 @@ class Resource(models.Model):
 
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
-    show_incomplete_marks = models.BooleanField(default=True,verbose_name=_('Show score of in-progress attempts to students?'))
+    show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
@@ -371,6 +377,9 @@ class Attempt(models.Model):
 
     def channels_group(self):
         return 'attempt-{}'.format(self.pk)
+
+    def should_show_scores(self):
+        return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
 
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts')
