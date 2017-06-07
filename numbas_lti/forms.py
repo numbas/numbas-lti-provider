@@ -70,13 +70,14 @@ class CreateExamForm(ModelForm):
 
     def clean_package(self):
         package = self.cleaned_data['package']
-        try:
-            zip = zipfile.ZipFile(package)
-            zip.getinfo('imsmanifest.xml')
-        except zipfile.BadZipFile:
-            raise forms.ValidationError(_("The uploaded file is not a .zip file"))
-        except KeyError:
-            raise forms.ValidationError(_("The uploaded .zip file does not contain an imsmanifest.xml file - make sure you download a SCORM package from the editor."))
+        if package is not None:
+            try:
+                zip = zipfile.ZipFile(package)
+                zip.getinfo('imsmanifest.xml')
+            except zipfile.BadZipFile:
+                raise forms.ValidationError(_("The uploaded file is not a .zip file"))
+            except KeyError:
+                raise forms.ValidationError(_("The uploaded .zip file does not contain an imsmanifest.xml file - make sure you download a SCORM package from the editor."))
 
         return package
 
