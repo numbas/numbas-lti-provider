@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
@@ -19,6 +20,7 @@ from django.utils.translation import ugettext_lazy as _, ugettext
 from django.template.loader import get_template
 from django.contrib import messages
 from django.forms.models import inlineformset_factory
+from django.db.models import Q
 from itertools import groupby
 from channels import Channel
 import datetime
@@ -429,10 +431,32 @@ class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
         messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
         return redirect(reverse('manage_attempts',args=(attempt.resource.pk,)))
 
-class AllAttemptsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
-    model = Resource
+class AllAttemptsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.ListView):
+    model = Attempt
     template_name = 'numbas_lti/management/attempts.html'
     management_tab = 'attempts'
+    paginate_by = 20
+    context_object_name = 'attempts'
+
+    def get_queryset(self, *args, **kwargs):
+        resource = self.get_resource()
+        attempts = resource.attempts.all()
+        if 'query' in self.request.GET:
+            query = self.request.GET.get('query')
+            for word in query.split():
+                print(word)
+                attempts = attempts.filter(Q(user__first_name__icontains=word) | Q(user__last_name__icontains=word))
+        return attempts
+
+    def get_resource(self):
+        return Resource.objects.get(pk=self.kwargs.get('pk'))
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(AllAttemptsView,self).get_context_data(*args,**kwargs)
+        resource = self.get_resource()
+        context['resource'] = resource
+
+        return context
 
 class ResourceSettingsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource

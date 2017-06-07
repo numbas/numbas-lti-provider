@@ -1,5 +1,6 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load percentage %}
+{% load querystring %}
 {% load i18n %}
 
 {% block management_content %}
@@ -8,9 +9,37 @@
 
     <p><a class="btn btn-info" href="{% url 'attempts_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</a></p>
 
-    <div>
-        <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
-    </div>
+    <form method="GET" class="form-inline">
+        {% for key,value in request.GET.items %}
+        <input type="hidden" value="{{value}}" name="{{key}}">
+        {% endfor %}
+        {% csrf_token %}
+        <label for="query">
+            {% trans "Search for a student:" %} 
+        </label>
+        <div class="input-group">
+            <input id="query" name="query" type="search" class="form-control" value="{{request.GET.query}}">
+            {% if request.GET.query %}
+                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
+            {% endif %}
+            <div class="input-group-btn">
+                <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">Search</span></button>
+            </div>
+        </div>
+    </form>
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation">
+        <ul class="pager">
+            {% if page_obj.has_previous %}
+            <li class="previous"><a href="?{% set_query_values page=page_obj.previous_page_number %}" aria-label="{% trans "Previous page" %}"><span aria-hidden="true">&laquo;</span> {% trans "Later" %}</a></li>
+            {% endif %}
+            <li>{% blocktrans with start=page_obj.start_index end=page_obj.end_index count count=paginator.count %}Showing the only attempt{% plural %}Showing attempts {{start}} - {{end}} of {{count}}{% endblocktrans %}</li>
+            {% if page_obj.has_next %}
+            <li class="next"><a href="?{% set_query_values page=page_obj.next_page_number %}" aria-label="{% trans "Next page" %}">{% trans "Earlier" %} <span aria-hidden="true">&raquo;</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
     <table id="attempts" class="table table-striped">
         <thead>
             <tr>
@@ -22,7 +51,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for attempt in resource.attempts.all %}
+            {% for attempt in attempts %}
             <tr data-student="{{attempt.user.get_full_name}}">
                 <td>{{attempt.user.get_full_name}}</td>
                 <td>{{attempt.start_time}}</td>
@@ -38,22 +67,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <script>
-        function filter_rows(query) {
-            query = query.toLowerCase();
-            var re = new RegExp(query);
-            var rows = document.querySelectorAll('#attempts tbody tr');
-            Array.prototype.map.apply(rows,[function(row) {
-                var name = row.getAttribute('data-student').toLowerCase();
-                row.classList.toggle('hidden',!re.test(name));
-            }]);
-        }
-        var search = document.getElementById('query');
-        search.addEventListener('input',function() {
-            filter_rows(this.value);
-        });
-    </script>
     {% else %}
     <p>{% trans "No students have attempted this exam yet. Information about students' attempts will appear here once a student has attempted this exam." %}</p>
     {% endif %}
