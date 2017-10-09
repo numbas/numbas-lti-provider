@@ -108,6 +108,8 @@ class Resource(models.Model):
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
 
+    num_questions = models.PositiveIntegerField(default=0)
+
     def __str__(self):
         if self.exam:
             return str(self.exam)
@@ -146,15 +148,6 @@ class Resource(models.Model):
         if self.max_attempts==0:
             return True
         return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
-
-    def num_questions(self):
-        re_objective_id_key = r'^cmi.objectives.([0-9]+).id$'
-        top_key = ScormElement.objects.filter(attempt__resource=self,key__regex=re_objective_id_key).aggregate(models.Max('key'))['key__max']
-        if top_key is None:
-            return 0
-        else:
-            n = re.match(re_objective_id_key,top_key).group(1)
-            return int(n)+1
 
     def user_data(self,user):
         return LTIUserData.objects.filter(resource=self,user=user).last()
@@ -251,7 +244,7 @@ class Attempt(models.Model):
     def raw_score(self):
         if self.remarked_parts.exists() or self.resource.discounted_parts.exists():
             total = 0
-            for i in range(self.resource.num_questions()):
+            for i in range(self.resource.num_questions):
                 total += self.question_score(i)
             return total
 
@@ -261,7 +254,7 @@ class Attempt(models.Model):
     def max_score(self):
         if self.resource.discounted_parts.exists():
             total = 0
-            for i in range(self.resource.num_questions()):
+            for i in range(self.resource.num_questions):
                 total += self.question_max_score(i)
             return total
 
@@ -486,6 +479,19 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
             report_outcome_for_attempt(instance.attempt)
         except (ReportOutcomeFailure, ReportOutcomeConnectionError):
             pass
+
+@receiver(models.signals.post_save,sender=ScormElement)
+def scorm_set_num_questions(sender,instance,created,**kwargs):
+    """ Set the number of questions for this resource - can only work this out once the exam has been run! """
+    if not re.match(r'^cmi.objectives.([0-9]+).id$',instance.key) or not created:
+        return
+
+    number = int(re.match(r'q(\d+)',instance.value).group(1))+1
+    resource = instance.attempt.resource
+    
+    if number>resource.num_questions:
+        resource.num_questions = number
+        resource.save()
 
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name='Editor name')

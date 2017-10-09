@@ -510,7 +510,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource
     def get_rows(self):
         resource = self.object
-        num_questions = resource.num_questions()
+        num_questions = resource.num_questions
 
         headers = [_(x) for x in ['First name','Last name','Email','Username','Start time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
         yield headers
