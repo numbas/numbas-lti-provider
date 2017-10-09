@@ -10,6 +10,10 @@ class LTIRequestValidator(backends.LTIRequestValidator):
     def nonce_length(self):
         return 1,200
 
+    def check_client_key(self, client_key):
+        lower, upper = self.client_key_length
+        return lower <= len(client_key) <= upper
+
     def validate_client_key(self,client_key,request):
         return LTIConsumer.objects.filter(key=client_key).exists()
 
