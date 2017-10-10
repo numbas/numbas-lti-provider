@@ -547,7 +547,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
         yield headers
 
         for attempt in resource.attempts.all():
-            user_data = resource.use_data(attempt.user)
+            user_data = resource.user_data(attempt.user)
             row = [
                 attempt.user.first_name,
                 attempt.user.last_name,
