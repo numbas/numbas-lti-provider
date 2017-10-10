@@ -30,7 +30,7 @@ class NumbasLTIResourceMiddleware(object):
             if description is None:
                 description = ''
             try:
-                resource = Resource.objects.get(resource_link_id=resource_link_id)
+                resource = Resource.objects.get(context=context, resource_link_id=resource_link_id)
             except Resource.DoesNotExist:
                 resource = Resource.objects.create(resource_link_id=resource_link_id, context=context, title=title, description=description)
                 return
