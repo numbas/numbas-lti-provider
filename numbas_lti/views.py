@@ -844,6 +844,15 @@ class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
     context_object_name = 'consumer'
     template_name = 'numbas_lti/management/admin/view_consumer.html'
 
+    def get_context_data(self, *args, **kwargs):
+        context = super(ManageConsumerView,self).get_context_data(*args,**kwargs)
+        
+        consumer = self.get_object()
+        context['unnamed_contexts'] = consumer.contexts.filter(name='').all()
+        context['named_contexts'] = consumer.contexts.exclude(name='').all()
+
+        return context
+
 class EditorLinkManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,ManagementViewMixin):
     permission_required = ('numbas_lti.add_editorlink',)
     management_tab = 'editor-links'
