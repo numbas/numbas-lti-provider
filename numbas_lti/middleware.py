@@ -24,7 +24,11 @@ class NumbasLTIResourceMiddleware(object):
                         instance_guid=request.LTI.get('tool_consumer_instance_guid')
                     )
             title = request.LTI.get('resource_link_title')
+            if title is None:
+                title = ''
             description = request.LTI.get('resource_link_description')
+            if description is None:
+                description = ''
             try:
                 resource = Resource.objects.get(resource_link_id=resource_link_id)
                 if (title,description,context) != (resource.title,resource.description,resource.context):
