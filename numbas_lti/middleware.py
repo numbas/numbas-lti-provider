@@ -31,11 +31,15 @@ class NumbasLTIResourceMiddleware(object):
                 description = ''
             try:
                 resource = Resource.objects.get(resource_link_id=resource_link_id)
+            except Resource.DoesNotExist:
+                resource = Resource.objects.create(resource_link_id=resource_link_id, context=context, title=title, description=description)
+                return
+            except Resource.MultipleObjectsReturned:
+                resource = Resource.objects.filter(resource_link_id=resource_link_id).last()
+            finally:
                 if (title,description,context) != (resource.title,resource.description,resource.context):
                     resource.title = title
                     resource.description = description
                     resource.context = context
                     resource.save()
                 request.resource = resource
-            except Resource.DoesNotExist:
-                request.resource = Resource.objects.create(resource_link_id=resource_link_id, context=context, title=title, description=description)
