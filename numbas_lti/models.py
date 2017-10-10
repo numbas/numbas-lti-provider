@@ -34,6 +34,10 @@ class LTIConsumer(models.Model):
     def __str__(self):
         return self.key
 
+    @property
+    def resources(self):
+        return Resource.objects.filter(context__consumer=self)
+
 class ExtractPackageMixin(object):
     extract_folder = 'extracted_zips'
 
@@ -62,6 +66,7 @@ class Exam(ExtractPackageMixin,models.Model):
     package = models.FileField(upload_to='exams/',verbose_name='Package file')
     retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
     rest_url = models.URLField(blank=True,default='',verbose_name='URL of the exam on the editor\'s REST API')
+    creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this exam was created'))
 
     def __str__(self):
         return self.title
@@ -96,10 +101,27 @@ SHOW_SCORES_MODES = [
     ('never',_('Never')),
 ]
 
+class LTIContext(models.Model):
+    consumer = models.ForeignKey(LTIConsumer,related_name='contexts')
+    context_id = models.CharField(max_length=300)
+    name = models.CharField(max_length=300)
+    label = models.CharField(max_length=300)
+    instance_guid = models.CharField(max_length=300)
+
+    def __str__(self):
+        if self.name == self.label:
+            return self.name
+        else:
+            return '{} ({})'.format(self.name, self.label)
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
-    tool_consumer_instance_guid = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)
+    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='resources')
+    title = models.CharField(max_length=300,default='')
+    description = models.TextField(default='')
+
+    creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this resource was created'))
 
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
@@ -110,11 +132,14 @@ class Resource(models.Model):
 
     num_questions = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        ordering = ['-creation_time','title']
+
     def __str__(self):
         if self.exam:
             return str(self.exam)
         else:
-            return _('{} {} - no exam uploaded').format(self.tool_consumer_instance_guid,self.resource_link_id)
+            return _('Resource in "{}" - no exam uploaded').format(self.context.name)
 
     @property
     def slug(self):
@@ -373,6 +398,12 @@ class Attempt(models.Model):
 
     def should_show_scores(self):
         return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
+
+class AttemptQuestionScore(models.Model):
+    attempt = models.ForeignKey(Attempt,related_name='question_scores')
+    number = models.IntegerField()
+    raw_score = models.FloatField()
+    scaled_score = models.FloatField()
 
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts')

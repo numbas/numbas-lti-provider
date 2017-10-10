@@ -101,7 +101,7 @@ def lti_entry(request):
 
     if request_is_instructor(request):
         if not request.resource.exam:
-            return redirect(reverse('create_exam'))
+            return redirect(reverse('create_exam',args=(request.resource.pk,)))
         else:
             return redirect(reverse('dashboard',args=(request.resource.pk,)))
     else:
@@ -110,7 +110,14 @@ def lti_entry(request):
         else:
             return redirect(reverse('show_attempts'))
 
-class MustBeInstructorMixin(LTIRoleRestrictionMixin):
+class LTIRoleOrSuperuserMixin(LTIRoleRestrictionMixin):
+    def check_allowed(self, request):
+        if request.user.is_superuser:
+            return True
+        else:
+            return super(LTIRoleOrSuperuserMixin, self).check_allowed(request)
+
+class MustBeInstructorMixin(LTIRoleOrSuperuserMixin):
     allowed_roles = ['Instructor']
 
 class ManagementViewMixin(object):
@@ -123,6 +130,29 @@ class ManagementViewMixin(object):
 
 class ResourceManagementViewMixin(ManagementViewMixin):
     context_object_name = 'resource'
+    resource_pk_url_kwarg = 'pk'
+
+    def get_resource(self):
+        if self.model == Resource:
+            return self.get_object()
+        else:
+            pk = self.kwargs.get(self.resource_pk_url_kwarg)
+            return Resource.objects.get(pk=pk)
+
+    def dispatch(self,*args,**kwargs):
+        self.resource = self.get_resource()
+        if not hasattr(self.request,'resource') or self.request.resource is None:
+            self.request.resource = self.resource
+
+        return super(ResourceManagementViewMixin,self).dispatch(*args,**kwargs)
+
+class MustHaveExamMixin(object):
+    def dispatch(self,*args,**kwargs):
+        resource = self.get_resource()
+        if resource.exam is None:
+            return redirect(reverse('create_exam',args=(resource.pk,)))
+
+        return super(MustHaveExamMixin,self).dispatch(*args,**kwargs)
 
 class CreateSuperuserView(generic.edit.CreateView):
     model = User
@@ -147,8 +177,9 @@ class CreateSuperuserView(generic.edit.CreateView):
         else:
             return reverse('create_consumer')
 
-class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
+class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
+    management_tab = 'create_exam'
     template_name = 'numbas_lti/management/create_exam.html'
     form_class = forms.CreateExamForm
 
@@ -172,7 +203,7 @@ class CreateExamView(MustBeInstructorMixin,generic.edit.CreateView):
     def get_success_url(self):
         return reverse('dashboard',args=(self.request.resource.pk,))
 
-class ReplaceExamView(ResourceManagementViewMixin,CreateExamView):
+class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
     template_name = 'numbas_lti/management/replace_exam.html'
 
@@ -189,7 +220,7 @@ class ReplaceExamView(ResourceManagementViewMixin,CreateExamView):
 
         return response
 
-class DashboardView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/dashboard.html'
     management_tab = 'dashboard'
@@ -217,7 +248,7 @@ class DashboardView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.de
 
         return context
 
-class DiscountPartsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/discount.html'
     context_object_name = 'resource'
@@ -301,7 +332,7 @@ class DiscountPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
         self.object = form.save()
         return JsonResponse({})
 
-class RemarkPartsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
     template_name = 'numbas_lti/management/remark.html'
     context_object_name = 'attempt'
@@ -431,7 +462,7 @@ class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
         messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
         return redirect(reverse('manage_attempts',args=(attempt.resource.pk,)))
 
-class AllAttemptsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.ListView):
+class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.ListView):
     model = Attempt
     template_name = 'numbas_lti/management/attempts.html'
     management_tab = 'attempts'
@@ -458,7 +489,7 @@ class AllAttemptsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.
 
         return context
 
-class ResourceSettingsView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+class ResourceSettingsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource
     form_class = forms.ResourceSettingsForm
     template_name = 'numbas_lti/management/resource_settings.html'
@@ -532,7 +563,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     def get_filename(self):
         return _("{slug}-attempts.csv").format(slug=self.object.slug)
 
-class AttemptSCORMListing(MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
+class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     model = Attempt
     management_tab = 'attempts'
     template_name = 'numbas_lti/management/attempt_scorm_listing.html'
@@ -546,7 +577,7 @@ class AttemptSCORMListing(MustBeInstructorMixin,ResourceManagementViewMixin,gene
 
         return context
 
-class ReportAllScoresView(MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
+class ReportAllScoresView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     model = Resource
     management_tab = 'dashboard'
     template_name = 'numbas_lti/management/report_all_scores.html'
@@ -579,11 +610,14 @@ class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
         process.save()
         return redirect(reverse('dashboard',args=(process.resource.pk,)))
 
-class DeleteAttemptView(MustBeInstructorMixin,ResourceManagementViewMixin,generic.edit.DeleteView):
+class DeleteAttemptView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.edit.DeleteView):
     model = Attempt
     context_object_name = 'attempt'
     management_tab = 'attempts'
     template_name = 'numbas_lti/management/delete_attempt.html'
+
+    def get_resource(self):
+        return self.get_object().resource
 
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
@@ -594,7 +628,7 @@ class DeleteAttemptView(MustBeInstructorMixin,ResourceManagementViewMixin,generi
     def get_success_url(self):
         return reverse('manage_attempts',args=(self.request.resource.pk,))
 
-class RunExamView(MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
+class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     """
         Run an exam without saving any attempt data
     """
@@ -602,6 +636,9 @@ class RunExamView(MustBeInstructorMixin,ResourceManagementViewMixin,generic.deta
     model = Exam
     template_name = 'numbas_lti/management/run_exam.html'
     context_object_name = 'exam'
+
+    def get_resource(self):
+        return Resource.objects.filter(exam=self.get_object()).first()
 
     def get_context_data(self,*args,**kwargs):
         context = super(RunExamView,self).get_context_data(*args,**kwargs)
@@ -801,6 +838,11 @@ class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
         consumer.save()
 
         return redirect(self.get_success_url())
+
+class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
+    model = LTIConsumer
+    context_object_name = 'consumer'
+    template_name = 'numbas_lti/management/admin/view_consumer.html'
 
 class EditorLinkManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,ManagementViewMixin):
     permission_required = ('numbas_lti.add_editorlink',)

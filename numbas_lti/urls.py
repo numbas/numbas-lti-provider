@@ -11,7 +11,7 @@ urlpatterns = [
 
     url(r'^create-superuser$', views.CreateSuperuserView.as_view(), name='create_superuser'),
 
-    url(r'^exam/create$', views.CreateExamView.as_view(), name='create_exam'),
+    url(r'^resource/(?P<pk>\d+)/create_exam$', views.CreateExamView.as_view(), name='create_exam'),
     url(r'^exam/(?P<pk>\d+)/run$', views.RunExamView.as_view(), name='run_exam'),
 
     url(r'^resource/(?P<pk>\d+)$', views.DashboardView.as_view(), name='dashboard'),
@@ -49,6 +49,7 @@ urlpatterns = [
 
     url(r'^consumers$', views.ListConsumersView.as_view(), name='list_consumers'),
     url(r'^consumers/create$', views.CreateConsumerView.as_view(), name='create_consumer'),
+    url(r'^consumers/(?P<pk>\d+)$', views.ManageConsumerView.as_view(), name='view_consumer'),
     url(r'^consumers/(?P<pk>\d+)/delete$', views.DeleteConsumerView.as_view(), name='delete_consumer'),
 
     url(r'^editorlinks$', views.ListEditorLinksView.as_view(), name='list_editorlinks'),

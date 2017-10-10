@@ -22,6 +22,7 @@
                     <th>{% trans "Consumer key" %}</th>
                     <th>{% trans "Shared secret" %}</th>
                     <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -29,7 +30,17 @@
                 <tr>
                     <td><code>{{consumer.key}}</code></td>
                     <td><code>{{consumer.secret}}</code></td>
-                    <td><a href="{% url 'delete_consumer' consumer.pk %}" title="{% trans "Delete this consumer" %}" class="btn btn-link"><span class="text-danger glyphicon glyphicon-trash"></span></a></td>
+                    <td>
+                        {% blocktrans count num_resources=consumer.resources.count %}
+                        1 resource.
+                        {% plural %}
+                        {{num_resources}} resources.
+                        {% endblocktrans %}
+                    </td>
+                    <td>
+                        <a href="{% url 'view_consumer' consumer.pk %}" class="btn btn-primary">{% trans "Manage" %}</a>
+                        <a href="{% url 'delete_consumer' consumer.pk %}" title="{% trans "Delete this consumer" %}" class="btn btn-link"><span class="text-danger glyphicon glyphicon-trash"></span></a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
