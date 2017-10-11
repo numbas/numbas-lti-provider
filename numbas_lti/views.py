@@ -571,6 +571,9 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     template_name = 'numbas_lti/management/attempt_scorm_listing.html'
     context_object_name = 'attempt'
 
+    def get_resource(self):
+        return self.get_object().resource
+
     def get_context_data(self,*args,**kwargs):
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 

@@ -22,7 +22,7 @@
 {% endblocktrans %}
 
 
-<form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' %}">
+<form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' request.resource.pk %}">
     {% csrf_token %}
     {{form|bootstrap}}
     <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-import"></span> {% trans "Replace" %}</button> 
