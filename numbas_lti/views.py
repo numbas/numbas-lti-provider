@@ -55,6 +55,8 @@ def index(request):
     return render(request,'numbas_lti/index.html',context)
 
 def request_is_instructor(request):
+    if request.user.is_superuser:
+        return True
     return 'Instructor' in request.LTI.get('roles')
 
 @csrf_exempt
