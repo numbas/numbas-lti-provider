@@ -798,13 +798,16 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
     done = []
     for id,elements in batches.items():
         for element in elements:
-            ScormElement.objects.create(
-                attempt = attempt,
-                key = element['key'], 
-                value = element['value'],
-                time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time'])),
-                counter = element.get('counter',0)
-            )
+            try:
+                ScormElement.objects.get_or_create(
+                    attempt = attempt,
+                    key = element['key'],
+                    value = element['value'],
+                    time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time'])),
+                    counter = element.get('counter',0)
+                )
+            except ScormElement.MultipleObjectsReturned:
+                pass
         done.append(id)
     return JsonResponse({'received_batches':done})
 

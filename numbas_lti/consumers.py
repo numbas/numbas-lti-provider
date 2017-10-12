@@ -20,13 +20,16 @@ def scorm_set_element(message,pk):
     packet = json.loads(message.content['text'])
     attempt = Attempt.objects.get(pk=pk)
     for element in packet['data']:
-        ScormElement.objects.create(
-            attempt = attempt,
-            key = element['key'], 
-            value = element['value'],
-            time = timezone.make_aware(datetime.fromtimestamp(element['time'])),
-            counter = element['counter']
-        )
+        try:
+            ScormElement.objects.get_or_create(
+                attempt = attempt,
+                key = element['key'], 
+                value = element['value'],
+                time = timezone.make_aware(datetime.fromtimestamp(element['time'])),
+                counter = element['counter']
+            )
+        except ScormElement.MultipleObjectsReturned:
+            pass
     response = {
         'received': str(packet['id'])
     }
