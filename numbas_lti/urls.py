@@ -19,7 +19,6 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/discount_part$', views.DiscountPartView.as_view(), name='discount_part'),
     url(r'^discount_part/(?P<pk>\d+)/update$', views.DiscountPartUpdateView.as_view(), name='discount_part_update'),
     url(r'^discount_part/(?P<pk>\d+)/delete$', views.DiscountPartDeleteView.as_view(), name='discount_part_delete'),
-    url(r'^resource/(?P<pk>\d+)/remark_parts$', views.RemarkPartsView.as_view(), name='remark_parts'),
     url(r'^resource/(?P<pk>\d+)/remark_part$', views.RemarkPartView.as_view(), name='remark_part'),
     url(r'^remark_part/(?P<pk>\d+)/update$', views.RemarkPartUpdateView.as_view(), name='remark_part_update'),
     url(r'^remark_part/(?P<pk>\d+)/delete$', views.RemarkPartDeleteView.as_view(), name='remark_part_delete'),
@@ -30,6 +29,7 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/scores.csv$', views.ScoresCSV.as_view(), name='scores_csv'),
     url(r'^resource/(?P<pk>\d+)/attempts.csv$', views.AttemptsCSV.as_view(), name='attempts_csv'),
 
+    url(r'^attempt/(?P<pk>\d+)/remark_parts$', views.RemarkPartsView.as_view(), name='remark_parts'),
     url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
     url(r'^attempt/(?P<pk>\d+)/delete$', views.DeleteAttemptView.as_view(), name='delete_attempt'),
     url(r'^attempt/(?P<pk>\d+)/reopen$', views.ReopenAttemptView.as_view(), name='reopen_attempt'),

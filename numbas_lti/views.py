@@ -340,6 +340,9 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
     context_object_name = 'attempt'
     management_tab = 'attempts'
 
+    def get_resource(self):
+        return self.get_object().resource
+
     def get_context_data(self,*args,**kwargs):
         context = super(RemarkPartsView,self).get_context_data(*args,**kwargs)
 
