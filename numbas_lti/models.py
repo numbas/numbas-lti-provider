@@ -243,7 +243,9 @@ class Attempt(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
 
     completion_status = models.CharField(max_length=20,choices=COMPLETION_STATUSES,default='not attempted')
+    completion_status_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_completion_status_of", null=True)
     scaled_score = models.FloatField(default=0)
+    scaled_score_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_scaled_score_of", null=True)
 
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
@@ -475,6 +477,9 @@ class ScormElement(models.Model):
     def __str__(self):
         return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))
 
+    def newer_than(self, other):
+        return self.time>other.time or (self.time==other.time and self.counter>other.counter)
+
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
     Group(instance.attempt.channels_group()).send({
@@ -490,7 +495,11 @@ def scorm_set_score(sender,instance,created,**kwargs):
     if instance.key!='cmi.score.scaled' or not created:
         return
 
+    if not (instance.attempt.scaled_score_element is None or instance.newer_than(instance.attempt.scaled_score_element)):
+        return
+
     instance.attempt.scaled_score = float(instance.value)
+    instance.attempt.scaled_score_element = instance
     instance.attempt.save()
     if instance.attempt.resource.report_mark_time == 'immediately':
         try:
@@ -503,7 +512,11 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     if instance.key!='cmi.completion_status' or not created:
         return
 
+    if not (instance.attempt.completion_status_element is None or instance.newer_than(instance.attempt.completion_status_element)):
+        return
+
     instance.attempt.completion_status = instance.value
+    instance.attempt.completion_status_element = instance
     instance.attempt.save()
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
         try:
