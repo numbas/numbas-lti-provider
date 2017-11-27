@@ -16,7 +16,7 @@ def set_current_elements(apps, schema_editor):
 
         a.scaled_score_element = a.scormelements.filter(key='cmi.scaled_score').order_by('-time','-counter').first()
         if a.scaled_score_element is not None:
-            a.scaled_score = a.scaled_score_element.value
+            a.scaled_score = float(a.scaled_score_element.value)
         a.save()
 
 class Migration(migrations.Migration):
