@@ -325,7 +325,7 @@ class Attempt(models.Model):
         return set([g['value'] for g in gaps.values('value')])
 
     def part_interaction_id(self,part):
-        id_element = self.part_paths().filter(value=part).get()
+        id_element = self.part_paths().filter(value=part).first()
         n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
         return n
 
