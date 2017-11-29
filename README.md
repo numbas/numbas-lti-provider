@@ -6,9 +6,20 @@ This is a Basic LTI 1.1 tool provider, to run [Numbas](http://www.numbas.org.uk)
 
 The tool handles attempt data, and as well as offering CSV exports of student scores can report scores back to the host VLE's gradebook.
 
-## How to use
+## What do I need in order to use this?
 
 You must run your own instance of this tool - as well as using a fair amount of server resources, we don't want to keep other people's student data!
+
+To install the tool, you need:
+
+* A dedicated server to install the software on, which will communicate with your virtual learning environment. At Newcastle, we use servers running Ubuntu. 
+* The ability to add a link to an LTI tool to your virtual learning environment. In Blackboard and Moodle, only administrators can do this.
+
+At most institutions, this will require the help of your IT team.
+
+If you're unsure whether you can use the LTI tool provider, or want help setting it up, [email the Numbas team](mailto:numbas@ncl.ac.uk).
+
+## How to use
 
 The set-up process looks like this:
 
@@ -19,23 +30,27 @@ The set-up process looks like this:
 
 ## Installing the software
 
+Below are instructions on installing the software on your own server, or on virtual machines provided by Heroku or the virtualisation software Vagrant.
+
+### On your own server
+
+This method is the most appropriate for real-world use, i.e. not development or testing.
+
+At the moment we have instructions on install the software on a machine [running Ubuntu 16.04 and using Apache](doc/install_apache.md).
+
 ### In the cloud with Heroku
 
 The quickest way of setting up the software is through Heroku. Click on the button - it'll take about five minutes from start to finish.
 
 [![Deploy Numbas LTI tool provider to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/numbas/numbas-lti-provider/tree/heroku)
 
-Heroku gives you 1,000 free hours of uptime per month, and limits the size of your app's database. To keep the app running continuously, and store more data, you have to pay. The minimum "always-up" setup looks to cost around $30 per month.
+Heroku gives you 1,000 free hours of uptime per month, and limits the size of your app's database. To keep the app running continuously, and store more data, you have to pay. The minimum "always-up" setup looks to cost around $30 per month, though use with real students might require more resources than that.
 
 ### In a Vagrant virtual machine
 
 [Vagrant](https://www.vagrantup.com/) provides an easy way of managing virtual machines on your computer. You might want to use this if you're trying out the software on a Windows PC, or want to run the tool in a self-contained environment, separate from your other software.
 
 * [Vagrant set-up instructions](doc/vagrant.md)
-
-### On your own server
-
-* [Using Apache on Ubuntu 16.04](doc/install_apache.md)
 
 ## Complete the set-up
 
