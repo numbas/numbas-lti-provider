@@ -285,13 +285,13 @@ class Attempt(models.Model):
                 total += self.question_max_score(i)
             return total
 
-        return float(self.get_element_default('cmi.score.max',0))
+        return float(self.get_element_default('cmi.score.max',sum(self.question_max_score(i) for i in range(self.resource.num_questions))))
 
     def part_discount(self,part):
         return self.resource.discounted_parts.filter(part=part).first()
 
     def part_paths(self):
-        return self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id')
+        return set(e['value'] for e in self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id').values('value').distinct())
 
     def part_hierarchy(self):
         """
@@ -305,8 +305,8 @@ class Attempt(models.Model):
                     }
                 }
         """
-        paths = sorted(set(e['value'] for e in self.part_paths().values('value')),key=lambda x:(len(x),x))
-        re_path = re.compile(r'q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
+        paths = sorted(self.part_paths(),key=lambda x:(len(x),x))
+        re_path = re.compile('q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
@@ -321,11 +321,11 @@ class Attempt(models.Model):
     def part_gaps(self,part):
         if not re.match(r'q\d+p\d+$',part):
             return None
-        gaps = self.part_paths().filter(value__startswith=part+'g')
-        return set([g['value'] for g in gaps.values('value')])
+        gaps = [g for g in self.part_paths() if g.startswith(part+'g')]
+        return gaps
 
     def part_interaction_id(self,part):
-        id_element = self.part_paths().filter(value=part).first()
+        id_element = self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id',value=part).first()
         n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
         return n
 
@@ -370,10 +370,9 @@ class Attempt(models.Model):
     def question_score(self,n):
         qid = 'q{}'.format(n)
         if self.remarked_parts.filter(part__startswith=qid).exists() or self.resource.discounted_parts.filter(part__startswith=qid).exists():
-            question_parts = self.part_paths().filter(value__startswith=qid)
+            question_parts = [p for p in self.part_paths() if p.startswith(qid)]
             total = 0
-            for p in question_parts:
-                part = p.value
+            for part in question_parts:
                 if re.match(r'^q{}p\d+$'.format(n),part):
                     total += self.part_score(part)
             return total
@@ -384,10 +383,9 @@ class Attempt(models.Model):
     def question_max_score(self,n):
         qid = 'q{}'.format(n)
         if self.resource.discounted_parts.filter(part__startswith=qid).exists():
-            question_parts = self.part_paths().filter(value__startswith=qid)
+            question_parts = [p for p in self.part_paths() if p.startswith(qid)]
             total = 0
-            for p in question_parts:
-                part = p.value
+            for part in question_parts:
                 if re.match(r'^q{}p\d+$'.format(n),part):
                     total += self.part_max_score(part)
             return total
@@ -411,6 +409,9 @@ class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts')
     part = models.CharField(max_length=20)
     score = models.FloatField()
+    
+    def __str__(self):
+        return '{} on part {} in {}'.format(self.score, self.part, self.attempt)
 
 def remark_update_scaled_score(sender,instance,**kwargs):
     attempt = instance.attempt
