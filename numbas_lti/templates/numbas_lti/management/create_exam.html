@@ -70,7 +70,7 @@
                     <div class="panel-body">
                         <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' request.resource.pk %}">
                             <p>{% trans "To obtain an exam package, find your exam in the Numbas editor and click <em>\"Download SCORM package\"</em>." %}</p>
-                            {% if editor_links.count = 1 %}
+                            {% if editor_links.count == 1 %}
                             <p class="text-center"><a class="btn btn-link" target="_blank" href="{{editor_links.first.url}}"><span class="glyphicon glyphicon-new-window"></span> {% trans "Click here to open the Numbas editor." %}</a></p>
                             {% endif %}
                             {% csrf_token %}
