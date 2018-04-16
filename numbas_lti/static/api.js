@@ -396,6 +396,12 @@ SCORM_API.prototype = {
         request
             .then(
                 function(response) {
+                    if(!response.ok) {
+                        console.error('failed to send SCORM data over HTTP');
+                        response.text().then(function(t){console.error('SCORM HTTP fallback error message: '+t)});
+                        sc.last_ajax_succeeded = false;
+                        return Promise.reject(error.message);
+                    }
                     sc.last_ajax_succeeded = true;
                     return response.json();
                 },

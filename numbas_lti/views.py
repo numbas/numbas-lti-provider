@@ -15,12 +15,13 @@ from django.views import generic
 from django.urls import reverse, reverse_lazy
 from django.core.exceptions import PermissionDenied
 from django import http
-from django.http import StreamingHttpResponse, JsonResponse
+from django.http import StreamingHttpResponse, JsonResponse, HttpResponseServerError
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.template.loader import get_template
 from django.contrib import messages
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
+from django.db.utils import OperationalError
 from itertools import groupby
 from channels import Channel
 import datetime
@@ -788,6 +789,9 @@ class RunAttemptView(generic.detail.DetailView):
         now = datetime.datetime.now().timestamp()
         dynamic_cmi = {k: {'value':v,'time':now} for k,v in dynamic_cmi.items()}
         scorm_cmi.update(dynamic_cmi)
+
+        context['support_name'] = getattr(settings,'SUPPORT_NAME',None)
+        context['support_url'] = getattr(settings,'SUPPORT_URL',None)
         
         context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
 
@@ -811,6 +815,8 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
                 )
             except ScormElement.MultipleObjectsReturned:
                 pass
+            except OperationalError as e:
+                return HttpResponseServerError(str(e))
         done.append(id)
     return JsonResponse({'received_batches':done})
 

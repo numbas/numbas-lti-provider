@@ -142,3 +142,5 @@ CHANNEL_LAYERS = {
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+SUPPORT_NAME = 'the Numbas team' # the name of your support contact
+SUPPORT_URL = None  # set to "mailto:your_email_address", or the URL of a page containing contact info

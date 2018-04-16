@@ -14,6 +14,7 @@
             <p>{% trans "There is currently no connection to the server - your attempt data can not be saved to the database." %}</p>
             <p>{% trans "When the connection is restored, data will be saved to the database." %}</p>
             <p class="text-localstorage-used">{% trans "Data is being saved locally, so you'll be able to resume this attempt <strong>from this device</strong> when the connection is restored." %}</p>
+            {% if support_name %}<p>{% trans "If this warning remains visible for a long time, please contact " %}{% if support_url %}<a href="{{support_url}}">{% endif %}{{support_name}}{% if support_url %}</a>{% endif %}.</p>{% endif %}
         </div>
     </span>
 </div>

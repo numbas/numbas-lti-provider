@@ -16,6 +16,9 @@ body {
     font-family: sans-serif;
     transition: background-color 0.5s;
 }
+#status-display a {
+    color: white;
+}
 body.terminated #status-display, #status-display:focus {
     border-radius: 0;
 }
