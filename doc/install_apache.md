@@ -7,6 +7,7 @@ First, install packages and set up users:
 * Overwrite `/etc/apache2/sites-available/000-default.conf` with [apache.conf](apache.conf), setting the `SSLCertificateFile` and `SSLCertificateKeyFile` lines to the paths to your SSL certificate and key files.
 * Copy [settings.py](settings.py) to `/srv/numbas-lti-provider/pretendlti/settings.py`. 
   * Change the settings in `DATABASES` to match your configuration.
+  * Set the `SUPPORT_NAME` to the name of your technical support contact, and optionally also `SUPPORT_URL`. Students will be shown a link to the support contact if any errors occur.
   * Add your server's name to `ALLOWED_HOSTS` or, if you're doing development, set `DEBUG` to `True`.
 * Copy [asgi.py](asgi.py) to `/srv/numbas-lti-provider/pretendlti/asgi.py`.
 * Copy [numbas_lti.conf](numbas_lti.conf) to `/etc/supervisor/conf.d/numbas_lti.conf`.
