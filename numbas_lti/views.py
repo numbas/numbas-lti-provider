@@ -12,7 +12,7 @@ from django_auth_lti.const import LEARNER, INSTRUCTOR
 from django_auth_lti.patch_reverse import patch_reverse
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django.views import generic
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.http import StreamingHttpResponse, JsonResponse

@@ -102,7 +102,7 @@ SHOW_SCORES_MODES = [
 ]
 
 class LTIContext(models.Model):
-    consumer = models.ForeignKey(LTIConsumer,related_name='contexts')
+    consumer = models.ForeignKey(LTIConsumer,related_name='contexts', on_delete=models.CASCADE)
     context_id = models.CharField(max_length=300)
     name = models.CharField(max_length=300)
     label = models.CharField(max_length=300)
@@ -400,13 +400,13 @@ class Attempt(models.Model):
         return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
 
 class AttemptQuestionScore(models.Model):
-    attempt = models.ForeignKey(Attempt,related_name='question_scores')
+    attempt = models.ForeignKey(Attempt,related_name='question_scores', on_delete=models.CASCADE)
     number = models.IntegerField()
     raw_score = models.FloatField()
     scaled_score = models.FloatField()
 
 class RemarkPart(models.Model):
-    attempt = models.ForeignKey(Attempt,related_name='remarked_parts')
+    attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
     score = models.FloatField()
     
@@ -431,7 +431,7 @@ DISCOUNT_BEHAVIOURS = [
 ]
 
 class DiscountPart(models.Model):
-    resource = models.ForeignKey(Resource,related_name='discounted_parts')
+    resource = models.ForeignKey(Resource,related_name='discounted_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
     behaviour = models.CharField(max_length=10,choices=DISCOUNT_BEHAVIOURS,default='remove')
 

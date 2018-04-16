@@ -1,7 +1,10 @@
 from .models import Resource, LTIContext, LTIConsumer
 
 class NumbasLTIResourceMiddleware(object):
-    def process_request(self,request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self,request):
         resource_link_id = request.LTI.get('resource_link_id')
         tool_consumer_instance_guid = request.LTI.get('tool_consumer_instance_guid')
         if resource_link_id is not None and tool_consumer_instance_guid is not None:
@@ -44,3 +47,7 @@ class NumbasLTIResourceMiddleware(object):
                     resource.context = context
                     resource.save()
                 request.resource = resource
+
+        response = self.get_response(request)
+
+        return response

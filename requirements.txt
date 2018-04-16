@@ -1,9 +1,9 @@
-Django==1.9
-oauthlib>=1.1.1
-lxml==3.6
-channels>=0.16
+Django==2.0
+oauthlib==2.0.7
+lxml==4.2.1
+channels==1.1.8
 git+git://github.com/christianp/django-auth-lti@oauthlib#egg=django_auth_lti
-requests==2.10
-requests-oauthlib==0.6
-django-bootstrap-form==3.2.1
-simplejson==3.10.0
+requests==2.18.4
+requests-oauthlib==0.8.0
+django-bootstrap-form==3.4
+simplejson==3.13.2
