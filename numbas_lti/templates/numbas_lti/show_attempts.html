@@ -25,11 +25,23 @@
             {% for attempt in object_list %}
             <tr>
                 <td>{{attempt.start_time}}</td>
-                <td>{% if attempt.should_show_scores %}{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}){% else %}<em>{% trans "In progress" %}</em>{% endif %}</td>
+                <td>
+                    {% if attempt.should_show_scores %}
+                        {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})
+                    {% else %}
+                        {% if attempt.completed %}
+                            {% trans "Completed" %}
+                        {% else %}
+                            <em>{% trans "In progress" %}</em>
+                        {% endif %}
+                    {% endif %}
+                </td>
                 <td>
                     <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
                         {% if attempt.completed %}
+                            {% if attempt.should_show_scores %}
                             <span class="glyphicon glyphicon-apple"></span> {% trans "Review this attempt" %}
+                            {% endif %}
                         {% else %}
                             <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
                         {% endif %}
