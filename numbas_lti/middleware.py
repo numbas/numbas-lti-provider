@@ -39,7 +39,6 @@ class NumbasLTIResourceMiddleware(object):
                 resource = Resource.objects.filter(context__instance_guid=tool_consumer_instance_guid, resource_link_id=resource_link_id).last()
             except Resource.DoesNotExist:
                 resource = Resource.objects.create(resource_link_id=resource_link_id, context=context, title=title, description=description)
-                return
             finally:
                 if (title,description,context) != (resource.title,resource.description,resource.context):
                     resource.title = title
