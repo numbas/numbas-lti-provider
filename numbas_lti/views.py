@@ -866,7 +866,7 @@ class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
         
         consumer = self.get_object()
         context['unnamed_contexts'] = consumer.contexts.filter(name='').all()
-        context['named_contexts'] = consumer.contexts.exclude(name='').all()
+        context['named_contexts'] = sorted(consumer.contexts.exclude(name='').all(),key=lambda c: c.name.upper())
 
         return context
 

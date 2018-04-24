@@ -9,15 +9,29 @@
     </header>
 
     <dl>
-        <dt>Key</dt>
+        <dt>{% trans "Key" %}</dt>
         <dd><code>{{consumer.key}}</code></dd>
-        <dt>Secret</dt>
+        <dt>{% trans "Secret" %}</dt>
         <dd><code>{{consumer.secret}}</code></dd>
     </dl>
 
     <main>
         <h2>{% trans "Resources" %}</h2>
-        {% for context in named_contexts|dictsort:"label" %}
+        {% regroup named_contexts by name|first|upper as context_groups %}
+        <ul class="list-inline">
+            {% for letter in context_groups %}
+            <li><a href="#context-letter-{{letter.grouper}}">{{letter.grouper}}</a></li>
+            {% endfor %}
+        </ul>
+        {% for letter in context_groups %}
+        <a id="context-letter-{{letter.grouper}}"></a>
+        <ul>
+        {% for context in letter.list %}
+            <li><a href="#context-{{context.pk}}">{{context.name}} ({{context.label}})</a></li>
+        {% endfor %}
+        </ul>
+        {% endfor %}
+        {% for context in named_contexts %}
             {% include "numbas_lti/management/admin/view_consumer_context.html" %}
         {% endfor %}
         {% for context in unnamed_contexts %}
