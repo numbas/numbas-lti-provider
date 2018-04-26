@@ -3,6 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.shortcuts import render,redirect
 from django.utils.decorators import available_attrs
 from django.views.decorators.csrf import csrf_exempt
@@ -21,23 +22,25 @@ from django.template.loader import get_template
 from django.contrib import messages
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
-from django.db.utils import OperationalError
 from itertools import groupby
 from channels import Channel
 import datetime
 from django.utils import timezone
 import csv
 import json
+import logging
 import simplejson
 import string
-from django.contrib.staticfiles.templatetags.staticfiles import static
 import requests
+
+logger = logging.getLogger(__name__)
 
 patch_reverse()
 
 from functools import wraps
 
 from .models import LTIConsumer, LTIUserData, Resource, AccessToken, Exam, Attempt, ScormElement, ReportProcess, RemarkPart, DiscountPart, EditorLink, EditorLinkProject
+from .save_scorm_data import save_scorm_data
 from . import forms
 
 def get_lti_entry_url(request):
@@ -62,6 +65,7 @@ def request_is_instructor(request):
 
 @csrf_exempt
 def no_resource(request):
+    logger.info(_("No resource found for an LTI entry:\n"+json.dumps(request.POST)))
     return render(request,'numbas_lti/error_no_resource.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 
 def static_view(template_name):
@@ -101,6 +105,8 @@ def lti_entry(request):
     user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
     user_data.save()
+
+    logger.info(_("LTI entry for user {} (ID: {})".format(user.get_full_name(),user.pk)))
 
     if request_is_instructor(request):
         if not request.resource.exam:
@@ -802,23 +808,8 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
     """ An AJAX fallback to save SCORM data, when the websocket fails """
     attempt = Attempt.objects.get(pk=pk)
     batches = json.loads(request.body.decode())
-    done = []
-    for id,elements in batches.items():
-        for element in elements:
-            try:
-                ScormElement.objects.get_or_create(
-                    attempt = attempt,
-                    key = element['key'],
-                    value = element['value'],
-                    time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time'])),
-                    counter = element.get('counter',0)
-                )
-            except ScormElement.MultipleObjectsReturned:
-                pass
-            except OperationalError as e:
-                return HttpResponseServerError(str(e))
-        done.append(id)
-    return JsonResponse({'received_batches':done})
+    done, unsaved_elements = save_scorm_data(attempt,batches)
+    return JsonResponse({'received_batches':done,'unsaved_elements':unsaved_elements})
 
 class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,ManagementViewMixin):
     permission_required = ('numbas_lti.add_lticonsumer',)

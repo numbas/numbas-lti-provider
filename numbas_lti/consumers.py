@@ -14,24 +14,17 @@ from django.utils.translation import ugettext as _
 
 from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
+from .save_scorm_data import save_scorm_data
 
 @channel_session_user
 def scorm_set_element(message,pk):
     packet = json.loads(message.content['text'])
     attempt = Attempt.objects.get(pk=pk)
-    for element in packet['data']:
-        try:
-            ScormElement.objects.get_or_create(
-                attempt = attempt,
-                key = element['key'], 
-                value = element['value'],
-                time = timezone.make_aware(datetime.fromtimestamp(element['time'])),
-                counter = element['counter']
-            )
-        except ScormElement.MultipleObjectsReturned:
-            pass
+    batches = {packet['id']: packet['data']}
+    done, unsaved_elements = save_scorm_data(attempt,batches)
     response = {
-        'received': str(packet['id'])
+        'received': done,
+        'unsaved_elements': unsaved_elements,
     }
     message.reply_channel.send({'text':json.dumps(response)})
 
