@@ -106,8 +106,6 @@ def lti_entry(request):
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
     user_data.save()
 
-    logger.info(_("LTI entry for user {} (ID: {})".format(user.get_full_name(),user.pk)))
-
     if request_is_instructor(request):
         if not request.resource.exam:
             return redirect(reverse('create_exam',args=(request.resource.pk,)))
