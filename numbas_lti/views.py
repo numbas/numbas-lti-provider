@@ -267,7 +267,6 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
         resource = self.get_object()
         hierarchy = resource.part_hierarchy()
         out = []
-        fst = lambda x:x[0]
 
         def row(q,p=None,g=None):
             qnum = int(q)+1
@@ -295,11 +294,11 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=fst):
+        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
             qnum = int(i)+1
             out.append(row(i))
 
-            for j,p in sorted(q.items(),key=fst):
+            for j,p in sorted(q.items(),key=hierarchy_key):
                 out.append(row(i,j))
 
                 for g in p['gaps']:
@@ -339,6 +338,13 @@ class DiscountPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
         self.object = form.save()
         return JsonResponse({})
 
+def hierarchy_key(x):
+    key = x[0]
+    try:
+        return int(key)
+    except ValueError:
+        return key
+
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
     template_name = 'numbas_lti/management/remark.html'
@@ -354,7 +360,6 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
         attempt = self.get_object()
         hierarchy = attempt.part_hierarchy()
         out = []
-        fst = lambda x:x[0]
 
         def row(q,p=None,g=None,parent=None,has_gaps=False):
             qnum = int(q)+1
@@ -392,11 +397,11 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=fst):
+        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
             qnum = int(i)+1
             out.append(row(i))
 
-            for j,p in sorted(q.items(),key=fst):
+            for j,p in sorted(q.items(),key=hierarchy_key):
                 has_gaps = len(p['gaps'])>0
                 prow = row(i,j,has_gaps=has_gaps)
                 out.append(prow)
