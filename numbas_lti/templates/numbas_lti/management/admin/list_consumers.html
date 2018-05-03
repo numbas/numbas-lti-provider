@@ -40,6 +40,7 @@
                     <td>
                         <a href="{% url 'view_consumer' consumer.pk %}" class="btn btn-primary">{% trans "Manage" %}</a>
                         <a href="{% url 'delete_consumer' consumer.pk %}" title="{% trans "Delete this consumer" %}" class="btn btn-link"><span class="text-danger glyphicon glyphicon-trash"></span></a>
+                        {% if consumer.url %}<a class="btn btn-link" href="{{consumer.url}}" target="_blank">{% trans "Visit" %} <span class="glyphicon glyphicon-new-window"></span></a>{% endif %}
                     </td>
                 </tr>
                 {% endfor %}

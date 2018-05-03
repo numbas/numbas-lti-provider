@@ -25,6 +25,7 @@ class NotDeletedManager(models.Manager):
         return super(NotDeletedManager,self).get_queryset().filter(deleted=False)
 
 class LTIConsumer(models.Model):
+    url = models.URLField(blank=True,default='',verbose_name='Home URL of consumer')
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
     secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
