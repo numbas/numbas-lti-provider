@@ -310,7 +310,6 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
         if 'query' in self.request.GET:
             query = self.request.GET.get('query')
             for word in query.split():
-                print(word)
                 attempts = attempts.filter(Q(user__first_name__icontains=word) | Q(user__last_name__icontains=word))
         return attempts
 
