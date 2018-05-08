@@ -23,14 +23,6 @@ class ListEditorLinksView(EditorLinkManagementMixin,generic.list.ListView):
     model = EditorLink
     template_name = 'numbas_lti/management/admin/list_editorlinks.html'
 
-class EditorLinkProjectFormSet(BaseInlineFormSet):
-    def get_queryset(self, *args, **kwargs):
-        queryset = super(EditorLinkProjectFormSet,self).get_queryset(*args,**kwargs)
-        print(queryset)
-        self.queryset = queryset.order_by('name')
-        print(self.queryset)
-        return self.queryset
-
 class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
     template_name = 'numbas_lti/management/admin/edit_editorlink.html'
     model = EditorLink
@@ -46,7 +38,6 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
             EditorLink,
             EditorLinkProject,
             form=forms.EditorLinkProjectForm,
-            formset=EditorLinkProjectFormSet,
             can_delete=False,
             extra=extra
         )
@@ -60,7 +51,7 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
 
             projects_data = requests.get('{}/api/projects'.format(self.object.url)).json()
             projects = []
-            for p in projects_data:
+            for p in sorted(projects_data,key=lambda p:p['name'].lower()):
                 projects.append({
                     'name': p['name'],
                     'description': p['description'],
