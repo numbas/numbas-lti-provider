@@ -2,8 +2,6 @@ from django.conf.urls import url
 from django.contrib import auth
 
 from . import views
-print(dir(views))
-
 urlpatterns = [
     url(r'^$', views.entry.index, name='index'),
     url(r'^lti_entry$', views.entry.lti_entry, name='lti_entry'),
