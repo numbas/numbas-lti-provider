@@ -1,12 +1,24 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
 {% load bootstrap %}
+{% load staticfiles %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% static 'view_consumer.css' %}">
+{%endblock stylesheets %}
 
 {% block management_content %}
 <div class="container">
     <header>
     <h1>{% trans "Manage a consumer" %}</h1>
     </header>
+
+    {% if consumer.url %}
+    <p>
+        <a href="{{consumer.url}}" target="_blank">{% trans "Visit this consumer's homepage" %} <span class="glyphicon glyphicon-new-window"></span></a>
+    </p>
+    {% endif %}
 
     <dl>
         <dt>{% trans "Key" %}</dt>
@@ -17,17 +29,15 @@
 
     <main>
         <h2>{% trans "Resources" %}</h2>
+        {% if not consumer.resources.count %}
+        <p>{% trans "This consumer has not created any resources yet." %}</p>
+        {% endif %}
         {% regroup named_contexts by name|first|upper as context_groups %}
-        <ul class="list-inline">
-            {% for letter in context_groups %}
-            <li><a href="#context-letter-{{letter.grouper}}">{{letter.grouper}}</a></li>
-            {% endfor %}
-        </ul>
         {% for letter in context_groups %}
         <a id="context-letter-{{letter.grouper}}"></a>
         <ul>
         {% for context in letter.list %}
-            <li><a href="#context-{{context.pk}}">{{context.name}} ({{context.label}})</a></li>
+        <li><a href="#context-{{context.pk}}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></li>
         {% endfor %}
         </ul>
         {% endfor %}

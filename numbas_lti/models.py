@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core import validators
 from channels import Group, Channel
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta,datetime
 
 from .report_outcome import report_outcome_for_attempt, ReportOutcomeFailure, ReportOutcomeConnectionError
 
@@ -207,6 +207,22 @@ class Resource(models.Model):
     
         return out
 
+    def last_activity(self):
+        if self.attempts.exists():
+            return self.attempts.order_by('-start_time').first().start_time
+        else:
+            return self.creation_time
+
+    def time_since_last_activity(self):
+        now = timezone.now()
+        diff = now - self.last_activity()
+        return diff
+
+    def is_new(self):
+        return self.time_since_last_activity().days < 7
+
+    def is_old(self):
+        return self.time_since_last_activity().days > 14
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -582,6 +598,9 @@ class EditorLinkProject(models.Model):
     remote_id = models.IntegerField(verbose_name='ID of the project on the editor')
     homepage = models.URLField(verbose_name='URL of the project\'s homepage on the editor')
     rest_url = models.URLField(verbose_name='URL of the project on the editor\'s REST API')
+
+    class Meta:
+        ordering = ['name']
 
 @receiver(models.signals.pre_save,sender=EditorLink)
 def update_editor_cache_before_save(sender,instance,**kwargs):
