@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
-from django.urls import reverse
+from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.views import generic

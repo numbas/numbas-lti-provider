@@ -1,7 +1,7 @@
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
-from django.urls import reverse
+from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views import generic
 from numbas_lti.models import LTIConsumer

@@ -1,6 +1,6 @@
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.shortcuts import redirect
-from django.urls import reverse
+from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views import generic
 from django_auth_lti.mixins import LTIRoleRestrictionMixin

@@ -3,7 +3,8 @@ from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.shortcuts import redirect
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
+from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views import generic
 from numbas_lti import forms
