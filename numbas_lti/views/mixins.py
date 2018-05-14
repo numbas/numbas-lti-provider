@@ -9,6 +9,9 @@ from numbas_lti.models import Resource, Exam
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
 
+def get_config_url(request):
+    return request.build_absolute_uri(reverse('config_xml',exclude_resource_link_id=True))
+
 def request_is_instructor(request):
     if request.user.is_superuser:
         return True

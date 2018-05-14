@@ -1,4 +1,4 @@
-from .mixins import static_view, request_is_instructor, get_lti_entry_url
+from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
 from numbas_lti.models import LTIConsumer, LTIUserData
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -8,6 +8,9 @@ from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 no_websockets = static_view('numbas_lti/no_websockets.html')
 not_authorized = static_view('numbas_lti/not_authorized.html')
@@ -33,13 +36,31 @@ def config_xml(request):
     )
 
 @csrf_exempt
-def no_resource(request):
-    logger.info(_("No resource found for an LTI entry:\n"+json.dumps(request.POST)))
-    return render(request,'numbas_lti/error_no_resource.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
-
-@csrf_exempt
 def lti_entry(request):
+    if request.method != 'POST':
+        return not_post(request)
 
+    lti_message_type = request.POST.get('lti_message_type')
+    if lti_message_type is None:
+        return not_an_lti_launch(request)
+
+    launch_types = {
+        'basic-lti-launch-request': basic_lti_launch,
+        'ToolProxyRegistrationRequest': consumer_registration_request,
+    }
+
+    if lti_message_type in launch_types:
+        return launch_types[lti_message_type](request)
+    else:
+        return unrecognised_message_type(request)
+
+def not_post(request):
+    return render(request,'numbas_lti/launch_errors/not_post.html',{})
+
+def not_an_lti_launch(request):
+    return render(request,'numbas_lti/launch_errors/not_an_lti_launch.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
+
+def basic_lti_launch(request):
     try:
         request.resource
     except AttributeError:
@@ -68,3 +89,15 @@ def lti_entry(request):
             return render(request,'numbas_lti/exam_not_set_up.html',{})
         else:
             return redirect(reverse('show_attempts'))
+
+@csrf_exempt
+def no_resource(request):
+    logger.error(_("No resource found for an LTI entry:\n"+json.dumps(request.POST)))
+    return render(request,'numbas_lti/launch_errors/no_resource.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
+
+def consumer_registration_request(request):
+    return render(request, 'numbas_lti/consumer_registration.html',{'config_url': get_config_url(request)})
+
+def unrecognised_message_type(request, lti_message_type):
+    logger.error(_("Unrecognised LTI launch type: {}\n{}".format(lti_message_type,json.dumps(request.POST))))
+    return render(request,'numbas_lti/launch_errors/unrecognised_lti_message_type.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0]), 'lti_message_type': lti_message_type})

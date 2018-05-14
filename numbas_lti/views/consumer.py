@@ -1,4 +1,4 @@
-from .mixins import ManagementViewMixin, get_lti_entry_url
+from .mixins import ManagementViewMixin, get_lti_entry_url, get_config_url
 from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -14,9 +14,6 @@ class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Managem
     permission_required = ('numbas_lti.add_lticonsumer',)
     login_url = reverse_lazy('login')
     management_tab = 'consumers'
-
-def get_config_url(request):
-    return request.build_absolute_uri(reverse('config_xml',exclude_resource_link_id=True))
 
 class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
     model = LTIConsumer

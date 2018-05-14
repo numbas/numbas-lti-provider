@@ -1,0 +1,30 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Not an LTI launch" %}</h1>
+    </header>
+    <main>
+        <p>{% trans "This URL is supposed to be used to launch an LTI activity." %}</p>
+
+        {% if debug %}
+        <h2>POST data</h2>
+        <p>{% blocktrans %}You should see some LTI-related items in the table below, such as <code>lti_message_type</code> and <code>lti_version</code>." {% endblocktrans %}</p>
+        <p>{% trans "If those aren't present, it's likely that you haven't arrived via an LTI launch." %}</p>
+        <table>
+            <thead>
+                <tr><th>{% trans "Key" %}</th><th>{% trans "Value" %}</th></tr>
+            </thead>
+            <tbody>
+                {% for key,value in post_data %}
+                <tr><td><code>{{key}}</code></td><td><code>{{value}}</code></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </main>
+</div>
+{% endblock content %}
+
