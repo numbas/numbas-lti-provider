@@ -90,6 +90,13 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
 
         return context
 
+def hierarchy_key(x):
+    key = x[0]
+    try:
+        return int(key)
+    except ValueError:
+        return key
+
 class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/discount.html'
