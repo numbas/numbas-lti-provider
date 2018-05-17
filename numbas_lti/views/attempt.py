@@ -295,6 +295,7 @@ class RunAttemptView(generic.detail.DetailView):
             'cmi.total_time': 0,
             'cmi.success_status': '',
             'cmi.completion_status': attempt.completion_status,
+            'numbas.user_role': 'instructor' if request_is_instructor(self.request) else 'student',
         }
         scorm_cmi = {k: {'value':v,'time':attempt.start_time.timestamp()} for k,v in scorm_cmi.items()}
 
