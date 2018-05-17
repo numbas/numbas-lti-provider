@@ -29,6 +29,10 @@
     .monospace {
         font-family: monospace;
     }
+
+    form.update-remark input.changed {
+        background: hsl(0, 50%, 95%);
+    }
 </style>
 {% endblock stylesheets %}
 
@@ -85,16 +89,33 @@
             });
         });
 
+        function save_score(form,score) {
+            if(!isNaN(parseFloat(score))) {
+                var url = form.getAttribute('action');
+                post(url,{score:score}).then(function(d) {
+                    form.querySelector('input').classList.remove('changed');
+                });
+            }
+        }
+
         // Update remark
+        $('#parts').on('input','.control form.update-remark input',function(e) {
+            var input = e.currentTarget;
+            input.classList.add('changed');
+        });
         $('#parts').on('change','.control form.update-remark input',function(e) {
             e.preventDefault();
             var select = e.currentTarget;
             var score = select.value;
-            if(!isNaN(parseFloat(score))) {
-                var form = $(select).parents('form')[0];
-                var url = form.getAttribute('action');
-                post(url,{score:score}).then(function(d) {});
-            }
+            var form = $(select).parents('form')[0];
+            save_score(form,score);
+        });
+        $('#parts').on('submit','.control form.update-remark',function(e) {
+            e.preventDefault();
+            var form = e.currentTarget;
+            var select = form.querySelector('input');
+            var score = select.value;
+            save_score(form,score);
         });
 
         // cancel remark
@@ -138,7 +159,7 @@
         </thead>
         <tbody>
             {% for part in parts %}
-            <tr class="{% if part.p == None %}info{% endif %} {% if part.discount %}warning{% endif %}">
+            <tr class="{% if part.p == None %}info{% endif %} {% if part.discount or part.remark %}warning{% endif %}">
                 <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
                 <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
                 <td>{% if part.g %}{{part.g}}{% endif %}</td>

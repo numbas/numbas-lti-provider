@@ -17,13 +17,18 @@
         </ul>
     </div>
 </nav>
-<main class="container">
-{% for message in messages %}
-<div class="alert alert-info">
-    {{message}}
-</div>
-{%endfor %}
+<div class="container">
+    <header>
+        {% block management_header %}{% endblock %}
+    </header>
+    <main class="container">
+        {% for message in messages %}
+        <div class="alert alert-info">
+            {{message}}
+        </div>
+        {%endfor %}
 
-{% block management_content %}{% endblock %}
-</main>
+        {% block management_content %}{% endblock %}
+    </main>
+</div>
 {% endblock content %}
