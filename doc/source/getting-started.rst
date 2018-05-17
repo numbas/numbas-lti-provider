@@ -41,7 +41,7 @@ Add a Numbas activity to your course
 
 :ref:`Add a link <create-resource>` from your course's page in your VLE to the Numbas tool provider.
 
-Download a Numbas exam package from :ref:`the Numbas editor <https://numbas.mathcentre.ac.uk>` and upload it to the newly-created resource.
+Download a Numbas exam package from `the Numbas editor <https://numbas.mathcentre.ac.uk>`_ and upload it to the newly-created resource.
 
 Students who click on the link will be shown the exam, and their answers and scores will be saved to the tool provider.
 
