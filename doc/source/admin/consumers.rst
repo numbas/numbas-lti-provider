@@ -38,7 +38,7 @@ There are instructions for some of the most popular VLEs below.
 Blackboard
 **********
 
-Follow `Blackboard's instructions <https://en-us.help.blackboard.com/Learn/Administrator/SaaS/Integrations/Learning_Tools_Interoperability>`_ - you'll need to add Numbas a new LTI Tool provider, and then add a placement for it. 
+Follow `Blackboard's instructions <https://en-us.help.blackboard.com/Learn/Administrator/SaaS/Integrations/Learning_Tools_Interoperability>`_ - you'll need to add Numbas as a new LTI Tool provider, and then add a placement for it. 
 
 Blackboard doesn't support automatic configuration by URL, so you'll have to use the manual configuration settings.
 
@@ -53,7 +53,7 @@ For the placement:
 * The **Label** is "Numbas" (or whatever you want it to be)
 * The **Type** is "Content Type", and select "Assessments" in the menu.
 * Tick **Placement allows grading**.
-* Save the icon from your "Manage consumers" page and upload it undr the **Icon** field on the Blackboard form.
+* Save the icon from your "Manage consumers" page and upload it under the **Icon** field on the Blackboard form.
 
 You can now add a Numbas exam to any folder in Blackboard by selecting "Numbas" from the *Assignments* menu.
 
