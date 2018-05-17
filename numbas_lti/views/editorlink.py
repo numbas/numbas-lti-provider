@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -23,6 +23,9 @@ class EditorLinkManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Manag
 class ListEditorLinksView(EditorLinkManagementMixin,generic.list.ListView):
     model = EditorLink
     template_name = 'numbas_lti/management/admin/list_editorlinks.html'
+
+class GettingProjectDataException(Exception):
+    pass
 
 class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
     template_name = 'numbas_lti/management/admin/edit_editorlink.html'
@@ -44,13 +47,28 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
         )
         return factory(*args,**kwargs)
 
+    def get_projects_data(self):
+        try:
+            link = self.get_object()
+            projects_data = requests.get('{}/api/projects'.format(link.url)).json()
+        except (json.JSONDecodeError, requests.ConnectionError) as e:
+            raise GettingProjectDataException(str(e))
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.projects_data = self.get_projects_data()
+        except GettingProjectDataException as e:
+            return http.HttpResponseServerError(_('Error obtaining the list of projects to edit: {}'.format(e)),{})
+
+        return super(UpdateEditorLinkView,self).get(request, *args, **kwargs)
+
     def get_context_data(self,*args,**kwargs):
         context = super(UpdateEditorLinkView,self).get_context_data(*args,**kwargs)
 
         if 'project_form' not in kwargs:
             selected_projects = [p.remote_id for p in self.object.projects.all()]
 
-            projects_data = requests.get('{}/api/projects'.format(self.object.url)).json()
+            projects_data = self.projects_data
             projects = []
             for p in sorted(projects_data,key=lambda p:p['name'].lower()):
                 projects.append({
