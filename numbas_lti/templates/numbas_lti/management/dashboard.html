@@ -56,7 +56,9 @@
                     <th>{% trans "Name" %}</th>
                     <th>{% trans "Score" %}</th>
                     <th>{% trans "Attempts" %}</th>
+                    {% if not unlimited_attempts %}
                     <th colspan="2">{% trans "Access tokens" %}</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -67,15 +69,16 @@
                         {{score|percentage}}
                         {% if lti_data.last_reported_score != score %}
                         <span class="glyphicon glyphicon-warning-sign" title="{% trans "This score has not been reported to the grade book yet." %}"></span>
-                        {{lti_data.last_reported_score}}
                         {% endif %}
                     </td>
                     <td>{{attempts}}</td>
+                    {% if not unlimited_attempts %}
                     <td>{{access_tokens}}</td>
                     <td>
                         <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' student.pk %}" title="{% trans "Grant an access token" %}"><span class="glyphicon glyphicon-plus"></span></a>
                         {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' student.pk %}" title="{% trans "Remove an access token" %}"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

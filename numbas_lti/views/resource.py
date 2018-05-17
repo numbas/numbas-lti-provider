@@ -77,6 +77,8 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
         if last_report_process and (not last_report_process.dismissed):
             context['last_report_process'] = last_report_process
 
+        context['unlimited_attempts'] = resource.max_attempts == 0
+
         context['student_summary'] = [
             (
                 student,
