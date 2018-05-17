@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -98,6 +98,14 @@ class CreateEditorLinkView(EditorLinkManagementMixin,generic.edit.CreateView):
         editorlink = self.object = form.save()
         messages.add_message(self.request,messages.SUCCESS,_('Connected to {} at {}.'.format(editorlink.name,editorlink.url)))
         return http.HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self,form):
+        url = form.data['url']
+        try:
+            link = EditorLink.objects.get(url=url)
+            return redirect(reverse('edit_editorlink',args=(link.pk,)))
+        except EditorLink.DoesNotExist:
+            return super(CreateEditorLinkView,self).form_invalid(form)
 
     def get_success_url(self):
         return reverse('edit_editorlink',args=(self.object.pk,))
