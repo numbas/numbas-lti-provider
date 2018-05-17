@@ -22,11 +22,12 @@ def save_scorm_data(attempt,batches):
             except ScormElement.MultipleObjectsReturned:
                 pass
             except OperationalError as e:
-                code, msg = e.args
-                if code in [1366]:
-                    logger.exception(_("Error saving SCORM data via AJAX fallback for attempt {}:\n{}".format(attempt.pk,e)))
-                    unsaved_elements.append(element)
-                else:
-                    raise e
+                if len(e.args)==2:
+                    code, msg = e.args
+                    if code in [1366]:
+                        logger.exception(_("Error saving SCORM data via AJAX fallback for attempt {}:\n{}".format(attempt.pk,e)))
+                        unsaved_elements.append(element)
+                    else:
+                        raise e
         done.append(id)
     return done,unsaved_elements
