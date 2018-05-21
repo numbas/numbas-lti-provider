@@ -51,6 +51,7 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
         try:
             link = self.get_object()
             projects_data = requests.get('{}/api/projects'.format(link.url)).json()
+            return projects_data
         except (json.JSONDecodeError, requests.ConnectionError) as e:
             raise GettingProjectDataException(str(e))
 
@@ -69,9 +70,10 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
             selected_projects = [p.remote_id for p in self.object.projects.all()]
 
             projects_data = self.projects_data
-            projects = []
-            for p in sorted(projects_data,key=lambda p:p['name'].lower()):
-                projects.append({
+            projects = sorted(projects_data,key=lambda p:p['name'].lower())
+            project_forms = []
+            for p in projects:
+                project_forms.append({
                     'name': p['name'],
                     'description': p['description'],
                     'remote_id': p['pk'],
@@ -80,7 +82,9 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
                     'use': p['pk'] in selected_projects,
                 })
 
-            context['project_form'] = self.projectformset(initial=projects)
+            project_formset = self.projectformset(initial=project_forms)
+            context['project_formset'] = project_formset
+            context['projects'] = zip(project_formset, projects)
 
         return context
 
