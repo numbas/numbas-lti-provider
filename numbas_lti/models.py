@@ -602,6 +602,9 @@ class EditorLinkProject(models.Model):
     class Meta:
         ordering = ['name']
 
+    def __str__(self):
+        return self.name
+
 @receiver(models.signals.pre_save,sender=EditorLink)
 def update_editor_cache_before_save(sender,instance,**kwargs):
     instance.update_cache()
