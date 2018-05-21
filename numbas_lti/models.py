@@ -289,7 +289,7 @@ class Attempt(models.Model):
         if self.remarked_parts.exists() or self.resource.discounted_parts.exists():
             total = 0
             for i in range(self.resource.num_questions):
-                total += self.question_score(i)
+                total += self.question_raw_score(i)
             return total
 
         return float(self.get_element_default('cmi.score.raw',0))
@@ -346,7 +346,7 @@ class Attempt(models.Model):
         n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
         return n
 
-    def part_score(self,part):
+    def part_raw_score(self,part):
         discounted = self.part_discount(part)
         if discounted:
             return self.part_max_score(part)
@@ -357,7 +357,7 @@ class Attempt(models.Model):
 
         if self.remarked_parts.filter(part__startswith=part+'g').exists() or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
-            return sum(self.part_score(g) for g in gaps)
+            return sum(self.part_raw_score(g) for g in gaps)
 
         try:
             id = self.part_interaction_id(part)
@@ -384,31 +384,56 @@ class Attempt(models.Model):
 
         return float(self.get_element_default('cmi.interactions.{}.weighting'.format(id),0))
 
-    def question_score(self,n):
+    def question_raw_score(self,n):
+        _,raw,_,_ = self.calculate_question_score_info(n)
+        return raw
+
+    def calculate_question_score_info(self,n):
         qid = 'q{}'.format(n)
         if self.remarked_parts.filter(part__startswith=qid).exists() or self.resource.discounted_parts.filter(part__startswith=qid).exists():
             question_parts = [p for p in self.part_paths() if p.startswith(qid)]
-            total = 0
+            total_raw = 0.0
+            total_max = 0.0
             for part in question_parts:
                 if re.match(r'^q{}p\d+$'.format(n),part):
-                    total += self.part_score(part)
-            return total
+                    total_raw += self.part_raw_score(part)
+                    total_max += self.part_max_score(part)
+            raw_score = total_raw
+            scaled_score = total_raw/total_max if total_max>0 else 0.0
+            max_score = total_max
         else:
-            score = self.get_element_default('cmi.objectives.{}.score.raw'.format(n),0)
-        return float(score)
+            raw_score = float(self.get_element_default('cmi.objectives.{}.score.raw'.format(n),0))
+            scaled_score = float(self.get_element_default('cmi.objectives.{}.score.scaled'.format(n),0))
+            max_score = float(self.get_element_default('cmi.objectives.{}.score.max'.format(n),0))
+
+        completion_status = self.get_element_default('cmi.objectives.{}.completion_status'.format(n),'not attempted')
+
+        return (scaled_score, raw_score, max_score, completion_status)
+
+    def update_question_score_info(self,n):
+        scaled_score,raw_score,max_score,completion_status = self.calculate_question_score_info(n)
+        AttemptQuestionScore.objects.update_or_create(attempt=self,number=n,defaults={'scaled_score':scaled_score,'raw_score':raw_score,'max_score':max_score,'completion_status':completion_status})
+
+    def question_score_info(self,n):
+        try:
+            return self.cached_question_scores.get(number=n)
+        except AttemptQuestionScore.DoesNotExist:
+            scaled_score, raw_score, max_score, completion_status = self.calculate_question_score_info(n)
+            aqs = AttemptQuestionScore.objects.create(attempt = self, number = n, raw_score = raw_score, scaled_score = scaled_score, max_score = max_score, completion_status = completion_status)
+            return aqs
+
+    def question_numbers(self):
+        questions = self.scormelements.filter(key__regex='cmi.objectives.[0-9]+.id').values('key').distinct()
+        re_number = re.compile(r'cmi.objectives.([0-9]+).id')
+        numbers = [re_number.match(q['key']).group(1) for q in questions]
+        return numbers
+
+    def question_scores(self):
+        return sorted([self.question_score_info(n) for n in self.question_numbers()],key=lambda x:int(x.number))
 
     def question_max_score(self,n):
-        qid = 'q{}'.format(n)
-        if self.resource.discounted_parts.filter(part__startswith=qid).exists():
-            question_parts = [p for p in self.part_paths() if p.startswith(qid)]
-            total = 0
-            for part in question_parts:
-                if re.match(r'^q{}p\d+$'.format(n),part):
-                    total += self.part_max_score(part)
-            return total
-        else:
-            score = self.get_element_default('cmi.objectives.{}.score.max'.format(n),0)
-        return float(score)
+        _,_,max_score,_ = self.calculate_question_score_info(n)
+        return max_score
 
     def channels_group(self):
         return 'attempt-{}'.format(self.pk)
@@ -417,10 +442,15 @@ class Attempt(models.Model):
         return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
 
 class AttemptQuestionScore(models.Model):
-    attempt = models.ForeignKey(Attempt,related_name='question_scores', on_delete=models.CASCADE)
+    attempt = models.ForeignKey(Attempt,related_name='cached_question_scores', on_delete=models.CASCADE)
     number = models.IntegerField()
     raw_score = models.FloatField()
     scaled_score = models.FloatField()
+    max_score = models.FloatField()
+    completion_status = models.CharField(default='not attempted',max_length=20)
+
+    def __str__(self):
+        return '{}/{} on question {} of {}'.format(self.raw_score,self.max_score,self.number,self.attempt)
 
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
@@ -432,6 +462,8 @@ class RemarkPart(models.Model):
 
 def remark_update_scaled_score(sender,instance,**kwargs):
     attempt = instance.attempt
+    question = int(re.match(r'^q(\d+)p\d+$',instance.part).group(1))
+    attempt.update_question_score_info(question)
     if attempt.max_score>0:
         scaled_score = attempt.raw_score/attempt.max_score
     else:
@@ -454,6 +486,9 @@ class DiscountPart(models.Model):
 
 def discount_update_scaled_score(sender,instance,**kwargs):
     for attempt in instance.resource.attempts.all():
+        question = int(re.match(r'^q(\d+)p\d+$',instance.part).group(1))
+        attempt.update_question_score_info(question)
+
         scaled_score = attempt.raw_score/attempt.max_score
         if scaled_score != attempt.scaled_score:
             attempt.scaled_score = scaled_score

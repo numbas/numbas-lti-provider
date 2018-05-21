@@ -68,7 +68,7 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
             if p is not None:
                 out.update({
-                    'score': attempt.part_score(path),
+                    'score': attempt.part_raw_score(path),
                     'max_score': attempt.part_max_score(path),
                     'discount': discount,
                     'remark': remark,
@@ -101,7 +101,7 @@ class RemarkPartView(MustBeInstructorMixin,generic.base.View):
         attempt = Attempt.objects.get(pk=pk)
         part = request.POST['part']
 
-        remark,created = RemarkPart.objects.get_or_create(attempt=attempt,part=part,score=attempt.part_score(part))
+        remark,created = RemarkPart.objects.get_or_create(attempt=attempt,part=part,score=attempt.part_raw_score(part))
 
         template = get_template('numbas_lti/management/remark/remarked.html')
         html = template.render({
@@ -129,7 +129,7 @@ class RemarkPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
         template = get_template('numbas_lti/management/remark/not_remarked.html')
         html = template.render({
             'attempt':attempt,
-            'score':attempt.part_score(remark.part),
+            'score':attempt.part_raw_score(remark.part),
             'max_score':attempt.part_max_score(remark.part),
             'path':remark.part,
         })

@@ -232,7 +232,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 attempt.completion_status,
                 attempt.raw_score,
                 attempt.scaled_score*100,
-            ]+[attempt.question_score(n) for n in range(num_questions)]
+            ]+[attempt.question_raw_score(n) for n in range(num_questions)]
             yield row
 
     def get_filename(self):
