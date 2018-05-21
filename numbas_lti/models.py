@@ -425,7 +425,7 @@ class Attempt(models.Model):
     def question_numbers(self):
         questions = self.scormelements.filter(key__regex='cmi.objectives.[0-9]+.id').values('key').distinct()
         re_number = re.compile(r'cmi.objectives.([0-9]+).id')
-        numbers = [re_number.match(q['key']).group(1) for q in questions]
+        numbers = sorted(set([re_number.match(q['key']).group(1) for q in questions]))
         return numbers
 
     def question_scores(self):
