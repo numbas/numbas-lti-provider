@@ -51,6 +51,8 @@ urlpatterns = [
     url(r'^consumers/(?P<pk>\d+)$', views.consumer.ManageConsumerView.as_view(), name='view_consumer'),
     url(r'^consumers/(?P<pk>\d+)/delete$', views.consumer.DeleteConsumerView.as_view(), name='delete_consumer'),
 
+    url(r'^contexts/(?P<pk>\d+)$', views.context.ManageContextView.as_view(), name='view_context'),
+
     url(r'^editorlinks$', views.editorlink.ListEditorLinksView.as_view(), name='list_editorlinks'),
     url(r'^editorlinks/create$', views.editorlink.CreateEditorLinkView.as_view(), name='create_editorlink'),
     url(r'^editorlink/(?P<pk>\d+)/edit$', views.editorlink.UpdateEditorLinkView.as_view(), name='edit_editorlink'),

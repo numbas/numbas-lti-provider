@@ -59,4 +59,3 @@ class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
         context['named_contexts'] = sorted(consumer.contexts.exclude(name='').all(),key=lambda c: c.name.upper())
 
         return context
-

@@ -28,24 +28,21 @@
     </dl>
 
     <main>
-        <h2>{% trans "Resources" %}</h2>
+        <h2>{% trans "Contexts" %}</h2>
+
         {% if not consumer.resources.count %}
-        <p>{% trans "This consumer has not created any resources yet." %}</p>
+            <p>{% trans "This consumer has not created any resources yet." %}</p>
         {% endif %}
+
         {% regroup named_contexts by name|first|upper as context_groups %}
+
         {% for letter in context_groups %}
-        <a id="context-letter-{{letter.grouper}}"></a>
-        <ul>
-        {% for context in letter.list %}
-        <li><a href="#context-{{context.pk}}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></li>
-        {% endfor %}
-        </ul>
-        {% endfor %}
-        {% for context in named_contexts %}
-            {% include "numbas_lti/management/admin/view_consumer_context.html" %}
-        {% endfor %}
-        {% for context in unnamed_contexts %}
-            {% include "numbas_lti/management/admin/view_consumer_context.html" %}
+            <a id="context-letter-{{letter.grouper}}"></a>
+            <ul>
+                {% for context in letter.list %}
+                <li><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></li>
+                {% endfor %}
+            </ul>
         {% endfor %}
     </main>
 </div>
