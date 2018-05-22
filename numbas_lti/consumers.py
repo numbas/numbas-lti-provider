@@ -8,27 +8,33 @@ from channels.generic.websockets import WebsocketConsumer
 import json
 from datetime import datetime
 from django.utils import timezone
+from urllib.parse import parse_qs
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
+from django_auth_lti.patch_reverse import reverse
 
-from .groups import group_for_user
+from .groups import group_for_attempt
 from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
 from .save_scorm_data import save_scorm_data
 
 @channel_session_user_from_http
-def ws_connect(message,*args,**kwargs):
+def ws_connect(message,pk):
     message.reply_channel.send({"accept": True})
-    user = message.user
-    if user.is_authenticated:
-        group_for_user(user).add(message.reply_channel)
+    attempt = Attempt.objects.get(pk=pk)
+    group = group_for_attempt(attempt)
+    group.add(message.reply_channel)
+    query = parse_qs(message.content['query_string'].decode('utf-8'))
+    uid = query.get('uid',[''])[0]
+    mode= query.get('mode',[''])[0]
+    if mode!='review':
+        group.send({'text': json.dumps({'current_uid': uid})})
 
 @channel_session_user_from_http
-def ws_disconnect(message,*args,**kwargs):
-    user = message.user
-    if user.is_authenticated:
-        group_for_user(user).discard(message.reply_channel)
+def ws_disconnect(message,pk):
+    attempt = Attempt.objects.get(pk=pk)
+    group_for_attempt(attempt).discard(message.reply_channel)
 
 @channel_session_user
 def scorm_set_element(message,pk):
@@ -39,7 +45,6 @@ def scorm_set_element(message,pk):
     response = {
         'received': done,
         'completion_status': attempt.completion_status,
-        'show_attempts_url': reverse('show_attempts'),
         'unsaved_elements': unsaved_elements,
     }
     message.reply_channel.send({'text':json.dumps(response)})

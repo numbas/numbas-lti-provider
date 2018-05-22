@@ -17,6 +17,10 @@ function SCORM_API(data,attempt_pk,fallback_url) {
      */
     this.localstorage_key = 'numbas-lti-attempt-'+this.attempt_pk+'-scorm-data';
 
+    /** A unique ID for this instance of the API, to differentiate it from other clients loading the same attempt.
+     */
+    this.uid = (new Date()-0)+':'+Math.random();
+
     /** We will store changed elements in a queue, to be sent to the server in batches periodically
      */
     this.queue = [];
@@ -187,11 +191,21 @@ SCORM_API.prototype = {
 
     },
 
+    /** Terminate the SCORM API because we were told to by the server, and navigate to the given URL
+     */
+    external_kill: function(message, url) {
+        if(!this.terminated) {
+            this.Terminate('');
+            alert(message);
+            window.location = show_attempts_url;
+        }
+    },
+
     initialise_socket: function() {
         var sc = this;
 
         var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-        var ws_url = ws_scheme + '://' + window.location.host + "/websocket/attempt/"+this.attempt_pk+"/scorm_api";
+        var ws_url = ws_scheme + '://' + window.location.host + "/websocket/attempt/"+this.attempt_pk+"/scorm_api?uid="+encodeURIComponent(this.uid)+"&mode="+encodeURIComponent(this.mode);
 
         /** A WebSocket to send data back to the server. It will automatically reconnect, but won't guarantee delivery of messages.
          */
@@ -206,12 +220,12 @@ SCORM_API.prototype = {
                 sc.batch_received(d.received);
             }
 
-            if(d.completion_status == 'completed') {
-                if(!sc.terminated) {
-                    sc.Terminate('');
-                    alert("This attempt has been ended in another window. You may not enter any more answers here. Click OK to go leave this attempt.");
-                    window.location = d.show_attempts_url;
-                }
+            if(sc.mode!='review' && d.current_uid && d.current_uid != sc.uid) {
+                sc.external_kill("This attempt has been opened in another window. You may not enter any more answers here. You may continue in the other window. Click OK to leave this attempt.");
+            }
+
+            if(sc.mode!='review' && d.completion_status == 'completed') {
+                sc.external_kill("This attempt has been ended in another window. You may not enter any more answers here. Click OK to leave this attempt.");
             }
         }
 
@@ -431,8 +445,7 @@ SCORM_API.prototype = {
         ;
     },
 
-	Initialize: function(b) {
-		if(b!='' || this.initialized || this.terminated) {
+	Initialize: function(b) {if(b!='' || this.initialized || this.terminated) {
 			return false;
 		}
 		this.initialized = true;
