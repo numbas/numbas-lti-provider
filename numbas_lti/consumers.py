@@ -12,9 +12,23 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
+from .groups import group_for_user
 from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
 from .save_scorm_data import save_scorm_data
+
+@channel_session_user_from_http
+def ws_connect(message,*args,**kwargs):
+    message.reply_channel.send({"accept": True})
+    user = message.user
+    if user.is_authenticated:
+        group_for_user(user).add(message.reply_channel)
+
+@channel_session_user_from_http
+def ws_disconnect(message,*args,**kwargs):
+    user = message.user
+    if user.is_authenticated:
+        group_for_user(user).discard(message.reply_channel)
 
 @channel_session_user
 def scorm_set_element(message,pk):
@@ -24,6 +38,7 @@ def scorm_set_element(message,pk):
     done, unsaved_elements = save_scorm_data(attempt,batches)
     response = {
         'received': done,
+        'completion_status': attempt.completion_status,
         'unsaved_elements': unsaved_elements,
     }
     message.reply_channel.send({'text':json.dumps(response)})

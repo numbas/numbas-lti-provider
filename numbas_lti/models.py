@@ -10,6 +10,7 @@ from channels import Group, Channel
 from django.utils import timezone
 from datetime import timedelta,datetime
 
+from .groups import group_for_user
 from .report_outcome import report_outcome_for_attempt, ReportOutcomeFailure, ReportOutcomeConnectionError
 
 import os
@@ -258,6 +259,7 @@ class Attempt(models.Model):
     exam = models.ForeignKey(Exam,on_delete=models.CASCADE,related_name='attempts')  # need to keep track of both resource and exam in case the exam later gets overwritten
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='attempts')
     start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField(blank=True,null=True)
 
     completion_status = models.CharField(max_length=20,choices=COMPLETION_STATUSES,default='not attempted')
     completion_status_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_completion_status_of", null=True)
@@ -570,7 +572,11 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
     instance.attempt.completion_status = instance.value
     instance.attempt.completion_status_element = instance
+    if instance.value=='completed' and instance.attempt.end_time is None:
+        instance.attempt.end_time = timezone.now()
+        group_for_user(instance.attempt.user).send({'text':json.dumps({'completion_status':'completed'})})
     instance.attempt.save()
+
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
         try:
             report_outcome_for_attempt(instance.attempt)

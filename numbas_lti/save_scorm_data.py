@@ -15,12 +15,16 @@ def save_scorm_data(attempt,batches):
     question_scores_changed = set()
     for id,elements in batches.items():
         for element in elements:
+            time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time']))
+            if attempt.completion_status=='completed' and (attempt.end_time is None or time > attempt.end_time):
+                continue    # don't save new elements after the exam has been created
+
             try:
                 _, created = ScormElement.objects.get_or_create(
                     attempt = attempt,
                     key = element['key'],
                     value = element['value'],
-                    time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time'])),
+                    time = time,
                     counter = element.get('counter',0)
                 )
                 if created:
