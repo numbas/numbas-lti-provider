@@ -39,6 +39,7 @@ def scorm_set_element(message,pk):
     response = {
         'received': done,
         'completion_status': attempt.completion_status,
+        'show_attempts_url': reverse('show_attempts'),
         'unsaved_elements': unsaved_elements,
     }
     message.reply_channel.send({'text':json.dumps(response)})

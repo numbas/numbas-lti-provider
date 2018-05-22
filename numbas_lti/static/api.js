@@ -209,8 +209,8 @@ SCORM_API.prototype = {
             if(d.completion_status == 'completed') {
                 if(!sc.terminated) {
                     sc.Terminate('');
-                    alert("This attempt has been ended in another window. You may not enter any more answers here. Click OK to reload this page.");
-                    window.location += '';
+                    alert("This attempt has been ended in another window. You may not enter any more answers here. Click OK to go leave this attempt.");
+                    window.location = d.show_attempts_url;
                 }
             }
         }
