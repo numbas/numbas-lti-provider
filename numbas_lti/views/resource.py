@@ -1,13 +1,13 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin
 from .generic import CSVView
 from numbas_lti import forms
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES
 from channels import Channel
 from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q,Count
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
@@ -332,3 +332,28 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
         return context
 
+class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_stats.html'
+    management_tab = 'stats'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(StatsView,self).get_context_data(*args, **kwargs)
+
+        resource = self.object
+        completion_counts = resource.attempts.values('completion_status').order_by('completion_status').annotate(number=Count('completion_status'))
+        completion_dict = {x['completion_status']: x['number'] for x in completion_counts}
+        context['completion_counts'] = [
+            (label, completion_dict.get(value,0)) for value,label in COMPLETION_STATUSES
+        ]
+
+        attempt_scores = resource.attempts.values('scaled_score').order_by('scaled_score').annotate(number=Count('scaled_score'))
+        cumulative_scores = []
+        t = 0
+        for item in reversed(attempt_scores):
+            cumulative_scores.insert(0,{'score': item['scaled_score'],'n': t})
+            t += item['number']
+        cumulative_scores.append({'score': 1.0,'n':0})
+        context['cumulative_scores'] = json.dumps(cumulative_scores)
+
+        return context

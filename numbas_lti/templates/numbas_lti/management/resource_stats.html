@@ -1,0 +1,71 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block management_content %}
+<h2>{% trans "Statistics" %}</h2>
+
+<h3>{% trans "Attempt completion" %}</h3>
+<table class="table">
+    <tbody>
+        {% for label,n in completion_counts %}
+        <tr>
+            <th>{{label}}</th>
+            <th>{{n}}</th>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>{% trans "Score distribution" %}</h3>
+<p>{% blocktrans %}In this chart, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+<div id="cumulative_scores_chart" class="ct-major-twelfth"></div>
+
+{% endblock %}
+
+{% block stylesheets %}
+    {{block.super}}
+
+    <link rel="stylesheet" href="{% static 'chartist/chartist.min.css' %}">
+    <style>
+        .ct-label {
+            font-size: 1em;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+{{block.super}}
+
+    <script src="{% static 'chartist/chartist.min.js' %}"></script>
+
+    <script>
+        var cumulative_scores_data = {{cumulative_scores|safe}};
+
+        new Chartist.Line('#cumulative_scores_chart', {
+            series: [{'name': 'scores', 'data': cumulative_scores_data.map(function(d){ return {x:parseFloat(d.score),y:parseInt(d.n)}})}]
+        }, 
+        {
+            series: {
+                'scores': {
+                    lineSmooth: Chartist.Interpolation.step()
+                }
+            },
+            axisX: {
+                type: Chartist.FixedScaleAxis,
+                high: 1.05,
+                low: 0,
+                ticks: [0,0.2,0.4,0.6,0.8,1],
+                labelInterpolationFnc: function(value) {
+                    return (Math.round(value * 100)) + '%';
+                },
+            },
+            axisY: {
+                onlyInteger: true
+            },
+            showArea: true
+        });
+
+    </script>
+{% endblock %}

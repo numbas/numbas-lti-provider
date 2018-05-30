@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^remark_part/(?P<pk>\d+)/update$', views.attempt.RemarkPartUpdateView.as_view(), name='remark_part_update'),
     url(r'^remark_part/(?P<pk>\d+)/delete$', views.attempt.RemarkPartDeleteView.as_view(), name='remark_part_delete'),
     url(r'^resource/(?P<pk>\d+)/attempts$', views.resource.AllAttemptsView.as_view(), name='manage_attempts'),
+    url(r'^resource/(?P<pk>\d+)/stats$', views.resource.StatsView.as_view(), name='resource_stats'),
     url(r'^resource/(?P<pk>\d+)/settings$', views.resource.ResourceSettingsView.as_view(), name='resource_settings'),
     url(r'^resource/(?P<pk>\d+)/replace$', views.resource.ReplaceExamView.as_view(), name='replace_exam'),
     url(r'^resource/(?P<pk>\d+)/report_scores$', views.resource.ReportAllScoresView.as_view(), name='report_scores'),

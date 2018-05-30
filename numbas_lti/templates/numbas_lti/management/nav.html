@@ -7,6 +7,7 @@
         <ul class="nav navbar-nav">
             <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'dashboard' request.resource.pk %}"><span class="glyphicon glyphicon-dashboard"></span> {% trans "Dashboard" %}</a></li>
             <li class="{% if management_tab == 'attempts' %}active{% endif %}"><a href="{% url 'manage_attempts' request.resource.pk %}"><span class="glyphicon glyphicon-stats"></span> {% trans "Attempts" %}</a></li>
+            <li class="{% if management_tab == 'stats' %}active{% endif %}"><a href="{% url 'resource_stats' request.resource.pk %}"><span class="glyphicon glyphicon-stats"></span> {% trans "Statistics" %}</a></li>
             <li class="{% if management_tab == 'settings' %}active{% endif %}"><a href="{% url 'resource_settings' request.resource.pk %}"><span class="glyphicon glyphicon-cog"></span> {% trans "Settings" %}</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
