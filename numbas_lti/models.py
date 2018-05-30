@@ -424,6 +424,12 @@ class Attempt(models.Model):
             scaled_score, raw_score, max_score, completion_status = self.calculate_question_score_info(n)
             aqs = AttemptQuestionScore.objects.create(attempt = self, number = n, raw_score = raw_score, scaled_score = scaled_score, max_score = max_score, completion_status = completion_status)
             return aqs
+        except AttemptQuestionScore.MultipleObjectsReturned:
+            aqs = self.cached_question_scores.filter(number=n)
+            n = aqs.count()
+            aq = aqs[n]
+            aqs[:n].delete()
+            return aq
 
     def question_numbers(self):
         questions = self.scormelements.filter(key__regex='cmi.objectives.[0-9]+.id').values('key').distinct()
@@ -451,6 +457,9 @@ class AttemptQuestionScore(models.Model):
     scaled_score = models.FloatField()
     max_score = models.FloatField()
     completion_status = models.CharField(default='not attempted',max_length=20)
+
+    class Meta:
+        unique_together = (('attempt','number'),)
 
     def __str__(self):
         return '{}/{} on question {} of {}'.format(self.raw_score,self.max_score,self.number,self.attempt)
