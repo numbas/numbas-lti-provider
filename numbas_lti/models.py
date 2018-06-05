@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, ugettext
 from django.core import validators
 from channels import Group, Channel
 from django.utils import timezone
@@ -141,8 +141,10 @@ class Resource(models.Model):
     def __str__(self):
         if self.exam:
             return str(self.exam)
-        else:
+        elif self.context:
             return _('Resource in "{}" - no exam uploaded').format(self.context.name)
+        else:
+            return ugettext('Resource with no context')
 
     @property
     def slug(self):
@@ -257,7 +259,7 @@ class LTIUserData(models.Model):
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
-    exam = models.ForeignKey(Exam,on_delete=models.CASCADE,related_name='attempts')  # need to keep track of both resource and exam in case the exam later gets overwritten
+    exam = models.ForeignKey(Exam,on_delete=models.CASCADE,related_name='attempts',null=True)  # need to keep track of both resource and exam in case the exam later gets overwritten
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='attempts')
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(blank=True,null=True)
@@ -661,3 +663,17 @@ class EditorLinkProject(models.Model):
 @receiver(models.signals.pre_save,sender=EditorLink)
 def update_editor_cache_before_save(sender,instance,**kwargs):
     instance.update_cache()
+
+class StressTest(models.Model):
+    resource = models.OneToOneField(Resource,on_delete=models.CASCADE,primary_key=True)
+
+    def __str__(self):
+        return self.resource.creation_time.strftime('%B %d, %Y %H:%M')
+
+    def get_absolute_url(self):
+        return reverse('view_stresstest',args=(self.pk,))
+
+class StressTestNote(models.Model):
+    stresstest = models.ForeignKey(StressTest,on_delete=models.CASCADE,related_name='notes')
+    text = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)

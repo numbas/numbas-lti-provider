@@ -60,4 +60,11 @@ urlpatterns = [
     url(r'^editorlink/(?P<pk>\d+)/delete$', views.editorlink.DeleteEditorLinkView.as_view(), name='delete_editorlink'),
 
     url(r'^config.xml$', views.entry.config_xml, name='config_xml'),
+
+    url(r'^stress$', views.stress.ListStressTestsView.as_view(), name='list_stresstests'),
+    url(r'^stress/create$', views.stress.create_stress_test, name='create_stresstest'),
+    url(r'^stress/(?P<pk>\d+)/view$', views.stress.StressTestView.as_view(), name='view_stresstest'),
+    url(r'^stress/(?P<pk>\d+)/new-attempt$', views.stress.NewAttemptView.as_view(), name='new_stresstest_attempt'),
+    url(r'^stress/(?P<pk>\d+)/wipe$', views.stress.WipeDataView.as_view(), name='wipe_stresstest'),
+    url(r'^stress/(?P<pk>\d+)/delete$', views.stress.DeleteStressTestView.as_view(), name='delete_stresstest'),
 ]
