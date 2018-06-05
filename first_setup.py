@@ -57,6 +57,23 @@ class Command(object):
     }}
 }}"""
 
+    redis_template = """CHANNEL_LAYERS = {{
+    "default": {{
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {{
+            "hosts": [os.environ.get('REDIS_URL','redis://localhost:6379')],
+        }},
+        "ROUTING": "numbasltiprovider.routing.channel_routing",
+    }},
+}}"""
+
+    inmemory_template = """CHANNEL_LAYERS = {{
+    "default": {{
+        "BACKEND": "asgiref.inmemory.ChannelLayer",
+        "ROUTING": "numbasltiprovider.routing.channel_routing",
+    }},
+}}"""
+
     def __init__(self):
         self.written_files = []
 
@@ -140,18 +157,20 @@ class Command(object):
             template = self.sqlite_template if 'sqlite' in rvalues['DB_ENGINE'] else self.other_db_template
             return template.format(**rvalues)
 
+        def set_channel_layers(m, rvalues):
+            template = self.inmemory_template if self.values['DEBUG'] else self.redis_template
+            return template.format(**rvalues)
+
         settings_subs = [
             (r"^DEBUG = (False)", 'DEBUG'),
             (r"^STATIC_ROOT = '(static/)'", 'STATIC_ROOT'),
             (r"^MEDIA_ROOT = '(media/)'", 'MEDIA_ROOT'),
-            (r"^DATABASES = {.*^}", set_database),
+            (r"^DATABASES = {.*?^}", set_database),
+            (r"^CHANNEL_LAYERS = {.*?^}", set_channel_layers),
             (r"^SECRET_KEY = '()'", 'SECRET_KEY'),
             (r"^ALLOWED_HOSTS = \['(localhost)'\]", 'ALLOWED_HOSTS'),
         ]
         self.sub_file('numbasltiprovider/settings.py', settings_subs)
-
-        if not self.values['DEBUG']:
-            self.sub_file('web/django.wsgi', [ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
 
         if len(self.written_files):
             print_notice("The following files have been written. You should look at them now to see if you need to make any more changes.")
@@ -173,7 +192,7 @@ class Command(object):
         for pattern, key in subs:
             pattern = re.compile(pattern, re.MULTILINE | re.DOTALL)
             if callable(key):
-                self.sub_fn(text, pattern, key)
+                text = self.sub_fn(text, pattern, key)
             else:
                 text = self.sub(text, pattern, self.rvalues[key])
 
@@ -184,6 +203,7 @@ class Command(object):
     def sub_fn(self, source, pattern, fn):
         m = pattern.search(source)
         if not m:
+            print(source)
             raise Exception("Didn't find {}".format(pattern.pattern))
         start, end = m.span(0)
         out = fn(m, self.rvalues)
