@@ -128,9 +128,6 @@ var app = new Vue({
             },function(error) {
                 console.error("Error starting attempt: ",error);
             })
-            .catch(function() {
-                console.log(arguments);
-            });
         },
         wipe: function() {
             app.attempts.map(function(attempt){ attempt.end(); });

@@ -415,7 +415,7 @@ SCORM_API.prototype = {
     send_ajax: function() {
         var sc = this;
 
-        if(this.socket_is_open() || this.pending_ajax) {
+        if(this.pending_ajax) {
             return;
         }
         if(this.queue.length) {
