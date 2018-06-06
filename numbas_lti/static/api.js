@@ -89,9 +89,13 @@ function SCORM_API(data,attempt_pk,fallback_url) {
         sc.send_queue_socket();
     },this.socket_period);
 
-    this.ajax_interval = setInterval(function() {
+    this.ajax_period = this.base_ajax_period;
+
+    function send_ajax_interval() {
         sc.send_ajax();
-    },this.ajax_period);
+        setTimeout(send_ajax_interval,sc.ajax_period);
+    }
+    setTimeout(send_ajax_interval,sc.ajax_period);
 }
 SCORM_API.prototype = {
 
@@ -101,7 +105,11 @@ SCORM_API.prototype = {
 
     /** Interval when websocket is disconnected to send data over AJAX, in milliseconds
      */
-    ajax_period: 5000,
+    base_ajax_period: 5000,
+
+    /** Amount to multiply ajax_period by on failure
+     */
+    ajax_period_exponent: 1.5,
 
     /** How long the warning message should stay visible after the warning disappears, in milliseconds
      */
@@ -451,28 +459,22 @@ SCORM_API.prototype = {
             },
             body: JSON.stringify(out)
         });
+
         request
             .then(
                 function(response) {
-                    sc.pending_ajax = false;
                     if(!response.ok) {
-                        console.error('failed to send SCORM data over HTTP');
                         response.text().then(function(t){
                             console.error('SCORM HTTP fallback error message: '+t);
-                            sc.callbacks.trigger('ajax.failed',t);
                         });
-                        sc.last_ajax_succeeded = false;
+                        sc.ajax_failed();
                         return Promise.reject(error.message);
                     }
-                    sc.last_ajax_succeeded = true;
-                    sc.callbacks.trigger('ajax.succeeded');
+                    sc.ajax_succeeded();
                     return response.json();
                 },
                 function(error) {
-                    sc.pending_ajax = false;
-                    console.error('failed to send SCORM data over HTTP: '+error.message);
-                    sc.callbacks.trigger('ajax.failed',error.message);
-                    sc.last_ajax_succeeded = false;
+                    sc.ajax_failed();
                     return Promise.reject(error.message);
                 }
             )
@@ -487,6 +489,21 @@ SCORM_API.prototype = {
             )
         ;
         this.callbacks.trigger('send_ajax');
+    },
+
+    ajax_succeeded: function() {
+        this.pending_ajax = false;
+        this.last_ajax_succeeded = true;
+        this.ajax_period = this.base_ajax_period;
+        this.callbacks.trigger('ajax.succeeded');
+    },
+
+    ajax_failed: function() {
+        this.pending_ajax = false;
+        console.error('failed to send SCORM data over HTTP');
+        this.last_ajax_succeeded = false;
+        this.ajax_period *= this.ajax_period_exponent;
+        this.callbacks.trigger('ajax.failed',error.message);
     },
 
 	Initialize: function(b) {
