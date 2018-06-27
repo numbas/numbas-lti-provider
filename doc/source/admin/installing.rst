@@ -37,7 +37,7 @@ First, install packages, set up users, and create the required paths (you can sa
     # install packages
     apt update
     apt install \
-        git redis-server postgresql postgresql-server-dev-9.5 \
+        git redis-server postgresql postgresql-server-dev-all \
         libxml2-dev libxslt1-dev python-dev lib32z1-dev python3-pip supervisor
     pip3 install virtualenv
 
