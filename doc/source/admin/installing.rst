@@ -130,7 +130,7 @@ Set up a webserver
 
 We have instructions for two webservers: :ref:`NGINX <install_NGINX>` and :ref:`Apache <install_apache>`.
 
-.. _install_NGINX:
+.. _install_nginx:
 
 With NGINX
 **********
@@ -140,9 +140,9 @@ It is the recommended option for the Numbas LTI provider.
 
 Install NGINX::
 
-    apt install NGINX
+    apt install nginx
 
-Overwrite :file:`/etc/NGINX/sites-available/default` with the following::
+Overwrite :file:`/etc/nginx/sites-available/default` with the following::
 
     upstream backend_hosts {
      server 0.0.0.0:8700;
