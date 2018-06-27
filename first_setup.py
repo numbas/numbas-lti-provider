@@ -136,6 +136,7 @@ class Command(object):
         self.rvalues = {key: enrep(value) for key, value in self.values.items()}
 
     def get_value(self, question):
+        default = None
         if os.path.exists('numbasltiprovider/settings.py'):
             import numbasltiprovider.settings
             default = question.default
@@ -148,7 +149,7 @@ class Command(object):
                     default = numbasltiprovider.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.', '')
                 elif question.key[:3]=='DB_' and question.key[3:] in numbasltiprovider.settings.DATABASES['default']:
                     default = numbasltiprovider.settings.DATABASES['default'][question.key[3:]]
-        self.values[question.key] = self.get_input(question.question, question.default, question.validation)
+        self.values[question.key] = self.get_input(question.question, default, question.validation)
 
 
     def write_files(self):
