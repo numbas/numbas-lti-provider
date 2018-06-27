@@ -30,8 +30,7 @@ First, install packages, set up users, and create the required paths (you can sa
     #!/usr/bin/bash
 
     # set up user group
-    addgroup numbas_lti
-    adduser numbas_lti numbas_lti
+    adduser --disabled-password numbas_lti
     adduser www-data numbas_lti
 
     # install packages
