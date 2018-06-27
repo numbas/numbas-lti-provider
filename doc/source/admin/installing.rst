@@ -30,14 +30,13 @@ First, install packages, set up users, and create the required paths (you can sa
     #!/usr/bin/bash
 
     # set up user group
-    addgroup numbas_lti
-    adduser numbas_lti numbas_lti
+    adduser --disabled-password numbas_lti
     adduser www-data numbas_lti
 
     # install packages
     apt update
     apt install \
-        git redis-server postgresql postgresql-server-dev-9.5 \
+        git redis-server postgresql postgresql-server-dev-all \
         libxml2-dev libxslt1-dev python-dev lib32z1-dev python3-pip supervisor
     pip3 install virtualenv
 
@@ -131,7 +130,7 @@ Set up a webserver
 
 We have instructions for two webservers: :ref:`NGINX <install_NGINX>` and :ref:`Apache <install_apache>`.
 
-.. _install_NGINX:
+.. _install_nginx:
 
 With NGINX
 **********
@@ -141,9 +140,9 @@ It is the recommended option for the Numbas LTI provider.
 
 Install NGINX::
 
-    apt install NGINX
+    apt install nginx
 
-Overwrite :file:`/etc/NGINX/sites-available/default` with the following::
+Overwrite :file:`/etc/nginx/sites-available/default` with the following::
 
     upstream backend_hosts {
      server 0.0.0.0:8700;
