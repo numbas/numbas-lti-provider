@@ -22,27 +22,19 @@
     {% include "numbas_lti/management/nav.html" %}
     <iframe id="scorm-player" width="100%" src="{{exam.extracted_url}}/index.html"></iframe>
 
-    <script type="text/javascript" src="{% static 'api.js' %}"></script>
     <script type="text/javascript">
-        {% if scorm_cmi %}
-        var cmi = {{scorm_cmi|safe}};
-        window.API_1484_11 = new SCORM_API(cmi);
-        {% endif %}
-
         window.addEventListener('load',function() {
             var iframe = document.getElementById('scorm-player');
 
             function resize_iframe() {
+                console.log('resize');
                 if(!iframe.contentWindow) {
                     return;
                 }
                 try {
                     var dh = document.documentElement.getBoundingClientRect().bottom;
-                    var ih = iframe.clientHeight;
-                    var oh = dh-ih;
-                    var wh = window.innerHeight;
-                    var h = wh-oh-10;
-                    var height = Math.max(500,h);
+                    var iy = iframe.getBoundingClientRect().y;
+                    var height = dh-iy;
                     iframe.style.height = height+'px';
                 } catch(e) {
                 }
