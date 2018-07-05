@@ -22,13 +22,13 @@ class EditorLinkManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Manag
 
 class ListEditorLinksView(EditorLinkManagementMixin,generic.list.ListView):
     model = EditorLink
-    template_name = 'numbas_lti/management/admin/list_editorlinks.html'
+    template_name = 'numbas_lti/management/admin/editorlink/list.html'
 
 class GettingProjectDataException(Exception):
     pass
 
 class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
-    template_name = 'numbas_lti/management/admin/edit_editorlink.html'
+    template_name = 'numbas_lti/management/admin/editorlink/edit.html'
     model = EditorLink
     fields = ['name']
     success_url = reverse_lazy('list_editorlinks')
@@ -114,7 +114,7 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
 class CreateEditorLinkView(EditorLinkManagementMixin,generic.edit.CreateView):
     model = EditorLink
     form_class = forms.CreateEditorLinkForm
-    template_name = 'numbas_lti/management/admin/create_editorlink.html'
+    template_name = 'numbas_lti/management/admin/editorlink/create.html'
 
     def form_valid(self,form):
         editorlink = self.object = form.save()
@@ -134,7 +134,7 @@ class CreateEditorLinkView(EditorLinkManagementMixin,generic.edit.CreateView):
 
 class DeleteEditorLinkView(EditorLinkManagementMixin,generic.edit.DeleteView):
     model = EditorLink
-    template_name = 'numbas_lti/management/admin/confirm_delete_editorlink.html'
+    template_name = 'numbas_lti/management/admin/editorlink/confirm_delete.html'
     success_url = reverse_lazy('list_editorlinks')
     context_object_name = 'editorlink'
 

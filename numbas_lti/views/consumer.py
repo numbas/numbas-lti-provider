@@ -17,7 +17,7 @@ class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Managem
 
 class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
     model = LTIConsumer
-    template_name = 'numbas_lti/management/admin/list_consumers.html'
+    template_name = 'numbas_lti/management/admin/consumer/list.html'
 
     def get_context_data(self,*args,**kwargs):
         context = super(ListConsumersView,self).get_context_data(*args,**kwargs)
@@ -29,14 +29,14 @@ class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
 
 class CreateConsumerView(ConsumerManagementMixin,generic.edit.CreateView):
     model = LTIConsumer
-    template_name = 'numbas_lti/management/admin/create_consumer.html'
+    template_name = 'numbas_lti/management/admin/consumer/create.html'
     form_class = forms.CreateConsumerForm
     success_url = reverse_lazy('list_consumers')
 
 class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
     model = LTIConsumer
     context_object_name = 'consumer'
-    template_name = 'numbas_lti/management/admin/confirm_delete_consumer.html'
+    template_name = 'numbas_lti/management/admin/consumer/confirm_delete.html'
     success_url = reverse_lazy('list_consumers')
 
     def form_valid(self,form):
@@ -49,7 +49,7 @@ class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
 class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
     model = LTIConsumer
     context_object_name = 'consumer'
-    template_name = 'numbas_lti/management/admin/view_consumer.html'
+    template_name = 'numbas_lti/management/admin/consumer/view.html'
 
     def get_context_data(self, *args, **kwargs):
         context = super(ManageConsumerView,self).get_context_data(*args,**kwargs)

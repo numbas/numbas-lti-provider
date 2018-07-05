@@ -3,11 +3,13 @@
 {% load bootstrap %}
 
 {% block management_content %}
-<div class="container">
     <header>
         <h1 id="context-{{context.pk}}">{{context.name|default:"Unnamed course"}} {% if context.label and context.label != context.name %}({{context.label}}){% endif %}</h1>
-        <p>A context in <a href="{% url 'view_consumer' context.consumer.pk %}"><code>{{context.consumer.key}}</code></a></p>
     </header>
+
+    <p>A context in <a href="{% url 'view_consumer' context.consumer.pk %}"><code>{{context.consumer.key}}</code></a></p>
+
+    <p><a href="{% url 'delete_context' context.pk %}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this context" %}</a></p>
 
     {% if context.resources.exists %}
     <table class="table">
