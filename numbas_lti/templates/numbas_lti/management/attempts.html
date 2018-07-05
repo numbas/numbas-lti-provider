@@ -42,7 +42,9 @@
 
     <form method="GET" class="form-inline">
         {% for key,value in request.GET.items %}
+        {% if key != 'page' %}
         <input type="hidden" value="{{value}}" name="{{key}}">
+        {% endif %}
         {% endfor %}
         {% csrf_token %}
         <label for="query">
