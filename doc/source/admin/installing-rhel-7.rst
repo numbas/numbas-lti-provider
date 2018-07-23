@@ -1,7 +1,7 @@
-.. _installation:
+.. _installation-rhel-7:
 
-Installation
-############
+Installation on RedHat Enterprise Linux 7
+#########################################
 
 You will need:
 
@@ -12,9 +12,8 @@ You will need:
 * An SSL certificate: LTI content must be served over HTTPS. 
   These can be obtained easily and for free from `Let's Encrypt <https://letsencrypt.org/>`_.
 
-These instructions will take a fresh machine running Ubuntu 16.04 and set up the Numbas LTI tool provider to run through NGINX or Apache.
-On different operating systems or with different web servers, the process will be different. 
-There are alternate instructions for :ref:`installation on RedHat Enterprise Linux 7 <installation-rhel-7>`.
+These instructions will take a fresh machine using RHEL 7 and set up the Numbas LTI tool provider to run through NGINX.
+On different operating systems or with different web servers, the process will be different.
 
 We will set up:
 
@@ -26,24 +25,26 @@ We will set up:
 Set up the environment
 ----------------------
 
-First, install packages, set up users, and create the required paths (you can save this script as a file and run it as root - it doesn't need any user input)::
+Create the :file:`/etc/yum.repos.d/nginx.repo` with the following contents::
 
-    #!/usr/bin/bash
+    [nginx]
+    name=nginx repo
+    baseurl=http://nginx.org/packages/rhel/7/$basearch/
+    gpgcheck=0
+    enabled=1
+    
+First, set up a user account and install packages, and create the required paths. 
+Run the following commands as root::
 
-    # set up user group
-    adduser --disabled-password numbas_lti
-    adduser www-data numbas_lti
+    #!/bin/bash
+    useradd numbas_lti
+    yum install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
+    yum install postgresql96-server \
+        python34 python34-pip python34-devel \
+        redis supervisor nginx
 
-    # install packages
-    apt update
-    apt install \
-        git redis-server postgresql postgresql-server-dev-all \
-        libxml2-dev libxslt1-dev python-dev lib32z1-dev python3-pip supervisor
-    pip3 install virtualenv
-
-    # get the numbas-lti-provider code
-    git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
-    chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
+    systemctl enable redis
+    systemctl start redis
 
     # create media and static file directories
     mkdir /srv/numbas-lti-media
@@ -51,6 +52,10 @@ First, install packages, set up users, and create the required paths (you can sa
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-media
     chown -R www-data:www-data /srv/numbas-lti-static
     chmod -R 770 /srv/numbas-lti-*
+
+    # get the numbas-lti-provider code
+    git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
+    chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
     # create the virtualenv for the python modules
     virtualenv /opt/numbas_lti_python
@@ -61,12 +66,20 @@ First, install packages, set up users, and create the required paths (you can sa
     cd /srv/numbas-lti-provider
     source /opt/numbas_lti_python/bin/activate
     pip install -r requirements.txt
-    pip install asgi_redis psycopg2
+    pip install asgi_redis psycopg2-binary
 
-Next, create a database and set a password to access it (replace ``$password`` with your chosen password in the following script)::
+Change PostgreSQL to use password authentication: edit :file:`/var/lib/psql/9.6/data/pg_hba.conf`, and change::
 
-    sudo -u postgres psql -c "CREATE USER numbas_lti WITH ENCRYPTED PASSWORD '$password' CREATEDB;"
-    sudo -u postgres createdb -U numbas_lti numbas_lti -h localhost
+    host    all             all             127.0.0.1/32            ident
+
+to::
+
+    host    all             all             127.0.0.1/32            md5
+
+Now restart PostgreSQL and create a database::
+
+    systemctl restart postgresql-9.6
+    sudo -u numbas_lti createdb numbas_lti
 
 Configuring the Numbas LTI provider
 -----------------------------------
@@ -87,12 +100,12 @@ Configure supervisord
 
 Supervisord ensures that the Numbas LTI provider app is always running.
 
-Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
+Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
 
     [program:numbas_lti_daphne]
     command=/opt/numbas_lti_python/bin/daphne numbasltiprovider.asgi:channel_layer --port 87%(process_num)02d --bind 0.0.0.0 -v 2
     directory=/srv/numbas-lti-provider/
-    user=www-data
+    user=numbas_lti
     autostart=true
     autorestart=true
     stopasgroup=true
@@ -105,7 +118,7 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     [program:numbas_lti_workers]
     command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py runworker
     directory=/srv/numbas-lti-provider/
-    user=www-data
+    user=numbas_lti
     autostart=true
     autorestart=true
     redirect_stderr=True
@@ -126,24 +139,17 @@ Once you've set this up, run::
 
 Supervisord will start the Numbas LTI provider, and restart it automatically if it ever crashes.
 
-Set up a webserver
-------------------
-
-We have instructions for two webservers: :ref:`NGINX <install_NGINX>` and :ref:`Apache <install_apache>`.
-
-.. _install_nginx:
-
-With NGINX
-**********
+Set up the NGINX webserver
+--------------------------
 
 `NGINX <https://www.NGINX.com/>`_ is a high performance webserver, ideal for use as a reverse proxy.
 It is the recommended option for the Numbas LTI provider.
 
-Install NGINX::
+Add the `nginx` user to the `numbas_lti` group::
 
-    apt install nginx
+    usermod -a -G numbas_lti nginx
 
-Overwrite :file:`/etc/nginx/sites-available/default` with the following::
+Overwrite :file:`/etc/nginx/conf.d/default.conf` with the following::
 
     upstream backend_hosts {
      server 0.0.0.0:8700;
@@ -153,12 +159,8 @@ Overwrite :file:`/etc/nginx/sites-available/default` with the following::
     }
 
     server {
-        listen 443;
+        listen 80;
         client_max_body_size 20M;
-
-        ssl on;
-        ssl_certificate /etc/ssl/numbas-lti.pem;
-        ssl_certificate_key /etc/ssl/numbas-lti.key;
 
         error_page 502 /502.html;
         location = /502.html {
@@ -174,20 +176,20 @@ Overwrite :file:`/etc/nginx/sites-available/default` with the following::
         }
 
         location / {
-                proxy_pass http://backend_hosts;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
-                proxy_buffering off;
-                proxy_redirect     off;
-                proxy_set_header   Host $host;
-                proxy_set_header   X-Real-IP $remote_addr;
-                proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header   X-Forwarded-Host $server_name;
-                proxy_set_header   X-Scheme https;
-                proxy_set_header   X-Forwarded-Proto https;
-                proxy_read_timeout 600s;
-            }
+            proxy_pass http://backend_hosts;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_buffering off;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Host $server_name;
+            proxy_set_header   X-Scheme https;
+            proxy_set_header   X-Forwarded-Proto https;
+            proxy_read_timeout 600s;
+        }
 
     }
     
@@ -197,52 +199,15 @@ If you're using certbot, it will add those lines for you.
 You should put something in :file:`/srv/www/server-error/502.html`, to be shown when there's a server error.
 This can happen if the Numbas LTI provider isn't running, or otherwise fails to communicate with NGINX.
 
-.. _install_apache:
- 
-With Apache
-***********
+Finally, open the firewall to allow web traffic::
 
-`Apache <https://httpd.apache.org/>`_ is a very commonly-used webserver.
-While it can be used as a reverse proxy for the Numbas LTI provider, it's not great at dealing with the many simultaneous connections that the LTI provider requires.
-In some circumstances, Apache might be your only option, so the instructions are provided as a reference.
+    setsebool -P httpd_can_network_connect 1
+    firewall-cmd --permanent --zone=public --add-service=http
+    firewall-cmd --permanent --zone=public --add-service=https
+    firewall-cmd --reload
+    setenforce permissive
+    systemctl start nginx
 
-Install required packages::
-
-    apt install apache2
-    a2enmod ssl proxy proxy_wstunnel proxy_http proxy_connect headers rewrite
-
-Overwrite :file:`/etc/apache2/sites-available/000-default.conf` with the following::
-
-    <VirtualHost *:443>
-      SSLEngine on
-      SSLProxyEngine on
-      SSLCertificateFile /etc/apache2/ssl/certs/numbas_lti.crt
-      SSLCertificateKeyFile /etc/apache2/ssl/private/numbas_lti.key
-
-      ProxyPreserveHost On
-      ProxyRequests Off
-      ProxyPass /static !
-      Alias "/static" "/srv/numbas-lti-static"
-      ProxyPass "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPassReverse "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPass / http://0.0.0.0:8707/
-      ProxyPassReverse / http://0.0.0.0:8707/
-
-      RequestHeader set X-Scheme "https"
-      RequestHeader set X-Forwarded-Proto "https"
-
-      <Directory "/srv/numbas-lti-static">
-        AllowOverride None
-        Options FollowSymLinks
-        Require all granted
-      </Directory>
-
-      ErrorLog ${APACHE_LOG_DIR}/numbas_lti.error.log
-      CustomLog ${APACHE_LOG_DIR}/numbas_lti.access.log combined
-    </VirtualHost>
-
-Set the ``SSLCertificateFile`` and ``SSLCertificateKeyFile`` lines to the paths to your SSL certificate and key files.
-If you're using certbot, it will add those lines for you.
 
 Obtain an SSL certificate
 -------------------------
