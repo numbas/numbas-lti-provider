@@ -3,6 +3,7 @@ import re
 import os
 import traceback
 import urllib.parse
+from importlib import reload
 
 def print_notice(s):
     print('\033[92m'+s+'\033[0m\n')
@@ -50,10 +51,10 @@ class Command(object):
     other_db_template = """DATABASES = {{
     'default': {{
         'ENGINE': 'django.db.backends.{DB_ENGINE}',
-        'NAME': '{{DB_NAME}}',
-        'USER': '{{DB_USER}}',
-        'PASSWORD': '{{DB_PASSWORD}}',
-        'HOST': '{{DB_HOST}}',
+        'NAME': '{DB_NAME}',
+        'USER': '{DB_USER}',
+        'PASSWORD': '{DB_PASSWORD}',
+        'HOST': '{DB_HOST}',
     }}
 }}"""
 
@@ -83,6 +84,9 @@ class Command(object):
         self.get_values()
 
         self.write_files()
+
+        import numbasltiprovider.settings
+        reload(numbasltiprovider.settings)
 
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "numbasltiprovider.settings")
 
@@ -136,10 +140,9 @@ class Command(object):
         self.rvalues = {key: enrep(value) for key, value in self.values.items()}
 
     def get_value(self, question):
-        default = None
+        default = question.default
         if os.path.exists('numbasltiprovider/settings.py'):
             import numbasltiprovider.settings
-            default = question.default
             try:
                 default = getattr(numbasltiprovider.settings, question.key)
                 if isinstance(default,list):
