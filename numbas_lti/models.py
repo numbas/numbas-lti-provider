@@ -169,7 +169,7 @@ class Resource(models.Model):
         return attempts.aggregate(highest_score=models.Max('scaled_score'))['highest_score']
 
     def grade_last(self,user,attempts):
-        return attempts.order_by('-start_time').first()
+        return attempts.order_by('-start_time').first().scaled_score
 
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
