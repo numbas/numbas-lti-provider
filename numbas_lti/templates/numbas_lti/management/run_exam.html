@@ -32,7 +32,8 @@
                 }
                 try {
                     var dh = document.documentElement.getBoundingClientRect().bottom;
-                    var iy = iframe.getBoundingClientRect().y;
+                    var irect = iframe.getBoundingClientRect();
+                    var iy = irect.y || (irect.top+5);
                     var height = dh-iy;
                     iframe.style.height = height+'px';
                 } catch(e) {
