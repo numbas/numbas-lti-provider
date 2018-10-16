@@ -141,4 +141,4 @@ class ConsumerTimePeriodForm(ModelForm):
             'end': forms.DateInput(attrs={'class':'form-control','type':'date'}),
         }
 
-ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, extra=1, can_delete=False)
+ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)

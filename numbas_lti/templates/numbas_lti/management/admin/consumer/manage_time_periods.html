@@ -42,6 +42,11 @@
                     {% for field in subform.visible_fields %}
                         <td>
                         {{field}}
+                        {% if field.errors %}
+                        {% for error in field.errors %}
+                            <span class="text-warning">{{error}}</span>
+                        {% endfor %}
+                        {% endif %}
                         </td>
                     {% endfor %}
                     {% if subform.instance.pk %}

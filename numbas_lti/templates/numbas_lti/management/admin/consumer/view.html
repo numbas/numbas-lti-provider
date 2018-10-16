@@ -34,9 +34,11 @@
             <p>{% trans "This consumer has not created any resources yet." %}</p>
         {% endif %}
 
+        <table class="table periods">
         {% for period,contexts in period_groups %}
-        <div class="period">
-            <h3>{{period.name}}</h3>
+        <tr>
+            <th>{{period.name}}</th>
+            <td>
             {% regroup contexts by name|first|upper as context_groups %}
 
             {% for letter in context_groups %}
@@ -47,8 +49,10 @@
                     {% endfor %}
                 </ul>
             {% endfor %}
-        </div>
+            </td>
+        </tr>
         {% endfor %}
+        </table>
 
         <a class="btn btn-default" href="{% url 'consumer_manage_time_periods' consumer.pk %}"><span class="glyphicon glyphicon-calendar"></span> Manage time periods</a>
     </main>

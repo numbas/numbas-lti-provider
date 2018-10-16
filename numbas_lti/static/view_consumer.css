@@ -5,3 +5,7 @@
 .resource.new {
     font-size: 1.1em;
 }
+
+table.periods tr:first-child th, table.periods tr:first-child td {
+  border-top: none;
+}
