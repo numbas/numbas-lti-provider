@@ -4,7 +4,7 @@ from django.forms import ModelForm
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod
 
 from django.core.files import File
 from io import BytesIO
@@ -130,3 +130,15 @@ class CreateEditorLinkForm(ModelForm):
         if commit:
             editorlink.save()
         return editorlink
+
+class ConsumerTimePeriodForm(ModelForm):
+    class Meta:
+        model = ConsumerTimePeriod
+        fields = ['name','start','end']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'start': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'end': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+        }
+
+ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, extra=1, can_delete=False)

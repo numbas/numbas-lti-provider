@@ -11,7 +11,7 @@
 {% block management_content %}
 <div class="container">
     <header>
-    <h1>{% trans "Manage a consumer" %}</h1>
+        <h1>{% blocktrans with key=consumer.key %}Manage <code>{{key}}</code>{% endblocktrans %}</h1>
     </header>
 
     {% if consumer.url %}
@@ -34,16 +34,23 @@
             <p>{% trans "This consumer has not created any resources yet." %}</p>
         {% endif %}
 
-        {% regroup named_contexts by name|first|upper as context_groups %}
+        {% for period,contexts in period_groups %}
+        <div class="period">
+            <h3>{{period.name}}</h3>
+            {% regroup contexts by name|first|upper as context_groups %}
 
-        {% for letter in context_groups %}
-            <a id="context-letter-{{letter.grouper}}"></a>
-            <ul>
-                {% for context in letter.list %}
-                <li><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></li>
-                {% endfor %}
-            </ul>
+            {% for letter in context_groups %}
+            <a id="period-{{period.name|slugify}}-context-letter-{{letter.grouper}}"></a>
+                <ul>
+                    {% for context in letter.list %}
+                    <li><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </div>
         {% endfor %}
+
+        <a class="btn btn-default" href="{% url 'consumer_manage_time_periods' consumer.pk %}"><span class="glyphicon glyphicon-calendar"></span> Manage time periods</a>
     </main>
 </div>
 {% endblock management_content %}

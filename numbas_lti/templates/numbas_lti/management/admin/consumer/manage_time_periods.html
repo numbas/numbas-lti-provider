@@ -1,0 +1,61 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+{% load staticfiles %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% static 'view_consumer.css' %}">
+{%endblock stylesheets %}
+
+{% block management_content %}
+    <header>
+        <h1>{% blocktrans with key=consumer.key %}Manage time periods for <code>{{key}}</code>{% endblocktrans %}</h1>
+    </header>
+    <section>
+        {% blocktrans %}
+        <p>Use time periods to group contexts belonging to this consumer by the time in which they were active.</p>
+        {% endblocktrans %}
+    </section>
+
+    <form method="POST" class="form-inline">
+        {{form.management_form}}
+        {% csrf_token %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Start" %}</th>
+                    <th>{% trans "End" %}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for subform in form %}
+                <tr>
+                    {{ subform.non_field_errors }}
+
+                    {% for hidden_field in subform.hidden_fields %}
+                        {{ hidden_field.errors }}
+                        {{ hidden_field }}
+                    {% endfor %}
+                    {% for field in subform.visible_fields %}
+                        <td>
+                        {{field}}
+                        </td>
+                    {% endfor %}
+                    {% if subform.instance.pk %}
+                    <td>
+                        <a href="{% url 'delete_consumer_time_period' subform.instance.pk %}" class="text-danger" title="{% trans "Delete this period" %}"><span class="glyphicon glyphicon-trash"></span></a>
+                    </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        
+        <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+        <a href="{% url 'view_consumer' consumer.pk %}" class="btn btn-link">{% trans "Cancel" %}</a>
+    </form>
+</div>
+{% endblock management_content %}

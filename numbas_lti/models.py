@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Min
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
@@ -40,6 +41,53 @@ class LTIConsumer(models.Model):
     @property
     def resources(self):
         return Resource.objects.filter(context__consumer=self)
+
+    def contexts_grouped_by_period(self):
+        contexts = self.contexts.annotate(creation=Min('resources__creation_time')).order_by('-creation')
+        if not self.time_periods.exists():
+            return [(None,contexts)]
+        it = iter(self.time_periods.order_by('-end'))
+        p = next(it)
+        out = []
+        lafter = []
+        lduring = []
+        for c in contexts.exclude(creation=None):
+            while p is not None and c.creation<p.start:
+                if len(lafter):
+                    out.append((None,lafter))
+                if len(lduring):
+                    out.append((p,lduring))
+                lafter = []
+                lduring = []
+                try:
+                    p = next(it)
+                except StopIteration:
+                    p = None
+            if p is None:
+                lafter.append(c)
+                continue
+            if c.creation>p.end:
+                lafter.append(c)
+            else:
+                lduring.append(c)
+        if len(lafter):
+            out.append((None,lafter))
+        if len(lduring):
+            out.append((p,lduring))
+        no_creation = contexts.filter(creation=None)
+        if no_creation.exists():
+            out.append((None,no_creation[:]))
+        groups = [(p,sorted(cs,key=lambda c:c.name.upper())) for p,cs in out]
+        return groups
+
+class ConsumerTimePeriod(models.Model):
+    consumer = models.ForeignKey(LTIConsumer, related_name='time_periods', on_delete=models.CASCADE)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+    name = models.CharField(max_length=300)
+
+    class Meta:
+        ordering = ['-end','-start']
 
 class ExtractPackageMixin(object):
     extract_folder = 'extracted_zips'

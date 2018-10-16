@@ -50,7 +50,10 @@ urlpatterns = [
     url(r'^consumers$', views.consumer.ListConsumersView.as_view(), name='list_consumers'),
     url(r'^consumers/create$', views.consumer.CreateConsumerView.as_view(), name='create_consumer'),
     url(r'^consumers/(?P<pk>\d+)$', views.consumer.ManageConsumerView.as_view(), name='view_consumer'),
+    url(r'^consumers/(?P<pk>\d+)/time-periods$', views.consumer.ManageTimePeriodsView.as_view(), name='consumer_manage_time_periods'),
     url(r'^consumers/(?P<pk>\d+)/delete$', views.consumer.DeleteConsumerView.as_view(), name='delete_consumer'),
+
+    url(r'^time-period/(?P<pk>\d+)/delete$', views.consumer.DeleteTimePeriodView.as_view(), name='delete_consumer_time_period'),
 
     url(r'^contexts/(?P<pk>\d+)$', views.context.ManageContextView.as_view(), name='view_context'),
     url(r'^contexts/(?P<pk>\d+)/delete$', views.context.DeleteContextView.as_view(), name='delete_context'),

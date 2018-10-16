@@ -8,7 +8,7 @@ from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views import generic
 from numbas_lti import forms
-from numbas_lti.models import LTIConsumer
+from numbas_lti.models import LTIConsumer, ConsumerTimePeriod
 
 class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,ManagementViewMixin):
     permission_required = ('numbas_lti.add_lticonsumer',)
@@ -57,5 +57,24 @@ class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
         consumer = self.get_object()
         context['unnamed_contexts'] = consumer.contexts.filter(name='').all()
         context['named_contexts'] = sorted(consumer.contexts.exclude(name='').all(),key=lambda c: c.name.upper())
+        context['period_groups'] = consumer.contexts_grouped_by_period()
 
         return context
+
+class ManageTimePeriodsView(ConsumerManagementMixin,generic.edit.UpdateView):
+    model = LTIConsumer
+    context_object_name = 'consumer'
+    template_name = 'numbas_lti/management/admin/consumer/manage_time_periods.html'
+    form_class = forms.ConsumerTimePeriodFormSet
+    def get_success_url(self):
+        print(self.object)
+        return reverse('view_consumer',args=(self.get_object().pk,))
+
+class DeleteTimePeriodView(ConsumerManagementMixin,generic.edit.DeleteView):
+    model = ConsumerTimePeriod
+
+    def get(self,*args,**kwargs):
+        return self.post(*args,**kwargs)
+    
+    def get_success_url(self):
+        return reverse('consumer_manage_time_periods',args=(self.get_object().consumer.pk,))
