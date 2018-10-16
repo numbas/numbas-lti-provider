@@ -43,7 +43,7 @@ class LTIConsumer(models.Model):
         return Resource.objects.filter(context__consumer=self)
 
     def contexts_grouped_by_period(self):
-        contexts = self.contexts.annotate(creation=Min('resources__creation_time')).order_by('-creation')
+        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time')).order_by('-creation')
         if not self.time_periods.exists():
             return [(None,contexts)]
         it = iter(self.time_periods.order_by('-end'))
