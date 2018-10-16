@@ -476,7 +476,7 @@ class RemarkPart(models.Model):
 
 def remark_update_scaled_score(sender,instance,**kwargs):
     attempt = instance.attempt
-    question = int(re.match(r'^q(\d+)p\d+$',instance.part).group(1))
+    question = int(re.match(r'^q(\d+)$',instance.part).group(1))
     attempt.update_question_score_info(question)
     if attempt.max_score>0:
         scaled_score = attempt.raw_score/attempt.max_score
