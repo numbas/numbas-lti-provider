@@ -715,6 +715,9 @@ def update_editor_cache_before_save(sender,instance,**kwargs):
 class StressTest(models.Model):
     resource = models.OneToOneField(Resource,on_delete=models.CASCADE,primary_key=True)
 
+    class Meta:
+        ordering = ['-resource__creation_time']
+
     def __str__(self):
         return self.resource.creation_time.strftime('%B %d, %Y %H:%M')
 

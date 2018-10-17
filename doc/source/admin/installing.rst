@@ -1,7 +1,7 @@
 .. _installation:
 
-Installation
-############
+Installation on Ubuntu
+######################
 
 You will need:
 

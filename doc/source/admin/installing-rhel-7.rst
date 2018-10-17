@@ -14,6 +14,7 @@ You will need:
 
 These instructions will take a fresh machine using RHEL 7 and set up the Numbas LTI tool provider to run through NGINX.
 On different operating systems or with different web servers, the process will be different.
+There are alternate instructions for :ref:`installation on Ubuntu <installation>`.
 
 We will set up:
 

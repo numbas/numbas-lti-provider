@@ -45,7 +45,7 @@
             <a id="period-{{period.name|slugify}}-context-letter-{{letter.grouper}}"></a>
                 <ul>
                     {% for context in letter.list %}
-                    <li><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></li>
+                    <li><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a> ({% blocktrans count n=context.resources.count %}1 resource{% plural %}{{n}} resources{% endblocktrans %})</li>
                     {% endfor %}
                 </ul>
             {% endfor %}
