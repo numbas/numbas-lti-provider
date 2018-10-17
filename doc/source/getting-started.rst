@@ -34,6 +34,10 @@ This may require support from the administrator of your VLE.
 Link a Numbas editor
 ####################
 
+.. note::
+
+    This step is optional.
+
 You can :ref:`link to an instance of the Numbas editor <add-editor-link>` to make a selection of exams available directly from the LTI tool, instead of having to download a Numbas exam package to your own computer first.
 
 Add a Numbas activity to your course
