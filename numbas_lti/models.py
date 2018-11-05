@@ -332,6 +332,8 @@ class Attempt(models.Model):
         try:
             return self.scormelements.current(key).value
         except ScormElement.DoesNotExist:
+            if callable(default):
+                default = default()
             return default
 
     def completed(self):
@@ -355,7 +357,7 @@ class Attempt(models.Model):
                 total += self.question_max_score(i)
             return total
 
-        return float(self.get_element_default('cmi.score.max',sum(self.question_max_score(i) for i in range(self.resource.num_questions))))
+        return float(self.get_element_default('cmi.score.max', lambda: sum(self.question_max_score(i) for i in range(self.resource.num_questions))))
 
     def part_discount(self,part):
         return self.resource.discounted_parts.filter(part=part).first()
