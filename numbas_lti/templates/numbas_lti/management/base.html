@@ -1,6 +1,8 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
 
+{% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
+
 {% block content %}
 {% include "numbas_lti/management/nav.html" %}
 <div class="{% block main_container %}container{% endblock %}">
