@@ -41,6 +41,8 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend','django.contrib.auth.backends.ModelBackend']
 
+LTI_INSTRUCTOR_ROLES = ['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant']
+
 ROOT_URLCONF = 'numbasltiprovider.urls'
 
 TEMPLATES = [

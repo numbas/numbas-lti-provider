@@ -1,10 +1,14 @@
+from django.conf import settings
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views import generic
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
+from django_auth_lti.verification import is_allowed
 from numbas_lti.models import Resource, Exam
+
+INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES',['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant'])
 
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
@@ -15,7 +19,7 @@ def get_config_url(request):
 def request_is_instructor(request):
     if request.user.is_superuser:
         return True
-    return 'Instructor' in request.LTI.get('roles')
+    return is_allowed(request,INSTRUCTOR_ROLES,False)
 
 def static_view(template_name):
     return generic.TemplateView.as_view(template_name=template_name)
@@ -28,7 +32,7 @@ class LTIRoleOrSuperuserMixin(LTIRoleRestrictionMixin):
             return super(LTIRoleOrSuperuserMixin, self).check_allowed(request)
 
 class MustBeInstructorMixin(LTIRoleOrSuperuserMixin):
-    allowed_roles = ['Instructor']
+    allowed_roles = INSTRUCTOR_ROLES
 
 class ManagementViewMixin(object):
     def get_context_data(self,*args,**kwargs):

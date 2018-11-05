@@ -1,4 +1,4 @@
-from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin
+from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES
 from .generic import CSVView
 from numbas_lti import forms
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES
@@ -248,14 +248,14 @@ class ReportAllScoresView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
         Channel("report.all_scores").send({'pk':self.get_object().pk})
         return super(ReportAllScoresView,self).get(*args,**kwargs)
 
-@lti_role_required(['Instructor'])
+@lti_role_required(INSTRUCTOR_ROLES)
 def grant_access_token(request,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=request.resource)
 
     return redirect(reverse('dashboard',args=(request.resource.pk,)))
 
-@lti_role_required(['Instructor'])
+@lti_role_required(INSTRUCTOR_ROLES)
 def remove_access_token(request,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.filter(user=user,resource=request.resource).first().delete()
