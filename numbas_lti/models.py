@@ -391,8 +391,8 @@ class Attempt(models.Model):
         return out
 
     def part_gaps(self,part):
-        if not re.match(r'q\d+p\d+$',part):
-            return None
+        if not re.match(r'^q\d+p\d+$',part):
+            return []
         gaps = [g for g in self.part_paths() if g.startswith(part+'g')]
         return gaps
 
@@ -526,7 +526,7 @@ class RemarkPart(models.Model):
 
 def remark_update_scaled_score(sender,instance,**kwargs):
     attempt = instance.attempt
-    question = int(re.match(r'^q(\d+)$',instance.part).group(1))
+    question = int(re.match(r'^q(\d+)',instance.part).group(1))
     attempt.update_question_score_info(question)
     if attempt.max_score>0:
         scaled_score = attempt.raw_score/attempt.max_score
@@ -550,7 +550,7 @@ class DiscountPart(models.Model):
 
 def discount_update_scaled_score(sender,instance,**kwargs):
     for attempt in instance.resource.attempts.all():
-        question = int(re.match(r'^q(\d+)p\d+$',instance.part).group(1))
+        question = int(re.match(r'^q(\d+)',instance.part).group(1))
         attempt.update_question_score_info(question)
 
         scaled_score = attempt.raw_score/attempt.max_score
