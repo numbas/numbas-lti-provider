@@ -1,4 +1,4 @@
-from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES
+from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView
 from numbas_lti import forms
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES
@@ -248,19 +248,21 @@ class ReportAllScoresView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
         Channel("report.all_scores").send({'pk':self.get_object().pk})
         return super(ReportAllScoresView,self).get(*args,**kwargs)
 
-@lti_role_required(INSTRUCTOR_ROLES)
-def grant_access_token(request,user_id):
+@lti_role_or_superuser_required(INSTRUCTOR_ROLES)
+def grant_access_token(request,resource_id,user_id):
+    resource = Resource.objects.get(pk=resource_id)
     user = User.objects.get(id=user_id)
-    AccessToken.objects.create(user=user,resource=request.resource)
+    AccessToken.objects.create(user=user,resource=resource)
 
-    return redirect(reverse('dashboard',args=(request.resource.pk,)))
+    return redirect(reverse('dashboard',args=(resource.pk,)))
 
-@lti_role_required(INSTRUCTOR_ROLES)
-def remove_access_token(request,user_id):
+@lti_role_or_superuser_required(INSTRUCTOR_ROLES)
+def remove_access_token(request,resource_id,user_id):
+    resource = Resource.objects.get(pk=resource_id)
     user = User.objects.get(id=user_id)
-    AccessToken.objects.filter(user=user,resource=request.resource).first().delete()
+    AccessToken.objects.filter(user=user,resource=resource).first().delete()
 
-    return redirect(reverse('dashboard',args=(request.resource.pk,)))
+    return redirect(reverse('dashboard',args=(resource.pk,)))
 
 class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
     model = ReportProcess
