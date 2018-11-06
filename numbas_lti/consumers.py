@@ -53,16 +53,18 @@ def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
     process = ReportProcess.objects.create(resource=resource)
 
+    errors = []
     for user in User.objects.filter(attempts__resource=resource).distinct():
         try:
             request = report_outcome(resource,user)
         except ReportOutcomeException as e:
-            process.status = 'error'
-            process.response = e.message
-            process.save()
-            return
+            errors.append(e)
 
-    process.status = 'complete'
+    if len(errors):
+        process.status = 'error'
+        process.response = '\n'.join(e.message for e in errors)
+    else:
+        process.status = 'complete'
     process.save()
 
 class AttemptScormListingConsumer(WebsocketConsumer):
