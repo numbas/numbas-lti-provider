@@ -6,7 +6,7 @@ urlpatterns = [
     url(r'^$', views.entry.index, name='index'),
     url(r'^lti_entry$', views.entry.lti_entry, name='lti_entry'),
 
-    url(r'^login$', auth.views.login, name='login'),
+    url(r'^login$', auth.views.LoginView.as_view(), name='login'),
 
     url(r'^create-superuser$', views.admin.CreateSuperuserView.as_view(), name='create_superuser'),
 
