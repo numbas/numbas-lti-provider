@@ -11,7 +11,8 @@ You must run your own instance of this tool - as well as using a fair amount of 
 To install the tool, you need:
 
 * A dedicated server to install the software on, which will communicate with your virtual learning environment. 
-  At Newcastle, we use servers running Ubuntu. 
+  At Newcastle, we use servers running Ubuntu, though anything that can run Python will do. 
+  As a rough guide, you'll need around 0.5MB of disk space per student attempt.
 * The ability to add a link to an LTI tool to your virtual learning environment. 
   In Blackboard and Moodle, only administrators can do this.
 
