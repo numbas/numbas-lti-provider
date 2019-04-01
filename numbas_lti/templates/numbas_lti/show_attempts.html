@@ -37,6 +37,7 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% if attempt.should_show_scores or not attempt.completed %}
                     <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
                         {% if attempt.completed %}
                             {% if attempt.should_show_scores %}
@@ -46,6 +47,7 @@
                             <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
                         {% endif %}
                     </a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
