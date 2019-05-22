@@ -306,7 +306,9 @@ SCORM_API.prototype = {
     set_localstorage: function() {
         try {
             var data = {
-                sent: {}
+                sent: {},
+                current: this.data,
+                save_time: (new Date())-0
             }
             for(var id in this.sent) {
                 data.sent[id] = this.make_batch(this.sent[id].elements);
