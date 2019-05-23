@@ -256,13 +256,13 @@ class RunAttemptView(generic.detail.DetailView):
             broken_attempt.broken = True
             broken_attempt.save()
 
-            context['attempt'] = attempt
             attempt = Attempt.objects.create(
                 resource = broken_attempt.resource,
                 exam = broken_attempt.exam,
                 user = broken_attempt.user
             )
             entry = 'ab-initio'
+            context['attempt'] = attempt
 
 
         if attempt.completion_status=='completed':
