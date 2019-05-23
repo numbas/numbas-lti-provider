@@ -69,12 +69,12 @@ def basic_lti_launch(request):
     client_key = request.POST.get('oauth_consumer_key')
     consumer = LTIConsumer.objects.get(key=client_key)
 
-    user_data,_ = LTIUserData.objects.get_or_create(
-        user=request.user,
-        resource=request.resource,
-        consumer=consumer,
-        consumer_user_id = request.LTI.get('user_id')
-    )
+    user_id = request.LTI.get('user_id')
+
+    user_data = LTIUserData.objects.filter(user=request.user, resource = request.resource, consumer=consumer, consumer_user_id = user_id).last()
+    if user_data is None:
+        user_data = LTIUserData.objects.create(user=request.user, resource = request.resource, consumer=consumer, consumer_user_id = user_id)
+
     user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
     user_data.save()
