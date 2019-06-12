@@ -12,6 +12,12 @@
         {% blocktrans count num_attempts=object_list|length %}You can resume or review your previous attempt{% plural %}You can resume or review your previous attempts{% endblocktrans %}{% if can_start_new_attempt %}{% trans ", or start a new one" %}{% endif %}.
     </p>
 
+    {% for message in messages %}
+    <div class="alert alert-info">
+        {{message}}
+    </div>
+    {% endfor %}
+
     <table class="table">
         <thead>
             <tr>

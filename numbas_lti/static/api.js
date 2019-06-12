@@ -7,13 +7,18 @@
  * @param {number} attempt_pk - the id of the associated attempt in the database
  * @param {string} fallback_url - URL of the AJAX fallback endpoint
  */
-function SCORM_API(data,attempt_pk,fallback_url) {
+function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
     var sc = this;
 
     this.callbacks = new CallbackHandler();
 
     this.attempt_pk = attempt_pk;
     this.fallback_url = fallback_url;
+
+    if(allow_review_from!==null) {
+        allow_review_from = new Date(allow_review_from);
+    }
+    this.allow_review_from = allow_review_from;
 
     /** Key to save data under in localStorage
      */
@@ -173,6 +178,14 @@ SCORM_API.prototype = {
 
         // Force review mode from now on if activity is completed - could be out of sync if resuming a session which wasn't saved properly.
         if(this.data['cmi.completion_status'] == 'completed') {
+            if(this.allow_review_from!==null && new Date()<this.allow_review_from) {
+                var player = document.getElementById('scorm-player');
+                player.parentElement.removeChild(player);
+                this.ajax_period = 0;
+                this.send_ajax().then(function(m) {
+                    window.location = show_attempts_url+'&back_from_unsaved_complete_attempt=1';
+                });
+            }
             this.data['cmi.mode'] = this.mode = 'review';
         }
 
@@ -426,7 +439,7 @@ SCORM_API.prototype = {
         var sc = this;
 
         if(this.pending_ajax) {
-            return;
+            return Promise.resolve('pending ajax');
         }
         if(this.queue.length) {
             var id = this.sent_acc++;
@@ -445,7 +458,7 @@ SCORM_API.prototype = {
             }
         }
         if(!stuff_to_send) {
-            return;
+            return Promise.resolve('no stuff to send');
         }
 
         var csrftoken = getCookie('csrftoken');
@@ -485,12 +498,11 @@ SCORM_API.prototype = {
                     d.received_batches.forEach(function(id) {
                         sc.batch_received(id);
                     });
-                },
-                function(e) {
                 }
             )
         ;
         this.callbacks.trigger('send_ajax');
+        return request;
     },
 
     ajax_succeeded: function() {

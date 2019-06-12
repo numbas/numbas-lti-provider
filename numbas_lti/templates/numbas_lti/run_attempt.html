@@ -41,7 +41,8 @@ if(!Modernizr.websockets) {
         var attempt_pk = {{attempt.pk}};
         var fallback_url = '{% url 'attempt_scorm_data_fallback' attempt.pk %}';
         var show_attempts_url = '{% url 'show_attempts' %}';
-        var sc = new SCORM_API(cmi,attempt_pk,fallback_url);
+        var allow_review_from = {% if attempt.resource.allow_review_from %}'{{attempt.resource.allow_review_from|date:'c'}}'{% else %}null{% endif %};
+        var sc = new SCORM_API(cmi,attempt_pk,fallback_url,allow_review_from);
         window.API_1484_11 = sc.API_1484_11;
     } catch(e) {
         alert("{% trans "A connection to the server could not be created. Please report this." %}");
