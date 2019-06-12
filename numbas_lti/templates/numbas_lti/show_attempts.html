@@ -37,16 +37,22 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if attempt.should_show_scores or not attempt.completed %}
-                    <a class="btn {% if attempt.completed %}btn-link{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
-                        {% if attempt.completed %}
-                            {% if attempt.should_show_scores %}
+                    {% if attempt.completed %}
+                        {% if attempt.review_allowed %}
+                        <a class="btn btn-info" href="{% url 'run_attempt' pk=attempt.pk %}">
                             <span class="glyphicon glyphicon-apple"></span> {% trans "Review this attempt" %}
-                            {% endif %}
+                        </a>
                         {% else %}
-                            <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
+                        {% if attempt.resource.allow_review_from %}
+                            {% blocktrans with time=attempt.resource.allow_review_from %}Review will be available from {{time}}{% endblocktrans %}
                         {% endif %}
-                    </a>
+                        {% endif %}
+                    {% else %}
+                        {% if attempt.resume_allowed %}
+                        <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
+                            <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
+                        </a>
+                        {% endif %}
                     {% endif %}
                 </td>
             </tr>

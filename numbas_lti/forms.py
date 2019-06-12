@@ -10,6 +10,7 @@ from django.core.files import File
 from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
+from bootstrap_datepicker_plus import DateTimePickerInput
 from django.contrib.auth.models import User
 import os
 import requests
@@ -21,7 +22,10 @@ import string
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from']
+        widgets = {
+            'allow_review_from': DateTimePickerInput()
+        }
 
 class RemarkPartScoreForm(ModelForm):
     class Meta:

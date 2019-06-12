@@ -177,6 +177,7 @@ class Resource(models.Model):
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
     show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
+    allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
@@ -498,6 +499,17 @@ class Attempt(models.Model):
 
     def channels_group(self):
         return 'attempt-{}'.format(self.pk)
+
+    def resume_allowed(self):
+        if self.completed():
+            return self.review_allowed()
+        else:
+            return True
+
+    def review_allowed(self):
+        if not self.should_show_scores():
+            return False
+        return self.resource.allow_review_from is None or timezone.now() >= self.resource.allow_review_from
 
     def should_show_scores(self):
         return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
