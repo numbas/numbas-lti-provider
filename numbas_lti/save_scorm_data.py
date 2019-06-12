@@ -39,7 +39,7 @@ def save_scorm_data(attempt,batches):
                 except OperationalError as e:
                     if len(e.args)==2:
                         code, msg = e.args
-                        if code in [1366]:
+                        if code in [1366, 1267]:
                             logger.exception(_("Error saving SCORM data via AJAX fallback for attempt {}:\n{}".format(attempt.pk,e)))
                             unsaved_elements.append(element)
                         else:
