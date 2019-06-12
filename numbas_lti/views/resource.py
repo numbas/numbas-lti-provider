@@ -218,7 +218,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
         resource = self.object
         num_questions = resource.num_questions
 
-        headers = [_(x) for x in ['First name','Last name','Email','Username','Start time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
+        headers = [_(x) for x in ['First name','Last name','Email','Username','Start time','End time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
         yield headers
 
         for attempt in resource.attempts.all():
@@ -229,6 +229,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 attempt.user.email,
                 attempt.user.username,
                 attempt.start_time,
+                attempt.end_time,
                 attempt.completion_status,
                 attempt.raw_score,
                 attempt.scaled_score*100,
