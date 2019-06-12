@@ -9,7 +9,10 @@ def percentage(value):
 
 @register.filter
 def percentage_bin(value,bins=3):
-    n = floor(value*bins)
-    if n==bins:
-        n -= 1
+    if value==0:
+        return 0
+    elif value==1:
+        return bins-1
+    else:
+        n = floor(value*(bins-2))+1
     return n
