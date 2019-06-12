@@ -77,6 +77,18 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
         if last_report_process and (not last_report_process.dismissed):
             context['last_report_process'] = last_report_process
 
+        return context
+
+class StudentProgressView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/student_progress.html'
+    management_tab = 'dashboard'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        resource = self.get_object()
+
         context['unlimited_attempts'] = resource.max_attempts == 0
 
         context['student_summary'] = [
@@ -91,6 +103,7 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
         ]
 
         return context
+
 
 def hierarchy_key(x):
     key = x[0]

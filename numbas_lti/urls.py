@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^exam/(?P<pk>\d+)/run$', views.resource.RunExamView.as_view(), name='run_exam'),
 
     url(r'^resource/(?P<pk>\d+)$', views.resource.DashboardView.as_view(), name='dashboard'),
+    url(r'^resource/(?P<pk>\d+)/student_progress$', views.resource.StudentProgressView.as_view(), name='student_progress'),
     url(r'^resource/(?P<pk>\d+)/discount_parts$', views.resource.DiscountPartsView.as_view(), name='discount_parts'),
     url(r'^resource/(?P<pk>\d+)/discount_part$', views.resource.DiscountPartView.as_view(), name='discount_part'),
     url(r'^discount_part/(?P<pk>\d+)/update$', views.resource.DiscountPartUpdateView.as_view(), name='discount_part_update'),

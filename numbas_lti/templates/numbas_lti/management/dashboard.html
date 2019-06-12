@@ -2,13 +2,15 @@
 {% load percentage %}
 {% load i18n %}
 
+{% block body_class %}dashboard{% endblock %}
+
 {% block management_content %}
     {% if resource.attempts.count %}
 
     <p><strong>{{resource.attempts.count}}</strong> {% blocktrans count counter=resource.attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
 
-    <section>
     {% if last_report_process %}
+    <section>
         {% if last_report_process.status == 'reporting' %}
             <div class="alert alert-info">
                 <p>{% trans "Scores are currently being reported back to the grade book" %}.</p>
@@ -27,80 +29,25 @@
                 <p><a class="btn btn-danger btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
             </div>
         {% endif %}
-    {% else %}
-        <div>
-            <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>
-        </div>
+    </section>
     {% endif %}
-    </section>
 
     <section>
-        <h2>{% trans "Marking" %}</h2>
-        <div>
-            <a class="btn btn-danger" href="{% url 'discount_parts' resource.pk %}"><span class="glyphicon glyphicon-minus-sign"></span> {% trans "Discount question parts" %}</a>
-        </div>
-        <p class="help-block">{% trans "You can remark individual attempts on the attempts page." %}</p>
+        <ul class="list-unstyled actions">
+            <li><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></li>
+            {% if not last_report_process %}
+            <li><a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a></li>
+            {% endif %}
+            <li><a href="{% url 'student_progress' resource.pk %}"><span class="glyphicon glyphicon-user"></span> {% trans "View individual student progress and grant access tokens" %}</a></li>
+            <li>
+                <a class="btn btn-danger" href="{% url 'discount_parts' resource.pk %}"><span class="glyphicon glyphicon-minus-sign"></span> {% trans "Discount question parts" %}</a>
+                <span class="help-block">{% trans "You can remark individual attempts on the attempts page." %}</span>
+            </li>
+        </ul>
     </section>
 
-    <section>
-        <h2>{% trans "Student progress" %}</h2>
+    {% else %}
+        <p>{% trans "No students have attempted this exam yet. Information about scores will appear here once a student attempts this exam." %}</p>
+    {% endif %}
 
-        <p><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></p>
-
-        <div>
-            <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
-        </div>
-        <table class="table" id="students">
-            <thead>
-                <tr>
-                    <th>{% trans "Name" %}</th>
-                    <th>{% trans "Score" %}</th>
-                    <th>{% trans "Attempts" %}</th>
-                    {% if not unlimited_attempts %}
-                    <th colspan="2">{% trans "Access tokens" %}</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for student,score,lti_data,attempts,access_tokens in student_summary %}
-                <tr data-student="{{student.get_full_name}}">
-                    <td>{{student.get_full_name}}</td>
-                    <td>
-                        {{score|percentage}}
-                        {% if lti_data.last_reported_score != score %}
-                        <span class="glyphicon glyphicon-warning-sign" title="{% trans "This score has not been reported to the grade book yet." %}"></span>
-                        {% endif %}
-                    </td>
-                    <td>{{attempts}}</td>
-                    {% if not unlimited_attempts %}
-                    <td>{{access_tokens}}</td>
-                    <td>
-                        <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' resource.pk student.pk %}" title="{% trans "Grant an access token" %}"><span class="glyphicon glyphicon-plus"></span></a>
-                        {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' resource.pk student.pk %}" title="{% trans "Remove an access token" %}"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <script>
-            function filter_rows(query) {
-                query = query.toLowerCase();
-                var re = new RegExp(query);
-                var rows = document.querySelectorAll('#students tbody tr');
-                Array.prototype.map.apply(rows,[function(row) {
-                    var name = row.getAttribute('data-student').toLowerCase();
-                    row.classList.toggle('hidden',!re.test(name));
-                }]);
-            }
-            var search = document.getElementById('query');
-            search.addEventListener('input',function() {
-                filter_rows(this.value);
-            });
-        </script>
-        {% else %}
-            <p>{% trans "No students have attempted this exam yet. Information about scores will appear here once a student attempts this exam." %}</p>
-        {% endif %}
-    </section>
 {% endblock management_content %}
