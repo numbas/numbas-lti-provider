@@ -263,6 +263,16 @@ Some VLEs make reported scores available to students immediately, which you may 
 * "On completion" - a student's score is reported when they complete an attempt.
 * "Manually, by instructor" - Scores are only reported when an instructor clicks the :guilabel:`Report scores back to VLE` button on the dashboard.
 
+Allow students to review attempts from
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify when students are allowed to re-enter completed attempts in review mode.
+
+If left blank, students can review their attempts at any time.
+
+If a date and time are set, students may only review their attempts after that time.
+
+Instructors may always review students' attempts, from the :guilabel:`Attempts` tab.
 
 Test run
 --------
