@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'channels',
     'numbas_lti',
     'bootstrapform',
+    'bootstrap_datepicker_plus',
 ]
 
 MIDDLEWARE = [
