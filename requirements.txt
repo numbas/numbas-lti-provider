@@ -2,7 +2,7 @@ Django==2.2.2
 oauthlib==3.0.1
 lxml==4.3.0
 channels==1.1.8
-git+git://github.com/christianp/django-auth-lti@oauthlib#egg=django_auth_lti
+git+https://github.com/christianp/django-auth-lti@oauthlib#egg=django_auth_lti
 requests==2.21.0
 requests-oauthlib==1.2.0
 django-bootstrap-form==3.4
