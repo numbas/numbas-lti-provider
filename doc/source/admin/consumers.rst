@@ -71,13 +71,11 @@ Moodle 3.0+
 * Go to :guilabel:`Site administration` → :guilabel:`Plugins` → :guilabel:`Activity modules` → :guilabel:`External tool` → :guilabel:`Manage tools`.
 * Paste your **automatic configuration URL** into the box labelled :guilabel:`Tool URL`, and click :guilabel:`Add`.
 * Enter your **consumer key** and **shared secret**, then click "*Save changes*".
+* Go back to the :guilabel:`Manage tools` page and edit the Numbas tool. 
+* For :guilabel:`Default launch container`, select "New window".
+* If you'd like Numbas to show up as an activity type, bypassing the "External tool" step, for :guilabel:`Tool configuration usage`, select "Show in activity chooser and as a preconfigured tool".
 
 Now you can add a Numbas exam in any course by clicking :guilabel:`Add an activity or resource` and selecting :guilabel:`External tool`, then select "Numbas" from the :guilabel:`Preconfigured tool` dropdown.
-
-If you'd like Numbas to show up as an activity type, bypassing the "External tool" step:
-
-* Go back to the :guilabel:`Manage tools` page and edit the Numbas tool. 
-* For :guilabel:`Tool configuration usage`, select "Show in activity chooser and as a preconfigured tool".
 
 Versions of Moodle before 3.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -106,8 +104,8 @@ Now you can add a Numbas exam in your :guilabel:`Modules` page:
 
 * Click the button to add an item.
 * Select :guilabel:`External tool` and click on :guilabel:`Numbas`.
+* Tick :guilabel:`Load in a new tab`.
 * Click :guilabel:`Add item`.
-
 
 Managing a consumer
 -------------------
