@@ -1,5 +1,5 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
-from .generic import CSVView
+from .generic import CSVView, JSONView
 from numbas_lti import forms
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES
 from channels import Channel
@@ -13,6 +13,7 @@ from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required
 import csv
@@ -224,6 +225,24 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
 
     def get_filename(self):
         return _("{slug}-scores.csv").format(slug=self.object.slug)
+
+class JSONDumpView(MustBeInstructorMixin,JSONView,generic.detail.DetailView):
+    model = Resource
+
+    def get_data(self):
+        resource = self.get_object()
+        data = {
+            'resource': {
+                'pk': resource.pk,
+                'title': resource.title,
+            },
+            'attempts': [a.data_dump() for a in resource.attempts.all()],
+        }
+        return data
+
+    def get_filename(self):
+        resource = self.get_object()
+        return '{context}--{resource}.json'.format(context=slugify(resource.context.name), resource=resource.slug)
 
 class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource

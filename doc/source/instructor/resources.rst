@@ -138,6 +138,11 @@ The columns of the file are:
 * Percentage (total score as a percentage of marks available)
 * One column giving the total score for each question
 
+Download all attempt data as JSON
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Click the :guilabel:`Download all attempt data as JSON` button to obtain a ``.json`` file containing all data to do with attempts on this resource, including part and question scores, all SCORM data, completion status, and the values of question variables.
+
 .. _review-attempt:
 
 Review an attempt
@@ -163,11 +168,11 @@ The new score is saved as you type, and the totals for the question and the whol
 
     Remarking an attempt.
 
-SCORM data
-^^^^^^^^^^
+Data
+^^^^
 
 Numbas uses the `SCORM <https://scorm.com/scorm-explained/>`_ standard to store data about attempts.
-By clicking on the :guilabel:`SCORM data` button, you can see all of the SCORM data model elements stored for a particular attempt.
+By clicking on the :guilabel:`Data` button, you can see all of the SCORM data model elements stored for a particular attempt.
 
 This is most useful for debugging connection errors, to confirm that data has been saved.
 
@@ -175,6 +180,8 @@ If :guilabel:`Most recent value only` is ticked, only the most recent value for 
 Untick it to see every value that the element has taken since the start of the attempt.
 
 You can type a regular expression in the :guilabel:`Search for an element` box to narrow down the displayed list of elements.
+
+Click the :guilabel:`Download attempt data in JSON format` button to obtain a ``.json`` file containing all data pertaining to this attempt, including question and part scores, completion status, and the values of question variables.
 
 Delete an attempt
 ^^^^^^^^^^^^^^^^^

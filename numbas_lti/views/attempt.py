@@ -1,14 +1,15 @@
 from .mixins import MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, request_is_instructor
+from .generic import JSONView
 from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.text import slugify
 from django.views import generic
 from django.views.decorators.http import require_POST
 from itertools import groupby
@@ -284,36 +285,12 @@ class RunAttemptView(generic.detail.DetailView):
         user = attempt.user
         user_data = attempt.resource.user_data(user)
 
-        scorm_cmi = {
-            'cmi.suspend_data': '',
-            'cmi.objectives._count': 0,
-            'cmi.interactions._count': 0,
-            'cmi.learner_name': user.get_full_name(),
-            'cmi.learner_id': user_data.consumer_user_id,
-            'cmi.location': '',
-            'cmi.score.raw': 0,
-            'cmi.score.scaled': 0,
-            'cmi.score.min': 0,
-            'cmi.score.max': 0,
-            'cmi.total_time': 0,
-            'cmi.success_status': '',
-            'cmi.completion_status': attempt.completion_status,
-            'numbas.user_role': 'instructor' if request_is_instructor(self.request) else 'student',
-        }
-        scorm_cmi = {k: {'value':v,'time':attempt.start_time.timestamp()} for k,v in scorm_cmi.items()}
-
-        # TODO only fetch the latest values of elements from the DB, somehow
-
-        latest_elements = {}
-
-        for e in attempt.scormelements.all().order_by('time','counter'):
-            latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
-
-        scorm_cmi.update(latest_elements)
+        scorm_cmi = attempt.scorm_cmi()
 
         dynamic_cmi = {
             'cmi.mode': mode,
             'cmi.entry': entry,
+            'numbas.user_role': 'instructor' if request_is_instructor(self.request) else 'student',
         }
         now = datetime.datetime.now().timestamp()
         dynamic_cmi = {k: {'value':v,'time':now} for k,v in dynamic_cmi.items()}
@@ -334,3 +311,21 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
     done, unsaved_elements = save_scorm_data(attempt,batches)
     return http.JsonResponse({'received_batches':done,'unsaved_elements':unsaved_elements})
 
+
+class JSONDumpView(MustBeInstructorMixin,JSONView,generic.detail.DetailView):
+    model = Attempt
+
+    def get_resource(self):
+        return self.get_object().resource
+
+    def get_data(self):
+       attempt = self.get_object()
+       return attempt.data_dump()
+
+    def get_filename(self):
+        attempt = self.get_object()
+        return '{context}--{resource}--attempt-{attempt}.json'.format(
+            context=slugify(attempt.resource.context.name),
+            resource=attempt.resource.slug,
+            attempt=attempt.pk
+        )

@@ -29,6 +29,7 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/report_scores$', views.resource.ReportAllScoresView.as_view(), name='report_scores'),
     url(r'^resource/(?P<pk>\d+)/scores.csv$', views.resource.ScoresCSV.as_view(), name='scores_csv'),
     url(r'^resource/(?P<pk>\d+)/attempts.csv$', views.resource.AttemptsCSV.as_view(), name='attempts_csv'),
+    url(r'^resource/(?P<pk>\d+)/attempts.json$', views.resource.JSONDumpView.as_view(), name='resource_json_dump'),
     url(r'^resource/(?P<resource_id>\d+)/grant_access_token/(?P<user_id>\d+)$', views.resource.grant_access_token, name='grant_access_token'),
     url(r'^resource/(?P<resource_id>\d+)/remove_access_token/(?P<user_id>\d+)$', views.resource.remove_access_token, name='remove_access_token'),
 
@@ -37,6 +38,7 @@ urlpatterns = [
     url(r'^attempt/(?P<pk>\d+)/delete$', views.attempt.DeleteAttemptView.as_view(), name='delete_attempt'),
     url(r'^attempt/(?P<pk>\d+)/reopen$', views.attempt.ReopenAttemptView.as_view(), name='reopen_attempt'),
     url(r'^attempt/(?P<pk>\d+)/scorm_data_fallback$', views.attempt.scorm_data_fallback, name='attempt_scorm_data_fallback'),
+    url(r'^attempt/(?P<pk>\d+)/data.json$', views.attempt.JSONDumpView.as_view(), name='attempt_json_dump'),
 
     url(r'report-process/(?P<pk>\d+)/dismiss$', views.resource.DismissReportProcessView.as_view(), name='dismiss_report_process'),
 

@@ -337,6 +337,96 @@ class Attempt(models.Model):
                 default = default()
             return default
 
+    def scorm_cmi(self):
+        user_data = self.resource.user_data(self.user)
+
+        scorm_cmi = {
+            'cmi.suspend_data': '',
+            'cmi.objectives._count': 0,
+            'cmi.interactions._count': 0,
+            'cmi.learner_name': self.user.get_full_name(),
+            'cmi.learner_id': user_data.consumer_user_id,
+            'cmi.location': '',
+            'cmi.score.raw': 0,
+            'cmi.score.scaled': 0,
+            'cmi.score.min': 0,
+            'cmi.score.max': 0,
+            'cmi.total_time': 0,
+            'cmi.success_status': '',
+            'cmi.completion_status': self.completion_status,
+        }
+        scorm_cmi = {k: {'value':v,'time':self.start_time.timestamp()} for k,v in scorm_cmi.items()}
+
+        # TODO only fetch the latest values of elements from the DB, somehow
+
+        latest_elements = {}
+
+        for e in self.scormelements.all().order_by('time','counter'):
+            latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
+
+        scorm_cmi.update(latest_elements)
+
+        return scorm_cmi
+
+    def data_dump(self):
+        data = {
+            'attempt': self.pk,
+            'resource': {
+                'title': self.resource.title,
+                'context': self.resource.context.name,
+            },
+            'exam': self.exam.pk,
+            'user': {
+                'pk': self.user.pk,
+                'username': self.user.username,
+                'first_name': self.user.first_name,
+                'last_name': self.user.last_name,
+            },
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'completion_status': self.completion_status,
+            'scaled_score': self.scaled_score,
+            'raw_score': self.raw_score,
+            'scores': [],
+            'broken': self.broken,
+            'remarked_parts': [{'part': p.part, 'score': p.score} for p in self.remarked_parts.all()],
+            'scorm': {
+                'current': self.scorm_cmi(),
+                'all': [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')],
+            },
+        }
+        
+        def describe_part(path,part={}):
+            data = {'part': path, 'raw_score': self.part_raw_score(path), 'max_score': self.part_max_score(path)}
+            gaps = part.get('gaps',[])
+            if len(gaps)>0:
+                data['gaps'] = [describe_part('{}g{}'.format(path,g)) for g in gaps]
+            steps = part.get('steps',[])
+            if len(steps)>0:
+                data['steps'] = [describe_part('{}s{}'.format(path,s)) for s in steps]
+
+            return data
+
+        for qnum, parts in self.part_hierarchy().items():
+            scaled_score, raw_score, max_score, completion_status = self.calculate_question_score_info(qnum)
+            obj = {
+                'question': int(qnum),
+                'scaled_score': scaled_score,
+                'raw_score': raw_score,
+                'max_score': max_score,
+                'parts': [describe_part('q{}p{}'.format(qnum,path),part) for path,part in parts.items()],
+            }
+
+            data['scores'].append(obj)
+
+        try:
+            suspend_data = json.loads(self.get_element_default('cmi.suspend_data','{}'))
+        except json.decoder.JSONDecodeError:
+            suspend_data = {}
+        data['suspend_data'] = suspend_data
+
+        return data
+
     def completed(self):
         return self.completion_status=='completed'
 
