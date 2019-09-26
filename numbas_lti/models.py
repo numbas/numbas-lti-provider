@@ -368,7 +368,7 @@ class Attempt(models.Model):
 
         return scorm_cmi
 
-    def data_dump(self,include_scorm=True):
+    def data_dump(self,include_all_scorm=False):
         remarked_parts = self.remarked_parts.all()
         discounted_parts = self.resource.discounted_parts.all()
 
@@ -398,8 +398,9 @@ class Attempt(models.Model):
         scorm_cmi = self.scorm_cmi()
         data['scorm'] = {
             'current': scorm_cmi,
-            'all': [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')],
         }
+        if include_all_scorm:
+            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')]
 
         re_interaction_id = re.compile(r'^cmi\.interactions\.(\d+)\.id$')
         part_ids = {}
@@ -409,7 +410,7 @@ class Attempt(models.Model):
                 part_ids[v['value']] = m.group(1)
 
         remark_dict = {r.part:r.score for r in remarked_parts}
-        discount_dict = set(d.part for d in discounted_parts)
+        discount_dict = {d.part:d.behaviour for d in discounted_parts}
 
         def scorm_value(key,default=None):
             try:
@@ -434,7 +435,8 @@ class Attempt(models.Model):
 
             if path in discount_dict:
                 data['discounted'] = True
-                if discounted.behaviour == 'remove':
+                behaviour = discount_dict[path]
+                if behaviour == 'remove':
                     data['raw_score'] = 0
                     data['max_score'] = 0
                 else:

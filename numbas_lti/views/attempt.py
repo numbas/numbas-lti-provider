@@ -320,7 +320,7 @@ class JSONDumpView(MustBeInstructorMixin,JSONView,generic.detail.DetailView):
 
     def get_data(self):
        attempt = self.get_object()
-       return attempt.data_dump()
+       return attempt.data_dump(include_all_scorm=True)
 
     def get_filename(self):
         attempt = self.get_object()
