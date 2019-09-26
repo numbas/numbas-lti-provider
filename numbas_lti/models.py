@@ -408,8 +408,8 @@ class Attempt(models.Model):
             if m:
                 part_ids[v['value']] = m.group(1)
 
-        remark_dict = {r.path:r.score for r in remarked_parts}
-        discount_dict = set(d.path for d in discounted_parts)
+        remark_dict = {r.part:r.score for r in remarked_parts}
+        discount_dict = set(d.part for d in discounted_parts)
 
         def scorm_value(key,default=None):
             try:
@@ -420,7 +420,9 @@ class Attempt(models.Model):
         def describe_part(path,part={}):
             pid = part_ids[path]
             data = {
-                'part': path
+                'part': path,
+                'raw_score': float(scorm_value('cmi.interactions.{}.result'.format(pid),'0')),
+                'max_score': float(scorm_value('cmi.interactions.{}.weighting'.format(pid), '0')),
             }
 
             gaps = part.get('gaps',[])
@@ -448,9 +450,6 @@ class Attempt(models.Model):
                 data['raw_score'] = raw_score
                 data['max_score'] = max_score
                 data['score_changed'] = True
-            else:
-                data['raw_score'] = float(scorm_value('cmi.interactions.{}.result'.format(pid),'0'))
-                data['max_score'] = float(scorm_value('cmi.interactions.{}.weighting'.format(pid), '0'))
 
             if any(s.get('discounted') or s.get('remarked') for s in data.get('steps',[])):
                 step_score = 0
