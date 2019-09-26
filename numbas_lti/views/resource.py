@@ -243,7 +243,7 @@ class JSONDumpView(MustBeInstructorMixin,generic.detail.DetailView):
             itertools.chain([head],(json.dumps(a.data_dump()) for a in resource.attempts.all()),[footer]),
             content_type='application/json'
         )
-        response['Content-Disposition'] = '{context}--{resource}.json'.format(context=slugify(resource.context.name), resource=resource.slug)
+        response['Content-Disposition'] = 'attachment; filename="{context}--{resource}.json"'.format(context=slugify(resource.context.name), resource=resource.slug)
         return response
 
 
