@@ -240,7 +240,7 @@ class JSONDumpView(MustBeInstructorMixin,generic.detail.DetailView):
     "attempts": ['''.format(pk=resource.pk,title=json.dumps(resource.title))
         footer = '    ]\n}'
         response = http.StreamingHttpResponse(
-            itertools.chain([head],(json.dumps(a.data_dump()) for a in resource.attempts.all()),[footer]),
+            itertools.chain([head],((',' if i>0 else '')+json.dumps(a.data_dump()) for i,a in enumerate(resource.attempts.all())),[footer]),
             content_type='application/json'
         )
         response['Content-Disposition'] = 'attachment; filename="{context}--{resource}.json"'.format(context=slugify(resource.context.name), resource=resource.slug)
