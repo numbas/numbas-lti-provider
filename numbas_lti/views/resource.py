@@ -18,6 +18,7 @@ from django.views import generic
 from django_auth_lti.decorators import lti_role_required
 import csv
 import json
+import itertools
 import string
 
 class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
@@ -226,23 +227,25 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     def get_filename(self):
         return _("{slug}-scores.csv").format(slug=self.object.slug)
 
-class JSONDumpView(MustBeInstructorMixin,JSONView,generic.detail.DetailView):
+class JSONDumpView(MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
 
-    def get_data(self):
+    def render_to_response(self,context,**kwargs):
         resource = self.get_object()
-        data = {
-            'resource': {
-                'pk': resource.pk,
-                'title': resource.title,
-            },
-            'attempts': [a.data_dump() for a in resource.attempts.all()],
-        }
-        return data
+        head = '''{{
+    "resource": {{
+        "pk": {pk},
+        "title": {title}
+    }},
+    "attempts": ['''.format(pk=resource.pk,title=json.dumps(resource.title))
+        footer = '    ]\n}'
+        response = http.StreamingHttpResponse(
+            itertools.chain([head],(json.dumps(a.data_dump()) for a in resource.attempts.all()),[footer]),
+            content_type='application/json'
+        )
+        response['Content-Disposition'] = '{context}--{resource}.json'.format(context=slugify(resource.context.name), resource=resource.slug)
+        return response
 
-    def get_filename(self):
-        resource = self.get_object()
-        return '{context}--{resource}.json'.format(context=slugify(resource.context.name), resource=resource.slug)
 
 class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource

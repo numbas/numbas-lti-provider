@@ -368,7 +368,10 @@ class Attempt(models.Model):
 
         return scorm_cmi
 
-    def data_dump(self):
+    def data_dump(self,include_scorm=True):
+        remarked_parts = self.remarked_parts.all()
+        discounted_parts = self.resource.discounted_parts.all()
+
         data = {
             'attempt': self.pk,
             'resource': {
@@ -382,22 +385,44 @@ class Attempt(models.Model):
                 'first_name': self.user.first_name,
                 'last_name': self.user.last_name,
             },
-            'start_time': self.start_time,
-            'end_time': self.end_time,
+            'start_time': self.start_time.timestamp() if self.start_time is not None else None,
+            'end_time': self.end_time.timestamp() if self.end_time is not None else None,
             'completion_status': self.completion_status,
             'scaled_score': self.scaled_score,
             'raw_score': self.raw_score,
             'scores': [],
             'broken': self.broken,
-            'remarked_parts': [{'part': p.part, 'score': p.score} for p in self.remarked_parts.all()],
-            'scorm': {
-                'current': self.scorm_cmi(),
-                'all': [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')],
-            },
+            'remarked_parts': [{'part': p.part, 'score': p.score} for p in remarked_parts],
         }
+
+        scorm_cmi = self.scorm_cmi()
+        data['scorm'] = {
+            'current': scorm_cmi,
+            'all': [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')],
+        }
+
+        re_interaction_id = re.compile(r'^cmi\.interactions\.(\d+)\.id$')
+        part_ids = {}
+        for k,v in scorm_cmi.items():
+            m = re_interaction_id.match(k)
+            if m:
+                part_ids[v['value']] = m.group(1)
+
+        remark_dict = {r.path:r.score for r in remarked_parts}
+        discount_dict = set(d.path for d in discounted_parts)
+
+        def scorm_value(key,default=None):
+            try:
+                return scorm_cmi[key]['value']
+            except KeyError:
+                return default
         
         def describe_part(path,part={}):
-            data = {'part': path, 'raw_score': self.part_raw_score(path), 'max_score': self.part_max_score(path)}
+            pid = part_ids[path]
+            data = {
+                'part': path
+            }
+
             gaps = part.get('gaps',[])
             if len(gaps)>0:
                 data['gaps'] = [describe_part('{}g{}'.format(path,g)) for g in gaps]
@@ -405,15 +430,46 @@ class Attempt(models.Model):
             if len(steps)>0:
                 data['steps'] = [describe_part('{}s{}'.format(path,s)) for s in steps]
 
+            if path in discount_dict:
+                data['discounted'] = True
+                data['raw_score'] = 0
+                data['max_score'] = 0
+                data['score_changed'] = True
+            elif path in remark_dict:
+                data['remarked'] = True
+                data['raw_score'] = remark_dict[path]
+                data['score_changed'] = True
+            elif any(g.get('discounted') or g.get('remarked') for g in data.get('gaps',[])):
+                raw_score = 0
+                max_score = 0
+                for g in data['gaps']:
+                    raw_score += g['raw_score']
+                    max_score += g['max_score']
+                data['raw_score'] = raw_score
+                data['max_score'] = max_score
+                data['score_changed'] = True
+            else:
+                data['raw_score'] = float(scorm_value('cmi.interactions.{}.result'.format(pid),'0'))
+                data['max_score'] = float(scorm_value('cmi.interactions.{}.weighting'.format(pid), '0'))
+
+            if any(s.get('discounted') or s.get('remarked') for s in data.get('steps',[])):
+                step_score = 0
+                for s in data['steps']:
+                    step_score += s['raw_score']
+                if step_score > data['raw_score']:
+                    data['raw_score'] = step_score
+                    data['score_changed'] = True
+
             return data
 
         for qnum, parts in self.part_hierarchy().items():
-            scaled_score, raw_score, max_score, completion_status = self.calculate_question_score_info(qnum)
+            aqs = self.question_score_info(qnum)
             obj = {
                 'question': int(qnum),
-                'scaled_score': scaled_score,
-                'raw_score': raw_score,
-                'max_score': max_score,
+                'scaled_score': aqs.scaled_score,
+                'raw_score': aqs.raw_score,
+                'max_score': aqs.max_score,
+                'completion_status': aqs.completion_status,
                 'parts': [describe_part('q{}p{}'.format(qnum,path),part) for path,part in parts.items()],
             }
 
