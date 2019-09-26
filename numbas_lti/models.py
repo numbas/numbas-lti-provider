@@ -434,8 +434,11 @@ class Attempt(models.Model):
 
             if path in discount_dict:
                 data['discounted'] = True
-                data['raw_score'] = 0
-                data['max_score'] = 0
+                if discounted.behaviour == 'remove':
+                    data['raw_score'] = 0
+                    data['max_score'] = 0
+                else:
+                    data['raw_score'] = data['max_score']
                 data['score_changed'] = True
             elif path in remark_dict:
                 data['remarked'] = True
