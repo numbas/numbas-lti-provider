@@ -25,7 +25,7 @@ function update_question_scores_chart() {
     });
 
     // Get the different categories and count them
-    var categories = Object.keys(numbers).sort();
+    var categories = Object.keys(numbers).map(n=>parseInt(n)).sort();
     var n = categories.length;
 
     var svg_el = document.getElementById('question_scores_chart');
@@ -190,11 +190,9 @@ function update_complete_table() {
     data.questions.forEach(function(q) {
         numbers_dict[q.number] = true;
     });
-    var numbers = Object.keys(numbers_dict).sort();
+    var numbers = Object.keys(numbers_dict).map(n=>parseInt(n)).sort();
 
-    // Get the different categories and count them
-    var categories = Object.keys(numbers).sort();
-    var n = categories.length;
+    var n = numbers.length;
 
     var qdata = [];
     numbers.forEach(function(n) {
@@ -209,8 +207,6 @@ function update_complete_table() {
         });
     });
 
-    window.qdata = qdata;
-
     var format = d3.format('.0%');
     var num_attempts = data.attempts.length;
 
@@ -222,7 +218,7 @@ function update_complete_table() {
     var text_height = 8;
     var height = (2*bar_height+text_height)*qdata.length;
     var width = el.getBoundingClientRect().width;
-    var gap = 12;
+    var gap = 24;
 
     var svg = d3.select('#stacked_status_chart svg.diagram')
         .attr('width',width)
@@ -239,7 +235,7 @@ function update_complete_table() {
 
     var y = d3.scalePoint()
         .domain(qdata.map(d=>d.label))
-        .range([bar_height/2+text_height,height-bar_height/2])
+        .range([bar_height/2+2*text_height,height-bar_height/2])
     ;
 
     var x = d3.scaleLinear()
