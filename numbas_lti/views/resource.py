@@ -389,9 +389,6 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
             (label, value, completion_dict.get(value,0)) for value,label in COMPLETION_STATUSES
         ]
 
-        with open('stats.json') as f:
-            context['data'] = f.read()
-
-#        context['data'] = json.dumps(resource.live_stats_data())
+        context['data'] = json.dumps(resource.live_stats_data())
 
         return context
