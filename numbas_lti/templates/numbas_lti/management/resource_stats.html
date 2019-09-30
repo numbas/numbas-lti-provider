@@ -7,30 +7,97 @@
 <h2>{% trans "Statistics" %}</h2>
 
 <h3>{% trans "Attempt completion" %}</h3>
-<table class="table">
+<table class="table" id="completion-table">
     <tbody>
-        {% for label,n in completion_counts %}
+        {% for label,value,n in completion_counts %}
         <tr>
-            <th>{{label}}</th>
-            <th>{{n}}</th>
+            <td>{{label}}</td>
+            <td class="value" data-value="{{value}}">{{n}}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
+<section id="stacked_status_chart">
+    <div class="legend">
+        <span class="num_not_attempted">
+            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+            Not attempted
+        </span>
+        <span class="num_incorrect">
+            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+            Incorrect
+        </span>
+        <span class="num_partial">
+            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+            Partially correct
+        </span>
+        <span class="num_correct">
+            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+            Correct
+        </span>
+    </div>
+    <div class="chart">
+        <svg class="diagram"></svg>
+    </div>
+</section>
+
+
 <h3>{% trans "Score distribution" %}</h3>
-<p>{% blocktrans %}In this chart, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
-<div id="cumulative_scores_chart" class="ct-major-twelfth"></div>
+<p>{% blocktrans %}In the following charts, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+
+<section id="question_scores_chart" class="chart"></section>
 
 {% endblock %}
 
 {% block stylesheets %}
     {{block.super}}
 
-    <link rel="stylesheet" href="{% static 'chartist/chartist.min.css' %}">
     <style>
+        .chart svg {
+            display: block;
+            margin: 2rem auto;
+            width: 100%;
+        }
         .ct-label {
             font-size: 1em;
+        }
+        .x-axis .tick line {
+            stroke: #ccc;
+            stroke-dasharray: 2 2;
+        }
+        .question-dot {
+            opacity: 0.5;
+        }
+
+        section {
+            margin: 3rem auto;
+        }
+
+        .num_not_attempted rect {
+            fill: #eee;
+            stroke: #888;
+        }
+        .num_incorrect rect {
+            fill: red;
+        }
+        .num_partial rect {
+            fill: lightslategrey;
+        }
+        .num_correct rect {
+            fill: lime;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: space-evenly;
+        }
+        .legend > span {
+            margin: 1em;
+        }
+
+        #stacked_status_chart .percentage {
+            text-anchor: middle;
         }
     </style>
 {% endblock %}
@@ -38,35 +105,13 @@
 {% block javascripts %}
 {{block.super}}
 
-    <script src="{% static 'chartist/chartist.min.js' %}"></script>
+    <script src="{% static 'robust-websocket.js' %}"></script>
+
+    <script src="{% static 'd3/d3.min.js' %}"></script>
 
     <script>
-        var cumulative_scores_data = {{cumulative_scores|safe}};
-
-        new Chartist.Line('#cumulative_scores_chart', {
-            series: [{'name': 'scores', 'data': cumulative_scores_data.map(function(d){ return {x:parseFloat(d.score),y:parseInt(d.n)}})}]
-        }, 
-        {
-            series: {
-                'scores': {
-                    lineSmooth: Chartist.Interpolation.step()
-                }
-            },
-            axisX: {
-                type: Chartist.FixedScaleAxis,
-                high: 1.05,
-                low: 0,
-                ticks: [0,0.2,0.4,0.6,0.8,1],
-                labelInterpolationFnc: function(value) {
-                    return (Math.round(value * 100)) + '%';
-                },
-            },
-            axisY: {
-                onlyInteger: true
-            },
-            showArea: true,
-            showPoint: false
-        });
-
+        var data = {{data|safe}};
     </script>
+
+    <script src="{% static 'resource-stats.js' %}"></script>
 {% endblock %}

@@ -382,19 +382,16 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
         context = super(StatsView,self).get_context_data(*args, **kwargs)
 
         resource = self.object
+
         completion_counts = resource.attempts.values('completion_status').order_by('completion_status').annotate(number=Count('completion_status'))
         completion_dict = {x['completion_status']: x['number'] for x in completion_counts}
         context['completion_counts'] = [
-            (label, completion_dict.get(value,0)) for value,label in COMPLETION_STATUSES
+            (label, value, completion_dict.get(value,0)) for value,label in COMPLETION_STATUSES
         ]
 
-        attempt_scores = resource.attempts.values('scaled_score').order_by('scaled_score').annotate(number=Count('scaled_score'))
-        cumulative_scores = []
-        t = 0
-        for item in reversed(attempt_scores):
-            cumulative_scores.insert(0,{'score': item['scaled_score'],'n': t})
-            t += item['number']
-        cumulative_scores.append({'score': 1.0,'n':0})
-        context['cumulative_scores'] = json.dumps(cumulative_scores)
+        with open('stats.json') as f:
+            context['data'] = f.read()
+
+#        context['data'] = json.dumps(resource.live_stats_data())
 
         return context

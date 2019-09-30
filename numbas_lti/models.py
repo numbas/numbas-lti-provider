@@ -12,7 +12,7 @@ from django.utils import timezone
 from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
 
-from .groups import group_for_attempt
+from .groups import group_for_attempt, group_for_resource_stats
 from .report_outcome import report_outcome_for_attempt, ReportOutcomeFailure, ReportOutcomeConnectionError
 
 import os
@@ -276,6 +276,30 @@ class Resource(models.Model):
 
     def is_old(self):
         return self.time_since_last_activity().days > 14
+
+    def live_stats_data(self):
+        question_data = [
+            {
+                'number': s.number, 
+                'raw_score': s.raw_score, 
+                'scaled_score': s.scaled_score, 
+                'max_score': s.max_score, 
+                'completion_status': s.completion_status,
+            } 
+            for s in AttemptQuestionScore.objects.filter(attempt__resource=self)
+        ]
+        attempt_data = [
+            {
+                'scaled_score': a.scaled_score,
+                'completion_status': a.completion_status,
+            }
+            for a in self.attempts.all()
+        ]
+        data = {
+            'questions': question_data,
+            'attempts': attempt_data,
+        }
+        return data
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -677,6 +701,13 @@ class AttemptQuestionScore(models.Model):
 
     def __str__(self):
         return '{}/{} on question {} of {}'.format(self.raw_score,self.max_score,self.number,self.attempt)
+
+@receiver(models.signals.post_save,sender=AttemptQuestionScore)
+def question_score_live_stats(sender,instance,**kwargs):
+    print("Save attempt question score",instance.number)
+    resource = instance.attempt.resource
+    group = group_for_resource_stats(resource)
+    group.send({"text": json.dumps(resource.live_stats_data())})
 
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)

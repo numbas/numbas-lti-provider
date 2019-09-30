@@ -14,13 +14,13 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django_auth_lti.patch_reverse import reverse
 
-from .groups import group_for_attempt
-from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
+from .groups import group_for_attempt, group_for_resource_stats
+from .models import Attempt, ScormElement, Resource, ReportProcess, EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
 from .save_scorm_data import save_scorm_data
 
 @channel_session_user_from_http
-def ws_connect(message,pk):
+def attempt_ws_connect(message,pk):
     message.reply_channel.send({"accept": True})
     attempt = Attempt.objects.get(pk=pk)
     group = group_for_attempt(attempt)
@@ -32,7 +32,7 @@ def ws_connect(message,pk):
         group.send({'text': json.dumps({'current_uid': uid})})
 
 @channel_session_user_from_http
-def ws_disconnect(message,pk):
+def attempt_ws_disconnect(message,pk):
     attempt = Attempt.objects.get(pk=pk)
     group_for_attempt(attempt).discard(message.reply_channel)
 
@@ -48,6 +48,27 @@ def scorm_set_element(message,pk):
         'unsaved_elements': unsaved_elements,
     }
     message.reply_channel.send({'text':json.dumps(response)})
+
+@channel_session_user_from_http
+def resource_stats_ws_connect(message,pk):
+    print("Stats WS connect")
+    user = message.user
+    resource = Resource.objects.get(pk=pk)
+    message.reply_channel.send({"accept": True})
+    group = group_for_resource_stats(resource)
+    group.add(message.reply_channel)
+
+@channel_session_user_from_http
+def resource_stats_ws_disconnect(message,pk):
+    print("Stats WS disconnect")
+    resource = Resource.objects.get(pk=pk)
+    group = group_for_resource_stats(resource)
+    group.discard(message.reply_channel)
+
+@channel_session_user
+def resource_stats_ws_receive(message,pk):
+    resource = Resource.objects.get(pk=pk)
+    print(message)
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
