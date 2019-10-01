@@ -14,6 +14,10 @@ function update_completion_table() {
     }
 }
 
+function cmp(a,b) {
+    return a<b ? -1 : a>b ? 1 : 0;
+}
+
 function question_label(n) {
     return 'Q'+(parseInt(n)+1);
 }
@@ -25,7 +29,7 @@ function update_question_scores_chart() {
     });
 
     // Get the different categories and count them
-    var categories = Object.keys(numbers).map(n=>parseInt(n)).sort();
+    var categories = Object.keys(numbers).map(n=>parseInt(n)).sort(cmp);
     var n = categories.length;
 
     var svg_el = document.getElementById('question_scores_chart');
@@ -84,7 +88,7 @@ function update_question_scores_chart() {
     ;
 
     function cumulative_path(scores) {
-        scores = scores.slice().sort().reverse();
+        scores = scores.slice().sort(cmp).reverse();
         var density = [[1,0]];
         var os = 1.0001;
         var ot = 0;
@@ -190,7 +194,7 @@ function update_complete_table() {
     data.questions.forEach(function(q) {
         numbers_dict[q.number] = true;
     });
-    var numbers = Object.keys(numbers_dict).map(n=>parseInt(n)).sort();
+    var numbers = Object.keys(numbers_dict).map(n=>parseInt(n)).sort(cmp);
 
     var n = numbers.length;
 
