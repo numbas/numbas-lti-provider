@@ -443,12 +443,15 @@ class Attempt(models.Model):
                 return default
         
         def describe_part(path,part={}):
-            pid = part_ids[path]
+            pid = part_ids.get(path)
             data = {
                 'part': path,
-                'raw_score': float(scorm_value('cmi.interactions.{}.result'.format(pid),'0')),
-                'max_score': float(scorm_value('cmi.interactions.{}.weighting'.format(pid), '0')),
             }
+            if pid is not None:
+                data.update({
+                    'raw_score': float(scorm_value('cmi.interactions.{}.result'.format(pid),'0')),
+                    'max_score': float(scorm_value('cmi.interactions.{}.weighting'.format(pid), '0')),
+                })
 
             gaps = part.get('gaps',[])
             if len(gaps)>0:
