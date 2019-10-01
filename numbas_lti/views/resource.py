@@ -1,7 +1,7 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView, JSONView
 from numbas_lti import forms
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData
 from channels import Channel
 from django import http
 from django.conf import settings
@@ -73,6 +73,8 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
         context = super(DashboardView,self).get_context_data(*args,**kwargs)
 
         resource = self.get_object()
+
+        context['instructors'] = User.objects.filter(lti_data__in=LTIUserData.objects.filter(resource=resource,is_instructor=True)).distinct()
 
         context['students'] = User.objects.filter(attempts__resource=resource).distinct()
         last_report_process = resource.report_processes.first()

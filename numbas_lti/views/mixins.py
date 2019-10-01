@@ -22,7 +22,7 @@ def get_config_url(request):
 def request_is_instructor(request):
     if request.user.is_superuser:
         return True
-    return is_allowed(request,INSTRUCTOR_ROLES,False)
+    return bool(is_allowed(request,INSTRUCTOR_ROLES,False))
 
 def static_view(template_name):
     return generic.TemplateView.as_view(template_name=template_name)

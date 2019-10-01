@@ -69,6 +69,8 @@ def basic_lti_launch(request):
     client_key = request.POST.get('oauth_consumer_key')
     consumer = LTIConsumer.objects.get(key=client_key)
 
+    is_instructor = request_is_instructor(request)
+
     user_id = request.LTI.get('user_id')
 
     user_data = LTIUserData.objects.filter(user=request.user, resource = request.resource, consumer=consumer, consumer_user_id = user_id).last()
@@ -77,9 +79,10 @@ def basic_lti_launch(request):
 
     user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
+    user_data.is_instructor = is_instructor
     user_data.save()
 
-    if request_is_instructor(request):
+    if is_instructor:
         if not request.resource.exam:
             return redirect(reverse('create_exam',args=(request.resource.pk,)))
         else:

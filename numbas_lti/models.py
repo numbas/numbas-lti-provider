@@ -329,6 +329,7 @@ class LTIUserData(models.Model):
     lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
+    is_instructor = models.BooleanField(default=False)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
