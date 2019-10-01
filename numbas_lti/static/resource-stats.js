@@ -189,7 +189,7 @@ function update_question_scores_chart() {
     ;
 }
 
-function update_complete_table() {
+function update_status_chart() {
     var numbers_dict = {};
     data.questions.forEach(function(q) {
         numbers_dict[q.number] = true;
@@ -207,7 +207,7 @@ function update_complete_table() {
             num_correct: qs.filter(q => q.scaled_score==1).length,
             num_partial: qs.filter(q => q.scaled_score!=0 && q.scaled_score!=1).length,
             num_incorrect: qs.filter(q => q.scaled_score==0).length,
-            num_not_attempted: data.attempts.length - qs.length
+            num_not_attempted: Math.max(0,data.attempts.length - qs.length)
         });
     });
 
@@ -275,7 +275,7 @@ function update_complete_table() {
 function update() {
     update_completion_table();
     update_question_scores_chart();
-    update_complete_table()
+    update_status_chart();
 }
 
 function init_socket() {

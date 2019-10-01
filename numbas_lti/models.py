@@ -25,7 +25,7 @@ from collections import defaultdict
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
-        return super(NotDeletedManager,self).get_queryset().filter(deleted=False)
+        return super().get_queryset().filter(deleted=False)
 
 class LTIConsumer(models.Model):
     url = models.URLField(blank=True,default='',verbose_name='Home URL of consumer')
@@ -688,6 +688,10 @@ class Attempt(models.Model):
     def should_show_scores(self):
         return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
 
+class AttemptNotDeletedManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(attempt__deleted=False)
+
 class AttemptQuestionScore(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='cached_question_scores', on_delete=models.CASCADE)
     number = models.IntegerField()
@@ -695,6 +699,8 @@ class AttemptQuestionScore(models.Model):
     scaled_score = models.FloatField()
     max_score = models.FloatField()
     completion_status = models.CharField(default='not attempted',max_length=20)
+
+    objects = AttemptNotDeletedManager()
 
     class Meta:
         unique_together = (('attempt','number'),)
