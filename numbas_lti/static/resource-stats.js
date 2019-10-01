@@ -105,16 +105,15 @@ function update_question_scores_chart() {
     function cumulative_path(scores) {
         scores = scores.slice().sort(cmp).reverse();
         var density = [[1,0]];
-        var os = 1.0001;
+        var os = 1;
         var ot = 0;
         scores.forEach(function(s,t) {
             if(s!=os) {
-                density.splice(0,0,[os,(t+1)/data.attempts.length],[os,ot/data.attempts.length]);
+                density.splice(0,0,[s,t/data.attempts.length],[os,t/data.attempts.length]);
                 os = s;
-                ot = t+1;
             }
         });
-        density.splice(0,0,[0,0],[0,1],[0,ot/data.attempts.length]);
+        density.splice(0,0,[0,0],[0,1]);
         return density;
     }
 
