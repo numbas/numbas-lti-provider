@@ -127,8 +127,8 @@ function update_question_scores_chart() {
     }
     allDensity.push({key: 'Total', density: cumulative_path(data.attempts.map(function(a) { return a.scaled_score; }))});
 
-    var question_colour = function(d) { return d.key=='Total' ? '#eee' : d3.schemeCategory10[d.number%20]; }
-    var circle_colour = function(d) { return d.key=='Total' ? '#555' : d3.schemeCategory10[d.number%20]; }
+    var question_colour = function(d) { return d.key=='Total' ? '#eee' : d3.schemeCategory10[d.number%10]; }
+    var circle_colour = function(d) { return d.key=='Total' ? '#555' : d3.schemeCategory10[d.number%10]; }
 
     var bgs = question_scores_g.selectAll('.question-bg').data(allDensity);
     bgs.enter()
