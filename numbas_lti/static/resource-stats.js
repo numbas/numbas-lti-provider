@@ -14,6 +14,21 @@ function update_completion_table() {
     }
 }
 
+function update_summary_stats_table() {
+    var scores = data.attempts.map(a=>a.scaled_score).sort(cmp);
+    var stats = {
+        mean: d3.mean(scores),
+        median: d3.median(scores),
+        q1: d3.quantile(scores, 0.25),
+        q3: d3.quantile(scores,0.75)
+    };
+    var format = d3.format('.0%');
+    for(let td of document.querySelectorAll('#summary-stats-table .value')) {
+        var key = td.getAttribute('data-value');
+        td.textContent = format(stats[key] || 0);
+    }
+}
+
 function cmp(a,b) {
     return a<b ? -1 : a>b ? 1 : 0;
 }
@@ -274,6 +289,7 @@ function update_status_chart() {
 
 function update() {
     update_completion_table();
+    update_summary_stats_table();
     update_question_scores_chart();
     update_status_chart();
 }
@@ -284,13 +300,10 @@ function init_socket() {
 
     var socket = new RobustWebSocket(ws_url);
     socket.onmessage = function(e) {
-        console.log('message');
-        console.log(e.data);
         data = JSON.parse(e.data);
         update();
     }
     socket.onopen = function() {
-        console.log('open');
     }
 }
 init_socket();

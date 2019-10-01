@@ -18,6 +18,27 @@
     </tbody>
 </table>
 
+<h3>{% trans "Summary statistics" %}</h3>
+<p>{% trans "Total exam score" %}</p>
+<table class="table" id="summary-stats-table">
+    <thead>
+        <tr>
+            <th>{% trans "Mean" %}</th>
+            <th>{% trans "Lower quartile" %}</th>
+            <th>{% trans "Median" %}</th>
+            <th>{% trans "Upper quartile" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="value" data-value="mean"></td>
+            <td class="value" data-value="q1"></td>
+            <td class="value" data-value="median"></td>
+            <td class="value" data-value="q3"></td>
+        </tr>
+    </tbody>
+</table>
+
 <section id="stacked_status_chart">
     <div class="legend">
         <span class="num_not_attempted">
@@ -113,5 +134,5 @@
         var data = {{data|safe}};
     </script>
 
-    <script src="{% static 'resource-stats.js' %}"></script>
+    <script src="{% static 'resource-stats.js' %}" defer></script>
 {% endblock %}
