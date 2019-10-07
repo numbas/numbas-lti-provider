@@ -67,7 +67,6 @@ class ManageTimePeriodsView(ConsumerManagementMixin,generic.edit.UpdateView):
     template_name = 'numbas_lti/management/admin/consumer/manage_time_periods.html'
     form_class = forms.ConsumerTimePeriodFormSet
     def get_success_url(self):
-        print(self.object)
         return reverse('view_consumer',args=(self.get_object().pk,))
 
 class DeleteTimePeriodView(ConsumerManagementMixin,generic.edit.DeleteView):

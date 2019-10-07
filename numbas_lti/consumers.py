@@ -51,7 +51,6 @@ def scorm_set_element(message,pk):
 
 @channel_session_user_from_http
 def resource_stats_ws_connect(message,pk):
-    print("Stats WS connect")
     user = message.user
     resource = Resource.objects.get(pk=pk)
     message.reply_channel.send({"accept": True})
@@ -60,7 +59,6 @@ def resource_stats_ws_connect(message,pk):
 
 @channel_session_user_from_http
 def resource_stats_ws_disconnect(message,pk):
-    print("Stats WS disconnect")
     resource = Resource.objects.get(pk=pk)
     group = group_for_resource_stats(resource)
     group.discard(message.reply_channel)
@@ -68,7 +66,6 @@ def resource_stats_ws_disconnect(message,pk):
 @channel_session_user
 def resource_stats_ws_receive(message,pk):
     resource = Resource.objects.get(pk=pk)
-    print(message)
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
