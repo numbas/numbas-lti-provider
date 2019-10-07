@@ -692,6 +692,9 @@ class Attempt(models.Model):
     def should_show_scores(self):
         return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
 
+    def is_remarked(self):
+        return self.remarked_parts.exists()
+
 class AttemptNotDeletedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(attempt__deleted=False)

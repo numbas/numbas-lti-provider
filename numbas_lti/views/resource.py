@@ -176,7 +176,7 @@ class DiscountPartView(MustBeInstructorMixin,generic.base.View):
         part = request.POST['part']
         discount,created = DiscountPart.objects.get_or_create(resource=resource,part=part)
         template = get_template('numbas_lti/management/discount/discounted.html')
-        html = template.render({'resource':resource,'discount':discount,'form':forms.DiscountPartBehaviourForm(instance=discount)})
+        html = template.render({'resource':resource,'discount':discount,'form':forms.DiscountPartBehaviourForm(instance=discount),'path':part})
         return JsonResponse({'pk':discount.pk,'created':created, 'behaviour': discount.behaviour, 'html':html})
 
 class DiscountPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):

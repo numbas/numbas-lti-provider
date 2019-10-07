@@ -110,6 +110,7 @@ class RemarkPartView(MustBeInstructorMixin,generic.base.View):
             'remark':remark,
             'form':RemarkPartScoreForm(instance=remark),
             'max_score': remark.attempt.part_max_score(part),
+            'path': part,
         })
 
         return http.JsonResponse({

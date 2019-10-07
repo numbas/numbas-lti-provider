@@ -38,43 +38,10 @@
 
 {% block javascripts %}
 {{block.super}}
+    <script src="{% static 'discount_remark.js' %}"></script>
     <script src="{% static 'zepto/zepto.js' %}"></script>
 
     <script>
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    var csrftoken = getCookie('csrftoken');
-
-    function post(url,data) {
-        var fd = new FormData();
-        if(data) {
-            for(var x in data) {
-                fd.append(x,data[x]);
-            }
-        }
-        return fetch(url,{
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Accept': 'application/json'
-            },
-            body: fd
-        }).then(function(r){return r.json()});
-    }
 
     $(function() {
         // Create remark
@@ -83,17 +50,24 @@
             var form = e.currentTarget;
             var url = form.getAttribute('action');
             var part = form.querySelector('[name=path]').value;
-            post(url,{part:part}).then(function(d) {
+            post(url,{part:part}, form).then(function(d) {
                 $(form).parents('tr').addClass('warning');
                 $(form).parents('.control').html(d.html);
+            }).catch(function(err) {
+                alert("There was an error when remarking "+describe_part_path(part));
+                console.error(err);
             });
         });
 
         function save_score(form,score) {
             if(!isNaN(parseFloat(score))) {
                 var url = form.getAttribute('action');
+                var part = form.querySelector('[name=path]').value;
                 post(url,{score:score}).then(function(d) {
-                    form.querySelector('input').classList.remove('changed');
+                    form.querySelector('#id_score').classList.remove('changed');
+                }).catch(function(err) {
+                    alert("There was an error when remarking "+describe_part_path(part));
+                    console.error(err);
                 });
             }
         }
@@ -123,9 +97,13 @@
             e.preventDefault();
             var form = $(e.currentTarget).parents('form')[0];
             var url = form.getAttribute('action');
+            var part = form.querySelector('[name=path]').value;
             post(url).then(function(d) {
                 $(form).parents('tr').removeClass('warning');
                 $(form).parents('.control').html(d.html);
+            }).catch(function(err) {
+                alert("There was an error when restoring the original mark on "+describe_part_path(part));
+                console.error(err);
             });
         });
 

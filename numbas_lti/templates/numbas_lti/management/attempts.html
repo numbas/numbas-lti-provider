@@ -99,7 +99,7 @@
                     {% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.completion_status}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url 'reopen_attempt' attempt.pk %}">{% trans "(reopen)" %}</a>{% endif %}{% endif %}
                 </td>
                 <td>
-                    <div class="attempt-score">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})</div>
+                    <div class="attempt-score">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% trans "(remarked)" %}{% endif %}</div>
                 </td>
                 <td>
                     <ul class="score-info">
