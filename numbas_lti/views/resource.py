@@ -188,7 +188,7 @@ class DiscountPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
 
         resource = discount.resource
         template = get_template('numbas_lti/management/discount/not_discounted.html')
-        html = template.render({'resource':resource})
+        html = template.render({'resource':resource,'path':discount.part})
         return JsonResponse({'html':html})
 
 class DiscountPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
