@@ -714,7 +714,6 @@ class AttemptQuestionScore(models.Model):
 
 @receiver(models.signals.post_save,sender=AttemptQuestionScore)
 def question_score_live_stats(sender,instance,**kwargs):
-    print("Save attempt question score",instance.number)
     resource = instance.attempt.resource
     group = group_for_resource_stats(resource)
     group.send({"text": json.dumps(resource.live_stats_data())})
@@ -732,7 +731,7 @@ def remark_update_scaled_score(sender,instance,**kwargs):
     question = int(re.match(r'^q(\d+)',instance.part).group(1))
     attempt.update_question_score_info(question)
     if attempt.max_score>0:
-        scaled_score = attempt.raw_score/attempt.max_score
+        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
     else:
         scaled_score = 0
     if scaled_score != attempt.scaled_score:
@@ -756,7 +755,7 @@ def discount_update_scaled_score(sender,instance,**kwargs):
         question = int(re.match(r'^q(\d+)',instance.part).group(1))
         attempt.update_question_score_info(question)
 
-        scaled_score = attempt.raw_score/attempt.max_score
+        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
         if scaled_score != attempt.scaled_score:
             attempt.scaled_score = scaled_score
             attempt.save()
