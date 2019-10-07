@@ -712,11 +712,14 @@ class AttemptQuestionScore(models.Model):
     def __str__(self):
         return '{}/{} on question {} of {}'.format(self.raw_score,self.max_score,self.number,self.attempt)
 
+"""
+# Removed because it might be killing the server
 @receiver(models.signals.post_save,sender=AttemptQuestionScore)
 def question_score_live_stats(sender,instance,**kwargs):
     resource = instance.attempt.resource
     group = group_for_resource_stats(resource)
     group.send({"text": json.dumps(resource.live_stats_data())})
+"""
 
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
