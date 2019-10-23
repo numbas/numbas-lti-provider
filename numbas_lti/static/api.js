@@ -178,7 +178,7 @@ SCORM_API.prototype = {
 
         // Force review mode from now on if activity is completed - could be out of sync if resuming a session which wasn't saved properly.
         if(this.data['cmi.completion_status'] == 'completed') {
-            if(this.allow_review_from!==null && new Date()<this.allow_review_from) {
+            if(this.allow_review_from!==null && new Date()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
                 var player = document.getElementById('scorm-player');
                 player.parentElement.removeChild(player);
                 this.ajax_period = 0;
