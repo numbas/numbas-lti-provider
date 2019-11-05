@@ -1,0 +1,77 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block stylesheets %}
+{{block.super}}
+<style type="text/css">
+.project h3 {
+    margin-top: 0;
+    font-size: 1.3em;
+}
+.avatar {
+    width: 2em;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block management_content %}
+<form method="POST">
+    {% csrf_token %}
+    {{form|bootstrap}}
+    <fieldset>
+        <h2>{% trans "Select projects to make available" %}</h2>
+        <p>{% trans "To appear in this list, a project must be marked \"Visible to non-members\" in the editor." %}</p>
+        <p>{% trans "Exams from selected projects will be made available to instructors when they create an activity." %}</p>
+        {% if project_formset|length %}
+            <p>{% trans "Select the projects you'd like to make available below." %}</p>
+        {% else %}
+            <p class="alert alert-warning">{% trans "No projects have been made visible - go to the editor and mark a project \"Visible to non-members\" before proceeding." %}</p>
+        {% endif %}
+        {{project_formset.management_form}}
+        {{project_formset.non_form_errors}}
+        <table class="table">
+            <tbody>
+                {% for pform,project in projects %}
+                <tr class="project">
+                    <td>{{pform.use}}</td>
+                    <td>
+                        <h3>
+                            <a class="project-name" target="_blank" href="{{pform.homepage.value}}">{{pform.name.value}}</a>
+                            <small class="project-owner">
+                                {% trans "by" %} <a href="{{project.owner.profile}}" target="_blank">
+                                    {% if project.owner.avatar %}<img alt="picture of {{project.owner.full_name}}" src="{{project.owner.avatar.40x40}}" class="avatar"> {% endif %}
+                                    {{project.owner.full_name}}
+                                </a>
+                            </small>
+                        </h3>
+                        <div class="project-description">{{pform.description.value|safe}}</div>
+                        {{pform.errors}}
+                    </td>
+                    <td>
+                        {% blocktrans count counter=project.num_questions %}
+                        1 question
+                        {% plural %}
+                        {{counter}} questions
+                        {% endblocktrans %}
+                        and
+                        {% blocktrans count counter=project.num_exams %}
+                        1 exam
+                        {% plural %}
+                        {{counter}} exams
+                        {% endblocktrans %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% for pform in project_formset %}
+            {{pform.name}}
+            {{pform.description}}
+            {{pform.remote_id}}
+            {{pform.homepage}}
+            {{pform.rest_url}}
+        {% endfor %}
+    </fieldset>
+    <button class="btn btn-primary" type="submit">{% trans "Save" %}</button>
+</form>
+{% endblock management_content %}

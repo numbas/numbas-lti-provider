@@ -1,0 +1,28 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+
+{% block management_content %}
+<header>
+    <h1>{% trans "Stress tests" %}</h1>
+</header>
+
+<p>{% blocktrans %}Use the stress test feature to see how the LTI provider copes with high demand.{% endblocktrans %}</p>
+
+<table class="table">
+    <tbody>
+    {% for test in object_list %}
+    <tr>
+        <td><a href="{% url 'view_stresstest' test.pk %}">{{test}}</a></td>
+        <td>{% blocktrans count num_attempts=test.resource.attempts.count %}1 attempt{% plural %}{{num_attempts}} attempts{% endblocktrans %}</td>
+        <td>
+            <form method="POST" action="{% url 'delete_stresstest' test.pk %}">
+                {% csrf_token %}
+                <button class="btn btn-danger btn-sm">{% trans "Delete" %}</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<a class="btn btn-primary" href="{% url 'create_stresstest' %}">{% trans "Start a stress test" %}</a>
+{% endblock %}

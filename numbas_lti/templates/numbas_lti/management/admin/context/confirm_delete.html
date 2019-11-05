@@ -1,0 +1,25 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block management_content %}
+<div class="container">
+    <header>
+        <h1>Delete a context</h1>
+    </header>
+
+    <main>
+        <p>
+            {% blocktrans with key=context.key%}Are you sure you want to delete the context <code>{{key}}</code>?{% endblocktrans %}
+        </p>
+        <p class="text-danger">{% trans "All attempt data accessed through this context will be deleted." %}</p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <p>
+                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this context" %}</button>
+                <a class="btn btn-link" href="{% url 'view_context' context.pk %}">Cancel</a>
+            </p>
+        </form>
+    </main>
+</div>
+{% endblock management_content %}

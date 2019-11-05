@@ -7,15 +7,26 @@
  * @param {number} attempt_pk - the id of the associated attempt in the database
  * @param {string} fallback_url - URL of the AJAX fallback endpoint
  */
-function SCORM_API(data,attempt_pk,fallback_url) {
+function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
     var sc = this;
+
+    this.callbacks = new CallbackHandler();
 
     this.attempt_pk = attempt_pk;
     this.fallback_url = fallback_url;
 
+    if(allow_review_from!==null) {
+        allow_review_from = new Date(allow_review_from);
+    }
+    this.allow_review_from = allow_review_from;
+
     /** Key to save data under in localStorage
      */
     this.localstorage_key = 'numbas-lti-attempt-'+this.attempt_pk+'-scorm-data';
+
+    /** A unique ID for this instance of the API, to differentiate it from other clients loading the same attempt.
+     */
+    this.uid = (new Date()-0)+':'+Math.random();
 
     /** We will store changed elements in a queue, to be sent to the server in batches periodically
      */
@@ -25,6 +36,7 @@ function SCORM_API(data,attempt_pk,fallback_url) {
      *  Maps batch ids to lists of SCORMElements.
      */
     this.sent = {};
+    this.element_acc = 0;
 
     /** An accumulator for the batch IDs
      */
@@ -66,9 +78,14 @@ function SCORM_API(data,attempt_pk,fallback_url) {
             }
         }
         
-        toggle(status_display,'ok',ok);
-        toggle(status_display,'disconnected',show_warning);
-        toggle(status_display,'localstorage-used',sc.localstorage_used||false);
+        if(status_display) {
+            toggle(status_display,'ok',ok);
+            toggle(status_display,'disconnected',show_warning);
+            toggle(status_display,'localstorage-used',sc.localstorage_used||false);
+        }
+
+        sc.callbacks.trigger('update_interval');
+
     },50);
 
     /** Periodically send data over the websocket
@@ -77,9 +94,13 @@ function SCORM_API(data,attempt_pk,fallback_url) {
         sc.send_queue_socket();
     },this.socket_period);
 
-    this.ajax_interval = setInterval(function() {
+    this.ajax_period = this.base_ajax_period;
+
+    function send_ajax_interval() {
         sc.send_ajax();
-    },this.ajax_period);
+        setTimeout(send_ajax_interval,sc.ajax_period);
+    }
+    setTimeout(send_ajax_interval,sc.ajax_period);
 }
 SCORM_API.prototype = {
 
@@ -89,7 +110,11 @@ SCORM_API.prototype = {
 
     /** Interval when websocket is disconnected to send data over AJAX, in milliseconds
      */
-    ajax_period: 5000,
+    base_ajax_period: 5000,
+
+    /** Amount to multiply ajax_period by on failure
+     */
+    ajax_period_exponent: 1.5,
 
     /** How long the warning message should stay visible after the warning disappears, in milliseconds
      */
@@ -115,16 +140,19 @@ SCORM_API.prototype = {
 
         this.sent = {};
         for(var id in stored_data.sent) {
-            this.sent[id] = stored_data.sent[id].map(function(e) {
-                return new SCORMData(e.key,e.value,new Date(e.time*1000));
-            });
+            this.sent[id] = {
+                elements: stored_data.sent[id].map(function(e) {
+                    return new SCORMData(e.key,e.value,new Date(e.time*1000));
+                }),
+                time: new Date()
+            }
         }
 
         // merge saved data
         for(var id in this.sent) {
             this.sent_acc = Math.max(this.sent_acc,id);
 
-            var elements = this.sent[id];
+            var elements = this.sent[id].elements;
             elements.forEach(function(e) {
                 var d = data[e.key];
                 if(!(e.key in data) || data[e.key].time<e.timestamp()) {
@@ -150,8 +178,18 @@ SCORM_API.prototype = {
 
         // Force review mode from now on if activity is completed - could be out of sync if resuming a session which wasn't saved properly.
         if(this.data['cmi.completion_status'] == 'completed') {
+            if(this.allow_review_from!==null && new Date()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
+                var player = document.getElementById('scorm-player');
+                player.parentElement.removeChild(player);
+                this.ajax_period = 0;
+                this.send_ajax().then(function(m) {
+                    window.location = show_attempts_url+'&back_from_unsaved_complete_attempt=1';
+                });
+            }
             this.data['cmi.mode'] = this.mode = 'review';
         }
+
+        this.callbacks.trigger('initialise_data');
     },
 
     /** Initialise the SCORM API and expose it to the SCORM activity
@@ -184,25 +222,51 @@ SCORM_API.prototype = {
             this.check_key_counts_something(key);
         }
 
+        this.callbacks.trigger('initialise_api');
+    },
+
+    /** Terminate the SCORM API because we were told to by the server, and navigate to the given URL
+     */
+    external_kill: function(message, url) {
+        if(!this.terminated) {
+            this.Terminate('');
+            alert(message);
+            window.location = show_attempts_url;
+            this.callbacks.trigger('external_kill');
+        }
     },
 
     initialise_socket: function() {
         var sc = this;
 
         var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-        var ws_url = ws_scheme + '://' + window.location.host + "/websocket/attempt/"+this.attempt_pk+"/scorm_api";
+        var ws_url = ws_scheme + '://' + window.location.host + "/websocket/attempt/"+this.attempt_pk+"/scorm_api?uid="+encodeURIComponent(this.uid)+"&mode="+encodeURIComponent(this.mode);
 
         /** A WebSocket to send data back to the server. It will automatically reconnect, but won't guarantee delivery of messages.
          */
         this.socket = new RobustWebSocket(ws_url);
 
         this.socket.onmessage = function(e) {
-            var d = JSON.parse(e.data);
+            sc.callbacks.trigger('socket.onmessage',d);
+            try {
+                var d = JSON.parse(e.data);
+            } catch(e) {
+                console.log("Error reading socket message",e.data);
+                return;
+            }
 
             // The server sends back confirmation of each batch of elements it received.
             // When we get confirmation, remove that batch from the dict of unconfirmed batches.
             if(d.received) {
                 sc.batch_received(d.received);
+            }
+
+            if(sc.mode!='review' && d.current_uid && d.current_uid != sc.uid) {
+                sc.external_kill("This attempt has been opened in another window. You may not enter any more answers here. You may continue in the other window. Click OK to leave this attempt.");
+            }
+
+            if(sc.mode!='review' && d.completion_status == 'completed') {
+                sc.external_kill("This attempt has been ended in another window. You may not enter any more answers here. Click OK to leave this attempt.");
             }
         }
 
@@ -210,16 +274,20 @@ SCORM_API.prototype = {
 
             // resend any batches we didn't get confirmation messages for
             for(var id in sc.sent) {
-                sc.send_elements_socket(sc.sent[id],id);
+                sc.send_elements_socket(sc.sent[id].elements,id);
             }
 
             // send the current queue
             sc.send_queue_socket();
+
+            sc.callbacks.trigger('socket.onopen');
         }
 
         this.socket.onerror = function() {
+            sc.callbacks.trigger('socket.onerror');
         }
         this.socket.onclose = function() {
+            sc.callbacks.trigger('socket.onclose');
         }
 
     },
@@ -229,16 +297,21 @@ SCORM_API.prototype = {
      * @param {number} id
      */
     batch_sent: function(elements,id) {
-        this.sent[id] = elements;
+        this.sent[id] = {
+            elements: elements,
+            time: new Date()
+        };
         this.set_localstorage();
+        this.callbacks.trigger('batch_sent',elements,id);
     },
 
     /** Call when we've received confirmation that the server got the batch with the given id
      * @param {number} id
      */
     batch_received: function(id) {
-        delete sc.sent[id];
+        delete this.sent[id];
         this.set_localstorage();
+        this.callbacks.trigger('batch_received',id);
     },
 
     /** Store information which hasn't been confirmed received by the server to localStorage.
@@ -246,20 +319,23 @@ SCORM_API.prototype = {
     set_localstorage: function() {
         try {
             var data = {
-                sent: {}
+                sent: {},
+                current: this.data,
+                save_time: (new Date())-0
             }
             for(var id in this.sent) {
-                data.sent[id] = this.make_batch(this.sent[id]);
+                data.sent[id] = this.make_batch(this.sent[id].elements);
             }
             window.localStorage.setItem(this.localstorage_key, JSON.stringify(data));
             this.localstorage_used = true;
         } catch(e) {
             this.localstorage_used = false;
         }
+        this.callbacks.trigger('set_localstorage');
     },
 
     /** Load saved information from localStorage.
-     * @returns {object} of the form `{sent: {id: [{key,value,time}]}}`
+     * @returns {object} of the form `{sent: {id: [{key,value,time,counter}]}}`
      */
     get_localstorage: function() {
         try {
@@ -302,7 +378,7 @@ SCORM_API.prototype = {
     /** Is the WebSocket connection open?
      */
     socket_is_open: function() {
-        return this.socket.readyState==WebSocket.OPEN;
+        return this.socket.readyState==WebSocket.OPEN && Object.keys(this.sent).length==0;
     },
 
     /** Did the last AJAX call succeed?
@@ -323,6 +399,7 @@ SCORM_API.prototype = {
         this.send_elements_socket(this.queue,id);
         this.batch_sent(this.queue.slice(),id);
         this.queue = [];
+        this.callbacks.trigger('send_queue_socket');
     },
 
     /** Send the given list of data model elements to the server, with the given batch ID.
@@ -338,6 +415,7 @@ SCORM_API.prototype = {
 
         var out = this.make_batch(elements);
         this.socket.send(JSON.stringify({id:id, data:out}));
+        this.callbacks.trigger('send_elements_socket',elements,id);
         return true;
     },
 
@@ -360,8 +438,8 @@ SCORM_API.prototype = {
     send_ajax: function() {
         var sc = this;
 
-        if(this.socket_is_open()) {
-       //     return;
+        if(this.pending_ajax) {
+            return Promise.resolve('pending ajax');
         }
         if(this.queue.length) {
             var id = this.sent_acc++;
@@ -371,17 +449,21 @@ SCORM_API.prototype = {
 
         var stuff_to_send = false;
         var out = {};
+        var now = new Date();
         for(var key in this.sent) {
-            if(this.sent[key].length) {
+            var dt = now - this.sent[key].time;
+            if(this.sent[key].elements.length && dt>this.ajax_period) {
                 stuff_to_send = true;
-                out[key] = this.make_batch(this.sent[key]);
+                out[key] = this.make_batch(this.sent[key].elements);
             }
         }
         if(!stuff_to_send) {
-            return;
+            return Promise.resolve('no stuff to send');
         }
 
         var csrftoken = getCookie('csrftoken');
+
+        this.pending_ajax = true;
 
         var request = fetch(this.fallback_url, {
             method: 'POST',
@@ -392,15 +474,22 @@ SCORM_API.prototype = {
             },
             body: JSON.stringify(out)
         });
+
         request
             .then(
                 function(response) {
-                    sc.last_ajax_succeeded = true;
+                    if(!response.ok) {
+                        response.text().then(function(t){
+                            console.error('SCORM HTTP fallback error message: '+t);
+                        });
+                        sc.ajax_failed();
+                        return Promise.reject(error.message);
+                    }
+                    sc.ajax_succeeded();
                     return response.json();
                 },
                 function(error) {
-                    console.error('failed to send SCORM data over HTTP: '+error.message);
-                    sc.last_ajax_succeeded = false;
+                    sc.ajax_failed();
                     return Promise.reject(error.message);
                 }
             )
@@ -409,15 +498,31 @@ SCORM_API.prototype = {
                     d.received_batches.forEach(function(id) {
                         sc.batch_received(id);
                     });
-                },
-                function(e) {
                 }
             )
         ;
+        this.callbacks.trigger('send_ajax');
+        return request;
+    },
+
+    ajax_succeeded: function() {
+        this.pending_ajax = false;
+        this.last_ajax_succeeded = true;
+        this.ajax_period = this.base_ajax_period;
+        this.callbacks.trigger('ajax.succeeded');
+    },
+
+    ajax_failed: function() {
+        this.pending_ajax = false;
+        console.error('failed to send SCORM data over HTTP');
+        this.last_ajax_succeeded = false;
+        this.ajax_period *= this.ajax_period_exponent;
+        this.callbacks.trigger('ajax.failed',error.message);
     },
 
 	Initialize: function(b) {
-		if(b!='' || this.initialized || this.terminated) {
+        this.callbacks.trigger('Initialize',b);
+        if(b!='' || this.initialized || this.terminated) {
 			return false;
 		}
 		this.initialized = true;
@@ -425,10 +530,12 @@ SCORM_API.prototype = {
 	},
 
 	Terminate: function(b) {
+        this.callbacks.trigger('Terminate',b);
 		if(b!='' || !this.initialized || this.terminated) {
 			return false;
 		}
 		this.terminated = true;
+        document.body.classList.add('terminated');
 
         /** Do one last send over HTTP, to make sure any remaining data is saved straight away.
          */
@@ -467,28 +574,53 @@ SCORM_API.prototype = {
         if(changed) {
     		this.data[key] = value;
             this.check_key_counts_something(key);
-            this.queue.push(new SCORMData(key,value, new Date()));
+            this.queue.push(new SCORMData(key,value, new Date(),this.element_acc++));
         }
+        this.callbacks.trigger('SetValue',key,value,changed);
 	},
 
     Commit: function(s) {
+        this.callbacks.trigger('Commit');
         return true;
+    }
+}
+
+function CallbackHandler() {
+    this.callbacks = {};
+}
+CallbackHandler.prototype = {
+    on: function(key,fn) {
+        if(this.callbacks[key] === undefined) {
+            this.callbacks[key] = [];
+        }
+        this.callbacks[key].push(fn);
+    },
+    trigger: function(key) {
+        if(!this.callbacks[key]) {
+            return;
+        }
+        var args = Array.prototype.slice.call(arguments,1);
+        this.callbacks[key].forEach(function(fn) {
+            fn.apply(this,args);
+        });
     }
 }
 
 /** A single SCORM data model element, with the time it was set.
  */
-function SCORMData(key,value,time) {
+function SCORMData(key,value,time,counter) {
     this.key = key;
     this.value = value;
     this.time = time;
+    this.counter = counter;
 }
 SCORMData.prototype = {
     as_json: function() {
         return {
             key: this.key,
             value: this.value,
-            time: this.timestamp()
+            time: this.timestamp(),
+            counter: this.counter
         }
     },
 

@@ -8,48 +8,81 @@ from channels.generic.websockets import WebsocketConsumer
 import json
 from datetime import datetime
 from django.utils import timezone
+from urllib.parse import parse_qs
 
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
+from django_auth_lti.patch_reverse import reverse
 
-from .models import Attempt,ScormElement,Resource, ReportProcess,EditorLink
+from .groups import group_for_attempt, group_for_resource_stats
+from .models import Attempt, ScormElement, Resource, ReportProcess, EditorLink
 from .report_outcome import report_outcome, ReportOutcomeException
+from .save_scorm_data import save_scorm_data
 
 @channel_session_user_from_http
-def scorm_connect(message,pk):
-    pass
+def attempt_ws_connect(message,pk):
+    message.reply_channel.send({"accept": True})
+    attempt = Attempt.objects.get(pk=pk)
+    group = group_for_attempt(attempt)
+    group.add(message.reply_channel)
+    query = parse_qs(message.content['query_string'].decode('utf-8'))
+    uid = query.get('uid',[''])[0]
+    mode= query.get('mode',[''])[0]
+    if mode!='review':
+        group.send({'text': json.dumps({'current_uid': uid})})
+
+@channel_session_user_from_http
+def attempt_ws_disconnect(message,pk):
+    attempt = Attempt.objects.get(pk=pk)
+    group_for_attempt(attempt).discard(message.reply_channel)
 
 @channel_session_user
 def scorm_set_element(message,pk):
-    print("Receive {}".format(message.content['text']))
     packet = json.loads(message.content['text'])
     attempt = Attempt.objects.get(pk=pk)
-    for element in packet['data']:
-        ScormElement.objects.create(
-            attempt = attempt,
-            key = element['key'], 
-            value = element['value'],
-            time = timezone.make_aware(datetime.fromtimestamp(element['time']))
-        )
+    batches = {packet['id']: packet['data']}
+    done, unsaved_elements = save_scorm_data(attempt,batches)
     response = {
-        'received': str(packet['id'])
+        'received': done,
+        'completion_status': attempt.completion_status,
+        'unsaved_elements': unsaved_elements,
     }
     message.reply_channel.send({'text':json.dumps(response)})
+
+@channel_session_user_from_http
+def resource_stats_ws_connect(message,pk):
+    user = message.user
+    resource = Resource.objects.get(pk=pk)
+    message.reply_channel.send({"accept": True})
+    group = group_for_resource_stats(resource)
+    group.add(message.reply_channel)
+
+@channel_session_user_from_http
+def resource_stats_ws_disconnect(message,pk):
+    resource = Resource.objects.get(pk=pk)
+    group = group_for_resource_stats(resource)
+    group.discard(message.reply_channel)
+
+@channel_session_user
+def resource_stats_ws_receive(message,pk):
+    resource = Resource.objects.get(pk=pk)
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
     process = ReportProcess.objects.create(resource=resource)
 
+    errors = []
     for user in User.objects.filter(attempts__resource=resource).distinct():
         try:
             request = report_outcome(resource,user)
         except ReportOutcomeException as e:
-            process.status = 'error'
-            process.response = e.message
-            process.save()
-            return
+            errors.append(e)
 
-    process.status = 'complete'
+    if len(errors):
+        process.status = 'error'
+        process.response = '\n'.join(e.message for e in errors)
+    else:
+        process.status = 'complete'
     process.save()
 
 class AttemptScormListingConsumer(WebsocketConsumer):

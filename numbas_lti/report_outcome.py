@@ -20,9 +20,13 @@ class ReportOutcomeConnectionError(ReportOutcomeException):
         self.error = connection_error
 
 class ReportOutcomeFailure(ReportOutcomeException):
-    def __init__(self,consumer_message):
+    def __init__(self,user_data,consumer_message):
         self.consumer_message = consumer_message
-        self.message = _('Outcome report failed; the LTI consumer said: {}').format(self.consumer_message)
+        ctx = {
+            'user_name': user_data.user.get_full_name(), 
+            'consumer_message': self.consumer_message,
+        }
+        self.message = _('Outcome report for user {user_name} failed; the LTI consumer said: {consumer_message}').format(**ctx)
 
 def report_outcome_for_attempt(attempt):
     return report_outcome(attempt.resource,attempt.user)
@@ -69,15 +73,15 @@ def report_outcome(resource,user):
                 )
 
             if r.status_code!=200:
-                raise ReportOutcomeFailure(r.text)
+                raise ReportOutcomeFailure(user_data,r.text)
 
             namespaces = {'ims':'http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0'}
             try:
                 xml = etree.fromstring(r.content)
             except etree.XMLSyntaxError:
-                raise ReportOutcomeFailure('Response is not an XML document: {}'.format(r.text))
+                raise ReportOutcomeFailure(user_data,'Response is not an XML document: {}'.format(r.text))
             except Exception as e:
-                raise ReportOutcomeFailure('{}\n\n{}'.format(e,r.text))
+                raise ReportOutcomeFailure(user_data,'{}\n\n{}'.format(e,r.text))
             status = xml.find('./ims:imsx_POXHeader/ims:imsx_POXResponseHeaderInfo/ims:imsx_statusInfo',namespaces=namespaces)
             code = status.find('ims:imsx_codeMajor',namespaces=namespaces).text
             if code=='success':
@@ -86,6 +90,6 @@ def report_outcome(resource,user):
                 return r
             else:
                 description = status.find('ims:imsx_description',namespaces=namespaces).text
-                raise ReportOutcomeFailure(description)
+                raise ReportOutcomeFailure(user_data,description)
         except requests.exceptions.ConnectionError as e:
             raise ReportOutcomeConnectionError(e)

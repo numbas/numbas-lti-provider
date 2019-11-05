@@ -1,0 +1,62 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load percentage %}
+{% load i18n %}
+
+{% block management_content %}
+    <section>
+        <h2>{% trans "Student progress" %}</h2>
+
+        <div>
+            <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
+        </div>
+        <table class="table" id="students">
+            <thead>
+                <tr>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Score" %}</th>
+                    <th>{% trans "Attempts" %}</th>
+                    {% if not unlimited_attempts %}
+                    <th colspan="2">{% trans "Access tokens" %}</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for student,score,lti_data,attempts,access_tokens in student_summary %}
+                <tr data-student="{{student.get_full_name}}">
+                    <td>{{student.get_full_name}}</td>
+                    <td>
+                        {{score|percentage}}
+                        {% if lti_data.last_reported_score != score %}
+                        <span class="glyphicon glyphicon-warning-sign" title="{% trans "This score has not been reported to the grade book yet." %}"></span>
+                        {% endif %}
+                    </td>
+                    <td>{{attempts}}</td>
+                    {% if not unlimited_attempts %}
+                    <td>{{access_tokens}}</td>
+                    <td>
+                        <a class="btn btn-warning btn-sm" href="{% url 'grant_access_token' resource.pk student.pk %}" title="{% trans "Grant an access token" %}"><span class="glyphicon glyphicon-plus"></span></a>
+                        {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url 'remove_access_token' resource.pk student.pk %}" title="{% trans "Remove an access token" %}"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+            function filter_rows(query) {
+                query = query.toLowerCase();
+                var re = new RegExp(query);
+                var rows = document.querySelectorAll('#students tbody tr');
+                Array.prototype.map.apply(rows,[function(row) {
+                    var name = row.getAttribute('data-student').toLowerCase();
+                    row.classList.toggle('hidden',!re.test(name));
+                }]);
+            }
+            var search = document.getElementById('query');
+            search.addEventListener('input',function() {
+                filter_rows(this.value);
+            });
+        </script>
+    </section>
+{% endblock management_content %}

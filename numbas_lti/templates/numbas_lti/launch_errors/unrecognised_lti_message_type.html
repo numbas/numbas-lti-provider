@@ -1,0 +1,14 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Unrecognised LTI launch type" %}</h1>
+    </header>
+    <main>
+        <p>{% blocktrans %}The launch message type <code>{{lti_message_type}}</code> was not recognised.{% endblocktrans %}</p>
+        <p>{% trans "It's possible you're trying to do something using a version of LTI that this tool was not designed for." %}</p>
+    </main>
+</div>
+{% endblock content %}

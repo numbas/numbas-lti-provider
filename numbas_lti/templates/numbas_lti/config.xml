@@ -10,7 +10,7 @@
 	http://www.imsglobal.org/xsd/imslticp_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticp_v1p0.xsd">
 
 	<blti:title>{% trans "Numbas" %}</blti:title>
-	<blti:description>{% trans "Numbas exam" %}</blti:description>
+    <blti:description>{% trans "Direct students to attempt a Numbas exam. Instructors can review and manage students' attempts. Scores feed back to the grade book." %}</blti:description>
 	<blti:icon>{{icon}}</blti:icon>
 	<blti:launch_url>{{entry_url}}</blti:launch_url>
 
@@ -18,7 +18,7 @@
 		<lticp:code>numbas.org.uk</lticp:code>
 		<lticp:name>Numbas</lticp:name>
 		<lticp:description>Numbas is an open-source e-assessment package.</lticp:description>
-		<lticp:url>http://www.numbas.org.uk/</lticp:url>
+		<lticp:url>https://www.numbas.org.uk/</lticp:url>
 		<lticp:contact>
 			<lticp:email>numbas@ncl.ac.uk</lticp:email>
 		</lticp:contact>

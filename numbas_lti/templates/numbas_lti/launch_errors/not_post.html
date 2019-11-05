@@ -1,0 +1,14 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Incorrect access" %}</h1>
+    </header>
+    <main>
+        <p>This URL is for LTI launches, which must be <code>POST</code> requests triggered by the LTI consumer.</p>
+    </main>
+</div>
+{% endblock content %}
+

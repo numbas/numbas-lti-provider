@@ -1,16 +1,79 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load percentage %}
+{% load querystring %}
 {% load i18n %}
+
+{% block stylesheets %}
+{{block.super}}
+<style>
+.score-info {
+    width: 15em;
+    margin-top: 0.5em;
+    display: flex;
+    height: 1.2em;
+    padding: 0;
+    list-style: none;
+    background: white;
+}
+.score-info .question {
+    flex-basis: 3px;
+}
+.score-info .question ~ .question {
+    margin-left: 2px;
+}
+.score-info .question.not-attempted {
+    background: #ccc;
+}
+/* generated with http://tristen.ca/hcl-picker/#/hlc/3/1.46/7E4813/4AD269 */
+.scaled_score_0 { background-color: #7E4813; color: #fff; }
+.scaled_score_1 { background-color: #878B10; color: #fff; }
+.scaled_score_2 { background-color: #4AD269; color: #000; }
+
+</style>
+{% endblock %}
+
+{% block main_container %}container-fluid{% endblock %}
 
 {% block management_content %}
     {% if resource.attempts.count %}
     <h2>{% trans "Attempts" %}</h2>
 
     <p><a class="btn btn-info" href="{% url 'attempts_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</a></p>
+    <p><a class="btn btn-info" href="{% url 'resource_json_dump' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</a></p>
 
-    <div>
-        <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
-    </div>
+    <form method="GET" class="form-inline">
+        {% for key,value in request.GET.items %}
+        {% if key != 'page' %}
+        <input type="hidden" value="{{value}}" name="{{key}}">
+        {% endif %}
+        {% endfor %}
+        {% csrf_token %}
+        <label for="query">
+            {% trans "Search for a student:" %} 
+        </label>
+        <div class="input-group">
+            <input id="query" name="query" type="search" class="form-control" value="{{request.GET.query}}">
+            {% if request.GET.query %}
+                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
+            {% endif %}
+            <div class="input-group-btn">
+                <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">Search</span></button>
+            </div>
+        </div>
+    </form>
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation">
+        <ul class="pager">
+            {% if page_obj.has_previous %}
+            <li class="previous"><a href="?{% set_query_values page=page_obj.previous_page_number %}" aria-label="{% trans "Previous page" %}"><span aria-hidden="true">&laquo;</span> {% trans "Later" %}</a></li>
+            {% endif %}
+            <li>{% blocktrans with start=page_obj.start_index end=page_obj.end_index count count=paginator.count %}Showing the only attempt{% plural %}Showing attempts {{start}} - {{end}} of {{count}}{% endblocktrans %}</li>
+            {% if page_obj.has_next %}
+            <li class="next"><a href="?{% set_query_values page=page_obj.next_page_number %}" aria-label="{% trans "Next page" %}">{% trans "Earlier" %} <span aria-hidden="true">&raquo;</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
     <table id="attempts" class="table table-striped">
         <thead>
             <tr>
@@ -22,38 +85,35 @@
             </tr>
         </thead>
         <tbody>
-            {% for attempt in resource.attempts.all %}
+            {% for attempt in attempts %}
             <tr data-student="{{attempt.user.get_full_name}}">
                 <td>{{attempt.user.get_full_name}}</td>
                 <td>{{attempt.start_time}}</td>
                 <td>
                     <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% trans "(old exam)" %}{% endif %}
                     <a class="btn btn-link" href="{% url 'remark_parts' attempt.pk %}"><span class="text-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Remark" %}</span></a>
-                    <a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "SCORM data" %}</span></a>
+                    <a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
                     <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
                 </td>
-                <td>{% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completion_status == 'completed' %}text-success{% endif %}">{{attempt.completion_status}}</span>{% endif %}</td>
-                <td>{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})</td>
+                <td>
+                    {% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.completion_status}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url 'reopen_attempt' attempt.pk %}">{% trans "(reopen)" %}</a>{% endif %}{% endif %}
+                </td>
+                <td>
+                    <div class="attempt-score">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% trans "(remarked)" %}{% endif %}</div>
+                </td>
+                <td>
+                    <ul class="score-info">
+                        {% for aqs in attempt.question_scores %}
+                        {% if aqs.max_score %}
+                        <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}};" title="{% blocktrans with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktrans %} {% if aqs.completion_status == 'not attempted' %}{% trans "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    <script>
-        function filter_rows(query) {
-            query = query.toLowerCase();
-            var re = new RegExp(query);
-            var rows = document.querySelectorAll('#attempts tbody tr');
-            Array.prototype.map.apply(rows,[function(row) {
-                var name = row.getAttribute('data-student').toLowerCase();
-                row.classList.toggle('hidden',!re.test(name));
-            }]);
-        }
-        var search = document.getElementById('query');
-        search.addEventListener('input',function() {
-            filter_rows(this.value);
-        });
-    </script>
     {% else %}
     <p>{% trans "No students have attempted this exam yet. Information about students' attempts will appear here once a student has attempted this exam." %}</p>
     {% endif %}

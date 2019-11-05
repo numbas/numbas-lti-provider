@@ -4,12 +4,13 @@ from django.forms import ModelForm
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod
 
 from django.core.files import File
 from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
+from bootstrap_datepicker_plus import DateTimePickerInput
 from django.contrib.auth.models import User
 import os
 import requests
@@ -21,7 +22,10 @@ import string
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_incomplete_marks','report_mark_time']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from']
+        widgets = {
+            'allow_review_from': DateTimePickerInput()
+        }
 
 class RemarkPartScoreForm(ModelForm):
     class Meta:
@@ -49,7 +53,7 @@ class CreateSuperuserForm(UserCreationForm):
 class CreateConsumerForm(ModelForm):
     class Meta:
         model = LTIConsumer
-        fields = ('key',)
+        fields = ('key','url',)
 
     def save(self,commit=True):
         consumer = super(CreateConsumerForm,self).save(commit=False)
@@ -70,13 +74,14 @@ class CreateExamForm(ModelForm):
 
     def clean_package(self):
         package = self.cleaned_data['package']
-        try:
-            zip = zipfile.ZipFile(package)
-            zip.getinfo('imsmanifest.xml')
-        except zipfile.BadZipFile:
-            raise forms.ValidationError(_("The uploaded file is not a .zip file"))
-        except KeyError:
-            raise forms.ValidationError(_("The uploaded .zip file does not contain an imsmanifest.xml file - make sure you download a SCORM package from the editor."))
+        if package is not None:
+            try:
+                zip = zipfile.ZipFile(package)
+                zip.getinfo('imsmanifest.xml')
+            except zipfile.BadZipFile:
+                raise forms.ValidationError(_("The uploaded file is not a .zip file"))
+            except KeyError:
+                raise forms.ValidationError(_("The uploaded .zip file does not contain an imsmanifest.xml file - make sure you download a SCORM package from the editor."))
 
         return package
 
@@ -129,3 +134,15 @@ class CreateEditorLinkForm(ModelForm):
         if commit:
             editorlink.save()
         return editorlink
+
+class ConsumerTimePeriodForm(ModelForm):
+    class Meta:
+        model = ConsumerTimePeriod
+        fields = ['name','start','end']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'start': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'end': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+        }
+
+ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)

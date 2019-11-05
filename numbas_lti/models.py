@@ -1,16 +1,19 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Min
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, ugettext
 from django.core import validators
 from channels import Group, Channel
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta,datetime
+from django_auth_lti.patch_reverse import reverse
 
-from .report_outcome import report_outcome,report_outcome_for_attempt
+from .groups import group_for_attempt, group_for_resource_stats
+from .report_outcome import report_outcome_for_attempt, ReportOutcomeFailure, ReportOutcomeConnectionError
 
 import os
 import shutil
@@ -22,9 +25,10 @@ from collections import defaultdict
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
-        return super(NotDeletedManager,self).get_queryset().filter(deleted=False)
+        return super().get_queryset().filter(deleted=False)
 
 class LTIConsumer(models.Model):
+    url = models.URLField(blank=True,default='',verbose_name='Home URL of consumer')
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
     secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
@@ -33,6 +37,57 @@ class LTIConsumer(models.Model):
 
     def __str__(self):
         return self.key
+
+    @property
+    def resources(self):
+        return Resource.objects.filter(context__consumer=self)
+
+    def contexts_grouped_by_period(self):
+        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time')).order_by('-creation')
+        if not self.time_periods.exists():
+            return [(None,contexts)]
+        it = iter(self.time_periods.order_by('-end'))
+        p = next(it)
+        out = []
+        lafter = []
+        lduring = []
+        for c in contexts.exclude(creation=None):
+            while p is not None and c.creation<p.start:
+                if len(lafter):
+                    out.append((None,lafter))
+                if len(lduring):
+                    out.append((p,lduring))
+                lafter = []
+                lduring = []
+                try:
+                    p = next(it)
+                except StopIteration:
+                    p = None
+            if p is None:
+                lafter.append(c)
+                continue
+            if c.creation>p.end:
+                lafter.append(c)
+            else:
+                lduring.append(c)
+        if len(lafter):
+            out.append((None,lafter))
+        if len(lduring):
+            out.append((p,lduring))
+        no_creation = contexts.filter(creation=None)
+        if no_creation.exists():
+            out.append((None,no_creation[:]))
+        groups = [(p,sorted(cs,key=lambda c:c.name.upper())) for p,cs in out]
+        return groups
+
+class ConsumerTimePeriod(models.Model):
+    consumer = models.ForeignKey(LTIConsumer, related_name='time_periods', on_delete=models.CASCADE)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+    name = models.CharField(max_length=300)
+
+    class Meta:
+        ordering = ['-end','-start']
 
 class ExtractPackageMixin(object):
     extract_folder = 'extracted_zips'
@@ -62,6 +117,7 @@ class Exam(ExtractPackageMixin,models.Model):
     package = models.FileField(upload_to='exams/',verbose_name='Package file')
     retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
     rest_url = models.URLField(blank=True,default='',verbose_name='URL of the exam on the editor\'s REST API')
+    creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this exam was created'))
 
     def __str__(self):
         return self.title
@@ -90,23 +146,54 @@ REPORTING_STATUSES = [
     ('complete',_('All scores reported')),
 ]
 
+SHOW_SCORES_MODES = [
+    ('always',_('Always')),
+    ('complete',_('When attempt is complete')),
+    ('never',_('Never')),
+]
+
+class LTIContext(models.Model):
+    consumer = models.ForeignKey(LTIConsumer,related_name='contexts', on_delete=models.CASCADE)
+    context_id = models.CharField(max_length=300)
+    name = models.CharField(max_length=300)
+    label = models.CharField(max_length=300)
+    instance_guid = models.CharField(max_length=300)
+
+    def __str__(self):
+        if self.name == self.label:
+            return self.name
+        else:
+            return '{} ({})'.format(self.name, self.label)
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
-    tool_consumer_instance_guid = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)
+    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='resources')
+    title = models.CharField(max_length=300,default='')
+    description = models.TextField(default='')
+
+    creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this resource was created'))
 
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
-    show_incomplete_marks = models.BooleanField(default=True,verbose_name=_('Show score of in-progress attempts to students?'))
+    show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
+    allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
 
+    num_questions = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-creation_time','title']
+
     def __str__(self):
         if self.exam:
             return str(self.exam)
+        elif self.context:
+            return _('Resource in "{}" - no exam uploaded').format(self.context.name)
         else:
-            return _('{} {} - no exam uploaded').format(self.tool_consumer_instance_guid,self.resource_link_id)
+            return ugettext('Resource with no context')
 
     @property
     def slug(self):
@@ -131,7 +218,7 @@ class Resource(models.Model):
         return attempts.aggregate(highest_score=models.Max('scaled_score'))['highest_score']
 
     def grade_last(self,user,attempts):
-        return attempts.order_by('-start_time').first()
+        return attempts.order_by('-start_time').first().scaled_score
 
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
@@ -140,15 +227,6 @@ class Resource(models.Model):
         if self.max_attempts==0:
             return True
         return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
-
-    def num_questions(self):
-        re_objective_id_key = r'^cmi.objectives.([0-9]+).id$'
-        top_key = ScormElement.objects.filter(attempt__resource=self,key__regex=re_objective_id_key).aggregate(models.Max('key'))['key__max']
-        if top_key is None:
-            return 0
-        else:
-            n = re.match(re_objective_id_key,top_key).group(1)
-            return int(n)+1
 
     def user_data(self,user):
         return LTIUserData.objects.filter(resource=self,user=user).last()
@@ -165,8 +243,8 @@ class Resource(models.Model):
                     }
                 }
         """
-        paths = sorted(set(e['value'] for e in ScormElement.objects.filter(attempt__resource=self,key__regex=r'cmi.interactions.\d+.id').values('value')),key=lambda x:(len(x),x))
-        re_path = re.compile(r'q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
+        paths = sorted(set(e['value'] for e in ScormElement.objects.filter(attempt__resource=self,key__regex=r'cmi.interactions.[0-9]+.id').values('value')),key=lambda x:(len(x),x))
+        re_path = re.compile(r'q([0-9]+)p([0-9]+)(?:g([0-9]+)|s([0-9]+))?')
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
@@ -182,6 +260,46 @@ class Resource(models.Model):
     
         return out
 
+    def last_activity(self):
+        if self.attempts.exists():
+            return self.attempts.order_by('-start_time').first().start_time
+        else:
+            return self.creation_time
+
+    def time_since_last_activity(self):
+        now = timezone.now()
+        diff = now - self.last_activity()
+        return diff
+
+    def is_new(self):
+        return self.time_since_last_activity().days < 7
+
+    def is_old(self):
+        return self.time_since_last_activity().days > 14
+
+    def live_stats_data(self):
+        question_data = [
+            {
+                'number': s.number, 
+                'raw_score': s.raw_score, 
+                'scaled_score': s.scaled_score, 
+                'max_score': s.max_score, 
+                'completion_status': s.completion_status,
+            } 
+            for s in AttemptQuestionScore.objects.filter(attempt__resource=self)
+        ]
+        attempt_data = [
+            {
+                'scaled_score': a.scaled_score,
+                'completion_status': a.completion_status,
+            }
+            for a in self.attempts.all()
+        ]
+        data = {
+            'questions': question_data,
+            'attempts': attempt_data,
+        }
+        return data
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -211,15 +329,19 @@ class LTIUserData(models.Model):
     lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
+    is_instructor = models.BooleanField(default=False)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
-    exam = models.ForeignKey(Exam,on_delete=models.CASCADE,related_name='attempts')  # need to keep track of both resource and exam in case the exam later gets overwritten
+    exam = models.ForeignKey(Exam,on_delete=models.CASCADE,related_name='attempts',null=True)  # need to keep track of both resource and exam in case the exam later gets overwritten
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='attempts')
     start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField(blank=True,null=True)
 
     completion_status = models.CharField(max_length=20,choices=COMPLETION_STATUSES,default='not attempted')
+    completion_status_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_completion_status_of", null=True)
     scaled_score = models.FloatField(default=0)
+    scaled_score_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_scaled_score_of", null=True)
 
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
@@ -236,7 +358,162 @@ class Attempt(models.Model):
         try:
             return self.scormelements.current(key).value
         except ScormElement.DoesNotExist:
+            if callable(default):
+                default = default()
             return default
+
+    def scorm_cmi(self):
+        user_data = self.resource.user_data(self.user)
+
+        scorm_cmi = {
+            'cmi.suspend_data': '',
+            'cmi.objectives._count': 0,
+            'cmi.interactions._count': 0,
+            'cmi.learner_name': self.user.get_full_name(),
+            'cmi.learner_id': user_data.consumer_user_id,
+            'cmi.location': '',
+            'cmi.score.raw': 0,
+            'cmi.score.scaled': 0,
+            'cmi.score.min': 0,
+            'cmi.score.max': 0,
+            'cmi.total_time': 0,
+            'cmi.success_status': '',
+            'cmi.completion_status': self.completion_status,
+        }
+        scorm_cmi = {k: {'value':v,'time':self.start_time.timestamp()} for k,v in scorm_cmi.items()}
+
+        # TODO only fetch the latest values of elements from the DB, somehow
+
+        latest_elements = {}
+
+        for e in self.scormelements.all().order_by('time','counter'):
+            latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
+
+        scorm_cmi.update(latest_elements)
+
+        return scorm_cmi
+
+    def data_dump(self,include_all_scorm=False):
+        remarked_parts = self.remarked_parts.all()
+        discounted_parts = self.resource.discounted_parts.all()
+
+        data = {
+            'attempt': self.pk,
+            'resource': {
+                'title': self.resource.title,
+                'context': self.resource.context.name,
+            },
+            'exam': self.exam.pk,
+            'user': {
+                'pk': self.user.pk,
+                'username': self.user.username,
+                'first_name': self.user.first_name,
+                'last_name': self.user.last_name,
+            },
+            'start_time': self.start_time.timestamp() if self.start_time is not None else None,
+            'end_time': self.end_time.timestamp() if self.end_time is not None else None,
+            'completion_status': self.completion_status,
+            'scaled_score': self.scaled_score,
+            'raw_score': self.raw_score,
+            'scores': [],
+            'broken': self.broken,
+            'remarked_parts': [{'part': p.part, 'score': p.score} for p in remarked_parts],
+        }
+
+        scorm_cmi = self.scorm_cmi()
+        data['scorm'] = {
+            'current': scorm_cmi,
+        }
+        if include_all_scorm:
+            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')]
+
+        re_interaction_id = re.compile(r'^cmi\.interactions\.(\d+)\.id$')
+        part_ids = {}
+        for k,v in scorm_cmi.items():
+            m = re_interaction_id.match(k)
+            if m:
+                part_ids[v['value']] = m.group(1)
+
+        remark_dict = {r.part:r.score for r in remarked_parts}
+        discount_dict = {d.part:d.behaviour for d in discounted_parts}
+
+        def scorm_value(key,default=None):
+            try:
+                return scorm_cmi[key]['value']
+            except KeyError:
+                return default
+        
+        def describe_part(path,part={}):
+            pid = part_ids.get(path)
+            data = {
+                'part': path,
+            }
+            if pid is not None:
+                data.update({
+                    'raw_score': float(scorm_value('cmi.interactions.{}.result'.format(pid),'0')),
+                    'max_score': float(scorm_value('cmi.interactions.{}.weighting'.format(pid), '0')),
+                })
+
+            gaps = part.get('gaps',[])
+            if len(gaps)>0:
+                data['gaps'] = [describe_part('{}g{}'.format(path,g)) for g in gaps]
+            steps = part.get('steps',[])
+            if len(steps)>0:
+                data['steps'] = [describe_part('{}s{}'.format(path,s)) for s in steps]
+
+            if path in discount_dict:
+                data['discounted'] = True
+                behaviour = discount_dict[path]
+                if behaviour == 'remove':
+                    data['raw_score'] = 0
+                    data['max_score'] = 0
+                else:
+                    data['raw_score'] = data['max_score']
+                data['score_changed'] = True
+            elif path in remark_dict:
+                data['remarked'] = True
+                data['raw_score'] = remark_dict[path]
+                data['score_changed'] = True
+            elif any(g.get('discounted') or g.get('remarked') for g in data.get('gaps',[])):
+                raw_score = 0
+                max_score = 0
+                for g in data['gaps']:
+                    raw_score += g['raw_score']
+                    max_score += g['max_score']
+                data['raw_score'] = raw_score
+                data['max_score'] = max_score
+                data['score_changed'] = True
+
+            if any(s.get('discounted') or s.get('remarked') for s in data.get('steps',[])):
+                step_score = 0
+                for s in data['steps']:
+                    step_score += s['raw_score']
+                if step_score > data['raw_score']:
+                    data['raw_score'] = step_score
+                    data['score_changed'] = True
+
+            return data
+
+        for qnum, parts in self.part_hierarchy().items():
+            aqs = self.question_score_info(qnum)
+            obj = {
+                'question': int(qnum),
+                'scaled_score': aqs.scaled_score,
+                'raw_score': aqs.raw_score,
+                'max_score': aqs.max_score,
+                'completion_status': aqs.completion_status,
+                'parts': [describe_part('q{}p{}'.format(qnum,path),part) for path,part in parts.items()],
+            }
+
+            data['scores'].append(obj)
+
+        try:
+            suspend_data = json.loads(self.get_element_default('cmi.suspend_data','{}'))
+        except json.decoder.JSONDecodeError:
+            suspend_data = {}
+        data['suspend_data'] = suspend_data
+
+        return data
 
     def completed(self):
         return self.completion_status=='completed'
@@ -245,8 +522,8 @@ class Attempt(models.Model):
     def raw_score(self):
         if self.remarked_parts.exists() or self.resource.discounted_parts.exists():
             total = 0
-            for i in range(self.resource.num_questions()):
-                total += self.question_score(i)
+            for i in range(self.resource.num_questions):
+                total += self.question_raw_score(i)
             return total
 
         return float(self.get_element_default('cmi.score.raw',0))
@@ -255,17 +532,17 @@ class Attempt(models.Model):
     def max_score(self):
         if self.resource.discounted_parts.exists():
             total = 0
-            for i in range(self.resource.num_questions()):
+            for i in range(self.resource.num_questions):
                 total += self.question_max_score(i)
             return total
 
-        return float(self.get_element_default('cmi.score.max',0))
+        return float(self.get_element_default('cmi.score.max', lambda: sum(self.question_max_score(i) for i in range(self.resource.num_questions))))
 
     def part_discount(self,part):
         return self.resource.discounted_parts.filter(part=part).first()
 
     def part_paths(self):
-        return self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id')
+        return set(e['value'] for e in self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id').values('value').distinct())
 
     def part_hierarchy(self):
         """
@@ -279,8 +556,8 @@ class Attempt(models.Model):
                     }
                 }
         """
-        paths = sorted(set(e['value'] for e in self.part_paths().values('value')),key=lambda x:(len(x),x))
-        re_path = re.compile(r'q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
+        paths = sorted(self.part_paths(),key=lambda x:(len(x),x))
+        re_path = re.compile('q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
@@ -293,17 +570,17 @@ class Attempt(models.Model):
         return out
 
     def part_gaps(self,part):
-        if not re.match(r'q\d+p\d+$',part):
-            return None
-        gaps = self.part_paths().filter(value__startswith=part+'g')
-        return set([g['value'] for g in gaps.values('value')])
+        if not re.match(r'^q\d+p\d+$',part):
+            return []
+        gaps = [g for g in self.part_paths() if g.startswith(part+'g')]
+        return gaps
 
     def part_interaction_id(self,part):
-        id_element = self.part_paths().filter(value=part).get()
+        id_element = self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id',value=part).first()
         n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
         return n
 
-    def part_score(self,part):
+    def part_raw_score(self,part):
         discounted = self.part_discount(part)
         if discounted:
             return self.part_max_score(part)
@@ -314,7 +591,7 @@ class Attempt(models.Model):
 
         if self.remarked_parts.filter(part__startswith=part+'g').exists() or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
-            return sum(self.part_score(g) for g in gaps)
+            return sum(self.part_raw_score(g) for g in gaps)
 
         try:
             id = self.part_interaction_id(part)
@@ -341,45 +618,128 @@ class Attempt(models.Model):
 
         return float(self.get_element_default('cmi.interactions.{}.weighting'.format(id),0))
 
-    def question_score(self,n):
+    def question_raw_score(self,n):
+        _,raw,_,_ = self.calculate_question_score_info(n)
+        return raw
+
+    def calculate_question_score_info(self,n):
         qid = 'q{}'.format(n)
         if self.remarked_parts.filter(part__startswith=qid).exists() or self.resource.discounted_parts.filter(part__startswith=qid).exists():
-            question_parts = self.part_paths().filter(value__startswith=qid)
-            total = 0
-            for p in question_parts:
-                part = p.value
+            question_parts = [p for p in self.part_paths() if p.startswith(qid)]
+            total_raw = 0.0
+            total_max = 0.0
+            for part in question_parts:
                 if re.match(r'^q{}p\d+$'.format(n),part):
-                    total += self.part_score(part)
-            return total
+                    total_raw += self.part_raw_score(part)
+                    total_max += self.part_max_score(part)
+            raw_score = total_raw
+            scaled_score = total_raw/total_max if total_max>0 else 0.0
+            max_score = total_max
         else:
-            score = self.get_element_default('cmi.objectives.{}.score.raw'.format(n),0)
-        return float(score)
+            raw_score = float(self.get_element_default('cmi.objectives.{}.score.raw'.format(n),0))
+            scaled_score = float(self.get_element_default('cmi.objectives.{}.score.scaled'.format(n),0))
+            max_score = float(self.get_element_default('cmi.objectives.{}.score.max'.format(n),0))
+
+        completion_status = self.get_element_default('cmi.objectives.{}.completion_status'.format(n),'not attempted')
+
+        return (scaled_score, raw_score, max_score, completion_status)
+
+    def update_question_score_info(self,n):
+        scaled_score,raw_score,max_score,completion_status = self.calculate_question_score_info(n)
+        AttemptQuestionScore.objects.update_or_create(attempt=self,number=n,defaults={'scaled_score':scaled_score,'raw_score':raw_score,'max_score':max_score,'completion_status':completion_status})
+
+    def question_score_info(self,n):
+        try:
+            return self.cached_question_scores.get(number=n)
+        except AttemptQuestionScore.DoesNotExist:
+            scaled_score, raw_score, max_score, completion_status = self.calculate_question_score_info(n)
+            aqs = AttemptQuestionScore.objects.create(attempt = self, number = n, raw_score = raw_score, scaled_score = scaled_score, max_score = max_score, completion_status = completion_status)
+            return aqs
+        except AttemptQuestionScore.MultipleObjectsReturned:
+            aqs = self.cached_question_scores.filter(number=n)
+            n = aqs.count()
+            aq = aqs[n]
+            aqs[:n].delete()
+            return aq
+
+    def question_numbers(self):
+        questions = self.scormelements.filter(key__regex='cmi.objectives.[0-9]+.id').values('key').distinct()
+        re_number = re.compile(r'cmi.objectives.([0-9]+).id')
+        numbers = sorted(set([re_number.match(q['key']).group(1) for q in questions]))
+        return numbers
+
+    def question_scores(self):
+        return sorted([self.question_score_info(n) for n in self.question_numbers()],key=lambda x:int(x.number))
 
     def question_max_score(self,n):
-        qid = 'q{}'.format(n)
-        if self.resource.discounted_parts.filter(part__startswith=qid).exists():
-            question_parts = self.part_paths().filter(value__startswith=qid)
-            total = 0
-            for p in question_parts:
-                part = p.value
-                if re.match(r'^q{}p\d+$'.format(n),part):
-                    total += self.part_max_score(part)
-            return total
-        else:
-            score = self.get_element_default('cmi.objectives.{}.score.max'.format(n),0)
-        return float(score)
+        _,_,max_score,_ = self.calculate_question_score_info(n)
+        return max_score
 
     def channels_group(self):
         return 'attempt-{}'.format(self.pk)
 
+    def resume_allowed(self):
+        if self.completed():
+            return self.review_allowed()
+        else:
+            return True
+
+    def review_allowed(self):
+        if not self.should_show_scores():
+            return False
+        return self.resource.allow_review_from is None or timezone.now() >= self.resource.allow_review_from
+
+    def should_show_scores(self):
+        return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
+
+    def is_remarked(self):
+        return self.remarked_parts.exists()
+
+class AttemptNotDeletedManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(attempt__deleted=False)
+
+class AttemptQuestionScore(models.Model):
+    attempt = models.ForeignKey(Attempt,related_name='cached_question_scores', on_delete=models.CASCADE)
+    number = models.IntegerField()
+    raw_score = models.FloatField()
+    scaled_score = models.FloatField()
+    max_score = models.FloatField()
+    completion_status = models.CharField(default='not attempted',max_length=20)
+
+    objects = AttemptNotDeletedManager()
+
+    class Meta:
+        unique_together = (('attempt','number'),)
+
+    def __str__(self):
+        return '{}/{} on question {} of {}'.format(self.raw_score,self.max_score,self.number,self.attempt)
+
+"""
+# Removed because it might be killing the server
+@receiver(models.signals.post_save,sender=AttemptQuestionScore)
+def question_score_live_stats(sender,instance,**kwargs):
+    resource = instance.attempt.resource
+    group = group_for_resource_stats(resource)
+    group.send({"text": json.dumps(resource.live_stats_data())})
+"""
+
 class RemarkPart(models.Model):
-    attempt = models.ForeignKey(Attempt,related_name='remarked_parts')
+    attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
     score = models.FloatField()
+    
+    def __str__(self):
+        return '{} on part {} in {}'.format(self.score, self.part, self.attempt)
 
 def remark_update_scaled_score(sender,instance,**kwargs):
     attempt = instance.attempt
-    scaled_score = attempt.raw_score/attempt.max_score
+    question = int(re.match(r'^q(\d+)',instance.part).group(1))
+    attempt.update_question_score_info(question)
+    if attempt.max_score>0:
+        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
+    else:
+        scaled_score = 0
     if scaled_score != attempt.scaled_score:
         attempt.scaled_score = scaled_score
         attempt.save()
@@ -392,14 +752,16 @@ DISCOUNT_BEHAVIOURS = [
 ]
 
 class DiscountPart(models.Model):
-    resource = models.ForeignKey(Resource,related_name='discounted_parts')
+    resource = models.ForeignKey(Resource,related_name='discounted_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
     behaviour = models.CharField(max_length=10,choices=DISCOUNT_BEHAVIOURS,default='remove')
 
 def discount_update_scaled_score(sender,instance,**kwargs):
     for attempt in instance.resource.attempts.all():
-        scaled_score = attempt.raw_score/attempt.max_score
-        print(attempt,scaled_score,attempt.scaled_score)
+        question = int(re.match(r'^q(\d+)',instance.part).group(1))
+        attempt.update_question_score_info(question)
+
+        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
         if scaled_score != attempt.scaled_score:
             attempt.scaled_score = scaled_score
             attempt.save()
@@ -409,7 +771,7 @@ models.signals.post_delete.connect(discount_update_scaled_score,sender=DiscountP
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
         """ Return the last value of this field """
-        elements = self.filter(key=key).order_by('-time')
+        elements = self.filter(key=key).order_by('-time','-counter')
         if not elements.exists():
             raise ScormElement.DoesNotExist()
         else:
@@ -431,13 +793,17 @@ class ScormElement(models.Model):
     key = models.CharField(max_length=200)
     value = models.TextField()
     time = models.DateTimeField()
+    counter = models.IntegerField(default=0,verbose_name='Element counter to disambiguate elements with the same timestamp')
     current = models.BooleanField(default=True) # is this the latest version?
 
     class Meta:
-        ordering = ['-time']
+        ordering = ['-time','-counter']
 
     def __str__(self):
         return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))
+
+    def newer_than(self, other):
+        return self.time>other.time or (self.time==other.time and self.counter>other.counter)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
@@ -454,20 +820,53 @@ def scorm_set_score(sender,instance,created,**kwargs):
     if instance.key!='cmi.score.scaled' or not created:
         return
 
+    if not (instance.attempt.scaled_score_element is None or instance.newer_than(instance.attempt.scaled_score_element)):
+        return
+
     instance.attempt.scaled_score = float(instance.value)
+    instance.attempt.scaled_score_element = instance
     instance.attempt.save()
     if instance.attempt.resource.report_mark_time == 'immediately':
-        report_outcome_for_attempt(instance.attempt)
+        try:
+            report_outcome_for_attempt(instance.attempt)
+        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
+            pass
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
     if instance.key!='cmi.completion_status' or not created:
         return
 
+    if not (instance.attempt.completion_status_element is None or instance.newer_than(instance.attempt.completion_status_element)):
+        return
+
     instance.attempt.completion_status = instance.value
+    instance.attempt.completion_status_element = instance
+    if instance.value=='completed' and instance.attempt.end_time is None:
+        instance.attempt.end_time = timezone.now()
+        group_for_attempt(instance.attempt).send({'text':json.dumps({
+            'completion_status':'completed',
+        })})
     instance.attempt.save()
+
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        report_outcome_for_attempt(instance.attempt)
+        try:
+            report_outcome_for_attempt(instance.attempt)
+        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
+            pass
+
+@receiver(models.signals.post_save,sender=ScormElement)
+def scorm_set_num_questions(sender,instance,created,**kwargs):
+    """ Set the number of questions for this resource - can only work this out once the exam has been run! """
+    if not re.match(r'^cmi.objectives.([0-9]+).id$',instance.key) or not created:
+        return
+
+    number = int(re.match(r'q(\d+)',instance.value).group(1))+1
+    resource = instance.attempt.resource
+    
+    if number>resource.num_questions:
+        resource.num_questions = number
+        resource.save()
 
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name='Editor name')
@@ -513,6 +912,29 @@ class EditorLinkProject(models.Model):
     homepage = models.URLField(verbose_name='URL of the project\'s homepage on the editor')
     rest_url = models.URLField(verbose_name='URL of the project on the editor\'s REST API')
 
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 @receiver(models.signals.pre_save,sender=EditorLink)
 def update_editor_cache_before_save(sender,instance,**kwargs):
     instance.update_cache()
+
+class StressTest(models.Model):
+    resource = models.OneToOneField(Resource,on_delete=models.CASCADE,primary_key=True)
+
+    class Meta:
+        ordering = ['-resource__creation_time']
+
+    def __str__(self):
+        return self.resource.creation_time.strftime('%B %d, %Y %H:%M')
+
+    def get_absolute_url(self):
+        return reverse('view_stresstest',args=(self.pk,))
+
+class StressTestNote(models.Model):
+    stresstest = models.ForeignKey(StressTest,on_delete=models.CASCADE,related_name='notes')
+    text = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)

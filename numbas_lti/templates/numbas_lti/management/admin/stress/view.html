@@ -1,0 +1,74 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block admin_container %}container-fluid{% endblock %}
+
+{% block javascripts %}
+{{block.super}}
+
+<script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
+<script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'fetch.js' %}"></script>
+<script type="text/javascript" src="{% static 'polyfills.js' %}"></script>
+<script src="{% static 'api.js' %}"></script>
+<script src="{% static 'vue.js' %}"></script>
+<script src="{% static 'stresstest.js' %}"></script>
+{% endblock %}
+
+{% block stylesheets %}
+{{block.super}}
+<style>
+    .totals {
+        display: grid;
+        grid-gap: 0.5em;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        margin: 1em 0;
+        font-weight: bold;
+    }
+    .attempt {
+        margin: 1em 0;
+        display: grid;
+        grid-gap: 0.5em;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+    }
+</style>
+{% endblock %}
+
+{% block management_content %}
+<header>
+    <h1>Stress test {{object.resource.creation_time|date:"DATE_FORMAT"}}</h1>
+</header>
+
+<div id="app">
+    {% verbatim %}
+    <p><button class="btn btn-danger" @click="wipe">Wipe all data</button></p>
+    <p>Start <input type="number" v-model="num_attempts_to_start"> {{num_attempts_to_start | pluralize('attempt')}} at <input type="time" v-model="time_to_start"> <button class="btn btn-default" @click="start_next_minute">next minute</button> <button class="btn btn-warning" @click="start_attempts">now</button></p>
+    <p>Set <input type="number" v-model="num_elements_set_on_creation"> {{num_elements_set_on_creation | pluralize('element')}} on attempt creation.</p>
+    <p>Set new elements every <input type="number" v-model="element_period" min="1"> {{element_period | pluralize('second')}}.</p>
+    <button class="btn btn-primary" @click="start_attempt">Start an attempt</button>
+    <div class="totals">
+        <span>{{attempts.length}} {{attempts.length | pluralize('attempt')}}.</span>
+        <span>{{num_attempts_waiting_to_start}} waiting to start.</span>
+        <span>{{num_attempts_without_socket}} without websocket.</span>
+        <span>{{num_attempts_queued}} with unsaved data.</span>
+        <span>{{num_attempts_waiting_for_ajax}} waiting for AJAX.</span>
+    </div>
+    <ul class="list-unstyled">
+        <li v-for="attempt in attempts" v-if="attempt.begun" class="attempt">
+            <span>Attempt {{attempt.pk}}.</span>
+            <span>{{attempt.num_elements_set}} {{attempt.num_elements_set | pluralize('element')}} set.</span>
+            <span>Socket {{attempt.socket_state}}. {{attempt.queue_length}} {{attempt.queue_length | pluralize('element')}} in queue.</span>
+            <span>{{attempt.num_batches}} {{attempt.num_batches | pluralize('batch','batches')}} unacknowledged.</span>
+            <span><span v-if="attempt.ajax_is_working">AJAX is working</span><span v-else>AJAX is not working</span>.</span>
+            <span><span v-if="attempt.pending_ajax">Waiting for AJAX.</span></span>
+        </li>
+        <li v-else>
+            Waiting...
+        </li>
+    </ul>
+    {% endverbatim %}
+</div>
+{% endblock management_content %}

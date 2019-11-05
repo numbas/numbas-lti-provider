@@ -3,13 +3,14 @@
 <!doctype html>
 <html>
     <head>
-        <title>{% trans "Numbas LTI Provider" %}</title>
+        <title>{% block title %}{% trans "Numbas LTI Provider" %}{% endblock %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {% block stylesheets %}
         <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
+        <link rel="stylesheet" href="{% static 'numbas_lti.css' %}">
         {% endblock stylesheets %}
     </head>
-    <body>
+    <body class="{% block body_class %}{% endblock %}">
         {% block content %}
         {% endblock content %}
 
