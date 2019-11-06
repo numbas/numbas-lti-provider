@@ -1,4 +1,4 @@
-.. _installation:
+.. _installation_ubuntu:
 
 Installation on Ubuntu
 ######################

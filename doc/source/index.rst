@@ -13,6 +13,7 @@ Contents
 
     how-it-works
     getting-started
+    installation/index
     admin/index
     instructor/index
     student/index
