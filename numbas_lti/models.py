@@ -339,6 +339,21 @@ class LTIUserData(models.Model):
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
 
+    def get_source_id(self):
+        if self.lis_person_sourcedid:
+            return self.lis_person_sourcedid
+        else:
+            return self.consumer_user_id
+
+    def identifier(self):
+        identifier_field = self.resource.context.consumer.identifier_field
+        if identifier_field == 'username':
+            return self.get_source_id()
+        elif identifier_field == 'email':
+            return self.user.email
+        else:
+            return ''
+
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
     exam = models.ForeignKey(Exam,on_delete=models.CASCADE,related_name='attempts',null=True)  # need to keep track of both resource and exam in case the exam later gets overwritten
@@ -364,19 +379,6 @@ class Attempt(models.Model):
 
     def user_data(self):
         return self.resource.user_data(self.user)
-
-    def user_identifier(self):
-        identifier_field = self.resource.context.consumer.identifier_field
-        if identifier_field == 'username':
-            user_data = self.user_data()
-            if user_data.lis_person_sourcedid:
-                return user_data.lis_person_sourcedid
-            else:
-                return user_data.consumer_user_id
-        elif identifier_field == 'email':
-            return self.user.email
-        else:
-            return ''
 
     def get_element_default(self,key,default=None):
         try:

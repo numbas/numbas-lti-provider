@@ -96,7 +96,7 @@
             <tr data-student="{{attempt.user.get_full_name}}">
                 <td>{{attempt.user.get_full_name}}</td>
                 {% if identifier_field %}
-                <td class="identifier">{{attempt.user_identifier}}</td>
+                <td class="identifier">{{attempt.user_data.identifier}}</td>
                 {% endif %}
                 <td>{{attempt.start_time}}</td>
                 <td>

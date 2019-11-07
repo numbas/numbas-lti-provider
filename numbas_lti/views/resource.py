@@ -222,7 +222,7 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 student.first_name,
                 student.last_name,
                 student.email,
-                student.username,
+                user_data.get_source_id(),
                 resource.grade_user(student)*100
             )
 
@@ -267,7 +267,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 attempt.user.first_name,
                 attempt.user.last_name,
                 attempt.user.email,
-                attempt.user.username,
+                user_data.get_source_id(),
                 attempt.start_time,
                 attempt.end_time,
                 attempt.completion_status,
