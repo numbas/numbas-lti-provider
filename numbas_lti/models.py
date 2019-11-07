@@ -27,11 +27,18 @@ class NotDeletedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(deleted=False)
 
+IDENTIFIER_FIELDS = [
+    ('username', _('Username')),
+    ('email', _('Email address')),
+    ('', _('None')),
+]
+
 class LTIConsumer(models.Model):
     url = models.URLField(blank=True,default='',verbose_name='Home URL of consumer')
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
     secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
+    identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name='Field used to identify students')
 
     objects = NotDeletedManager()
 
@@ -327,6 +334,7 @@ class LTIUserData(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
     lis_result_sourcedid = models.CharField(max_length=200,default='',blank=True,null=True)
     lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
+    lis_person_sourcedid = models.CharField(max_length=200,blank=True,default='')
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
@@ -353,6 +361,22 @@ class Attempt(models.Model):
 
     def __str__(self):
         return 'Attempt by "{}" on "{}"'.format(self.user,self.resource)
+
+    def user_data(self):
+        return self.resource.user_data(self.user)
+
+    def user_identifier(self):
+        identifier_field = self.resource.context.consumer.identifier_field
+        if identifier_field == 'username':
+            user_data = self.user_data()
+            if user_data.lis_person_sourcedid:
+                return user_data.lis_person_sourcedid
+            else:
+                return user_data.consumer_user_id
+        elif identifier_field == 'email':
+            return self.user.email
+        else:
+            return ''
 
     def get_element_default(self,key,default=None):
         try:

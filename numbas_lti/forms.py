@@ -53,7 +53,7 @@ class CreateSuperuserForm(UserCreationForm):
 class CreateConsumerForm(ModelForm):
     class Meta:
         model = LTIConsumer
-        fields = ('key','url',)
+        fields = ('key','url','identifier_field',)
 
     def save(self,commit=True):
         consumer = super(CreateConsumerForm,self).save(commit=False)
