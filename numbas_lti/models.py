@@ -334,7 +334,7 @@ class LTIUserData(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
     lis_result_sourcedid = models.CharField(max_length=200,default='',blank=True,null=True)
     lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
-    lis_person_sourcedid = models.CharField(max_length=200,blank=True,default='')
+    lis_person_sourcedid = models.CharField(max_length=200,blank=True,default='',null=True)
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
