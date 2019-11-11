@@ -175,6 +175,7 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
 
         context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time','-counter'),key=lambda x:x.key)]
         context['show_stale_elements'] = True
+        context['resource'] = self.object.resource
 
         return context
 

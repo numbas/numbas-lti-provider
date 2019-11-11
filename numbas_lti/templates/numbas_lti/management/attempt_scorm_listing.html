@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}
+
 {% block stylesheets %}
     {{block.super}}
     <link rel="stylesheet" href="{% static 'attempt_scorm_listing.css' %}">
