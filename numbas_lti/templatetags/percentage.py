@@ -5,7 +5,7 @@ register = template.Library()
 
 @register.filter
 def percentage(value):
-    return "{0:.0%}".format(value)
+    return "{0:.0%}".format(floor(100*value)/100)
 
 @register.filter
 def percentage_bin(value,bins=3):
