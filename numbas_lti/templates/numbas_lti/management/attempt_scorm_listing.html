@@ -11,7 +11,9 @@
 
 {% block attempt_content %}
 
-<a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a>
+<p><a class="btn btn-link" href="{% url 'attempt_timeline' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View activity timeline for this attempt" %}</a></p>
+
+<p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
 
 <div class="search">
     <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>

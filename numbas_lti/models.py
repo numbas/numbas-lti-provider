@@ -831,14 +831,18 @@ class ScormElement(models.Model):
     def newer_than(self, other):
         return self.time>other.time or (self.time==other.time and self.counter>other.counter)
 
+    def as_json(self):
+        return {
+            'key': self.key,
+            'value': self.value,
+            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'counter': self.counter,
+        }
+
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
     Group(instance.attempt.channels_group()).send({
-        "text": json.dumps({
-            'key': instance.key,
-            'value': instance.value,
-            'time': instance.time.strftime('%Y-%m-%d %H:%M:%S'),
-        })
+        "text": json.dumps(instance.as_json())
     })
 
 @receiver(models.signals.post_save,sender=ScormElement)

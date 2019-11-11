@@ -179,7 +179,22 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
 
         return context
 
+class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
+    model = Attempt
+    management_tab = 'attempts'
+    template_name = 'numbas_lti/management/attempt_timeline.html'
+    context_object_name = 'attempt'
 
+    def get_resource(self):
+        return self.get_object().resource
+
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        context['resource'] = self.object.resource
+        context['elements'] = [e.as_json() for e in self.object.scormelements.order_by('time','counter')]
+
+        return context
 
 class DeleteAttemptView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.edit.DeleteView):
     model = Attempt

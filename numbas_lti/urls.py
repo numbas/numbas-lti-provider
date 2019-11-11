@@ -35,6 +35,7 @@ urlpatterns = [
 
     url(r'^attempt/(?P<pk>\d+)/remark_parts$', views.attempt.RemarkPartsView.as_view(), name='remark_parts'),
     url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.attempt.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
+    url(r'^attempt/(?P<pk>\d+)/timeline$', views.attempt.AttemptTimelineView.as_view(), name='attempt_timeline'),
     url(r'^attempt/(?P<pk>\d+)/delete$', views.attempt.DeleteAttemptView.as_view(), name='delete_attempt'),
     url(r'^attempt/(?P<pk>\d+)/reopen$', views.attempt.ReopenAttemptView.as_view(), name='reopen_attempt'),
     url(r'^attempt/(?P<pk>\d+)/scorm_data_fallback$', views.attempt.scorm_data_fallback, name='attempt_scorm_data_fallback'),
