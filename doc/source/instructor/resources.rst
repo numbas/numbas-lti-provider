@@ -171,8 +171,15 @@ The new score is saved as you type, and the totals for the question and the whol
 Data
 ^^^^
 
+By clicking on the :guilabel:`Data` button, you can see a timeline describing actions the student took during their attempt.
+
+Items shown include moving between questions, submitting answers, and marks awarded.
+This page will update in real-time as the student continues their attempt.
+
+Click the :guilabel:`Download attempt data in JSON format` button to obtain a ``.json`` file containing all data pertaining to this attempt, including question and part scores, completion status, and the values of question variables.
+
 Numbas uses the `SCORM <https://scorm.com/scorm-explained/>`_ standard to store data about attempts.
-By clicking on the :guilabel:`Data` button, you can see all of the SCORM data model elements stored for a particular attempt.
+By clicking on the :guilabel:`View raw SCORM data for this attempt` button, you can see all of the SCORM data model elements stored for a particular attempt.
 
 This is most useful for debugging connection errors, to confirm that data has been saved.
 
@@ -180,8 +187,6 @@ If :guilabel:`Most recent value only` is ticked, only the most recent value for 
 Untick it to see every value that the element has taken since the start of the attempt.
 
 You can type a regular expression in the :guilabel:`Search for an element` box to narrow down the displayed list of elements.
-
-Click the :guilabel:`Download attempt data in JSON format` button to obtain a ``.json`` file containing all data pertaining to this attempt, including question and part scores, completion status, and the values of question variables.
 
 Delete an attempt
 ^^^^^^^^^^^^^^^^^
