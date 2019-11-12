@@ -1,5 +1,5 @@
 from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
-from numbas_lti.models import LTIConsumer, LTIUserData
+from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -88,6 +88,13 @@ def basic_lti_launch(request):
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
     user_data.is_instructor = is_instructor
     user_data.save()
+
+    LTILaunch.objects.create(
+        user = request.user,
+        resource = request.resource,
+        user_agent = request.META.get('HTTP_USER_AGENT'),
+        ip_address = request.META.get('REMOTE_ADDR')
+    )
 
     if is_instructor:
         if not request.resource.exam:

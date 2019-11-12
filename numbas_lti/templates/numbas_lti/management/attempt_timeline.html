@@ -18,6 +18,7 @@
 <table class="table" id="timeline">
     <colgroup>
         <col style="width: 12em;"/>
+        <col style="width: 2em;"/>
         <col/>
         <col style="width: 5em;"/>
         <col style="width: 5em;"/>
@@ -25,6 +26,7 @@
     <thead>
         <tr>
             <th>{% trans "Time" %}</th>
+            <th></th>
             <th>{% trans "Action" %}</th>
             <th>{% trans "Total Score" %}</th>
             <th>{% trans "Scaled Score" %}</th>
@@ -35,6 +37,7 @@
             <!-- ko foreach: items -->
                 <tr class="item" data-bind="css: css">
                     <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: time"></span></td>
+                    <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
                     <td class="message"><span data-bind="html: message"></span></td>
                     <td class="exam-raw-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
                         <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
@@ -49,6 +52,7 @@
 <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 {{elements|json_script:"scorm-elements"}}
+{{launches|json_script:"launches"}}
 <script>
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
 </script>
