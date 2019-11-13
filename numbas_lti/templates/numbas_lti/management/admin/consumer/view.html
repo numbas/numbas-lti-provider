@@ -35,23 +35,30 @@
         {% endif %}
 
         <table class="table periods">
-        {% for period,contexts in period_groups %}
-        <tr>
-            <th>{{period.name}}</th>
-            <td>
-            {% regroup contexts by name|first|upper as context_groups %}
-
-            {% for letter in context_groups %}
-            <a id="period-{{period.name|slugify}}-context-letter-{{letter.grouper}}"></a>
-                <ul>
-                    {% for context in letter.list %}
-                    <li><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a> ({% blocktrans count n=context.resources.count %}1 resource{% plural %}{{n}} resources{% endblocktrans %})</li>
-                    {% endfor %}
-                </ul>
+            <colgroup>
+                <col style="width: 10em;"/>
+                <col/>
+                <col style="width: 4em;"/>
+                <col style="width: 4em;"/>
+            </colgroup>
+            <thead>
+                <th>{% trans "Time period" %}</th>
+                <th>{% trans "Context" %}</th>
+                <th>{% trans "Resources" %}</th>
+                <th>{% trans "Attempts" %}</th>
+            </thead>
+            <tbody>
+            {% for period,contexts in period_groups %}
+                {% for context in contexts %}
+                <tr>
+                    {% if forloop.first %}<td rowspan="{{contexts|length}}">{% if period %}{{period.name}}{% else %}{% trans "Not in a defined time period" %}{% endif %}</td>{% endif %}
+                    <td><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></td>
+                    <td class="number">{{context.resources.count}}</td>
+                    <td class="number">{{context.num_attempts}}</td>
+                </tr>
+                {% endfor %}
             {% endfor %}
-            </td>
-        </tr>
-        {% endfor %}
+            </tbody>
         </table>
 
         <a class="btn btn-default" href="{% url 'consumer_manage_time_periods' consumer.pk %}"><span class="glyphicon glyphicon-calendar"></span> Manage time periods</a>

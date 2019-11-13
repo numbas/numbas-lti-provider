@@ -9,3 +9,7 @@
 table.periods tr:first-child th, table.periods tr:first-child td {
   border-top: none;
 }
+
+td.number {
+    text-align: right;
+}

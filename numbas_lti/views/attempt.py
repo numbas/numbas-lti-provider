@@ -14,7 +14,7 @@ from django.views import generic
 from django.views.decorators.http import require_POST
 from itertools import groupby
 from numbas_lti.forms import RemarkPartScoreForm
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch
 from numbas_lti.save_scorm_data import save_scorm_data
 import datetime
 import json
@@ -193,6 +193,7 @@ class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
 
         context['resource'] = self.object.resource
         context['elements'] = [e.as_json() for e in self.object.scormelements.order_by('time','counter')]
+        context['launches'] = [l.as_json() for l in self.object.launches.all()]
 
         return context
 
@@ -261,6 +262,14 @@ class RunAttemptView(generic.detail.DetailView):
 
     template_name = 'numbas_lti/run_attempt.html'
 
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        AttemptLaunch.objects.create(
+            attempt = self.object,
+            mode = self.mode
+        )
+        return response
+
     def get_context_data(self,*args,**kwargs):
         context = super(RunAttemptView,self).get_context_data(*args,**kwargs)
 
@@ -297,7 +306,7 @@ class RunAttemptView(generic.detail.DetailView):
             else:
                 raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
 
-        context['mode'] = mode
+        context['mode'] = self.mode = mode
 
         user = attempt.user
         user_data = attempt.resource.user_data(user)

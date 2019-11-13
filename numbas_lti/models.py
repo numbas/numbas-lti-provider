@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Min
+from django.db.models import Min, Count
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
@@ -50,7 +50,7 @@ class LTIConsumer(models.Model):
         return Resource.objects.filter(context__consumer=self)
 
     def contexts_grouped_by_period(self):
-        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time')).order_by('-creation')
+        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time'),num_attempts=Count('resources__attempts')).order_by('-creation')
         if not self.time_periods.exists():
             return [(None,contexts)]
         it = iter(self.time_periods.order_by('-end'))
@@ -353,6 +353,19 @@ class LTIUserData(models.Model):
             return self.user.email
         else:
             return ''
+
+class LTILaunch(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_launches')
+    resource = models.ForeignKey(Resource,on_delete=models.CASCADE, related_name='launches')
+    time = models.DateTimeField(auto_now_add=True)
+    user_agent = models.CharField(max_length=500)
+    ip_address = models.CharField(max_length=100)
+
+    def __str__(self):
+        return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)
+
+    class Meta:
+        ordering = ('time',)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
@@ -720,6 +733,24 @@ class Attempt(models.Model):
 
     def is_remarked(self):
         return self.remarked_parts.exists()
+
+class AttemptLaunch(models.Model):
+    attempt = models.ForeignKey(Attempt,related_name='launches', on_delete=models.CASCADE)
+    time = models.DateTimeField(auto_now_add=True)
+    mode = models.CharField(max_length=100)
+
+    def __str__(self):
+        return 'Launch {} in mode "{}" at {}'.format(self.attempt, self.mode, self.time)
+
+    def as_json(self):
+        return {
+            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'mode': self.mode,
+        }
+
+    class Meta:
+        ordering = ('time',)
+
 
 class AttemptNotDeletedManager(models.Manager):
     def get_queryset(self):

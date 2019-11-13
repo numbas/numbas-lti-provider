@@ -20,7 +20,11 @@ function parse_part_path(path) {
     };
 }
 
-function Timeline(elements) {
+function score_icon(score,marks) {
+    return marks==0 ? '' : score<marks ? 'remove' : 'ok'
+}
+
+function Timeline(elements, launches) {
     var tl = this;
     this.question = ko.observable(0);
     this.raw_score = ko.observable(0);
@@ -31,6 +35,10 @@ function Timeline(elements) {
     this.timeline = ko.observableArray([]);
 
     elements.forEach(this.add_element,this);
+
+    this.launches = launches;
+
+    launches.forEach(this.add_launch, this);
 
     this.grouped_timeline = ko.computed(function() {
         var timeline = this.timeline().sort(function(a,b) {
@@ -51,6 +59,7 @@ function Timeline(elements) {
             current_group.items.push(item);
         });
         var item_order = [
+            'launch',
             'scorm part answer',
             'scorm part score',
             'scorm question score raw',
@@ -65,7 +74,9 @@ function Timeline(elements) {
         groups.forEach(function(g) {
             var exam_score = 0;
             if(g.items.length) {
-                var dm = tl.datamodel_at(g.items[g.items.length-1].element);
+                var element_items = g.items.filter(function(i){ return i.css.scorm });
+                var element = element_items.length ? element_items[element_items.length-1].element : null;
+                var dm = tl.datamodel_at(element);
                 g.exam_raw_score = parseFloat(dm['cmi.score.raw'] || 0);
                 g.exam_max_score = parseFloat(dm['cmi.score.max'] || 0);
                 var exam_scaled_score = parseFloat(dm['cmi.score.scaled'] || 0);
@@ -125,20 +136,23 @@ Timeline.prototype = {
                 p = p.steps[desc.step];
             }
             var part_type = datamodel['cmi.interactions.'+id+'.description'];
+            var marks = parseFloat(datamodel['cmi.interactions.'+id+'.weighting']);
             part = {
                 id: id,
                 name: p.name || path,
                 path: path,
-                type: part_type
+                type: part_type,
+                marks: marks
             }
         } catch(e) {
             part = {
                 id: id,
                 name: path,
-                path: path
+                path: path,
+                marks: 0
             }
         }
-        part.name = 'Question '+(desc.question+1)+' '+part.name;
+        part.name = 'Question '+(desc.question+1)+', '+part.name;
         return part;
     },
 
@@ -160,11 +174,17 @@ Timeline.prototype = {
                 'completed': 'Ended the attempt.',
             };
             var message = messages[element.value];
+            var icons = {
+                'incomplete': 'open',
+                'completed': 'saved'
+            }
+            var icon = icons[element.value];
             if(message) {
                 this.add_timeline_item(new TimelineItem(
                     message,
                     element,
-                    'scorm completion_status'
+                    'scorm completion_status',
+                    icon
                 ));
             }
             return;
@@ -179,7 +199,8 @@ Timeline.prototype = {
             this.add_timeline_item(new TimelineItem(
                 'Moved to <em class="question">Question '+(number+1)+'</em>.',
                 element,
-                'scorm location'
+                'scorm location',
+                'list'
             ));
             this.question(number);
         } else if(m = key.match(/^cmi.interactions.(\d+).learner_response$/)) {
@@ -189,31 +210,44 @@ Timeline.prototype = {
                 this.add_timeline_item(new TimelineItem(
                     'Submitted answer <code>'+element.value+'</code> for <em class="part">'+p.name+'</em>.',
                     element,
-                    'scorm part answer'
+                    'scorm part answer',
+                    'pencil'
                 ));
             }
         } else if(m = key.match(/^cmi.interactions.(\d+).result$/)) {
             var id = parseInt(m[1]);
             var p = this.getPart(id,element);
+            var score = parseFloat(element.value);
             this.add_timeline_item(new TimelineItem(
-                'Received <strong>'+element.value+'</strong> '+pluralise(element.value,'mark','marks')+' for <em class="part">'+p.name+'</em>.',
+                'Received <strong>'+score+'/'+p.marks+'</strong> '+pluralise(score,'mark','marks')+' for <em class="part">'+p.name+'</em>.',
                 element,
-                'scorm part score'
+                'scorm part score',
+                score_icon(score,p.marks)
             ));
         } else if(m = key.match(/^cmi.objectives.(\d+).score.raw$/)) {
             var id = parseInt(m[1]);
             this.add_timeline_item(new TimelineItem(
                 'Total score for <em class="question">Question '+(id+1)+'</em> is <strong>'+element.value+'</strong>.',
                 element,
-                'scorm question score raw'
+                'scorm question score raw',
+                ''
             ));
         } else if(key=='cmi.score.raw') {
             this.add_timeline_item(new TimelineItem(
                 'Total score for exam is <strong>'+element.value+'</strong>.',
                 element,
-                'scorm exam score raw'
+                'scorm exam score raw',
+                ''
             ));
         }
+    },
+    add_launch: function(launch) {
+        this.add_timeline_item(new TimelineItem(
+            'Launched in '+launch.mode+' mode.',
+            launch,
+            'launch',
+            'eye-open'
+        ))
     },
     add_timeline_item: function(item) {
         this.timeline.push(item);
@@ -241,7 +275,7 @@ Timeline.prototype = {
 
 }
 
-function TimelineItem(message,element,kind) {
+function TimelineItem(message,element,kind,icon) {
     var ti = this;
     this.message = message;
     this.element = element;
@@ -251,11 +285,16 @@ function TimelineItem(message,element,kind) {
     kind.split(' ').forEach(function(cls) {
         ti.css[cls] = true;
     });
+    this.icon = icon;
 }
 
 var scorm_json = document.getElementById('scorm-elements').textContent;
 var elements = JSON.parse(scorm_json);
-var tl = new Timeline(elements);
+
+var launches_json = document.getElementById('launches').textContent;
+var launches = JSON.parse(launches_json);
+
+var tl = new Timeline(elements, launches);
 tl.listen_for_changes(listener_url);
 
 ko.applyBindings(tl);
