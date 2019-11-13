@@ -83,7 +83,7 @@ function Timeline(elements) {
 Timeline.prototype = {
     datamodel_at: function(element) {
         var t,counter;
-        if(element===undefined) {
+        if(!element) {
             t = Infinity;
             counter = Infinity;
         } else {
