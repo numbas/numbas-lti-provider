@@ -15,18 +15,57 @@ function update_completion_table() {
 }
 
 function update_summary_stats_table() {
-    var scores = data.attempts.map(a=>a.scaled_score).sort(cmp);
-    var stats = {
-        mean: d3.mean(scores),
-        median: d3.median(scores),
-        q1: d3.quantile(scores, 0.25),
-        q3: d3.quantile(scores,0.75)
-    };
-    var format = d3.format('.0%');
-    for(let td of document.querySelectorAll('#summary-stats-table .value')) {
-        var key = td.getAttribute('data-value');
-        td.textContent = format(stats[key] || 0);
+    function format_duration(d) {
+        d = luxon.Duration.fromMillis(d);
+        if(d.as('minutes')<120) {
+            return d.toFormat('m')+' minutes';
+        } else if(d.as('hours')<48) {
+            return d.toFormat('h')+' hours';
+        } else {
+            return d.toFormat('d')+' days';
+        }
     }
+    var stats = [
+        {label: 'Total score', values: data.attempts.map(a=>a.scaled_score).sort(d3.ascending), format: d3.format('.0%')},
+        {label: 'Start time', values: data.attempts.map(a=>a.start_time).sort(d3.ascending), format: d3.timeFormat('%Y-%m-%d %H:%M')},
+        {label: 'End time', values: data.attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: d3.timeFormat('%Y-%m-%d %H:%M')},
+        {label: 'Time taken', values: data.attempts.filter(a=>a.end_time).map(a=>a.end_time-a.start_time).sort(d3.ascending), format: format_duration}
+    ];
+    var table = d3.select('#summary-stats-table')
+    var rows = table.select('tbody').selectAll('tr').data(stats)
+        .join(enter => {
+            const tr = enter.append('tr');
+            tr.append('th');
+            tr.append('td')
+                .attr('class','mean');
+            tr.append('td')
+                .attr('class','q1');
+            tr.append('td')
+                .attr('class','median');
+            tr.append('td')
+                .attr('class','q3');
+            return tr;
+        })
+    ;
+    rows.select('th').join('th')
+        .text(d=>d.label)
+
+    rows.select('td.mean')
+        .text(d=>d.format(d3.mean(d.values)))
+    ;
+
+    rows.select('td.q1')
+        .text(d=>d.format(d3.quantile(d.values,0.25)))
+    ;
+
+    rows.select('td.median')
+        .text(d=>d.format(d3.median(d.values)))
+    ;
+
+    rows.select('td.q3')
+        .text(d=>d.format(d3.quantile(d.values,0.75)))
+    ;
+
 }
 
 function cmp(a,b) {
@@ -138,10 +177,6 @@ function update_question_scores_chart() {
         .attr('y',function(d) { return yName(d.key)+y(1) })
         .attr('width',x(1)-x(0))
         .attr('height',-y(1))
-        .attr('fill','hsl(0,0%,95%)')
-        .attr('stroke','#555')
-        .attr('stroke-width',1)
-        .attr('opacity',0.5)
     ;
     bgs
         .attr('x',x(0))
@@ -291,37 +326,39 @@ function update_time_chart() {
 
     var svg_el = document.querySelector('#times > .chart > .diagram');
     const width = svg_el.getBoundingClientRect().width - margin.left - margin.right;
-    const height = 150;
+    const height = 400;
 
     const [first,last] = d3.extent(data.attempts,d=>d.start_time);
 
     const intervals = [
-        {interval: d3.timeMonth, format: '%m'},
-        {interval: d3.timeWeek, format: '%d/%m'},
-        {interval: d3.timeDay, format: '%d/%m'},
-        {interval: d3.timeHour, format: '%H:%M'}
+        d3.timeMonth,
+        d3.timeWeek,
+        d3.timeDay,
+        d3.timeHour
     ];
-    const {interval,format} = intervals.find(i=>i.interval.count(first,last)>=20) || intervals[intervals.length-1];
+    const interval = intervals.find(i=>i.count(first,last)>=20) || intervals[intervals.length-1];
 
     const thresholds = interval.range(
         interval.offset(interval.floor(first),-1),
         interval.offset(interval.ceil(last),1)
     );
 
-    const histogram = d3.histogram().thresholds(thresholds).value(d=>d.start_time);
-
-    const binned = histogram(data.attempts);
-
     const x = d3.scaleTime(d3.extent(thresholds),[margin.left,width-margin.right]);
-    const y = d3.scaleLinear([0,d3.extent(binned,b=>b.length)[1]],[height-margin.bottom,margin.top]);
+    x.clamp(true);
+    const y = d3.scaleLinear([0,data.attempts.length],[height-margin.bottom,margin.top]);
+    const y_tooltip = d3.scaleLinear([0,1],[height-margin.bottom,margin.top]);
+
+    function time_format(t) {
+        if(d3.timeFormat('%H:%M')(t)=='00:00') {
+            return d3.timeFormat('%Y-%m-%d')(t);
+        } else {
+            return d3.timeFormat('%Y-%m-%d %H:%M');
+        }
+    }
 
     const xAxis = g => g
         .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).tickSizeOuter(0).tickFormat(d3.timeFormat(format)))
-        .selectAll('text')
-            .attr('dx','-2.2em')
-            .attr('dy','-.35em')
-            .attr('transform','rotate(-65)')
+        .call(d3.axisBottom(x).ticks(6).tickSizeOuter(0).tickFormat(time_format))
     ;
 
     yAxis = g => g
@@ -333,27 +370,100 @@ function update_time_chart() {
       .attr("viewBox", [0, 0, width, height])
     ;
 
+    function key(a) {
+        if(!a.end_time) {
+            return a.start_time-0;
+        } else {
+            return ((a.end_time-0)+(a.start_time-0))/2;
+        }
+    }
+
+    const sorted_attempts = data.attempts.slice().sort(function(a,b){return d3.ascending(key(a),key(b))});
+    sorted_attempts.forEach(function(a,i) { a.pos = i; });
+
+    function pinline(selection) {
+        selection.select('circle.start')
+            .attr('cx',d=>x(d.start_time))
+            .attr('cy',d=>y(d.pos))
+            .attr('r',2)
+        ;
+        selection.select('circle.end')
+            .attr('opacity',d=>d.end_time ? 1 : 0)
+            .attr('cx',d=>x(d.end_time || d.start_time))
+            .attr('cy',d=>y(d.pos))
+            .attr('r',2)
+        ;
+        selection.select('line')
+            .attr('opacity',d=>d.end_time ? 1 : 0)
+            .attr('x1',a=>x(a.start_time))
+            .attr('y1',a=>y(a.pos))
+            .attr('x2',a=>x(a.end_time || a.start_time))
+            .attr('y2',a=>y(a.pos))
+        ;
+    }
+
     svg.append("g")
-      .attr("fill", "hsl(240,40%,70%)")
-      .selectAll("rect")
-      .data(binned)
-      .join("rect")
-      .attr("x", d => x(d.x0) + 1)
-      .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) ))
-      .attr("y", d => y(d.length))
-      .attr("height", d => y(0) - y(d.length));
+        .selectAll("g")
+        .data(sorted_attempts)
+        .join(enter => {
+            const g = enter.append('g');
+            g.append('circle')
+                .attr('class','start')
+            ;
+            g.append('circle')
+                .attr('class','end')
+            ;
+            g.append('line')
+                .attr('class','duration')
+            ;
+            return g;
+        })
+        .call(pinline)
+    ;
 
     svg.append("g")
       .call(xAxis);
 
-    svg.append("g")
-      .call(yAxis);
+    const tip = svg.append('g')
+        .attr('class','tip')
+        .attr('opacity',0)
+    ;
+
+    const line_tip = tip.append('line')
+        .attr('x1',0)
+        .attr('x2',0)
+        .attr('y1',y_tooltip(0))
+        .attr('y2',y_tooltip(1))
+    ;
+    const time_tip = tip.append('text')
+        .attr('x',0)
+        .attr('y',y_tooltip(1)-5)
+        .attr('text-anchor','middle')
+    ;
+
+    svg.on('mouseover',function() {
+        tip.transition().duration(100).attr('opacity',1);
+    })
+    svg.on('mouseout',function() {
+        tip.transition().duration(500).attr('opacity',0);
+    })
+    svg.on('mousemove',function() {
+        let [mx,my] = d3.mouse(this);
+        mx = x(x.invert(mx));
+        const t = x.invert(mx);
+        time_tip.text(d3.timeFormat('%Y-%m-%d %H:%M')(t));
+        const b_tip = time_tip.node().getBoundingClientRect();
+        const tx = Math.min(Math.max(mx,b_tip.width/2),width-b_tip.width/2);
+        time_tip.attr('transform',`translate(${tx},0)`);
+        line_tip.attr('transform',`translate(${mx},0)`);
+    });
 }
 
 
 function update() {
     data.attempts.forEach(function(a) {
         a.start_time = new Date(a.start_time)
+        a.end_time = a.end_time ? new Date(a.end_time) : null;
     });
     update_completion_table();
     update_summary_stats_table();
