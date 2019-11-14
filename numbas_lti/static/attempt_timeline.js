@@ -75,7 +75,7 @@ function Timeline(elements, launches) {
             var exam_score = 0;
             if(g.items.length) {
                 var element_items = g.items.filter(function(i){ return i.css.scorm });
-                var element = element_items.length ? element_items[element_items.length-1].element : null;
+                var element = element_items.length ? element_items[element_items.length-1].element : {time: g.items[g.items.length-1].time, counter: Infinity};
                 var dm = tl.datamodel_at(element);
                 g.exam_raw_score = parseFloat(dm['cmi.score.raw'] || 0);
                 g.exam_max_score = parseFloat(dm['cmi.score.max'] || 0);
@@ -94,7 +94,7 @@ function Timeline(elements, launches) {
 Timeline.prototype = {
     datamodel_at: function(element) {
         var t,counter;
-        if(element===undefined) {
+        if(!element) {
             t = Infinity;
             counter = Infinity;
         } else {
