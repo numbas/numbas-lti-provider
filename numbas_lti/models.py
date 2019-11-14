@@ -299,6 +299,8 @@ class Resource(models.Model):
             {
                 'scaled_score': a.scaled_score,
                 'completion_status': a.completion_status,
+                'start_time': a.start_time.isoformat(),
+                'end_time': a.end_time.isoformat() if a.end_time is not None else None,
             }
             for a in self.attempts.all()
         ]

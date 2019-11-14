@@ -286,11 +286,80 @@ function update_status_chart() {
 
 }
 
+function update_time_chart() {
+    const margin = {top: 20, right: 20, bottom: 50, left: 40};
+
+    var svg_el = document.querySelector('#times > .chart > .diagram');
+    const width = svg_el.getBoundingClientRect().width - margin.left - margin.right;
+    const height = 150;
+
+    const [first,last] = d3.extent(data.attempts,d=>d.start_time);
+
+    const intervals = [
+        {interval: d3.timeMonth, format: '%m'},
+        {interval: d3.timeWeek, format: '%d/%m'},
+        {interval: d3.timeDay, format: '%d/%m'},
+        {interval: d3.timeHour, format: '%H:%M'}
+    ];
+    const {interval,format} = intervals.find(i=>i.interval.count(first,last)>=20) || intervals[intervals.length-1];
+
+    const thresholds = interval.range(
+        interval.offset(interval.floor(first),-1),
+        interval.offset(interval.ceil(last),1)
+    );
+
+    const histogram = d3.histogram().thresholds(thresholds).value(d=>d.start_time);
+
+    const binned = histogram(data.attempts);
+
+    const x = d3.scaleTime(d3.extent(thresholds),[margin.left,width-margin.right]);
+    const y = d3.scaleLinear([0,d3.extent(binned,b=>b.length)[1]],[height-margin.bottom,margin.top]);
+
+    const xAxis = g => g
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).tickSizeOuter(0).tickFormat(d3.timeFormat(format)))
+        .selectAll('text')
+            .attr('dx','-2.2em')
+            .attr('dy','-.35em')
+            .attr('transform','rotate(-65)')
+    ;
+
+    yAxis = g => g
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).tickFormat(d3.format('d')).tickValues(y.ticks().filter(t=>Number.isInteger(t))))
+    ;
+
+    const svg = d3.select(svg_el)
+      .attr("viewBox", [0, 0, width, height])
+    ;
+
+    svg.append("g")
+      .attr("fill", "hsl(240,40%,70%)")
+      .selectAll("rect")
+      .data(binned)
+      .join("rect")
+      .attr("x", d => x(d.x0) + 1)
+      .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) ))
+      .attr("y", d => y(d.length))
+      .attr("height", d => y(0) - y(d.length));
+
+    svg.append("g")
+      .call(xAxis);
+
+    svg.append("g")
+      .call(yAxis);
+}
+
+
 function update() {
+    data.attempts.forEach(function(a) {
+        a.start_time = new Date(a.start_time)
+    });
     update_completion_table();
     update_summary_stats_table();
     update_question_scores_chart();
     update_status_chart();
+    update_time_chart();
 }
 
 function init_socket() {
