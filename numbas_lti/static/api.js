@@ -61,7 +61,8 @@ function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
         var queued = sc.queue.length>0;
         var disconnected = !(sc.socket_is_open() || sc.ajax_is_working());
 
-        var ok = !((unreceived || queued) && disconnected);
+        var ok = !((unreceived || queued) && (disconnected || sc.terminated));
+        console.log(`o ${ok} u ${unreceived} q ${queued} d ${disconnected} t ${sc.terminated}`);
 
         if(!ok) {
             sc.last_show_warning = new Date();
@@ -79,8 +80,9 @@ function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
         }
         
         if(status_display) {
-            toggle(status_display,'ok',ok);
-            toggle(status_display,'disconnected',show_warning);
+            toggle(status_display,'ok',!show_warning);
+            toggle(status_display,'terminated',sc.terminated);
+            toggle(status_display,'disconnected',disconnected);
             toggle(status_display,'localstorage-used',sc.localstorage_used||false);
         }
 

@@ -9,6 +9,11 @@
 <body>
 <div id="status-display" tabindex="1" class="ok">
     <span class="symbol">!</span>
+    <span class="status-message text-terminated">
+        <div class="text">
+            <p>{% trans "Attempt data is being saved to the database." %}</p>
+        </div>
+    </span>
     <span class="status-message text-disconnected">
         <div class="text">
             <p>{% trans "There is currently no connection to the server - your attempt data can not be saved to the database." %}</p>

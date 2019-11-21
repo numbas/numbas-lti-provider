@@ -59,7 +59,8 @@ body:not(.terminated) #status-display:hover:not(:focus) .symbol {
 body.terminated #status-display .symbol, #status-display:focus .symbol {
     display: none;
 }
-#status-display.disconnected .text-disconnected {
+#status-display.disconnected .text-disconnected,
+#status-display.terminated .text-terminated {
     display: block;
 }
 
