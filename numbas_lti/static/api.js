@@ -62,12 +62,12 @@ function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
         var disconnected = !(sc.socket_is_open() || sc.ajax_is_working());
 
         var ok = !((unreceived || queued) && (disconnected || sc.terminated));
-        console.log(`o ${ok} u ${unreceived} q ${queued} d ${disconnected} t ${sc.terminated}`);
 
         if(!ok) {
             sc.last_show_warning = new Date();
         }
-        var show_warning = !ok || (new Date()-sc.last_show_warning)<sc.warning_linger_duration;
+        warning_linger_duration = sc.terminated ? 0 : sc.warning_linger_duration;
+        var show_warning = !ok || (new Date()-sc.last_show_warning)<warning_linger_duration;
 
         var status_display = document.getElementById('status-display');
 
@@ -81,7 +81,7 @@ function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
         
         if(status_display) {
             toggle(status_display,'ok',!show_warning);
-            toggle(status_display,'terminated',sc.terminated);
+            toggle(status_display,'terminated',sc.terminated && !disconnected);
             toggle(status_display,'disconnected',disconnected);
             toggle(status_display,'localstorage-used',sc.localstorage_used||false);
         }
@@ -484,14 +484,14 @@ SCORM_API.prototype = {
                         response.text().then(function(t){
                             console.error('SCORM HTTP fallback error message: '+t);
                         });
-                        sc.ajax_failed();
+                        sc.ajax_failed(error);
                         return Promise.reject(error.message);
                     }
                     sc.ajax_succeeded();
                     return response.json();
                 },
                 function(error) {
-                    sc.ajax_failed();
+                    sc.ajax_failed(error);
                     return Promise.reject(error.message);
                 }
             )
@@ -514,7 +514,7 @@ SCORM_API.prototype = {
         this.callbacks.trigger('ajax.succeeded');
     },
 
-    ajax_failed: function() {
+    ajax_failed: function(error) {
         this.pending_ajax = false;
         console.error('failed to send SCORM data over HTTP');
         this.last_ajax_succeeded = false;
@@ -541,6 +541,7 @@ SCORM_API.prototype = {
 
         /** Do one last send over HTTP, to make sure any remaining data is saved straight away.
          */
+        this.send_queue_socket();
         this.send_ajax();
 
 		return true;
