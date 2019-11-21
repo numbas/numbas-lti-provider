@@ -32,7 +32,7 @@ Dashboard
     The dashboard screen.
 
 When you open a resource as an instructor, you are first shown the dashboard.
-This view lists scores for all students who have attempted the resource.
+This view offers a few actions to do with the resource, and the navigation bar at the top has links to other views.
 
 .. _report-scores:
 
@@ -92,6 +92,8 @@ The username field might not correspond exactly to the student's username on the
 Student progress
 ^^^^^^^^^^^^^^^^
 
+From the dashboard, click :guilabel:`View individual student progress and grant access tokens` to view the :guilabel:`Student progress` table.
+
 The :guilabel:`Student progress` table lists the names of students who have attempted the activity, along with their scores as calculated following the :ref:`grading method <grading-method>`, and the number of attempts they have made.
 
 You can narrow down the displayed list by entering a name in the :guilabel:`Search for a student` box.
@@ -111,6 +113,28 @@ To revoke an access token, click the minus symbol next to the student's name in 
 Attempts started with an access token that is subsequently removed will not be deleted.
 
 When the student launches the activity, they will be offered the opportunity to start a new attempt.
+
+.. _validate-receipt:
+
+Validate a receipt code
+^^^^^^^^^^^^^^^^^^^^^^^
+
+If enabled, students are emailed a receipt on completion of an attempt.
+The receipt contains information about their attempt, such as time and score, as well as a code that you can use to confirm that a receipt is valid.
+
+On the :guilabel:`Validate a receipt code` page, copy a code from a student into a box.
+
+If the code is valid, you'll be shown the information from the receipt, as well as a link to view the attempt's data in more detail.
+
+.. figure:: _static/valid-receipt-code.png
+
+   A validated receipt code.
+
+If the code is invalid, or corresponds to an attempt at a different resource, you'll be told so.
+
+.. figure:: _static/attempts.png
+
+   An invalid receipt code.
 
 Attempts
 --------

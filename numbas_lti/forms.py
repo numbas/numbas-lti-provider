@@ -1,6 +1,6 @@
 import zipfile
 
-from django.forms import ModelForm
+from django.forms import ModelForm, Form
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
@@ -146,3 +146,6 @@ class ConsumerTimePeriodForm(ModelForm):
         }
 
 ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)
+
+class ValidateReceiptForm(Form):
+    code = forms.CharField(strip=True,widget=forms.Textarea(attrs={'class':'form-control'}))
