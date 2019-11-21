@@ -4,34 +4,47 @@
 {% load staticfiles %}
 
 {% block management_content %}
-<h2>{% trans "Statistics" %}</h2>
+<h2>
+    {% blocktrans with resource_name=resource.title %}Statistics for <strong>{{resource_name}}</strong>{% endblocktrans %}
+    <br>
+    <small>{{resource.context.name}}</small>
+</h2>
 
-<h3>{% trans "Attempt completion" %}</h3>
-<table class="table" id="completion-table">
-    <tbody>
-        {% for label,value,n in completion_counts %}
-        <tr>
-            <td>{{label}}</td>
-            <td class="value" data-value="{{value}}">{{n}}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<button type="button" onclick="window.print()" class="hidden-print btn btn-info">
+    <span class="glyphicon glyphicon-print"></span>
+    {% trans "Print this page" %}
+</button>
 
-<h3>{% trans "Summary statistics" %}</h3>
-<table class="table" id="summary-stats-table">
-    <thead>
-        <tr>
-            <th></th>
-            <th>{% trans "Mean" %}</th>
-            <th>{% trans "Lower quartile" %}</th>
-            <th>{% trans "Median" %}</th>
-            <th>{% trans "Upper quartile" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
-</table>
+<section id="attempt_completion">
+    <h3>{% trans "Attempt completion" %}</h3>
+    <table class="table" id="completion-table">
+        <tbody>
+            {% for label,value,n in completion_counts %}
+            <tr>
+                <td>{{label}}</td>
+                <td class="value" data-value="{{value}}">{{n}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section id="summary_statistics">
+    <h3>{% trans "Summary statistics" %}</h3>
+    <table class="table" id="summary-stats-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>{% trans "Mean" %}</th>
+                <th>{% trans "Lower quartile" %}</th>
+                <th>{% trans "Median" %}</th>
+                <th>{% trans "Upper quartile" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</section>
 
 <section id="stacked_status_chart">
     <div class="legend">
@@ -58,13 +71,14 @@
 </section>
 
 
-<h3>{% trans "Score distribution" %}</h3>
-<p>{% blocktrans %}In the following charts, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+<section id="question_scores_chart">
+    <h3>{% trans "Score distribution" %}</h3>
+    <p>{% blocktrans %}In the following charts, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+    <div class="chart"></div>
+</section>
 
-<section id="question_scores_chart" class="chart"></section>
-
-<h3>{% trans "Attempt times" %}</h3>
 <section id="times">
+    <h3>{% trans "Attempt times" %}</h3>
 	<p>{% blocktrans %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktrans %}</p>
     <div class="chart">
         <svg class="diagram"></svg>

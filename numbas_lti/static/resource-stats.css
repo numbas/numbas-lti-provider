@@ -1,3 +1,7 @@
+h2, h3 {
+    text-align: center;
+}
+
 .chart svg {
     display: block;
     margin: 2rem auto;
@@ -23,6 +27,8 @@
 
 section {
     margin: 3rem auto;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .num_not_attempted rect {
@@ -51,6 +57,10 @@ section {
     text-anchor: middle;
 }
 
+#times circle {
+    r: 2px;
+}
+
 #times circle.start {
     fill: hsl(240,40%,70%);
 }
@@ -66,4 +76,16 @@ section {
 #times .tip line {
     stroke: hsl(240,40%,70%);
     stroke-dasharray: 8 5;
+}
+
+@media print {
+    #times circle {
+        r: 3px;
+    }
+    #times circle.start {
+        fill: hsl(240,70%,50%);
+    }
+    #times circle.end {
+        fill: hsl(120,70%,50%);
+    }
 }

@@ -1,4 +1,4 @@
-var question_scores_svg = d3.select("#question_scores_chart").append('svg');
+var question_scores_svg = d3.select("#question_scores_chart .chart").append('svg');
 var question_scores_g = question_scores_svg.append('g');
 question_scores_g.append('g').attr('class','x-axis');
 question_scores_g.append('g').attr('class','x-axis-top');
@@ -86,7 +86,7 @@ function update_question_scores_chart() {
     var categories = Object.keys(numbers).map(n=>parseInt(n)).sort(cmp);
     var n = categories.length;
 
-    var svg_el = document.getElementById('question_scores_chart');
+    var svg_el = document.querySelector('#question_scores_chart .chart');
 
     var bar_height = 120;
 
@@ -352,7 +352,7 @@ function update_time_chart() {
         if(d3.timeFormat('%H:%M')(t)=='00:00') {
             return d3.timeFormat('%Y-%m-%d')(t);
         } else {
-            return d3.timeFormat('%Y-%m-%d %H:%M');
+            return d3.timeFormat('%Y-%m-%d %H:%M')(t);
         }
     }
 
@@ -385,13 +385,11 @@ function update_time_chart() {
         selection.select('circle.start')
             .attr('cx',d=>x(d.start_time))
             .attr('cy',d=>y(d.pos))
-            .attr('r',2)
         ;
         selection.select('circle.end')
             .attr('opacity',d=>d.end_time ? 1 : 0)
             .attr('cx',d=>x(d.end_time || d.start_time))
             .attr('cy',d=>y(d.pos))
-            .attr('r',2)
         ;
         selection.select('line')
             .attr('opacity',d=>d.end_time ? 1 : 0)
