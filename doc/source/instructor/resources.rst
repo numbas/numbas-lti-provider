@@ -119,7 +119,7 @@ When the student launches the activity, they will be offered the opportunity to 
 Validate a receipt code
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-If enabled, students are emailed a receipt on completion of an attempt.
+If enabled (see :ref:`email-receipts-option`), students are emailed a receipt on completion of an attempt.
 The receipt contains information about their attempt, such as time and score, as well as a code that you can use to confirm that a receipt is valid.
 
 On the :guilabel:`Validate a receipt code` page, copy a code from a student into a box.
@@ -309,6 +309,16 @@ If left blank, students can review their attempts at any time.
 If a date and time are set, students may only review their attempts after that time.
 
 Instructors may always review students' attempts, from the :guilabel:`Attempts` tab.
+
+.. _email-receipts-option:
+
+Email attempt receipts to students on completion?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If ticked, then when a student completes an attempt at this resource they will be emailed a receipt summarising their attempt.
+
+The receipt contains a code which instructors can use to confirm the receipt's contents. See :ref:`validate-receipt`.
+
 
 Test run
 --------

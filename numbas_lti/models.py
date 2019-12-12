@@ -189,6 +189,7 @@ class Resource(models.Model):
     show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
     allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
+    email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
 
@@ -960,7 +961,7 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
         group_for_attempt(instance.attempt).send({'text':json.dumps({
             'completion_status':'completed',
         })})
-        if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False):
+        if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and instance.attempt.resource.email_receipts:
             instance.attempt.send_completion_receipt()
     instance.attempt.save()
 
