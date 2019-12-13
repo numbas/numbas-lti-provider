@@ -13,7 +13,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django_auth_lti.patch_reverse import reverse
-from django.utils import timezone
+from django.utils import timezone, dateparse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
@@ -421,7 +421,7 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
             summary = signing.loads(code,salt=salt)
             for k in ('receipt_time','start_time','end_time'):
                 if k in summary:
-                    summary[k] = timezone.datetime.fromisoformat(summary[k])
+                    summary[k] = dateparse.parse_datetime(summary[k])
             context['summary'] = summary
             attempt = Attempt.objects.get(pk=summary['pk'],resource=self.object)
             context['attempt'] = attempt
