@@ -1,6 +1,6 @@
 import zipfile
 
-from django.forms import ModelForm
+from django.forms import ModelForm, Form
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
@@ -22,7 +22,7 @@ import string
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','email_receipts']
         widgets = {
             'allow_review_from': DateTimePickerInput()
         }
@@ -146,3 +146,6 @@ class ConsumerTimePeriodForm(ModelForm):
         }
 
 ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)
+
+class ValidateReceiptForm(Form):
+    code = forms.CharField(strip=True,widget=forms.Textarea(attrs={'class':'form-control'}))

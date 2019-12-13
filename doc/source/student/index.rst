@@ -19,6 +19,7 @@ If :ref:`the exam's settings <when-to-show-scores>` allow it, the score earned f
 The student can click the :guilabel:`Continue` button to resume an incomplete attempt where they left off.
 
 Once a student clicks the :guilabel:`End exam` button, the attempt is marked as "completed", and the student can not change their answers.
+If the server is configured to do it, the student is emailed a receipt containing information about their attempt, and a code that can be used by the instructor to :ref:`validate it <validate-receipt>`.
 
 For completed attempts, the student can click :guilabel:`Review this attempt` to reopen the attempt in review mode, the same as was shown when they ended the exam.
 They will see the results summary screen, and can click on individual questions to see their answers and any feedback.

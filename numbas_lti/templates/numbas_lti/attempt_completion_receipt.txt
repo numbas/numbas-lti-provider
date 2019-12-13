@@ -1,0 +1,12 @@
+{% load i18n %}{% load percentage %}
+{% blocktrans with user_name=user.get_full_name resource_name=attempt.resource.title %}{{user_name}},
+This is a receipt confirming the completion of your attempt at {{resource_name}}.{% endblocktrans %}
+
+{% blocktrans with start_time=attempt.start_time end_time=attempt.end_time %}Receipt generated at: {{receipt_time}}
+Start time: {{start_time}}
+End time: {{end_time}}{% endblocktrans %}{% if include_score %}{% blocktrans with raw_score=attempt.raw_score max_score=attempt.max_score percentage=attempt.scaled_score|percentage %}
+Score: {{raw_score}}/{{max_score}} ({{percentage}}){% endblocktrans %}{% endif %}
+
+{% blocktrans %}The following code can be used by your instructor to verify the information in this receipt:
+
+{{signed_summary}}{% endblocktrans %}
