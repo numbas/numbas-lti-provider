@@ -1,9 +1,12 @@
 from django.conf import settings
+from django.core import signing
+from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Min, Count
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
+from django.template.loader import get_template
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.core import validators
@@ -186,6 +189,7 @@ class Resource(models.Model):
     show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
     allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
+    email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
 
@@ -310,6 +314,9 @@ class Resource(models.Model):
         }
         return data
 
+    def receipt_salt(self):
+        return 'numbas_lti:consumer:'+self.context.consumer.key
+
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
     status = models.CharField(max_length=10,choices=REPORTING_STATUSES,default='reporting',verbose_name=_("Current status of the process"))
@@ -380,6 +387,8 @@ class Attempt(models.Model):
     completion_status_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_completion_status_of", null=True)
     scaled_score = models.FloatField(default=0)
     scaled_score_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_scaled_score_of", null=True)
+    sent_receipt = models.BooleanField(default=False,verbose_name='Has a completion receipt been sent?')
+    receipt_time = models.DateTimeField(blank=True,null=True,verbose_name='Time the completion receipt was sent')
 
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
@@ -736,6 +745,48 @@ class Attempt(models.Model):
     def is_remarked(self):
         return self.remarked_parts.exists()
 
+    def completion_receipt(self):
+        include_score = self.should_show_scores()
+
+        now = timezone.now()
+        self.receipt_time = now
+
+        summary = {
+            'pk': self.pk,
+            'receipt_time': now.isoformat(),
+            'start_time': self.start_time.isoformat(),
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+        }
+        if include_score:
+            summary['raw_score'] = self.raw_score
+
+        signed_summary = signing.dumps(summary,salt=self.resource.receipt_salt())
+
+        template = get_template('numbas_lti/attempt_completion_receipt.txt')
+
+        message = template.render({
+            'include_score': include_score,
+            'receipt_time': now,
+            'attempt': self,
+            'user': self.user,
+            'signed_summary': signed_summary,
+        }).strip()
+        
+        return message
+
+    def send_completion_receipt(self):
+        message = self.completion_receipt()
+        send_mail(
+            ugettext('Numbas: Receipt for {resource_name}').format(resource_name=self.resource.title),
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [self.user.email],
+            fail_silently=False
+        )
+        self.sent_receipt = True
+        self.save()
+            
+
 class AttemptLaunch(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='launches', on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
@@ -910,6 +961,8 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
         group_for_attempt(instance.attempt).send({'text':json.dumps({
             'completion_status':'completed',
         })})
+        if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and instance.attempt.resource.email_receipts:
+            instance.attempt.send_completion_receipt()
     instance.attempt.save()
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':

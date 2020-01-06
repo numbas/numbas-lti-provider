@@ -33,6 +33,8 @@ class Command(object):
         Question('DB_ENGINE', 'Which database engine are you using?', 'mysql'),
         Question('STATIC_ROOT', 'Where are static files stored?', '/srv/numbas-lti-static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?', '/srv/numbas-lti-media/', validation=path_exists),
+        Question('EMAIL_COMPLETION_RECEIPTS', 'Email students a receipt on completion of attempts?', True),
+        Question('DEFAULT_FROM_EMAIL', 'Address to send email from', ''),
     ]
     db_questions = [
         Question('DB_NAME', 'Name of the database:', 'numbas_lti'),

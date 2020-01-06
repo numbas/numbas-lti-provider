@@ -7,11 +7,13 @@ from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.core import signing
 from django.db.models import Q,Count
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django_auth_lti.patch_reverse import reverse
+from django.utils import timezone, dateparse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
@@ -394,3 +396,42 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
         context['data'] = json.dumps(resource.live_stats_data())
 
         return context
+
+class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
+    model = Resource
+    form_class = forms.ValidateReceiptForm
+    template_name = 'numbas_lti/management/validate_receipt.html'
+    management_tab = 'dashboard'
+    
+    def dispatch(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        return super().dispatch(request,*args,**kwargs)
+
+    def get(self,request,*args,**kwargs):
+        print(type(self.get_context_data()))
+        return super().get(request,*args,**kwargs)
+
+    def form_valid(self, form):
+        code = form.cleaned_data['code']
+        salt = self.object.receipt_salt()
+        context = self.get_context_data()
+        context['form'] = form
+        context['submitted'] = True
+        try:
+            summary = signing.loads(code,salt=salt)
+            for k in ('receipt_time','start_time','end_time'):
+                if k in summary:
+                    summary[k] = dateparse.parse_datetime(summary[k])
+            context['summary'] = summary
+            attempt = Attempt.objects.get(pk=summary['pk'],resource=self.object)
+            context['attempt'] = attempt
+            context['valid'] = True
+            return self.render_to_response(context)
+        except signing.BadSignature:
+            context['invalid'] = True
+            pass
+        except Attempt.DoesNotExist:
+            context['no_attempt'] = True
+
+        return self.render_to_response(context)
+    
