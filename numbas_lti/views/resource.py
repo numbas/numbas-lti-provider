@@ -58,7 +58,7 @@ class ReplaceExamView(CreateExamView):
         return context
 
     def form_valid(self,form):
-        response = super(CreateExamView,self).form_valid(form)
+        response = super().form_valid(form)
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
