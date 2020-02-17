@@ -8,3 +8,4 @@ requests-oauthlib==1.2.0
 django-bootstrap-form==3.4
 simplejson==3.16.0
 django-bootstrap-datepicker-plus==3.0.5
+django-ipware==2.1.0

@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
+from ipware import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +89,8 @@ def basic_lti_launch(request):
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
     user_data.is_instructor = is_instructor
     user_data.save()
+
+    ip_address = get_client_ip(request)
 
     LTILaunch.objects.create(
         user = request.user,
