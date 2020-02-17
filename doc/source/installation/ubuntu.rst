@@ -53,7 +53,7 @@ First, install packages, set up users, and create the required paths (you can sa
     chmod -R 770 /srv/numbas-lti-*
 
     # create the virtualenv for the python modules
-    virtualenv /opt/numbas_lti_python
+    virtualenv -p python3 /opt/numbas_lti_python
     chown -R numbas_lti:numbas_lti /opt/numbas_lti_python
     chmod -R 770 /opt/numbas_lti_python
 
