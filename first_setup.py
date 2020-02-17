@@ -175,6 +175,8 @@ class Command(object):
             (r"^CHANNEL_LAYERS = {.*?^}", set_channel_layers),
             (r"^SECRET_KEY = '()'", 'SECRET_KEY'),
             (r"^ALLOWED_HOSTS = \['(localhost)'\]", 'ALLOWED_HOSTS'),
+            (r"EMAIL_COMPLETION_RECEIPTS = (True)", "EMAIL_COMPLETION_RECEIPTS"),
+            (r"DEFAULT_FROM_EMAIL = ('')", "DEFAULT_FROM_EMAIL"),
         ]
         self.sub_file('numbasltiprovider/settings.py', settings_subs)
 
