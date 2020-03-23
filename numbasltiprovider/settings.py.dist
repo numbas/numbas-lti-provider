@@ -30,6 +30,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_cookies_samesite.middleware.CookiesSameSite',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -177,6 +178,8 @@ SUPPORT_URL = None  # set to "mailto:your_email_address", or the URL of a page c
 
 SESSION_COOKIE_SAMESITE = None  # Allow cookies to be set through cross-origin POST requests, such as when a resource is embedded in an iframe
 CSRF_COOKIE_SAMESITE = None  
+DCS_SESSION_COOKIE_SAMESITE = 'None'  # Allow cookies to be set through cross-origin POST requests, such as when a resource is embedded in an iframe
+DCS_CSRF_COOKIE_SAMESITE = 'None'
 
 EMAIL_COMPLETION_RECEIPTS = True
 DEFAULT_FROM_EMAIL = ''
