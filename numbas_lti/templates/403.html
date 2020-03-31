@@ -1,0 +1,19 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <div class="jumbotron">
+        <header>
+            <h1>{% trans "Permission denied" %}</h1>
+        </header>
+
+        <main>
+            {% if exception %}
+            <p>{{exception}}</p>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock content %}
+

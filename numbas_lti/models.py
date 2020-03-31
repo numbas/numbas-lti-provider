@@ -187,6 +187,8 @@ class Resource(models.Model):
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
     show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
+    available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'))
+    available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'))
     allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
     email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
@@ -234,7 +236,13 @@ class Resource(models.Model):
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
 
+    def is_available(self):
+        now = timezone.now()
+        return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
+
     def can_start_new_attempt(self,user):
+        if not self.is_available():
+            return False
         if self.max_attempts==0:
             return True
         return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
@@ -566,6 +574,8 @@ class Attempt(models.Model):
         return data
 
     def completed(self):
+        if not self.resource.is_available():
+            return True
         return self.completion_status=='completed'
 
     @property

@@ -4,6 +4,9 @@ body {
 #scorm-player {
     border: none;
 }
+body.ended #scorm-player {
+    display: none;
+}
 
 #status-display {
     position: absolute;
@@ -22,7 +25,7 @@ body {
 body.terminated #status-display, #status-display:focus {
     border-radius: 0;
 }
-#status-display.ok {
+#status-display.ok:not(.ended) {
     display: none;
 }
 #status-display .status-message {
@@ -60,7 +63,9 @@ body.terminated #status-display .symbol, #status-display:focus .symbol {
     display: none;
 }
 #status-display.disconnected .text-disconnected,
-#status-display.terminated .text-terminated {
+#status-display.ended .text-ended,
+#status-display.ok .text-ok,
+#status-display.terminated:not(.ok) .text-terminated {
     display: block;
 }
 

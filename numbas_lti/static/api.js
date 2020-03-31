@@ -7,18 +7,19 @@
  * @param {number} attempt_pk - the id of the associated attempt in the database
  * @param {string} fallback_url - URL of the AJAX fallback endpoint
  */
-function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
+function SCORM_API(options) {
+    console.log(options);
+    var data = options.scorm_cmi;
     var sc = this;
 
     this.callbacks = new CallbackHandler();
 
-    this.attempt_pk = attempt_pk;
-    this.fallback_url = fallback_url;
+    this.attempt_pk = options.attempt_pk;
+    this.fallback_url = options.fallback_url;
+    this.show_attempts_url = options.show_attempts_url;
 
-    if(allow_review_from!==null) {
-        allow_review_from = new Date(allow_review_from);
-    }
-    this.allow_review_from = allow_review_from;
+    this.allow_review_from = load_date(options.allow_review_from);
+    this.available_until = load_date(options.available_until);
 
     /** Key to save data under in localStorage
      */
@@ -53,41 +54,7 @@ function SCORM_API(data,attempt_pk,fallback_url,allow_review_from) {
     /** Periodically, update the connection status display
      */
     this.update_interval = setInterval(function() {
-        var unreceived = false;
-        for(var x in sc.sent) {
-            unreceived = true;
-            break;
-        }
-        var queued = sc.queue.length>0;
-        var disconnected = !(sc.socket_is_open() || sc.ajax_is_working());
-
-        var ok = !((unreceived || queued) && (disconnected || sc.terminated));
-
-        if(!ok) {
-            sc.last_show_warning = new Date();
-        }
-        warning_linger_duration = sc.terminated ? 0 : sc.warning_linger_duration;
-        var show_warning = !ok || (new Date()-sc.last_show_warning)<warning_linger_duration;
-
-        var status_display = document.getElementById('status-display');
-
-        function toggle(elem,cls,on) {
-            if(on) {
-                elem.classList.add(cls);
-            } else {
-                elem.classList.remove(cls);
-            }
-        }
-        
-        if(status_display) {
-            toggle(status_display,'ok',!show_warning);
-            toggle(status_display,'terminated',sc.terminated && !disconnected);
-            toggle(status_display,'disconnected',disconnected);
-            toggle(status_display,'localstorage-used',sc.localstorage_used||false);
-        }
-
-        sc.callbacks.trigger('update_interval');
-
+        sc.update();
     },50);
 
     /** Periodically send data over the websocket
@@ -185,7 +152,7 @@ SCORM_API.prototype = {
                 player.parentElement.removeChild(player);
                 this.ajax_period = 0;
                 this.send_ajax().then(function(m) {
-                    window.location = show_attempts_url+'&back_from_unsaved_complete_attempt=1';
+                    redirect(this.show_attempts_url+'&back_from_unsaved_complete_attempt=1');
                 });
             }
             this.data['cmi.mode'] = this.mode = 'review';
@@ -229,13 +196,21 @@ SCORM_API.prototype = {
 
     /** Terminate the SCORM API because we were told to by the server, and navigate to the given URL
      */
-    external_kill: function(message, url) {
+    external_kill: function(message) {
         if(!this.terminated) {
             this.Terminate('');
             alert(message);
-            window.location = show_attempts_url;
+            redirect(this.show_attempts_url);
             this.callbacks.trigger('external_kill');
         }
+    },
+
+    /** Force the exam to end.
+     */
+    end: function() {
+        this.Terminate('');
+        this.ended = true;
+        document.body.classList.add('ended');
     },
 
     initialise_socket: function() {
@@ -292,6 +267,53 @@ SCORM_API.prototype = {
             sc.callbacks.trigger('socket.onclose');
         }
 
+    },
+
+    /** Update the connection display, and check for passing the end date
+     */
+    update: function() {
+        var unreceived = false;
+        for(var x in this.sent) {
+            unreceived = true;
+            break;
+        }
+        var queued = this.queue.length>0;
+        var disconnected = !(this.socket_is_open() || this.ajax_is_working());
+
+        var ok = !((unreceived || queued) && (disconnected || this.terminated));
+
+        if(!ok) {
+            this.last_show_warning = new Date();
+        }
+        warning_linger_duration = this.terminated ? 0 : this.warning_linger_duration;
+        var show_warning = !ok || (new Date()-this.last_show_warning)<warning_linger_duration;
+
+        var status_display = document.getElementById('status-display');
+
+        function toggle(elem,cls,on) {
+            if(on) {
+                elem.classList.add(cls);
+            } else {
+                elem.classList.remove(cls);
+            }
+        }
+
+        if(status_display) {
+            toggle(status_display,'ok',!show_warning);
+            toggle(status_display,'ended',this.ended);
+            toggle(status_display,'terminated',this.terminated && !disconnected);
+            toggle(status_display,'disconnected',disconnected);
+            toggle(status_display,'localstorage-used',this.localstorage_used||false);
+        }
+
+        this.callbacks.trigger('update_interval');
+
+        if(this.mode=='normal') {
+            var t = new Date();
+            if(this.available_until && t>this.available_until) {
+                this.end();
+            }
+        }
     },
 
     /** Call when we send a batch of elements
@@ -646,4 +668,21 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+function load_date(date) {
+    if(date!==null) {
+        return new Date(date);
+    }
+}
+
+function redirect(url) {
+    function clear_beforeunload(win) {
+        win.onbeforeunload = null;
+        for(var i=0;i<win.frames.length;i++) {
+            clear_beforeunload(win.frames[i]);
+        }
+    }
+    clear_beforeunload(window);
+    window.location = url;
 }

@@ -244,7 +244,7 @@ class ShowAttemptsView(generic.list.ListView):
 
 def new_attempt(request):
     if not request.resource.can_start_new_attempt(request.user):
-        raise PermissionDenied(ugettext("You can't start a new attempt at this exam"))
+        raise PermissionDenied(ugettext("You can't start a new attempt at this exam."))
 
     if Attempt.objects.filter(resource=request.resource,user=request.user).count() == request.resource.max_attempts > 0:
         AccessToken.objects.filter(resource=request.resource,user=request.user).first().delete()
@@ -295,7 +295,7 @@ class RunAttemptView(generic.detail.DetailView):
             context['attempt'] = attempt
 
 
-        if attempt.completion_status=='completed':
+        if attempt.completed():
             mode = 'review'
         else:
             mode = 'normal'
@@ -326,6 +326,16 @@ class RunAttemptView(generic.detail.DetailView):
         context['support_url'] = getattr(settings,'SUPPORT_URL',None)
         
         context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
+        context['available_until'] = attempt.resource.available_until
+
+        context['js_vars'] = {
+            'scorm_cmi': scorm_cmi,
+            'attempt_pk': attempt.pk,
+            'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
+            'show_attempts_url': reverse('show_attempts'),
+            'allow_review_from': str(attempt.resource.allow_review_from),
+            'available_until': str(attempt.resource.available_until),
+        }
 
         return context
 
