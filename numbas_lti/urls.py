@@ -17,7 +17,6 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/student_progress$', views.resource.StudentProgressView.as_view(), name='student_progress'),
     url(r'^resource/(?P<pk>\d+)/discount_parts$', views.resource.DiscountPartsView.as_view(), name='discount_parts'),
     url(r'^resource/(?P<pk>\d+)/discount_part$', views.resource.DiscountPartView.as_view(), name='discount_part'),
-    url(r'^resource/(?P<pk>\d+)/errors$', views.resource.ErrorsView.as_view(), name='errors'),
     url(r'^resource/(?P<pk>\d+)/validate_receipt$', views.resource.ValidateReceiptView.as_view(), name='validate_receipt'),
     url(r'^discount_part/(?P<pk>\d+)/update$', views.resource.DiscountPartUpdateView.as_view(), name='discount_part_update'),
     url(r'^discount_part/(?P<pk>\d+)/delete$', views.resource.DiscountPartDeleteView.as_view(), name='discount_part_delete'),

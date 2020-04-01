@@ -242,8 +242,14 @@ Timeline.prototype = {
         }
     },
     add_launch: function(launch) {
+        var msg;
+        if(launch.user!=null) {
+            msg = 'Launched in '+launch.mode+' mode by '+launch.user+'.';
+        } else {
+            msg = 'Launched in '+launch.mode+' mode.';
+        }
         this.add_timeline_item(new TimelineItem(
-            'Launched in '+launch.mode+' mode.',
+            msg,
             launch,
             'launch',
             'eye-open'

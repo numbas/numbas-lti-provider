@@ -801,14 +801,17 @@ class AttemptLaunch(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='launches', on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
     mode = models.CharField(max_length=100)
+    user = models.ForeignKey(User,blank=True,null=True,on_delete=models.CASCADE,related_name='attempt_launches')
 
     def __str__(self):
         return 'Launch {} in mode "{}" at {}'.format(self.attempt, self.mode, self.time)
 
     def as_json(self):
         return {
+            'attempt': self.attempt.pk,
             'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
             'mode': self.mode,
+            'user': self.user.get_full_name() if self.user else None,
         }
 
     class Meta:

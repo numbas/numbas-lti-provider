@@ -266,7 +266,8 @@ class RunAttemptView(generic.detail.DetailView):
         response = super().get(request, *args, **kwargs)
         AttemptLaunch.objects.create(
             attempt = self.object,
-            mode = self.mode
+            mode = self.mode,
+            user = self.request.user
         )
         return response
 
