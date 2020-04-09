@@ -90,13 +90,13 @@ def basic_lti_launch(request):
     user_data.is_instructor = is_instructor
     user_data.save()
 
-    ip_address = get_client_ip(request)
+    ip_address, ip_routable = get_client_ip(request)
 
     LTILaunch.objects.create(
         user = request.user,
         resource = request.resource,
         user_agent = request.META.get('HTTP_USER_AGENT'),
-        ip_address = request.META.get('REMOTE_ADDR')
+        ip_address = ip_address
     )
 
     if is_instructor:
