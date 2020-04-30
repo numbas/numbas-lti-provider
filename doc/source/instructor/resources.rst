@@ -18,7 +18,7 @@ Creating a new resource
     
     The first thing you see on creating a new Numbas resource.
 
-Either upload an exam package that you have downloaded from the Numbas editor or, if any :term:`editor links <editor link>` have been created, select an exam from the list.
+Either upload an exam package that you have downloaded from the Numbas editor or, if any :term:`editor links <Editor link>` have been created, select an exam from the list.
 
 When you :numbas:ref:`download an exam package <exam-admin-controls>` from the Numbas editor, you must use the :guilabel:`SCORM package` option.
 
@@ -265,7 +265,7 @@ It's normally good to leave this on, so that students who forget to click the :g
 Maximum attempts per user
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How many :term:`attempts <attempt>` at the resource can each user take?
+How many :term:`attempts <Attempt>` at the resource can each user take?
 
 If set to 0, then there is no limit.
 
@@ -281,23 +281,26 @@ You might not want to immediately show students their scores on this screen.
 
 * "Always" means the student will see scores for all attempts, including incomplete attempts.
 * "When attempt is complete" means the student will only see their score for an attempt once it is complete.
+* "When review is allowed" means the student will only see their score after the date specified in the :ref:`allow-students-to-review-attempts-from` setting.
 * "Never" means that no scores are shown to the student, even after they've completed their attempt.
 
 .. warning::
     This only controls the display of scores by the LTI provider.
-    If you want to hide scores from the students, you must also turn off the :numbas:term:`score feedback options in the exam editor <Show current score?>`.
+    If you want to hide scores from the students, you must also turn off the score feedback options in the exam editor.
 
 .. _when-to-report-scores-back:
 
 When to report scores back
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Specify when students' scores are reported back to the :term:`consumer <tool consumer>`.
+Specify when students' scores are reported back to the :term:`consumer <Tool consumer>`.
 Some VLEs make reported scores available to students immediately, which you may not want.
 
 * "Immediately" - scores are reported as soon as they change, i.e. whenever a student submits an answer.
 * "On completion" - a student's score is reported when they complete an attempt.
 * "Manually, by instructor" - Scores are only reported when an instructor clicks the :guilabel:`Report scores back to VLE` button on the dashboard.
+
+.. _allow-students-to-review-attempts-from:
 
 Allow students to review attempts from
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -3,7 +3,7 @@
 Editor links
 ============
 
-:term:`Editor links <editor link>` form a connection between the Numbas LTI tool provider and an instance of the Numbas editor, allowing instructors to select exams from a list inside the LTI tool, rather than downloading an exam package to their own computer and then uploading it to the LTI tool.
+:term:`Editor links <Editor link>` form a connection between the Numbas LTI tool provider and an instance of the Numbas editor, allowing instructors to select exams from a list inside the LTI tool, rather than downloading an exam package to their own computer and then uploading it to the LTI tool.
 
 The `public Numbas editor hosted by mathcentre <https://numbas.mathcentre.ac.uk>`_ provides a wealth of ready-made exams on a variety of subjects.
 

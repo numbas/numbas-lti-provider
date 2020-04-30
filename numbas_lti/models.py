@@ -159,6 +159,7 @@ REPORTING_STATUSES = [
 SHOW_SCORES_MODES = [
     ('always',_('Always')),
     ('complete',_('When attempt is complete')),
+    ('review', _('When review is allowed')),
     ('never',_('Never')),
 ]
 
@@ -744,13 +745,20 @@ class Attempt(models.Model):
         else:
             return True
 
-    def review_allowed(self):
-        if not self.should_show_scores():
+    def review_allowed(self,ignore_show_scores=False):
+        if not (ignore_show_scores or self.should_show_scores()):
             return False
         return self.resource.allow_review_from is None or timezone.now() >= self.resource.allow_review_from
 
     def should_show_scores(self):
-        return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
+        if self.resource.show_marks_when == 'always':
+            return True
+        if self.completed():
+            if self.resource.show_marks_when == 'complete':
+                return True
+            if self.resource.show_marks_when == 'review' and self.review_allowed(ignore_show_scores=True):
+                return True
+        return False
 
     def is_remarked(self):
         return self.remarked_parts.exists()
