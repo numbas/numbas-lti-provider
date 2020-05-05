@@ -98,6 +98,9 @@ class CreateExamForm(ModelForm):
             exam.save()
         return exam
 
+class ReplaceExamForm(CreateExamForm):
+    safe_replacement = forms.BooleanField(required=False,label='This is a safe replacement for the previous exam package')
+
 class EditorLinkProjectForm(ModelForm):
     use = forms.BooleanField(required=False)
     class Meta:

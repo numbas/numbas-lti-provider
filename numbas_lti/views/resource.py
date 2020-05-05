@@ -52,6 +52,7 @@ class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.e
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
     template_name = 'numbas_lti/management/replace_exam.html'
+    form_class = forms.ReplaceExamForm
 
     def get_context_data(self,*args,**kwargs):
         context = super(ReplaceExamView,self).get_context_data(*args,**kwargs)
@@ -60,7 +61,16 @@ class ReplaceExamView(CreateExamView):
         return context
 
     def form_valid(self,form):
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa\n\n\n\n\AAAAAAA")
+        resource = self.request.resource
+        old_exam = resource.exam
         response = super().form_valid(form)
+
+        new_exam = self.object
+        print(old_exam.pk,new_exam.pk)
+        if form.cleaned_data['safe_replacement']:
+            resource.attempts.filter(exam=old_exam).update(exam=new_exam)
+            print("replaced")
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 

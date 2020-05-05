@@ -6,23 +6,23 @@
 <h1>{% trans "Replace exam" %}</h1>
 
 {% if current_exam.rest_url %}
-{% blocktrans %}
-<p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
-{% endblocktrans %}
-<form method="POST" action="{% url 'replace_exam' request.resource.pk %}">
-    {% csrf_token %}
-    <input type="hidden" name="retrieve_url" value="{{current_exam.retrieve_url}}">
-    <input type="hidden" name="rest_url" value="{{current_exam.rest_url}}">
-    <p><button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-transfer"></span> {% trans "Update from editor" %}</button></p>
-</form>
+    {% blocktrans %}
+    <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
+    {% endblocktrans %}
+    <form method="POST" action="{% url 'replace_exam' request.resource.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="retrieve_url" value="{{current_exam.retrieve_url}}">
+        <input type="hidden" name="rest_url" value="{{current_exam.rest_url}}">
+        <p><button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-transfer"></span> {% trans "Update from editor" %}</button></p>
+    </form>
+    {% blocktrans %}
+    <p>Alternately, you can upload a new exam package below.</p>
+    <hr>
+    {% endblocktrans %}
 {% endif %}
-{% blocktrans %}
-<p>Alternately, you can upload a new exam package below.</p>
-<hr>
-{% endblocktrans %}
 
 
-<form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' request.resource.pk %}">
+<form method="POST" enctype="multipart/form-data" action="{% url 'replace_exam' request.resource.pk %}">
     {% csrf_token %}
     {{form|bootstrap}}
     <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-import"></span> {% trans "Replace" %}</button> 

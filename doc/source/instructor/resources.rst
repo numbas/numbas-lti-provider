@@ -241,7 +241,8 @@ Replace exam package
 If you discover an error in your exam, you can update it by downloading it again from the editor and clicking the :guilabel:`Replace exam package` button.
 
 Any new attempts will use the latest version of the exam package.
-Because the new version might have changed in a way that is incompatible with existing attempts, for example by removing or rearranging question parts, any attempts started with the old package will continue to use the old package.
+Because the new version might have changed in a way that is incompatible with existing attempts, for example by removing or rearranging question parts, any attempts started with the old package will by default continue to use the old package.
+If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`This is a safe replacement for the previous exam package`. All attempts using the old package will be updated to use the new one.
 
 .. _grading-method:
 
