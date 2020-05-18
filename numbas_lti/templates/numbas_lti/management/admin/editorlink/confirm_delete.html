@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load bootstrap %}
 
+{% block title %}{% blocktrans with name=object.name %}Delete link to editor "{{name}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+
 {% block management_content %}
 <div class="container">
     <header>
@@ -10,7 +12,7 @@
 
     <main>
         <p>
-            {% blocktrans with key=consumer.key%}Are you sure you want to delete the connection to {{editorlink}}?{% endblocktrans %}
+            {% blocktrans with name=editorlink.name%}Are you sure you want to delete the connection to {{name}}?{% endblocktrans %}
         </p>
         <form method="POST" action="">
             {% csrf_token %}

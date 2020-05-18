@@ -3,6 +3,8 @@
 {% load bootstrap %}
 {% load staticfiles %}
 
+{% block title %}{% blocktrans with key=consumer.key %}Manage time periods for "{{key}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+
 {% block stylesheets %}
     {{block.super}}
     <link rel="stylesheet" href="{% static 'view_consumer.css' %}">

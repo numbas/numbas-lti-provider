@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load bootstrap %}
 
+{% block title %}{% blocktrans with key=consumer.key %}Delete "{{key}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+
 {% block management_content %}
 <div class="container">
     <header>

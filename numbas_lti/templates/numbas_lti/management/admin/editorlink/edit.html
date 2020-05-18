@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load bootstrap %}
 
+{% block title %}{% blocktrans with name=object.name %}Edit link to "{{name}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+
 {% block stylesheets %}
 {{block.super}}
 <style type="text/css">

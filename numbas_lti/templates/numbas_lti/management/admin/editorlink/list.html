@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load staticfiles %}
 
+{% block title %}{% trans "Editor links" %} - {{block.super}}{% endblock %}
+
 {% block management_content %}
     {% if object_list.exists %}
         <div>

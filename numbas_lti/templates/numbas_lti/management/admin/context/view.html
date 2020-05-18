@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load bootstrap %}
 
+{% block title %}{{context.name|default:"Unnamed course"}} - {{block.super}}{% endblock %}
+
 {% block management_content %}
     <header>
         <h1 id="context-{{context.pk}}">{{context.name|default:"Unnamed course"}} {% if context.label and context.label != context.name %}({{context.label}}){% endif %}</h1>

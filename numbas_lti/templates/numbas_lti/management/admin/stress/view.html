@@ -2,6 +2,9 @@
 {% load i18n %}
 {% load staticfiles %}
 
+{% block title %}{% blocktrans with time=object.resource.creation_time|date:"DATE_FORMAT" %}Stress test {{time}}{% endblocktrans %} - {{block.super}}{% endblock %}
+
+
 {% block admin_container %}container-fluid{% endblock %}
 
 {% block javascripts %}

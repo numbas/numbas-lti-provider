@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load staticfiles %}
 
+{% block title %}{% trans "Dashboard" %} - {{block.super}}{% endblock %}
+
 {% block stylesheets %}
 {{block.super}}
 <style type="text/css">

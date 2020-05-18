@@ -3,6 +3,8 @@
 {% load bootstrap %}
 {% load staticfiles %}
 
+{% block title %}{{consumer.key}} - {{block.super}}{% endblock %}
+
 {% block stylesheets %}
     {{block.super}}
     <link rel="stylesheet" href="{% static 'view_consumer.css' %}">
