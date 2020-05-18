@@ -25,10 +25,13 @@ function update_summary_stats_table() {
             return d.toFormat('d')+' days';
         }
     }
+    function timeFormat(t) {
+        return t ? d3.timeFormat('%Y-%m-%d %H:%M')(t) : '';
+    }
     var stats = [
         {label: 'Total score', values: data.attempts.map(a=>a.scaled_score).sort(d3.ascending), format: d3.format('.0%')},
-        {label: 'Start time', values: data.attempts.map(a=>a.start_time).sort(d3.ascending), format: d3.timeFormat('%Y-%m-%d %H:%M')},
-        {label: 'End time', values: data.attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: d3.timeFormat('%Y-%m-%d %H:%M')},
+        {label: 'Start time', values: data.attempts.map(a=>a.start_time).sort(d3.ascending), format: timeFormat},
+        {label: 'End time', values: data.attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: timeFormat},
         {label: 'Time taken', values: data.attempts.filter(a=>a.end_time).map(a=>a.end_time-a.start_time).sort(d3.ascending), format: format_duration}
     ];
     var table = d3.select('#summary-stats-table')
