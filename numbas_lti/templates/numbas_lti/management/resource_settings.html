@@ -11,7 +11,7 @@
 <form method="POST" action="{% url 'resource_settings' resource.pk %}">
     {% csrf_token %}
     {{form|bootstrap}}
-    <p><button class="btn btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url 'dashboard' resource.pk %}">{% trans "Cancel" %}</a></p>
+    <p><button class="btn btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url 'resource_dashboard' resource.pk %}">{% trans "Cancel" %}</a></p>
 </form>
 {% endblock management_content %}
 

@@ -103,7 +103,7 @@ def basic_lti_launch(request):
         if not request.resource.exam:
             return redirect(reverse('create_exam',args=(request.resource.pk,)))
         else:
-            return redirect(reverse('dashboard',args=(request.resource.pk,)))
+            return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
     else:
         if not request.resource.exam:
             return render(request,'numbas_lti/exam_not_set_up.html',{})

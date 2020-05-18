@@ -47,7 +47,7 @@ class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.e
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('dashboard',args=(self.request.resource.pk,))
+        return reverse('resource_dashboard',args=(self.request.resource.pk,))
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
@@ -219,7 +219,7 @@ class ResourceSettingsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeI
     management_tab = 'settings'
 
     def get_success_url(self):
-        return reverse('dashboard',args=(self.get_object().pk,))
+        return reverse('resource_dashboard',args=(self.get_object().pk,))
 
 class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource
@@ -307,7 +307,7 @@ def grant_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=resource)
 
-    return redirect(reverse('dashboard',args=(resource.pk,)))
+    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
 
 @lti_role_or_superuser_required(INSTRUCTOR_ROLES)
 def remove_access_token(request,resource_id,user_id):
@@ -315,7 +315,7 @@ def remove_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.filter(user=user,resource=resource).first().delete()
 
-    return redirect(reverse('dashboard',args=(resource.pk,)))
+    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
 
 class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
     model = ReportProcess
@@ -324,7 +324,7 @@ class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
         process = self.get_object()
         process.dismissed = True
         process.save()
-        return redirect(reverse('dashboard',args=(process.resource.pk,)))
+        return redirect(reverse('resource_dashboard',args=(process.resource.pk,)))
 
 class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     """
