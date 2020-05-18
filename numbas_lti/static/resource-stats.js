@@ -1,3 +1,8 @@
+var completed_toggle = document.getElementById('completed-toggle');
+
+var data = JSON.parse(document.getElementById('data-json').textContent);
+var only_completed = false;
+
 var question_scores_svg = d3.select("#question_scores_chart .chart").append('svg');
 var question_scores_g = question_scores_svg.append('g');
 question_scores_g.append('g').attr('class','x-axis');
@@ -28,11 +33,18 @@ function update_summary_stats_table() {
     function timeFormat(t) {
         return t ? d3.timeFormat('%Y-%m-%d %H:%M')(t) : '';
     }
+    function percentFormat(s) {
+        return s ? d3.format('.0%')(s) : '';
+    }
+    var attempts = data.attempts;
+    if(only_completed) {
+        attempts = attempts.filter(a=>a.completion_status=='completed');
+    }
     var stats = [
-        {label: 'Total score', values: data.attempts.map(a=>a.scaled_score).sort(d3.ascending), format: d3.format('.0%')},
-        {label: 'Start time', values: data.attempts.map(a=>a.start_time).sort(d3.ascending), format: timeFormat},
-        {label: 'End time', values: data.attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: timeFormat},
-        {label: 'Time taken', values: data.attempts.filter(a=>a.end_time).map(a=>a.end_time-a.start_time).sort(d3.ascending), format: format_duration}
+        {label: 'Total score', values: attempts.map(a=>a.scaled_score).sort(d3.ascending), format: percentFormat},
+        {label: 'Start time', values: attempts.map(a=>a.start_time).sort(d3.ascending), format: timeFormat},
+        {label: 'End time', values: attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: timeFormat},
+        {label: 'Time taken', values: attempts.filter(a=>a.end_time).map(a=>a.end_time-a.start_time).sort(d3.ascending), format: format_duration}
     ];
     var table = d3.select('#summary-stats-table')
     var rows = table.select('tbody').selectAll('tr').data(stats)
@@ -84,6 +96,10 @@ function update_question_scores_chart() {
     data.questions.forEach(function(q) {
         numbers[q.number] = true;
     });
+    var attempts = data.attempts;
+    if(only_completed) {
+        attempts = attempts.filter(a=>a.completion_status=='completed');
+    }
 
     // Get the different categories and count them
     var categories = Object.keys(numbers).map(n=>parseInt(n)).sort(cmp);
@@ -151,7 +167,7 @@ function update_question_scores_chart() {
         var ot = 0;
         scores.forEach(function(s,t) {
             if(s!=os) {
-                density.splice(0,0,[s,t/data.attempts.length],[os,t/data.attempts.length]);
+                density.splice(0,0,[s,t/attempts.length],[os,t/attempts.length]);
                 os = s;
             }
         });
@@ -167,7 +183,7 @@ function update_question_scores_chart() {
         var density = cumulative_path(qs);
         allDensity.push({key: key, density: density, number: number});
     }
-    allDensity.push({key: 'Total', density: cumulative_path(data.attempts.map(function(a) { return a.scaled_score; }))});
+    allDensity.push({key: 'Total', density: cumulative_path(attempts.map(function(a) { return a.scaled_score; }))});
 
     var question_colour = function(d) { return d.key=='Total' ? '#eee' : d3.schemeCategory10[d.number%10]; }
     var circle_colour = function(d) { return d.key=='Total' ? '#555' : d3.schemeCategory10[d.number%10]; }
@@ -219,7 +235,7 @@ function update_question_scores_chart() {
 
     var circle_data = 
         data.questions.map(function(q){ return {key: question_label(q.number), scaled_score: q.scaled_score, number: q.number} })
-        .concat(data.attempts.map(function(a){ return {key: 'Total', scaled_score: a.scaled_score} }))
+        .concat(attempts.map(function(a){ return {key: 'Total', scaled_score: a.scaled_score} }))
     ;
 
     var circles = question_scores_g.selectAll('.question-dot')
@@ -462,6 +478,7 @@ function update_time_chart() {
 
 
 function update() {
+    only_completed = completed_toggle.checked;
     data.attempts.forEach(function(a) {
         a.start_time = new Date(a.start_time)
         a.end_time = a.end_time ? new Date(a.end_time) : null;
@@ -490,3 +507,7 @@ update();
 window.addEventListener('resize',function(r) {
     update();
 });
+
+completed_toggle.addEventListener('change',function() {
+    update();
+})

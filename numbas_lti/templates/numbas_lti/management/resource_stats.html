@@ -29,6 +29,8 @@
     </table>
 </section>
 
+<input type="checkbox" id="completed-toggle"> <label for="completed-toggle">{% trans "Only count completed attempts" %}</label>
+
 <section id="summary_statistics">
     <h3>{% trans "Summary statistics" %}</h3>
     <table class="table" id="summary-stats-table">
@@ -101,9 +103,7 @@
     <script src="{% static 'luxon/luxon.js' %}"></script>
     <script src="{% static 'd3/d3.min.js' %}"></script>
 
-    <script>
-        var data = {{data|safe}};
-    </script>
+    {{data|json_script:"data-json"}}
 
     <script src="{% static 'resource-stats.js' %}" defer></script>
 {% endblock %}
