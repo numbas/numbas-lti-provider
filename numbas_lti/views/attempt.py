@@ -346,7 +346,6 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
     attempt = Attempt.objects.get(pk=pk)
     data = json.loads(request.body.decode())
     batches = data.get('batches',[])
-    print("FALLBACK",data)
     done, unsaved_elements = save_scorm_data(attempt,batches)
     if data.get('complete',False):
         if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
