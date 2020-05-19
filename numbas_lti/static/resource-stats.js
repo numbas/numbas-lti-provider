@@ -34,7 +34,7 @@ function update_summary_stats_table() {
         return t ? d3.timeFormat('%Y-%m-%d %H:%M')(t) : '';
     }
     function percentFormat(s) {
-        return s ? d3.format('.0%')(s) : '';
+        return s===null ? d3.format('.0%')(s) : '';
     }
     var attempts = data.attempts;
     if(only_completed) {
