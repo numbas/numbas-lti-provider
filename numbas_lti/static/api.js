@@ -458,10 +458,10 @@ SCORM_API.prototype = {
     /** Send the queued data model elements, as well as any unconfirmed batches, to the server over AJAX.
      * If there's no data to send, or the websocket connection is open, do nothing.
      */
-    send_ajax: function() {
+    send_ajax: function(force) {
         var sc = this;
 
-        if(this.pending_ajax) {
+        if(this.pending_ajax && !force) {
             return Promise.resolve('pending ajax');
         }
         if(this.queue.length) {
@@ -471,16 +471,16 @@ SCORM_API.prototype = {
         }
 
         var stuff_to_send = false;
-        var out = {};
+        var batches = {};
         var now = new Date();
         for(var key in this.sent) {
             var dt = now - this.sent[key].time;
             if(this.sent[key].elements.length && dt>this.ajax_period) {
                 stuff_to_send = true;
-                out[key] = this.make_batch(this.sent[key].elements);
+                batches[key] = this.make_batch(this.sent[key].elements);
             }
         }
-        if(!stuff_to_send) {
+        if(!(stuff_to_send || force)) {
             return Promise.resolve('no stuff to send');
         }
 
@@ -495,7 +495,10 @@ SCORM_API.prototype = {
                 'X-CSRFToken': csrftoken,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(out)
+            body: JSON.stringify({
+                batches: batches,
+                complete: force
+            })
         });
 
         request
@@ -563,7 +566,7 @@ SCORM_API.prototype = {
         /** Do one last send over HTTP, to make sure any remaining data is saved straight away.
          */
         this.send_queue_socket();
-        this.send_ajax();
+        this.send_ajax(true);
 
 		return true;
 	},

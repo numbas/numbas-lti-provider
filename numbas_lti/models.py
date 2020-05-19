@@ -982,8 +982,6 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
         group_for_attempt(instance.attempt).send({'text':json.dumps({
             'completion_status':'completed',
         })})
-        if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and instance.attempt.resource.email_receipts:
-            instance.attempt.send_completion_receipt()
     instance.attempt.save()
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':

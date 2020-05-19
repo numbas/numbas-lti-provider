@@ -344,8 +344,14 @@ class RunAttemptView(generic.detail.DetailView):
 def scorm_data_fallback(request,pk,*args,**kwargs):
     """ An AJAX fallback to save SCORM data, when the websocket fails """
     attempt = Attempt.objects.get(pk=pk)
-    batches = json.loads(request.body.decode())
+    data = json.loads(request.body.decode())
+    batches = data.get('batches',[])
+    print("FALLBACK",data)
     done, unsaved_elements = save_scorm_data(attempt,batches)
+    if data.get('complete',False):
+        if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
+            attempt.send_completion_receipt()
+
     return http.JsonResponse({'received_batches':done,'unsaved_elements':unsaved_elements})
 
 
