@@ -8,7 +8,6 @@
  * @param {string} fallback_url - URL of the AJAX fallback endpoint
  */
 function SCORM_API(options) {
-    console.log(options);
     var data = options.scorm_cmi;
     var sc = this;
 

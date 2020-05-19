@@ -22,9 +22,6 @@ body.ended #scorm-player {
 #status-display a {
     color: white;
 }
-body.terminated #status-display, #status-display:focus {
-    border-radius: 0;
-}
 #status-display.ok:not(.ended) {
     display: none;
 }
@@ -33,13 +30,6 @@ body.terminated #status-display, #status-display:focus {
 }
 #status-display:not(.localstorage-used) .text-localstorage-used {
     display: none;
-}
-body:not(.terminated) #status-display:not(:focus) .status-message .text {
-    display: none;
-}
-#status-display:hover:not(:focus) {
-    background-color: hsl(10,90%,50%);
-    cursor: pointer;
 }
 body:not(.terminated) #status-display:hover:not(:focus) .symbol {
     animation: wobble 0.3s infinite linear;
@@ -59,7 +49,7 @@ body:not(.terminated) #status-display:hover:not(:focus) .symbol {
         transform: rotate(0deg);
     }
 }
-body.terminated #status-display .symbol, #status-display:focus .symbol {
+body.terminated #status-display .symbol, #status-display .symbol {
     display: none;
 }
 #status-display.disconnected .text-disconnected,
