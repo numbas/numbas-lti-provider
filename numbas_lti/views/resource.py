@@ -369,10 +369,18 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
     context_object_name = 'attempts'
 
     def get_queryset(self, *args, **kwargs):
+        self.query = ''
         resource = self.get_resource()
         attempts = resource.attempts.all()
-        if 'query' in self.request.GET:
-            query = self.request.GET.get('query')
+        if self.request.GET.get('userid'):
+            try:
+                user = User.objects.get(pk=int(self.request.GET['userid']))
+                self.query = user.get_full_name()
+                attempts = attempts.filter(user=user)
+            except (ValueError, User.DoesNotExist):
+                pass
+        elif 'query' in self.request.GET:
+            query = self.query = self.request.GET.get('query')
             for word in query.split():
                 attempts = attempts.filter(Q(user__first_name__icontains=word) | Q(user__last_name__icontains=word))
         return attempts
@@ -384,6 +392,7 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
         context = super(AllAttemptsView,self).get_context_data(*args,**kwargs)
         resource = self.get_resource()
         context['resource'] = resource
+        context['query'] = self.query
 
         return context
 

@@ -45,19 +45,16 @@
     <p><a class="btn btn-info" href="{% url 'resource_json_dump' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</a></p>
 
     <form method="GET" class="form-inline">
-        {% for key,value in request.GET.items %}
-        {% if key != 'page' %}
-        <input type="hidden" value="{{value}}" name="{{key}}">
-        {% endif %}
-        {% endfor %}
+        <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
         {% csrf_token %}
         <label for="query">
             {% trans "Search for a student:" %} 
         </label>
         <div class="input-group">
-            <input id="query" name="query" type="search" class="form-control" value="{{request.GET.query}}">
-            {% if request.GET.query %}
-                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
+            <input type="hidden" name="userid" value="">
+            <input id="query" name="query" type="search" class="form-control" value="{{query}}">
+            {% if query %}
+                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
             {% endif %}
             <div class="input-group-btn">
                 <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">Search</span></button>
@@ -94,7 +91,11 @@
         <tbody>
             {% for attempt in attempts %}
             <tr data-student="{{attempt.user.get_full_name}}">
-                <td>{{attempt.user.get_full_name}}</td>
+                <td>
+                    <a href="?{% set_query_values page=1 userid=attempt.user.pk %}">
+                        {{attempt.user.get_full_name}}
+                    </a>
+                </td>
                 {% if identifier_field %}
                 <td class="identifier">{{attempt.user_data.identifier}}</td>
                 {% endif %}
