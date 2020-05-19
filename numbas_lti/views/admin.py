@@ -40,12 +40,17 @@ class DashboardView(generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        start_time = now() - timedelta(days=1)
+
         not_deleted = Q(attempts__deleted=False)
 
-        active_resources = Resource.objects.annotate(
-            recent_launches=Count('launches',filter=Q(launches__time__gt=now()-timedelta(days=1)),distinct=True),
-            complete_attempts=Count('attempts',filter=not_deleted & Q(attempts__completion_status='completed'),distinct=True)
-        )
+        recent_launch = Q(launches__time__gt=start_time)
+
+        active_resources = Resource.objects.filter(recent_launch).annotate(
+            recent_launches=Count('launches',filter=recent_launch,distinct=True),
+            recent_completions=Count('attempts',filter=not_deleted & Q(attempts__end_time__gt=start_time),distinct=True)
+        ).filter(recent_launches__gt=0).order_by('-recent_launches')
+
         context['active_resources'] = active_resources
 
         return context

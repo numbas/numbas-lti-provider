@@ -19,7 +19,7 @@
         <tr>
             <th>{% trans "Resource" %}</th>
             <th>{% trans "Launches today" %}</th>
-            <th>{% trans "Completed attempts" %}</th>
+            <th>{% trans "Attempts completed today" %}</th>
             <th></th>
         </tr>
     </thead>
@@ -32,7 +32,7 @@
                 <small class="text-muted">{{resource.context.name}}</small>
             </td>
             <td>{{resource.recent_launches}}</td>
-            <td>{{resource.complete_attempts}}</td>
+            <td>{{resource.recent_completions}}</td>
             <td><a href="{% url 'resource_stats' resource.pk %}" target="_blank"><span class="glyphicon glyphicon-stats"></span> {% trans "Statistics" %}</a></td>
         </tr>
         {% endfor %}
