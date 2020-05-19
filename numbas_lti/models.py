@@ -263,7 +263,7 @@ class Resource(models.Model):
                     }
                 }
         """
-        paths = sorted(set(e['value'] for e in ScormElement.objects.filter(attempt__resource=self,key__regex=r'cmi.interactions.[0-9]+.id').values('value')),key=lambda x:(len(x),x))
+        paths = sorted(set(e['value'] for e in ScormElement.objects.filter(attempt__resource=self,key_regex=r'cmi.interactions.[0-9]+.id').values('value')),key=lambda x:(len(x),x))
         re_path = re.compile(r'q([0-9]+)p([0-9]+)(?:g([0-9]+)|s([0-9]+))?')
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
