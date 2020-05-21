@@ -439,7 +439,7 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
         try:
             summary = signing.loads(code,salt=salt)
             for k in ('receipt_time','start_time','end_time'):
-                if k in summary:
+                if k in summary and summary[k] is not None:
                     summary[k] = dateparse.parse_datetime(summary[k])
             context['summary'] = summary
             attempt = Attempt.objects.get(pk=summary['pk'],resource=self.object)

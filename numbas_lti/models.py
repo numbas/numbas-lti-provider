@@ -402,6 +402,8 @@ class Attempt(models.Model):
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
 
+    all_data_received = models.BooleanField(default=False)
+
     objects = NotDeletedManager()
 
     class Meta:
@@ -578,6 +580,14 @@ class Attempt(models.Model):
         if not self.resource.is_available():
             return True
         return self.completion_status=='completed'
+
+    def finalise(self):
+        if self.end_time is None:
+            self.end_time = timezone.now()
+            self.save()
+            group_for_attempt(self).send({'text':json.dumps({
+                'completion_status':'completed',
+            })})
 
     @property
     def raw_score(self):
@@ -763,7 +773,7 @@ class Attempt(models.Model):
     def is_remarked(self):
         return self.remarked_parts.exists()
 
-    def completion_receipt(self):
+    def completion_receipt_context(self):
         include_score = self.should_show_scores()
 
         now = timezone.now()
@@ -780,15 +790,20 @@ class Attempt(models.Model):
 
         signed_summary = signing.dumps(summary,salt=self.resource.receipt_salt())
 
-        template = get_template('numbas_lti/attempt_completion_receipt.txt')
-
-        message = template.render({
+        context = {
             'include_score': include_score,
             'receipt_time': now,
             'attempt': self,
             'user': self.user,
             'signed_summary': signed_summary,
-        }).strip()
+        }
+        return context
+
+    def completion_receipt(self):
+
+        template = get_template('numbas_lti/attempt_completion_receipt.txt')
+
+        message = template.render(self.completion_receipt_context()).strip()
         
         return message
 
@@ -977,11 +992,6 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
     instance.attempt.completion_status = instance.value
     instance.attempt.completion_status_element = instance
-    if instance.value=='completed' and instance.attempt.end_time is None:
-        instance.attempt.end_time = timezone.now()
-        group_for_attempt(instance.attempt).send({'text':json.dumps({
-            'completion_status':'completed',
-        })})
     instance.attempt.save()
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
@@ -989,6 +999,19 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
             report_outcome_for_attempt(instance.attempt)
         except (ReportOutcomeFailure, ReportOutcomeConnectionError):
             pass
+
+@receiver(models.signals.post_save)
+def send_receipt_on_completion(sender,instance, **kwargs):
+    if sender == Attempt:
+        attempt = instance
+    elif sender == ScormElement:
+        attempt = instance.attempt
+    else:
+        return
+    if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
+        if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
+            attempt.send_completion_receipt()
+
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_num_questions(sender,instance,created,**kwargs):

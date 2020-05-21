@@ -289,6 +289,14 @@ SCORM_API.prototype = {
 
         var status_display = document.getElementById('status-display');
 
+        var confirmation = this.signed_receipt !== undefined;
+        if(confirmation) {
+            var receipt_code_display = document.getElementById('receipt-code');
+            if(receipt_code_display.textContent != this.signed_receipt) {
+                receipt_code_display.textContent = this.signed_receipt;
+            }
+        }
+
         function toggle(elem,cls,on) {
             if(on) {
                 elem.classList.add(cls);
@@ -303,6 +311,7 @@ SCORM_API.prototype = {
             toggle(status_display,'terminated',this.terminated && !disconnected);
             toggle(status_display,'disconnected',disconnected);
             toggle(status_display,'localstorage-used',this.localstorage_used||false);
+            toggle(status_display,'confirmation', confirmation);
         }
 
         this.callbacks.trigger('update_interval');
@@ -524,6 +533,9 @@ SCORM_API.prototype = {
                     d.received_batches.forEach(function(id) {
                         sc.batch_received(id);
                     });
+                    if(d.signed_receipt) {
+                        sc.signed_receipt = d.signed_receipt;
+                    }
                 }
             )
         ;

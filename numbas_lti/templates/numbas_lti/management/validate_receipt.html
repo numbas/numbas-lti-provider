@@ -83,20 +83,6 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>{% trans "Receipt generated at" %}</td>
-                    <td>{{summary.receipt_time}}</td>
-                    <td>{{attempt.receipt_time}}</td>
-                    <td>
-                        {% if summary.receipt_time == attempt.receipt_time %}
-                            <span class="glyphicon glyphicon-ok text-success"></span>
-                            <span class="sr-only">{% trans "Matches" %}</span>
-                        {% else %}
-                            <span class="glyphicon glyphicon-remove text-danger"></span>
-                            <span class="sr-only">{% trans "Doesn't match" %}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
                     <td>{% trans "Start time" %}</td>
                     <td>{{summary.start_time}}</td>
                     <td>{{attempt.start_time}}</td>

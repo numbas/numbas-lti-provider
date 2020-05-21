@@ -347,11 +347,19 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
     data = json.loads(request.body.decode())
     batches = data.get('batches',[])
     done, unsaved_elements = save_scorm_data(attempt,batches)
-    if data.get('complete',False):
-        if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
-            attempt.send_completion_receipt()
+    complete = data.get('complete',False)
+    response = {
+        'received_batches':done,
+        'unsaved_elements':unsaved_elements, 
+    }
+    if complete:
+        attempt.all_data_received = True
+        attempt.finalise()
+        attempt.save()
+        receipt_context = attempt.completion_receipt_context()
+        response['signed_receipt'] = receipt_context['signed_summary']
 
-    return http.JsonResponse({'received_batches':done,'unsaved_elements':unsaved_elements})
+    return http.JsonResponse(response)
 
 
 class JSONDumpView(MustBeInstructorMixin,JSONView,generic.detail.DetailView):

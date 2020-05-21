@@ -22,7 +22,7 @@ body.ended #scorm-player {
 #status-display a {
     color: white;
 }
-#status-display.ok:not(.ended) {
+#status-display.ok:not(.ended):not(.confirmation) {
     display: none;
 }
 #status-display .status-message {
@@ -55,8 +55,27 @@ body.terminated #status-display .symbol, #status-display .symbol {
 #status-display.disconnected .text-disconnected,
 #status-display.ended .text-ended,
 #status-display.ok .text-ok,
+#status-display.confirmation .text-confirmation,
 #status-display.terminated:not(.ok) .text-terminated {
     display: block;
+}
+
+
+#receipt-code {
+    white-space: normal;
+    line-break: anywhere;
+    font-size: 0.8em;
+    padding: 0 2rem;
+}
+body.terminated #status-display.confirmation {
+    background: hsl(120, 90%, 25%);
+    padding: 0.5em;
+    border-radius: 0;
+    font-size: 1rem;
+}
+#status-display p {
+    margin-top: 0;
+    margin-bottom: 0.5em;
 }
 
 body.terminated #status-display {
