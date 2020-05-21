@@ -31,10 +31,10 @@ function update_summary_stats_table() {
         }
     }
     function timeFormat(t) {
-        return t ? d3.timeFormat('%Y-%m-%d %H:%M')(t) : '';
+        return t!==undefined ? d3.timeFormat('%Y-%m-%d %H:%M')(t) : '';
     }
     function percentFormat(s) {
-        return s===null ? d3.format('.0%')(s) : '';
+        return s!==undefined ? d3.format('.0%')(s) : '';
     }
     var attempts = data.attempts;
     if(only_completed) {
