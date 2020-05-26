@@ -330,6 +330,7 @@ class RunAttemptView(generic.detail.DetailView):
         context['available_until'] = attempt.resource.available_until
 
         context['js_vars'] = {
+            'exam_url': attempt.exam.extracted_url+'/index.html',
             'scorm_cmi': scorm_cmi,
             'attempt_pk': attempt.pk,
             'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
