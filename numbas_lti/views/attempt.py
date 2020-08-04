@@ -173,7 +173,7 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     def get_context_data(self,*args,**kwargs):
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 
-        context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time','-counter'),key=lambda x:x.key)]
+        context['elements'] = [e.as_json() for e in self.object.scormelements.all()]
         context['show_stale_elements'] = True
         context['resource'] = self.object.resource
 
@@ -335,8 +335,8 @@ class RunAttemptView(generic.detail.DetailView):
             'attempt_pk': attempt.pk,
             'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
             'show_attempts_url': reverse('show_attempts'),
-            'allow_review_from': str(attempt.resource.allow_review_from),
-            'available_until': str(attempt.resource.available_until),
+            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else str(None),
+            'available_until': attempt.resource.available_until.isoformat() if attempt.resource.available_until else str(None),
         }
 
         return context

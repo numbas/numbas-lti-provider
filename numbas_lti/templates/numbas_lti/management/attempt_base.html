@@ -8,7 +8,7 @@
         {% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %}
     </h2>
     <h3>
-        <small>{% blocktrans with time=attempt.start_time|date:"Y-m-d H:i:s" %}Started {{time}}{% endblocktrans %}</small>
+        <small>{% blocktrans with time=attempt.start_time %}Started {{time}}{% endblocktrans %}</small>
     </h3>
 {% endblock management_header %}
 

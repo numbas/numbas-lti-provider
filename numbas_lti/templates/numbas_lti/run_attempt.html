@@ -57,6 +57,7 @@ if(!Modernizr.websockets) {
 <script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'fetch.js' %}"></script>
 <script type="text/javascript" src="{% static 'polyfills.js' %}"></script>
+{% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'api.js' %}"></script>
 {{js_vars|json_script:"js_vars"}}
 <script type="text/javascript">

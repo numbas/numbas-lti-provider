@@ -38,34 +38,26 @@
             <th>Value</th>
         </tr>
     </thead>
-    <tbody id="initial-data">
-        {% for key,elements in keys %}
-        {% for element in elements %}
-            {% if forloop.counter0 == 0 or show_stale_elements %}
-            <tr data-key="{{key}}" data-counter="{{element.counter}}">
-                <td class="key">{% if forloop.counter0 == 0 %}{{key}}{% endif %}</td>
-                <td class="time">{{element.time|date:"Y-m-d H:i:s"}}</td>
-                <td class="value">{{element.value}}</td>
-            </tr>
-            {% endif %}
-        {% endfor %}
-        {% endfor %}
-    </tbody>
     <tbody id="dynamic-data" data-bind="foreach: show_elements">
         <!-- ko foreach: elements -->
         <tr data-bind="css: {first: $index()==0}">
             <td class="key" data-bind="text: key"></td>
-            <td class="time" data-bind="text: time"></td>
+            <td class="time" data-bind="text: time_string"></td>
             <td class="value" data-bind="text: value"></td>
         </tr>
         <!-- /ko -->
     </tbody>
 </table>
 
+{% endblock attempt_content %}
+
+{% block javascripts %}
 <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+{% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
+{{elements|json_script:"scorm-elements"}}
 <script>
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
 </script>
 <script src="{% static 'attempt_scorm_listing.js' %}"></script>
-{% endblock attempt_content %}
+{% endblock javascripts %}

@@ -36,7 +36,7 @@
         <!-- ko foreach: {data: grouped_timeline, afterAdd: scrollIntoView} -->
             <!-- ko foreach: items -->
                 <tr class="item" data-bind="css: css">
-                    <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: time"></span></td>
+                    <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: time_string"></span></td>
                     <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
                     <td class="message"><span data-bind="html: message"></span></td>
                     <td class="exam-raw-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
@@ -49,7 +49,11 @@
     </tbody>
 </table>
 
+{% endblock attempt_content %}
+
+{% block javascripts %}
 <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+{% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 {{elements|json_script:"scorm-elements"}}
 {{launches|json_script:"launches"}}
@@ -57,4 +61,4 @@
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
 </script>
 <script src="{% static 'attempt_timeline.js' %}"></script>
-{% endblock attempt_content %}
+{% endblock javascripts %}

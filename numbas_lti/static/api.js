@@ -110,9 +110,9 @@ SCORM_API.prototype = {
         for(var id in stored_data.sent) {
             this.sent[id] = {
                 elements: stored_data.sent[id].map(function(e) {
-                    return new SCORMData(e.key,e.value,new Date(e.time*1000));
+                    return new SCORMData(e.key,e.value,DateTime.fromSeconds(e.time));
                 }),
-                time: new Date()
+                time: DateTime.local()
             }
         }
 
@@ -146,7 +146,7 @@ SCORM_API.prototype = {
 
         // Force review mode from now on if activity is completed - could be out of sync if resuming a session which wasn't saved properly.
         if(this.data['cmi.completion_status'] == 'completed') {
-            if(this.allow_review_from!==null && new Date()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
+            if(this.allow_review_from!==null && DateTime.local()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
                 var player = document.getElementById('scorm-player');
                 player.parentElement.removeChild(player);
                 this.ajax_period = 0;
@@ -282,10 +282,10 @@ SCORM_API.prototype = {
         var ok = !((unreceived || queued) && (disconnected || this.terminated));
 
         if(!ok) {
-            this.last_show_warning = new Date();
+            this.last_show_warning = DateTime.local();
         }
         warning_linger_duration = this.terminated ? 0 : this.warning_linger_duration;
-        var show_warning = !ok || (new Date()-this.last_show_warning)<warning_linger_duration;
+        var show_warning = !ok || (DateTime.local()-this.last_show_warning)<warning_linger_duration;
 
         var status_display = document.getElementById('status-display');
 
@@ -317,7 +317,7 @@ SCORM_API.prototype = {
         this.callbacks.trigger('update_interval');
 
         if(this.mode=='normal') {
-            var t = new Date();
+            var t = DateTime.local();
             if(this.available_until && t>this.available_until) {
                 this.end();
             }
@@ -331,7 +331,7 @@ SCORM_API.prototype = {
     batch_sent: function(elements,id) {
         this.sent[id] = {
             elements: elements,
-            time: new Date()
+            time: DateTime.local()
         };
         this.set_localstorage();
         this.callbacks.trigger('batch_sent',elements,id);
@@ -353,7 +353,7 @@ SCORM_API.prototype = {
             var data = {
                 sent: {},
                 current: this.data,
-                save_time: (new Date())-0
+                save_time: DateTime.local().toMillis()
             }
             for(var id in this.sent) {
                 data.sent[id] = this.make_batch(this.sent[id].elements);
@@ -481,7 +481,7 @@ SCORM_API.prototype = {
 
         var stuff_to_send = false;
         var batches = {};
-        var now = new Date();
+        var now = DateTime.local().toMillis();
         for(var key in this.sent) {
             var dt = now - this.sent[key].time;
             if(this.sent[key].elements.length && dt>this.ajax_period) {
@@ -613,7 +613,7 @@ SCORM_API.prototype = {
         if(changed) {
     		this.data[key] = value;
             this.check_key_counts_something(key);
-            this.queue.push(new SCORMData(key,value, new Date(),this.element_acc++));
+            this.queue.push(new SCORMData(key,value, DateTime.local(),this.element_acc++));
         }
         this.callbacks.trigger('SetValue',key,value,changed);
 	},
@@ -664,7 +664,7 @@ SCORMData.prototype = {
     },
 
     timestamp: function() {
-        return this.time.getTime()/1000
+        return this.time.toSeconds()
     }
 }
 
@@ -686,7 +686,7 @@ function getCookie(name) {
 
 function load_date(date) {
     if(date!==null) {
-        return new Date(date);
+        return DateTime.fromISO(date);
     }
 }
 

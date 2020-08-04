@@ -832,7 +832,7 @@ class AttemptLaunch(models.Model):
     def as_json(self):
         return {
             'attempt': self.attempt.pk,
-            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'time': self.time.isoformat(),
             'mode': self.mode,
             'user': self.user.get_full_name() if self.user else None,
         }
@@ -955,7 +955,7 @@ class ScormElement(models.Model):
         return {
             'key': self.key,
             'value': self.value,
-            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'time': self.time.isoformat(),
             'counter': self.counter,
         }
 

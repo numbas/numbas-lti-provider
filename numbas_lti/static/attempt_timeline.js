@@ -1,3 +1,5 @@
+var DateTime = luxon.DateTime;
+
 function percentage(n) {
     return Math.floor(100*n)+'%';
 }
@@ -285,7 +287,8 @@ function TimelineItem(message,element,kind,icon) {
     var ti = this;
     this.message = message;
     this.element = element;
-    this.time = element.time;
+    this.time = DateTime.fromISO(element.time);
+    this.time_string = this.time.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
     this.kind = kind;
     this.css = {}
     kind.split(' ').forEach(function(cls) {

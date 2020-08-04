@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load staticfiles %}
 
-{% block title %}{% blocktrans with time=object.resource.creation_time|date:"DATE_FORMAT" %}Stress test {{time}}{% endblocktrans %} - {{block.super}}{% endblock %}
+{% block title %}{% blocktrans with time=object.resource.creation_time %}Stress test {{time}}{% endblocktrans %} - {{block.super}}{% endblock %}
 
 
 {% block admin_container %}container-fluid{% endblock %}
@@ -42,7 +42,7 @@
 
 {% block management_content %}
 <header>
-    <h1>Stress test {{object.resource.creation_time|date:"DATE_FORMAT"}}</h1>
+    <h1>Stress test {{object.resource.creation_time}}</h1>
 </header>
 
 <div id="app">
