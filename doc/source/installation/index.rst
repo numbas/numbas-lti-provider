@@ -14,3 +14,4 @@ The Numbas LTI tool provider can be installed on any platform that can run Pytho
    ubuntu
    rhel-7
    heroku
+   troubleshooting/index
