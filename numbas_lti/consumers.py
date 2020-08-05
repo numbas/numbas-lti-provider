@@ -16,7 +16,7 @@ from django_auth_lti.patch_reverse import reverse
 
 from .groups import group_for_attempt, group_for_resource_stats
 from .models import Attempt, ScormElement, Resource, ReportProcess, EditorLink
-from .report_outcome import report_outcome, ReportOutcomeException
+from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .save_scorm_data import save_scorm_data
 
 @channel_session_user_from_http
@@ -85,6 +85,14 @@ def report_scores(message,**kwargs):
         process.status = 'complete'
     process.save()
 
+def report_score(message,**kwargs):
+    attempt = Attempt.objects.get(pk=message['pk'])
+    try:
+        report_outcome_for_attempt(attempt)
+    except ReportOutcomeException:
+        pass
+    
+
 class AttemptScormListingConsumer(WebsocketConsumer):
     def connection_groups(self,pk,**kwargs):
         attempt = Attempt.objects.get(pk=pk)
@@ -95,3 +103,8 @@ def update_editorlink(message,**kwargs):
 
     editorlink.update_cache(bounce=message.get('bounce',False))
     editorlink.save()
+
+def email_receipt(message,**kwargs):
+    attempt = Attempt.objects.get(pk=message['pk'])
+    if not attempt.sent_receipt:
+        attempt.send_completion_receipt()
