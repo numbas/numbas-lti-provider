@@ -1,0 +1,14 @@
+#timeline {
+    margin: 2em 0;
+}
+
+#timeline thead th {
+  position: sticky;
+  top: 0;
+  background: #eee;
+}
+
+.item .exam-raw-score, .item .exam-scaled-score {
+    text-align: right;
+}
+

@@ -3,5 +3,5 @@
 
 {% block management_content %}
 <p>{% trans "Scores are now being reported back to the LTI consumer. If there are lots of students, this might take a minute or two." %}</p>
-<p><a class="btn btn-primary" href="{% url 'dashboard' resource.pk %}">{% trans "Back to dashboard" %}</a></p>
+<p><a class="btn btn-primary" href="{% url 'resource_dashboard' resource.pk %}">{% trans "Back to dashboard" %}</a></p>
 {% endblock management_content %}

@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}
+
 {% block stylesheets %}
     {{block.super}}
     <link rel="stylesheet" href="{% static 'attempt_scorm_listing.css' %}">
@@ -9,7 +11,9 @@
 
 {% block attempt_content %}
 
-<a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a>
+<p><a class="btn btn-link" href="{% url 'attempt_timeline' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View activity timeline for this attempt" %}</a></p>
+
+<p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
 
 <div class="search">
     <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>
@@ -34,34 +38,26 @@
             <th>Value</th>
         </tr>
     </thead>
-    <tbody id="initial-data">
-        {% for key,elements in keys %}
-        {% for element in elements %}
-            {% if forloop.counter0 == 0 or show_stale_elements %}
-            <tr data-key="{{key}}" data-counter="{{element.counter}}">
-                <td class="key">{% if forloop.counter0 == 0 %}{{key}}{% endif %}</td>
-                <td class="time">{{element.time|date:"Y-m-d H:i:s"}}</td>
-                <td class="value">{{element.value}}</td>
-            </tr>
-            {% endif %}
-        {% endfor %}
-        {% endfor %}
-    </tbody>
     <tbody id="dynamic-data" data-bind="foreach: show_elements">
         <!-- ko foreach: elements -->
         <tr data-bind="css: {first: $index()==0}">
             <td class="key" data-bind="text: key"></td>
-            <td class="time" data-bind="text: time"></td>
+            <td class="time" data-bind="text: time_string"></td>
             <td class="value" data-bind="text: value"></td>
         </tr>
         <!-- /ko -->
     </tbody>
 </table>
 
+{% endblock attempt_content %}
+
+{% block javascripts %}
 <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+{% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
+{{elements|json_script:"scorm-elements"}}
 <script>
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
 </script>
 <script src="{% static 'attempt_scorm_listing.js' %}"></script>
-{% endblock attempt_content %}
+{% endblock javascripts %}

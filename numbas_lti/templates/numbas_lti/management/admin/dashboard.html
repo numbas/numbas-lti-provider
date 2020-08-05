@@ -1,0 +1,41 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}{% trans "Dashboard" %} - {{block.super}}{% endblock %}
+
+{% block stylesheets %}
+{{block.super}}
+<style type="text/css">
+</style>
+{% endblock stylesheets %}
+
+{% block management_content %}
+<h1>{% trans "Dashboard" %}</h1>
+
+<h2>{% trans "Today" %}</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>{% trans "Resource" %}</th>
+            <th>{% trans "Launches today" %}</th>
+            <th>{% trans "Attempts completed today" %}</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for resource in active_resources %}
+        <tr>
+            <td>
+                <a href="{% url 'resource_dashboard' resource.pk %}" target="_blank">{{resource.title|default:"Unnamed resource"}}</a>
+                <br>
+                <small class="text-muted">{{resource.context.name}}</small>
+            </td>
+            <td>{{resource.recent_launches}}</td>
+            <td>{{resource.recent_completions}}</td>
+            <td><a href="{% url 'resource_stats' resource.pk %}" target="_blank"><span class="glyphicon glyphicon-stats"></span> {% trans "Statistics" %}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock management_content %}

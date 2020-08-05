@@ -2,10 +2,12 @@
 {% load i18n %}
 {% load bootstrap %}
 
+{% block title %}{% trans "Add a new LTI consumer" %} - {{block.super}}{% endblock %}
+
 {% block management_content %}
 <div class="container">
     <header>
-        <h1>Add a new LTI consumer</h1>
+        <h1>{% trans "Add a new LTI consumer" %}</h1>
     </header>
 
     <main>

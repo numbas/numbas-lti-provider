@@ -32,7 +32,7 @@ Attempt.prototype = {
         this.begun = true;
         this.pk = data.pk;
         this.fallback_url = data.fallback_url;
-        this.api = new SCORM_API({'cmi.mode':{value:'normal'}},this.pk,this.fallback_url);
+        this.api = new SCORM_API({scorm_cmi: {'cmi.mode':{value:'normal'}}},this.pk,this.fallback_url);
         this.api.Initialize("");
 
         this.api.callbacks.on('socket.onopen',function() {

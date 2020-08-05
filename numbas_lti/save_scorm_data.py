@@ -40,7 +40,7 @@ def save_scorm_data(attempt,batches):
                     if len(e.args)==2:
                         code, msg = e.args
                         if code in [1366, 1267]:
-                            logger.exception(_("Error saving SCORM data via AJAX fallback for attempt {}:\n{}".format(attempt.pk,e)))
+                            logger.exception(_("Error saving SCORM data for attempt {}:\n{}".format(attempt.pk,e)))
                             unsaved_elements.append(element)
                         else:
                             raise e

@@ -6,6 +6,9 @@
 {% block stylesheets %}
 {{block.super}}
 <style>
+.identifier {
+    font-family: monospace;
+}
 .score-info {
     width: 15em;
     margin-top: 0.5em;
@@ -42,19 +45,16 @@
     <p><a class="btn btn-info" href="{% url 'resource_json_dump' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</a></p>
 
     <form method="GET" class="form-inline">
-        {% for key,value in request.GET.items %}
-        {% if key != 'page' %}
-        <input type="hidden" value="{{value}}" name="{{key}}">
-        {% endif %}
-        {% endfor %}
+        <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
         {% csrf_token %}
         <label for="query">
             {% trans "Search for a student:" %} 
         </label>
         <div class="input-group">
-            <input id="query" name="query" type="search" class="form-control" value="{{request.GET.query}}">
-            {% if request.GET.query %}
-                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
+            <input type="hidden" name="userid" value="">
+            <input id="query" name="query" type="search" class="form-control" value="{{query}}">
+            {% if query %}
+                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
             {% endif %}
             <div class="input-group-btn">
                 <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">Search</span></button>
@@ -74,10 +74,14 @@
         </ul>
     </nav>
     {% endif %}
+    {% with identifier_field=resource.context.consumer.identifier_field %}
     <table id="attempts" class="table table-striped">
         <thead>
             <tr>
                 <th>{% trans "Student" %}</th>
+                {% if identifier_field %}
+                <th>{{resource.context.consumer.get_identifier_field_display}}</th>
+                {% endif %}
                 <th>{% trans "Start time" %}</th>
                 <th></th>
                 <th>{% trans "Completion status" %}</th>
@@ -87,12 +91,19 @@
         <tbody>
             {% for attempt in attempts %}
             <tr data-student="{{attempt.user.get_full_name}}">
-                <td>{{attempt.user.get_full_name}}</td>
+                <td>
+                    <a href="?{% set_query_values page=1 userid=attempt.user.pk %}">
+                        {{attempt.user.get_full_name}}
+                    </a>
+                </td>
+                {% if identifier_field %}
+                <td class="identifier">{{attempt.user_data.identifier}}</td>
+                {% endif %}
                 <td>{{attempt.start_time}}</td>
                 <td>
                     <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% trans "(old exam)" %}{% endif %}
                     <a class="btn btn-link" href="{% url 'remark_parts' attempt.pk %}"><span class="text-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Remark" %}</span></a>
-                    <a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
+                    <a class="btn btn-link" href="{% url 'attempt_timeline' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
                     <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
                 </td>
                 <td>
@@ -114,6 +125,7 @@
             {% endfor %}
         </tbody>
     </table>
+    {% endwith %}
     {% else %}
     <p>{% trans "No students have attempted this exam yet. Information about students' attempts will appear here once a student has attempted this exam." %}</p>
     {% endif %}

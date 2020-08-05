@@ -14,7 +14,7 @@ To install the tool, you need:
   At Newcastle, we use servers running Ubuntu, though anything that can run Python will do. 
   As a rough guide, you'll need around 0.5MB of disk space per student attempt.
 * The ability to add a link to an LTI tool to your virtual learning environment. 
-  In Blackboard and Moodle, only administrators can do this.
+  In Blackboard and Moodle, only administrators can do this, but it only needs to be done once.
 
 At most institutions, this will require the help of your IT team.
 

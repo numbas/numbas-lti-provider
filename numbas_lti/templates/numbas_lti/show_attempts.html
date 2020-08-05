@@ -23,7 +23,6 @@
             <tr>
                 <th>{% trans "Start time" %}</th>
                 <th>{% trans "Score" %}</th>
-                <th>{% trans "Status" %}</th>
                 <th></th>
             </tr>
         </thead>
@@ -49,9 +48,9 @@
                             <span class="glyphicon glyphicon-apple"></span> {% trans "Review this attempt" %}
                         </a>
                         {% else %}
-                        {% if attempt.resource.allow_review_from %}
-                            {% blocktrans with time=attempt.resource.allow_review_from %}Review will be available from {{time}}{% endblocktrans %}
-                        {% endif %}
+                            {% if attempt.resource.allow_review_from %}
+                                {% blocktrans with time=attempt.resource.allow_review_from %}Review will be available from {{time}}{% endblocktrans %}
+                            {% endif %}
                         {% endif %}
                     {% else %}
                         {% if attempt.resume_allowed %}

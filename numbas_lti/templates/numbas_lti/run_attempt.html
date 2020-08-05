@@ -9,6 +9,21 @@
 <body>
 <div id="status-display" tabindex="1" class="ok">
     <span class="symbol">!</span>
+    <span class="status-message text-ended">
+        <div class="text">
+            <p>{% blocktrans with available_until=available_until|date:"r" %}This resource automatically closed at {{available_until}}{% endblocktrans %}</p>
+        </div>
+    </span>
+    <span class="status-message text-terminated">
+        <div class="text">
+            <p>{% trans "Attempt data is being saved to the database. Please wait." %}</p>
+        </div>
+    </span>
+    <span class="status-message text-ok">
+        <div class="text">
+            <p>{% trans "All attempt data has been saved to the database. You may now close this window." %}</p>
+        </div>
+    </span>
     <span class="status-message text-disconnected">
         <div class="text">
             <p>{% trans "There is currently no connection to the server - your attempt data can not be saved to the database." %}</p>
@@ -17,8 +32,16 @@
             {% if support_name %}<p>{% trans "If this warning remains visible for a long time, please contact " %}{% if support_url %}<a href="{{support_url}}">{% endif %}{{support_name}}{% if support_url %}</a>{% endif %}.</p>{% endif %}
         </div>
     </span>
+    <span class="status-message text-confirmation">
+        <div class="text">
+            <p>{% trans "The following code can be used by your instructor to verify the information in this receipt:" %}</p>
+            <pre id="receipt-code"></pre>
+        </div>
+    </span>
 </div>
-<iframe id="scorm-player" width="100%" height="100%" src="{{attempt.exam.extracted_url}}/index.html"></iframe>
+<div id="scorm-player-container">
+    <h1 style="text-align: center">Loading "{{attempt.resource.title}}"</h1>
+</div>
 
 {% if scorm_cmi %}
 <script>
@@ -34,30 +57,38 @@ if(!Modernizr.websockets) {
 <script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'fetch.js' %}"></script>
 <script type="text/javascript" src="{% static 'polyfills.js' %}"></script>
+{% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'api.js' %}"></script>
+{{js_vars|json_script:"js_vars"}}
 <script type="text/javascript">
+    var js_vars = JSON.parse(document.getElementById('js_vars').textContent);
     try {
-        var cmi = {{scorm_cmi|safe}};
-        var attempt_pk = {{attempt.pk}};
-        var fallback_url = '{% url 'attempt_scorm_data_fallback' attempt.pk %}';
-        var show_attempts_url = '{% url 'show_attempts' %}';
-        var allow_review_from = {% if attempt.resource.allow_review_from %}'{{attempt.resource.allow_review_from|date:'c'}}'{% else %}null{% endif %};
-        var sc = new SCORM_API(cmi,attempt_pk,fallback_url,allow_review_from);
+        var sc = new SCORM_API(js_vars);
         window.API_1484_11 = sc.API_1484_11;
     } catch(e) {
         alert("{% trans "A connection to the server could not be created. Please report this." %}");
         console.error(e.stack);
         window.location.href = '{% url 'show_attempts' %}';
     }
+	window.addEventListener('load',function() {
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('id','scorm-player');
+        iframe.setAttribute('width','100%');
+        iframe.setAttribute('height','100%');
+        iframe.setAttribute('src',js_vars.exam_url);
+        var iframe_container = document.getElementById('scorm-player-container');
+        iframe_container.innerHTML = '';
+        iframe_container.appendChild(iframe);
+    });
 </script>
 {% endif %}
 
 <script type="text/javascript">
 	window.addEventListener('load',function() {
-		var iframe = document.getElementById('scorm-player');
 
 		function resize_iframe() {
-			if(!iframe.contentWindow) {
+            var iframe = document.getElementById('scorm-player');
+			if(!(iframe && iframe.contentWindow)) {
 				return;
 			}
 			try {

@@ -1,10 +1,13 @@
+from datetime import timedelta
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
+from django.db.models import Count, Q
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import now
 from django.views import generic
-from numbas_lti.models import LTIConsumer
+from numbas_lti.models import LTIConsumer, Resource
 from numbas_lti.forms import CreateSuperuserForm
 
 class CreateSuperuserView(generic.edit.CreateView):
@@ -29,3 +32,25 @@ class CreateSuperuserView(generic.edit.CreateView):
             return reverse('list_consumers')
         else:
             return reverse('create_consumer')
+
+class DashboardView(generic.TemplateView):
+    template_name = 'numbas_lti/management/admin/dashboard.html'
+    management_tab = 'dashboard'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        start_time = now() - timedelta(days=1)
+
+        not_deleted = Q(attempts__deleted=False)
+
+        recent_launch = Q(launches__time__gt=start_time)
+
+        active_resources = Resource.objects.filter(recent_launch).annotate(
+            recent_launches=Count('launches',filter=recent_launch,distinct=True),
+            recent_completions=Count('attempts',filter=not_deleted & Q(attempts__end_time__gt=start_time),distinct=True)
+        ).filter(recent_launches__gt=0).order_by('-recent_launches')
+
+        context['active_resources'] = active_resources
+
+        return context

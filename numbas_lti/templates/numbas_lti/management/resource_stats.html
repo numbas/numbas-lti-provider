@@ -4,40 +4,49 @@
 {% load staticfiles %}
 
 {% block management_content %}
-<h2>{% trans "Statistics" %}</h2>
+<h2>
+    {% blocktrans with resource_name=resource.title %}Statistics for <strong>{{resource_name}}</strong>{% endblocktrans %}
+    <br>
+    <small>{{resource.context.name}}</small>
+</h2>
 
-<h3>{% trans "Attempt completion" %}</h3>
-<table class="table" id="completion-table">
-    <tbody>
-        {% for label,value,n in completion_counts %}
-        <tr>
-            <td>{{label}}</td>
-            <td class="value" data-value="{{value}}">{{n}}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<button type="button" onclick="window.print()" class="hidden-print btn btn-info">
+    <span class="glyphicon glyphicon-print"></span>
+    {% trans "Print this page" %}
+</button>
 
-<h3>{% trans "Summary statistics" %}</h3>
-<p>{% trans "Total exam score" %}</p>
-<table class="table" id="summary-stats-table">
-    <thead>
-        <tr>
-            <th>{% trans "Mean" %}</th>
-            <th>{% trans "Lower quartile" %}</th>
-            <th>{% trans "Median" %}</th>
-            <th>{% trans "Upper quartile" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td class="value" data-value="mean"></td>
-            <td class="value" data-value="q1"></td>
-            <td class="value" data-value="median"></td>
-            <td class="value" data-value="q3"></td>
-        </tr>
-    </tbody>
-</table>
+<section id="attempt_completion">
+    <h3>{% trans "Attempt completion" %}</h3>
+    <table class="table" id="completion-table">
+        <tbody>
+            {% for label,value,n in completion_counts %}
+            <tr>
+                <td>{{label}}</td>
+                <td class="value" data-value="{{value}}">{{n}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<input type="checkbox" id="completed-toggle"> <label for="completed-toggle">{% trans "Only count completed attempts" %}</label>
+
+<section id="summary_statistics">
+    <h3>{% trans "Summary statistics" %}</h3>
+    <table class="table" id="summary-stats-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>{% trans "Mean" %}</th>
+                <th>{% trans "Lower quartile" %}</th>
+                <th>{% trans "Median" %}</th>
+                <th>{% trans "Upper quartile" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</section>
 
 <section id="stacked_status_chart">
     <div class="legend">
@@ -64,63 +73,26 @@
 </section>
 
 
-<h3>{% trans "Score distribution" %}</h3>
-<p>{% blocktrans %}In the following charts, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+<section id="question_scores_chart">
+    <h3>{% trans "Score distribution" %}</h3>
+    <p>{% blocktrans %}In the following charts, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+    <div class="chart"></div>
+</section>
 
-<section id="question_scores_chart" class="chart"></section>
+<section id="times">
+    <h3>{% trans "Attempt times" %}</h3>
+	<p>{% blocktrans %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktrans %}</p>
+    <div class="chart">
+        <svg class="diagram"></svg>
+    </div>
+</section>
 
 {% endblock %}
 
 {% block stylesheets %}
     {{block.super}}
 
-    <style>
-        .chart svg {
-            display: block;
-            margin: 2rem auto;
-            width: 100%;
-        }
-        .ct-label {
-            font-size: 1em;
-        }
-        .x-axis .tick line {
-            stroke: #ccc;
-            stroke-dasharray: 2 2;
-        }
-        .question-dot {
-            opacity: 0.5;
-        }
-
-        section {
-            margin: 3rem auto;
-        }
-
-        .num_not_attempted rect {
-            fill: #eee;
-            stroke: #888;
-        }
-        .num_incorrect rect {
-            fill: red;
-        }
-        .num_partial rect {
-            fill: lightslategrey;
-        }
-        .num_correct rect {
-            fill: lime;
-        }
-
-        .legend {
-            display: flex;
-            justify-content: space-evenly;
-        }
-        .legend > span {
-            margin: 1em;
-        }
-
-        #stacked_status_chart .percentage {
-            text-anchor: middle;
-        }
-    </style>
+	<link rel="stylesheet" href="{% static 'resource-stats.css' %}">
 {% endblock %}
 
 {% block javascripts %}
@@ -128,11 +100,10 @@
 
     <script src="{% static 'robust-websocket.js' %}"></script>
 
+    {% include "numbas_lti/scripts/luxon.html" %}
     <script src="{% static 'd3/d3.min.js' %}"></script>
 
-    <script>
-        var data = {{data|safe}};
-    </script>
+    {{data|json_script:"data-json"}}
 
     <script src="{% static 'resource-stats.js' %}" defer></script>
 {% endblock %}

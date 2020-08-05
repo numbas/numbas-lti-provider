@@ -18,7 +18,7 @@ Creating a new resource
     
     The first thing you see on creating a new Numbas resource.
 
-Either upload an exam package that you have downloaded from the Numbas editor or, if any :term:`editor links <editor link>` have been created, select an exam from the list.
+Either upload an exam package that you have downloaded from the Numbas editor or, if any :term:`editor links <Editor link>` have been created, select an exam from the list.
 
 When you :numbas:ref:`download an exam package <exam-admin-controls>` from the Numbas editor, you must use the :guilabel:`SCORM package` option.
 
@@ -32,7 +32,7 @@ Dashboard
     The dashboard screen.
 
 When you open a resource as an instructor, you are first shown the dashboard.
-This view lists scores for all students who have attempted the resource.
+This view offers a few actions to do with the resource, and the navigation bar at the top has links to other views.
 
 .. _report-scores:
 
@@ -92,6 +92,8 @@ The username field might not correspond exactly to the student's username on the
 Student progress
 ^^^^^^^^^^^^^^^^
 
+From the dashboard, click :guilabel:`View individual student progress and grant access tokens` to view the :guilabel:`Student progress` table.
+
 The :guilabel:`Student progress` table lists the names of students who have attempted the activity, along with their scores as calculated following the :ref:`grading method <grading-method>`, and the number of attempts they have made.
 
 You can narrow down the displayed list by entering a name in the :guilabel:`Search for a student` box.
@@ -111,6 +113,28 @@ To revoke an access token, click the minus symbol next to the student's name in 
 Attempts started with an access token that is subsequently removed will not be deleted.
 
 When the student launches the activity, they will be offered the opportunity to start a new attempt.
+
+.. _validate-receipt:
+
+Validate a receipt code
+^^^^^^^^^^^^^^^^^^^^^^^
+
+If enabled (see :ref:`email-receipts-option`), students are emailed a receipt on completion of an attempt.
+The receipt contains information about their attempt, such as time and score, as well as a code that you can use to confirm that a receipt is valid.
+
+On the :guilabel:`Validate a receipt code` page, copy a code from a student into a box.
+
+If the code is valid, you'll be shown the information from the receipt, as well as a link to view the attempt's data in more detail.
+
+.. figure:: _static/valid-receipt-code.png
+
+   A validated receipt code.
+
+If the code is invalid, or corresponds to an attempt at a different resource, you'll be told so.
+
+.. figure:: _static/attempts.png
+
+   An invalid receipt code.
 
 Attempts
 --------
@@ -171,8 +195,15 @@ The new score is saved as you type, and the totals for the question and the whol
 Data
 ^^^^
 
+By clicking on the :guilabel:`Data` button, you can see a timeline describing actions the student took during their attempt.
+
+Items shown include moving between questions, submitting answers, and marks awarded.
+This page will update in real-time as the student continues their attempt.
+
+Click the :guilabel:`Download attempt data in JSON format` button to obtain a ``.json`` file containing all data pertaining to this attempt, including question and part scores, completion status, and the values of question variables.
+
 Numbas uses the `SCORM <https://scorm.com/scorm-explained/>`_ standard to store data about attempts.
-By clicking on the :guilabel:`Data` button, you can see all of the SCORM data model elements stored for a particular attempt.
+By clicking on the :guilabel:`View raw SCORM data for this attempt` button, you can see all of the SCORM data model elements stored for a particular attempt.
 
 This is most useful for debugging connection errors, to confirm that data has been saved.
 
@@ -180,8 +211,6 @@ If :guilabel:`Most recent value only` is ticked, only the most recent value for 
 Untick it to see every value that the element has taken since the start of the attempt.
 
 You can type a regular expression in the :guilabel:`Search for an element` box to narrow down the displayed list of elements.
-
-Click the :guilabel:`Download attempt data in JSON format` button to obtain a ``.json`` file containing all data pertaining to this attempt, including question and part scores, completion status, and the values of question variables.
 
 Delete an attempt
 ^^^^^^^^^^^^^^^^^
@@ -212,7 +241,8 @@ Replace exam package
 If you discover an error in your exam, you can update it by downloading it again from the editor and clicking the :guilabel:`Replace exam package` button.
 
 Any new attempts will use the latest version of the exam package.
-Because the new version might have changed in a way that is incompatible with existing attempts, for example by removing or rearranging question parts, any attempts started with the old package will continue to use the old package.
+Because the new version might have changed in a way that is incompatible with existing attempts, for example by removing or rearranging question parts, any attempts started with the old package will by default continue to use the old package.
+If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`This is a safe replacement for the previous exam package`. All attempts using the old package will be updated to use the new one.
 
 .. _grading-method:
 
@@ -236,7 +266,7 @@ It's normally good to leave this on, so that students who forget to click the :g
 Maximum attempts per user
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How many :term:`attempts <attempt>` at the resource can each user take?
+How many :term:`attempts <Attempt>` at the resource can each user take?
 
 If set to 0, then there is no limit.
 
@@ -252,23 +282,26 @@ You might not want to immediately show students their scores on this screen.
 
 * "Always" means the student will see scores for all attempts, including incomplete attempts.
 * "When attempt is complete" means the student will only see their score for an attempt once it is complete.
+* "When review is allowed" means the student will only see their score after the date specified in the :ref:`allow-students-to-review-attempts-from` setting.
 * "Never" means that no scores are shown to the student, even after they've completed their attempt.
 
 .. warning::
     This only controls the display of scores by the LTI provider.
-    If you want to hide scores from the students, you must also turn off the :numbas:term:`score feedback options in the exam editor <Show current score?>`.
+    If you want to hide scores from the students, you must also turn off the score feedback options in the exam editor.
 
 .. _when-to-report-scores-back:
 
 When to report scores back
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Specify when students' scores are reported back to the :term:`consumer <tool consumer>`.
+Specify when students' scores are reported back to the :term:`consumer <Tool consumer>`.
 Some VLEs make reported scores available to students immediately, which you may not want.
 
 * "Immediately" - scores are reported as soon as they change, i.e. whenever a student submits an answer.
 * "On completion" - a student's score is reported when they complete an attempt.
 * "Manually, by instructor" - Scores are only reported when an instructor clicks the :guilabel:`Report scores back to VLE` button on the dashboard.
+
+.. _allow-students-to-review-attempts-from:
 
 Allow students to review attempts from
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -280,6 +313,16 @@ If left blank, students can review their attempts at any time.
 If a date and time are set, students may only review their attempts after that time.
 
 Instructors may always review students' attempts, from the :guilabel:`Attempts` tab.
+
+.. _email-receipts-option:
+
+Email attempt receipts to students on completion?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If ticked, then when a student completes an attempt at this resource they will be emailed a receipt summarising their attempt.
+
+The receipt contains a code which instructors can use to confirm the receipt's contents. See :ref:`validate-receipt`.
+
 
 Test run
 --------

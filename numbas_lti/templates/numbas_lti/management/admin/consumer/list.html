@@ -2,6 +2,9 @@
 {% load i18n %}
 {% load staticfiles %}
 
+{% block title %}{% trans "Consumers" %} - {{block.super}}{% endblock %}
+
+
 {% block stylesheets %}
 {{block.super}}
 <style type="text/css">

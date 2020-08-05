@@ -1,6 +1,6 @@
 import zipfile
 
-from django.forms import ModelForm
+from django.forms import ModelForm, Form
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
@@ -22,9 +22,11 @@ import string
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts']
         widgets = {
-            'allow_review_from': DateTimePickerInput()
+            'allow_review_from': DateTimePickerInput(),
+            'available_from': DateTimePickerInput(),
+            'available_until': DateTimePickerInput(),
         }
 
 class RemarkPartScoreForm(ModelForm):
@@ -53,7 +55,7 @@ class CreateSuperuserForm(UserCreationForm):
 class CreateConsumerForm(ModelForm):
     class Meta:
         model = LTIConsumer
-        fields = ('key','url',)
+        fields = ('key','url','identifier_field',)
 
     def save(self,commit=True):
         consumer = super(CreateConsumerForm,self).save(commit=False)
@@ -95,6 +97,9 @@ class CreateExamForm(ModelForm):
         if commit:
             exam.save()
         return exam
+
+class ReplaceExamForm(CreateExamForm):
+    safe_replacement = forms.BooleanField(required=False,label='This is a safe replacement for the previous exam package')
 
 class EditorLinkProjectForm(ModelForm):
     use = forms.BooleanField(required=False)
@@ -146,3 +151,6 @@ class ConsumerTimePeriodForm(ModelForm):
         }
 
 ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)
+
+class ValidateReceiptForm(Form):
+    code = forms.CharField(strip=True,widget=forms.Textarea(attrs={'class':'form-control'}))

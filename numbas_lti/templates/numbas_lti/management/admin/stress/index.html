@@ -1,6 +1,8 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
 
+{% block title %}{% trans "Stress tests" %} - {{block.super}}{% endblock %}
+
 {% block management_content %}
 <header>
     <h1>{% trans "Stress tests" %}</h1>

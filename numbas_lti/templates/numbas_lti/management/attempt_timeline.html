@@ -1,0 +1,64 @@
+{% extends "numbas_lti/management/attempt_base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% static 'attempt_timeline.css' %}">
+{%endblock stylesheets %}
+
+{% block attempt_content %}
+
+<p><a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View raw SCORM data for this attempt" %}</a></p>
+
+<p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
+
+<table class="table" id="timeline">
+    <colgroup>
+        <col style="width: 12em;"/>
+        <col style="width: 2em;"/>
+        <col/>
+        <col style="width: 5em;"/>
+        <col style="width: 5em;"/>
+    </colgroup>
+    <thead>
+        <tr>
+            <th>{% trans "Time" %}</th>
+            <th></th>
+            <th>{% trans "Action" %}</th>
+            <th>{% trans "Total Score" %}</th>
+            <th>{% trans "Scaled Score" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- ko foreach: {data: grouped_timeline, afterAdd: scrollIntoView} -->
+            <!-- ko foreach: items -->
+                <tr class="item" data-bind="css: css">
+                    <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: time_string"></span></td>
+                    <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
+                    <td class="message"><span data-bind="html: message"></span></td>
+                    <td class="exam-raw-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
+                        <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
+                    </td>
+                    <td class="exam-scaled-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: $parent.exam_scaled_score"></span></td>
+                </tr>
+            <!-- /ko -->
+        <!-- /ko -->
+    </tbody>
+</table>
+
+{% endblock attempt_content %}
+
+{% block javascripts %}
+<script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+{% include "numbas_lti/scripts/luxon.html" %}
+<script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
+{{elements|json_script:"scorm-elements"}}
+{{launches|json_script:"launches"}}
+<script>
+    var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
+</script>
+<script src="{% static 'attempt_timeline.js' %}"></script>
+{% endblock javascripts %}

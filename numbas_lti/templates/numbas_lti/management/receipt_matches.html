@@ -1,0 +1,7 @@
+{% if matches %}
+    <span class="glyphicon glyphicon-ok text-success"></span>
+    <span class="sr-only">{% trans "Matches" %}</span>
+{% else %}
+    <span class="glyphicon glyphicon-remove text-danger"></span>
+    <span class="sr-only">{% trans "Doesn't match" %}</span>
+{% endif %}

@@ -1,20 +1,4 @@
-function read_elements() {
-    var rows = document.querySelectorAll('#initial-data tr');
-    var out = [];
-    for(var i=0;i<rows.length;i++) {
-        var row = rows[i];
-        var key = row.getAttribute('data-key');
-        var counter = parseInt(row.getAttribute('data-counter'));
-        var time = row.querySelector('.time').textContent;
-        var value = row.querySelector('.value').textContent;
-        out.push({key:key,time:time,value:value,counter:counter});
-    }
-
-    var initial = document.querySelector('#initial-data');
-    initial.parentElement.removeChild(initial);
-    
-    return out;
-}
+var DateTime = luxon.DateTime;
 
 function DataModel(elements) {
     this.all_elements = ko.observableArray([]);
@@ -53,6 +37,8 @@ function DataModel(elements) {
 DataModel.prototype = {
     add_element: function(element) {
         var key = element.key
+        element.time = DateTime.fromISO(element.time);
+        element.time_string = element.time.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
         if(this.elements[key]) {
             this.elements[key].push(element);
         } else {
@@ -92,7 +78,10 @@ document.querySelector('.search').addEventListener('click',function(e) {
 });
 
 
-var dm = new DataModel(read_elements());
+var scorm_json = document.getElementById('scorm-elements').textContent;
+var elements = JSON.parse(scorm_json);
+
+var dm = new DataModel(elements);
 dm.listen_for_changes(listener_url);
 
 ko.options.deferUpdates = true;

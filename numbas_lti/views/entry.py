@@ -1,5 +1,5 @@
 from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
-from numbas_lti.models import LTIConsumer, LTIUserData
+from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
+from ipware import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -73,20 +74,36 @@ def basic_lti_launch(request):
 
     user_id = request.LTI.get('user_id')
 
-    user_data = LTIUserData.objects.filter(user=request.user, resource = request.resource, consumer=consumer, consumer_user_id = user_id).last()
+    user_data_args = {
+        'user': request.user, 
+        'resource': request.resource, 
+        'consumer': consumer, 
+        'consumer_user_id': user_id,
+    }
+    user_data = LTIUserData.objects.filter(**user_data_args).last()
     if user_data is None:
-        user_data = LTIUserData.objects.create(user=request.user, resource = request.resource, consumer=consumer, consumer_user_id = user_id)
+        user_data = LTIUserData.objects.create(**user_data_args)
 
     user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
+    user_data.lis_person_sourcedid = request.LTI.get('lis_person_sourcedid','')
     user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
     user_data.is_instructor = is_instructor
     user_data.save()
+
+    ip_address, ip_routable = get_client_ip(request)
+
+    LTILaunch.objects.create(
+        user = request.user,
+        resource = request.resource,
+        user_agent = request.META.get('HTTP_USER_AGENT'),
+        ip_address = ip_address
+    )
 
     if is_instructor:
         if not request.resource.exam:
             return redirect(reverse('create_exam',args=(request.resource.pk,)))
         else:
-            return redirect(reverse('dashboard',args=(request.resource.pk,)))
+            return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
     else:
         if not request.resource.exam:
             return render(request,'numbas_lti/exam_not_set_up.html',{})

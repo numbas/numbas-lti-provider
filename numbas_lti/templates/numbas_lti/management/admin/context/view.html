@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load bootstrap %}
 
+{% block title %}{{context.name|default:"Unnamed course"}} - {{block.super}}{% endblock %}
+
 {% block management_content %}
     <header>
         <h1 id="context-{{context.pk}}">{{context.name|default:"Unnamed course"}} {% if context.label and context.label != context.name %}({{context.label}}){% endif %}</h1>
@@ -16,7 +18,7 @@
         {% for resource in context.resources.all %}
         <tr class="resource{% if resource.is_old %} old{% endif %}{% if resource.is_new %} new warning{% endif %}">
             <td>
-                <a href="{% url 'dashboard' resource.pk %}" target="_blank">{{resource.title|default:"Unnamed resource"}} {% if resource.exam.title and resource.title != resource.exam.title %}<small class="text-muted">({{resource.exam.title}})</small>{% endif %}</a>
+                <a href="{% url 'resource_dashboard' resource.pk %}" target="_blank">{{resource.title|default:"Unnamed resource"}} {% if resource.exam.title and resource.title != resource.exam.title %}<small class="text-muted">({{resource.exam.title}})</small>{% endif %}</a>
             </td>
             <td>{% trans "Created" %} {{resource.creation_time}}</td>
             <td>

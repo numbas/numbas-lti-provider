@@ -43,6 +43,9 @@
                 <a class="btn btn-danger" href="{% url 'discount_parts' resource.pk %}"><span class="glyphicon glyphicon-minus-sign"></span> {% trans "Discount question parts" %}</a>
                 <span class="help-block">{% trans "You can remark individual attempts on the attempts page." %}</span>
             </li>
+            <li>
+                <a class="btn btn-info" href="{% url 'validate_receipt' resource.pk %}"><span class="glyphicon glyphicon-ok"></span> {% trans "Validate a receipt code" %}</a>
+            </li>
         </ul>
     </section>
 

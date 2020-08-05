@@ -1,6 +1,7 @@
-Django==2.2.4
-oauthlib
-lxml
+Django==2.2.13
+oauthlib==3.0.1
+lxml==4.3.0
+>>>>>>> master
 channels==1.1.8
 git+https://github.com/christianp/django-auth-lti@oauthlib#egg=django_auth_lti
 requests
@@ -13,3 +14,5 @@ dj-database-url
 psycopg2
 redis
 asgi-redis
+django-ipware==2.1.0
+django-cookies-samesite==0.5.1

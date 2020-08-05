@@ -14,7 +14,7 @@ from django.views import generic
 from django.views.decorators.http import require_POST
 from itertools import groupby
 from numbas_lti.forms import RemarkPartScoreForm
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch
 from numbas_lti.save_scorm_data import save_scorm_data
 import datetime
 import json
@@ -173,12 +173,29 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     def get_context_data(self,*args,**kwargs):
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 
-        context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time','-counter'),key=lambda x:x.key)]
+        context['elements'] = [e.as_json() for e in self.object.scormelements.all()]
         context['show_stale_elements'] = True
+        context['resource'] = self.object.resource
 
         return context
 
+class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
+    model = Attempt
+    management_tab = 'attempts'
+    template_name = 'numbas_lti/management/attempt_timeline.html'
+    context_object_name = 'attempt'
 
+    def get_resource(self):
+        return self.get_object().resource
+
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        context['resource'] = self.object.resource
+        context['elements'] = [e.as_json() for e in self.object.scormelements.order_by('time','counter')]
+        context['launches'] = [l.as_json() for l in self.object.launches.all()]
+
+        return context
 
 class DeleteAttemptView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.edit.DeleteView):
     model = Attempt
@@ -227,7 +244,7 @@ class ShowAttemptsView(generic.list.ListView):
 
 def new_attempt(request):
     if not request.resource.can_start_new_attempt(request.user):
-        raise PermissionDenied(ugettext("You can't start a new attempt at this exam"))
+        raise PermissionDenied(ugettext("You can't start a new attempt at this exam."))
 
     if Attempt.objects.filter(resource=request.resource,user=request.user).count() == request.resource.max_attempts > 0:
         AccessToken.objects.filter(resource=request.resource,user=request.user).first().delete()
@@ -244,6 +261,15 @@ class RunAttemptView(generic.detail.DetailView):
     context_object_name = 'attempt'
 
     template_name = 'numbas_lti/run_attempt.html'
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        AttemptLaunch.objects.create(
+            attempt = self.object,
+            mode = self.mode,
+            user = self.request.user
+        )
+        return response
 
     def get_context_data(self,*args,**kwargs):
         context = super(RunAttemptView,self).get_context_data(*args,**kwargs)
@@ -270,7 +296,7 @@ class RunAttemptView(generic.detail.DetailView):
             context['attempt'] = attempt
 
 
-        if attempt.completion_status=='completed':
+        if attempt.completed():
             mode = 'review'
         else:
             mode = 'normal'
@@ -281,7 +307,7 @@ class RunAttemptView(generic.detail.DetailView):
             else:
                 raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
 
-        context['mode'] = mode
+        context['mode'] = self.mode = mode
 
         user = attempt.user
         user_data = attempt.resource.user_data(user)
@@ -301,6 +327,17 @@ class RunAttemptView(generic.detail.DetailView):
         context['support_url'] = getattr(settings,'SUPPORT_URL',None)
         
         context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
+        context['available_until'] = attempt.resource.available_until
+
+        context['js_vars'] = {
+            'exam_url': attempt.exam.extracted_url+'/index.html',
+            'scorm_cmi': scorm_cmi,
+            'attempt_pk': attempt.pk,
+            'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
+            'show_attempts_url': reverse('show_attempts'),
+            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else str(None),
+            'available_until': attempt.resource.available_until.isoformat() if attempt.resource.available_until else str(None),
+        }
 
         return context
 
@@ -308,9 +345,22 @@ class RunAttemptView(generic.detail.DetailView):
 def scorm_data_fallback(request,pk,*args,**kwargs):
     """ An AJAX fallback to save SCORM data, when the websocket fails """
     attempt = Attempt.objects.get(pk=pk)
-    batches = json.loads(request.body.decode())
+    data = json.loads(request.body.decode())
+    batches = data.get('batches',[])
     done, unsaved_elements = save_scorm_data(attempt,batches)
-    return http.JsonResponse({'received_batches':done,'unsaved_elements':unsaved_elements})
+    complete = data.get('complete',False)
+    response = {
+        'received_batches':done,
+        'unsaved_elements':unsaved_elements, 
+    }
+    if complete:
+        attempt.all_data_received = True
+        attempt.finalise()
+        attempt.save()
+        receipt_context = attempt.completion_receipt_context()
+        response['signed_receipt'] = receipt_context['signed_summary']
+
+    return http.JsonResponse(response)
 
 
 class JSONDumpView(MustBeInstructorMixin,JSONView,generic.detail.DetailView):

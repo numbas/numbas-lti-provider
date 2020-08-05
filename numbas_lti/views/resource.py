@@ -7,11 +7,13 @@ from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.core import signing
 from django.db.models import Q,Count
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django_auth_lti.patch_reverse import reverse
+from django.utils import timezone, dateparse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
@@ -45,11 +47,12 @@ class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.e
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('dashboard',args=(self.request.resource.pk,))
+        return reverse('resource_dashboard',args=(self.request.resource.pk,))
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
     template_name = 'numbas_lti/management/replace_exam.html'
+    form_class = forms.ReplaceExamForm
 
     def get_context_data(self,*args,**kwargs):
         context = super(ReplaceExamView,self).get_context_data(*args,**kwargs)
@@ -58,7 +61,16 @@ class ReplaceExamView(CreateExamView):
         return context
 
     def form_valid(self,form):
-        response = super(CreateExamView,self).form_valid(form)
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa\n\n\n\n\AAAAAAA")
+        resource = self.request.resource
+        old_exam = resource.exam
+        response = super().form_valid(form)
+
+        new_exam = self.object
+        print(old_exam.pk,new_exam.pk)
+        if form.cleaned_data['safe_replacement']:
+            resource.attempts.filter(exam=old_exam).update(exam=new_exam)
+            print("replaced")
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
@@ -207,7 +219,7 @@ class ResourceSettingsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeI
     management_tab = 'settings'
 
     def get_success_url(self):
-        return reverse('dashboard',args=(self.get_object().pk,))
+        return reverse('resource_dashboard',args=(self.get_object().pk,))
 
 class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource
@@ -222,7 +234,7 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 student.first_name,
                 student.last_name,
                 student.email,
-                student.username,
+                user_data.get_source_id(),
                 resource.grade_user(student)*100
             )
 
@@ -267,7 +279,7 @@ class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
                 attempt.user.first_name,
                 attempt.user.last_name,
                 attempt.user.email,
-                attempt.user.username,
+                user_data.get_source_id(),
                 attempt.start_time,
                 attempt.end_time,
                 attempt.completion_status,
@@ -295,7 +307,7 @@ def grant_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=resource)
 
-    return redirect(reverse('dashboard',args=(resource.pk,)))
+    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
 
 @lti_role_or_superuser_required(INSTRUCTOR_ROLES)
 def remove_access_token(request,resource_id,user_id):
@@ -303,7 +315,7 @@ def remove_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.filter(user=user,resource=resource).first().delete()
 
-    return redirect(reverse('dashboard',args=(resource.pk,)))
+    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
 
 class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
     model = ReportProcess
@@ -312,7 +324,7 @@ class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
         process = self.get_object()
         process.dismissed = True
         process.save()
-        return redirect(reverse('dashboard',args=(process.resource.pk,)))
+        return redirect(reverse('resource_dashboard',args=(process.resource.pk,)))
 
 class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     """
@@ -357,10 +369,18 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
     context_object_name = 'attempts'
 
     def get_queryset(self, *args, **kwargs):
+        self.query = ''
         resource = self.get_resource()
         attempts = resource.attempts.all()
-        if 'query' in self.request.GET:
-            query = self.request.GET.get('query')
+        if self.request.GET.get('userid'):
+            try:
+                user = User.objects.get(pk=int(self.request.GET['userid']))
+                self.query = user.get_full_name()
+                attempts = attempts.filter(user=user)
+            except (ValueError, User.DoesNotExist):
+                pass
+        elif 'query' in self.request.GET:
+            query = self.query = self.request.GET.get('query')
             for word in query.split():
                 attempts = attempts.filter(Q(user__first_name__icontains=word) | Q(user__last_name__icontains=word))
         return attempts
@@ -372,6 +392,7 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
         context = super(AllAttemptsView,self).get_context_data(*args,**kwargs)
         resource = self.get_resource()
         context['resource'] = resource
+        context['query'] = self.query
 
         return context
 
@@ -391,6 +412,45 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
             (label, value, completion_dict.get(value,0)) for value,label in COMPLETION_STATUSES
         ]
 
-        context['data'] = json.dumps(resource.live_stats_data())
+        context['data'] = resource.live_stats_data()
 
         return context
+
+class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
+    model = Resource
+    form_class = forms.ValidateReceiptForm
+    template_name = 'numbas_lti/management/validate_receipt.html'
+    management_tab = 'dashboard'
+    
+    def dispatch(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        return super().dispatch(request,*args,**kwargs)
+
+    def get(self,request,*args,**kwargs):
+        print(type(self.get_context_data()))
+        return super().get(request,*args,**kwargs)
+
+    def form_valid(self, form):
+        code = form.cleaned_data['code']
+        salt = self.object.receipt_salt()
+        context = self.get_context_data()
+        context['form'] = form
+        context['submitted'] = True
+        try:
+            summary = signing.loads(code,salt=salt)
+            for k in ('receipt_time','start_time','end_time'):
+                if k in summary and summary[k] is not None:
+                    summary[k] = dateparse.parse_datetime(summary[k])
+            context['summary'] = summary
+            attempt = Attempt.objects.get(pk=summary['pk'],resource=self.object)
+            context['attempt'] = attempt
+            context['valid'] = True
+            return self.render_to_response(context)
+        except signing.BadSignature:
+            context['invalid'] = True
+            pass
+        except Attempt.DoesNotExist:
+            context['no_attempt'] = True
+
+        return self.render_to_response(context)
+    

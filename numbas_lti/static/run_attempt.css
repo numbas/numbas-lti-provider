@@ -4,6 +4,9 @@ body {
 #scorm-player {
     border: none;
 }
+body.ended #scorm-player {
+    display: none;
+}
 
 #status-display {
     position: absolute;
@@ -19,10 +22,7 @@ body {
 #status-display a {
     color: white;
 }
-body.terminated #status-display, #status-display:focus {
-    border-radius: 0;
-}
-#status-display.ok {
+#status-display.ok:not(.ended):not(.confirmation) {
     display: none;
 }
 #status-display .status-message {
@@ -30,13 +30,6 @@ body.terminated #status-display, #status-display:focus {
 }
 #status-display:not(.localstorage-used) .text-localstorage-used {
     display: none;
-}
-body:not(.terminated) #status-display:not(:focus) .status-message .text {
-    display: none;
-}
-#status-display:hover:not(:focus) {
-    background-color: hsl(10,90%,50%);
-    cursor: pointer;
 }
 body:not(.terminated) #status-display:hover:not(:focus) .symbol {
     animation: wobble 0.3s infinite linear;
@@ -56,11 +49,33 @@ body:not(.terminated) #status-display:hover:not(:focus) .symbol {
         transform: rotate(0deg);
     }
 }
-body.terminated #status-display .symbol, #status-display:focus .symbol {
+body.terminated #status-display .symbol, #status-display .symbol {
     display: none;
 }
-#status-display.disconnected .text-disconnected {
+#status-display.disconnected .text-disconnected,
+#status-display.ended .text-ended,
+#status-display.ok .text-ok,
+#status-display.confirmation .text-confirmation,
+#status-display.terminated:not(.ok) .text-terminated {
     display: block;
+}
+
+
+#receipt-code {
+    white-space: normal;
+    line-break: anywhere;
+    font-size: 0.8em;
+    padding: 0 2rem;
+}
+body.terminated #status-display.confirmation {
+    background: hsl(120, 90%, 25%);
+    padding: 0.5em;
+    border-radius: 0;
+    font-size: 1rem;
+}
+#status-display p {
+    margin-top: 0;
+    margin-bottom: 0.5em;
 }
 
 body.terminated #status-display {

@@ -1,9 +1,12 @@
 from django.conf import settings
+from django.core import signing
+from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Min
+from django.db.models import Min, Count
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
+from django.template.loader import get_template
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.core import validators
@@ -27,11 +30,18 @@ class NotDeletedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(deleted=False)
 
+IDENTIFIER_FIELDS = [
+    ('username', _('Username')),
+    ('email', _('Email address')),
+    ('', _('None')),
+]
+
 class LTIConsumer(models.Model):
     url = models.URLField(blank=True,default='',verbose_name='Home URL of consumer')
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
     secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
+    identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name='Field used to identify students')
 
     objects = NotDeletedManager()
 
@@ -43,7 +53,7 @@ class LTIConsumer(models.Model):
         return Resource.objects.filter(context__consumer=self)
 
     def contexts_grouped_by_period(self):
-        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time')).order_by('-creation')
+        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time'),num_attempts=Count('resources__attempts')).order_by('-creation')
         if not self.time_periods.exists():
             return [(None,contexts)]
         it = iter(self.time_periods.order_by('-end'))
@@ -149,6 +159,7 @@ REPORTING_STATUSES = [
 SHOW_SCORES_MODES = [
     ('always',_('Always')),
     ('complete',_('When attempt is complete')),
+    ('review', _('When review is allowed')),
     ('never',_('Never')),
 ]
 
@@ -177,8 +188,11 @@ class Resource(models.Model):
     grading_method = models.CharField(max_length=20,choices=GRADING_METHODS,default='highest',verbose_name=_('Grading method'))
     include_incomplete_attempts = models.BooleanField(default=True,verbose_name=_('Include incomplete attempts in grading?'))
     show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
+    available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'))
+    available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'))
     allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
+    email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
     max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
 
@@ -223,7 +237,13 @@ class Resource(models.Model):
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
 
+    def is_available(self):
+        now = timezone.now()
+        return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
+
     def can_start_new_attempt(self,user):
+        if not self.is_available():
+            return False
         if self.max_attempts==0:
             return True
         return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
@@ -292,6 +312,8 @@ class Resource(models.Model):
             {
                 'scaled_score': a.scaled_score,
                 'completion_status': a.completion_status,
+                'start_time': a.start_time.isoformat(),
+                'end_time': a.end_time.isoformat() if a.end_time is not None else None,
             }
             for a in self.attempts.all()
         ]
@@ -300,6 +322,9 @@ class Resource(models.Model):
             'attempts': attempt_data,
         }
         return data
+
+    def receipt_salt(self):
+        return 'numbas_lti:consumer:'+self.context.consumer.key
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -327,9 +352,38 @@ class LTIUserData(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
     lis_result_sourcedid = models.CharField(max_length=200,default='',blank=True,null=True)
     lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
+    lis_person_sourcedid = models.CharField(max_length=200,blank=True,default='',null=True)
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
+
+    def get_source_id(self):
+        if self.lis_person_sourcedid:
+            return self.lis_person_sourcedid
+        else:
+            return self.consumer_user_id
+
+    def identifier(self):
+        identifier_field = self.resource.context.consumer.identifier_field
+        if identifier_field == 'username':
+            return self.get_source_id()
+        elif identifier_field == 'email':
+            return self.user.email
+        else:
+            return ''
+
+class LTILaunch(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_launches')
+    resource = models.ForeignKey(Resource,on_delete=models.CASCADE, related_name='launches')
+    time = models.DateTimeField(auto_now_add=True)
+    user_agent = models.CharField(max_length=500)
+    ip_address = models.CharField(max_length=100)
+
+    def __str__(self):
+        return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)
+
+    class Meta:
+        ordering = ('time',)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
@@ -342,9 +396,13 @@ class Attempt(models.Model):
     completion_status_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_completion_status_of", null=True)
     scaled_score = models.FloatField(default=0)
     scaled_score_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_scaled_score_of", null=True)
+    sent_receipt = models.BooleanField(default=False,verbose_name='Has a completion receipt been sent?')
+    receipt_time = models.DateTimeField(blank=True,null=True,verbose_name='Time the completion receipt was sent')
 
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
+
+    all_data_received = models.BooleanField(default=False)
 
     objects = NotDeletedManager()
 
@@ -353,6 +411,9 @@ class Attempt(models.Model):
 
     def __str__(self):
         return 'Attempt by "{}" on "{}"'.format(self.user,self.resource)
+
+    def user_data(self):
+        return self.resource.user_data(self.user)
 
     def get_element_default(self,key,default=None):
         try:
@@ -516,7 +577,17 @@ class Attempt(models.Model):
         return data
 
     def completed(self):
+        if not self.resource.is_available():
+            return True
         return self.completion_status=='completed'
+
+    def finalise(self):
+        if self.end_time is None:
+            self.end_time = timezone.now()
+            self.save()
+            group_for_attempt(self).send({'text':json.dumps({
+                'completion_status':'completed',
+            })})
 
     @property
     def raw_score(self):
@@ -684,16 +755,91 @@ class Attempt(models.Model):
         else:
             return True
 
-    def review_allowed(self):
-        if not self.should_show_scores():
+    def review_allowed(self,ignore_show_scores=False):
+        if not (ignore_show_scores or self.should_show_scores()):
             return False
         return self.resource.allow_review_from is None or timezone.now() >= self.resource.allow_review_from
 
     def should_show_scores(self):
-        return self.resource.show_marks_when=='always' or (self.resource.show_marks_when=='complete' and self.completed())
+        if self.resource.show_marks_when == 'always':
+            return True
+        if self.completed():
+            if self.resource.show_marks_when == 'complete':
+                return True
+            if self.resource.show_marks_when == 'review' and self.review_allowed(ignore_show_scores=True):
+                return True
+        return False
 
     def is_remarked(self):
         return self.remarked_parts.exists()
+
+    def completion_receipt_context(self):
+        include_score = self.should_show_scores()
+
+        now = timezone.now()
+        self.receipt_time = now
+
+        summary = {
+            'pk': self.pk,
+            'receipt_time': now.isoformat(),
+            'start_time': self.start_time.isoformat(),
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+        }
+        if include_score:
+            summary['raw_score'] = self.raw_score
+
+        signed_summary = signing.dumps(summary,salt=self.resource.receipt_salt())
+
+        context = {
+            'include_score': include_score,
+            'receipt_time': now,
+            'attempt': self,
+            'user': self.user,
+            'signed_summary': signed_summary,
+        }
+        return context
+
+    def completion_receipt(self):
+
+        template = get_template('numbas_lti/attempt_completion_receipt.txt')
+
+        message = template.render(self.completion_receipt_context()).strip()
+        
+        return message
+
+    def send_completion_receipt(self):
+        message = self.completion_receipt()
+        send_mail(
+            ugettext('Numbas: Receipt for {resource_name}').format(resource_name=self.resource.title),
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [self.user.email],
+            fail_silently=False
+        )
+        self.sent_receipt = True
+        self.save()
+            
+
+class AttemptLaunch(models.Model):
+    attempt = models.ForeignKey(Attempt,related_name='launches', on_delete=models.CASCADE)
+    time = models.DateTimeField(auto_now_add=True)
+    mode = models.CharField(max_length=100)
+    user = models.ForeignKey(User,blank=True,null=True,on_delete=models.CASCADE,related_name='attempt_launches')
+
+    def __str__(self):
+        return 'Launch {} in mode "{}" at {}'.format(self.attempt, self.mode, self.time)
+
+    def as_json(self):
+        return {
+            'attempt': self.attempt.pk,
+            'time': self.time.isoformat(),
+            'mode': self.mode,
+            'user': self.user.get_full_name() if self.user else None,
+        }
+
+    class Meta:
+        ordering = ('time',)
+
 
 class AttemptNotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -805,14 +951,18 @@ class ScormElement(models.Model):
     def newer_than(self, other):
         return self.time>other.time or (self.time==other.time and self.counter>other.counter)
 
+    def as_json(self):
+        return {
+            'key': self.key,
+            'value': self.value,
+            'time': self.time.isoformat(),
+            'counter': self.counter,
+        }
+
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
     Group(instance.attempt.channels_group()).send({
-        "text": json.dumps({
-            'key': instance.key,
-            'value': instance.value,
-            'time': instance.time.strftime('%Y-%m-%d %H:%M:%S'),
-        })
+        "text": json.dumps(instance.as_json())
     })
 
 @receiver(models.signals.post_save,sender=ScormElement)
@@ -842,11 +992,6 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
     instance.attempt.completion_status = instance.value
     instance.attempt.completion_status_element = instance
-    if instance.value=='completed' and instance.attempt.end_time is None:
-        instance.attempt.end_time = timezone.now()
-        group_for_attempt(instance.attempt).send({'text':json.dumps({
-            'completion_status':'completed',
-        })})
     instance.attempt.save()
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
@@ -854,6 +999,19 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
             report_outcome_for_attempt(instance.attempt)
         except (ReportOutcomeFailure, ReportOutcomeConnectionError):
             pass
+
+@receiver(models.signals.post_save)
+def send_receipt_on_completion(sender,instance, **kwargs):
+    if sender == Attempt:
+        attempt = instance
+    elif sender == ScormElement:
+        attempt = instance.attempt
+    else:
+        return
+    if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
+        if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
+            attempt.send_completion_receipt()
+
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_num_questions(sender,instance,created,**kwargs):

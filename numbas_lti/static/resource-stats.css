@@ -1,0 +1,91 @@
+h2, h3 {
+    text-align: center;
+}
+
+.chart svg {
+    display: block;
+    margin: 2rem auto;
+    width: 100%;
+}
+.ct-label {
+    font-size: 1em;
+}
+.x-axis .tick line {
+    stroke: #ccc;
+    stroke-dasharray: 2 2;
+}
+.question-dot {
+    opacity: 0.5;
+}
+
+.question-bg {
+    fill: hsl(0,0%,95%);
+    stroke: #555;
+    stroke-width: 1;
+    opacity: 0.5;
+}
+
+section {
+    margin: 3rem auto;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.num_not_attempted rect {
+    fill: #eee;
+    stroke: #888;
+}
+.num_incorrect rect {
+    fill: red;
+}
+.num_partial rect {
+    fill: lightslategrey;
+}
+.num_correct rect {
+    fill: lime;
+}
+
+.legend {
+    display: flex;
+    justify-content: space-evenly;
+}
+.legend > span {
+    margin: 1em;
+}
+
+#stacked_status_chart .percentage {
+    text-anchor: middle;
+}
+
+#times circle {
+    r: 2px;
+}
+
+#times circle.start {
+    fill: hsl(240,40%,70%);
+}
+
+#times circle.end {
+    fill: hsl(120,40%,70%);
+}
+
+#times line.duration {
+    stroke: hsla(240,0%,70%,0.4);
+}
+
+#times .tip line {
+    stroke: hsl(240,40%,70%);
+    stroke-dasharray: 8 5;
+}
+
+@media print {
+    #times circle {
+        r: 3px;
+    }
+    #times circle.start {
+        fill: hsl(240,70%,50%);
+    }
+    #times circle.end {
+        fill: hsl(120,70%,50%);
+    }
+}

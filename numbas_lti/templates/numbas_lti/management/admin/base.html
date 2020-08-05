@@ -9,6 +9,7 @@
                 <li class="{% if management_tab == 'consumers' %}active{% endif %}"><a href="{% url 'list_consumers' %}"><span class="glyphicon glyphicon-tasks"></span> {% trans "LTI Consumers" %}</a></li>
                 <li class="{% if management_tab == 'editor-links' %}active{% endif %}"><a href="{% url 'list_editorlinks' %}"><span class="glyphicon glyphicon-transfer"></span> {% trans "Editor links" %}</a></li>
                 <li class="{% if management_tab == 'stress-tests' %}active{% endif %}"><a href="{% url 'list_stresstests' %}"><span class="glyphicon glyphicon-scale"></span> {% trans "Stress tests" %}</a></li>
+                <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'global_dashboard' %}"><span class="glyphicon glyphicon-globe"></span> {% trans "Dashboard" %}</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li class="pull-right"><a href="/admin"><span class="glyphicon glyphicon-cog"></span> {% trans "Admin site" %}</a></li>
