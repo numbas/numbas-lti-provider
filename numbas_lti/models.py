@@ -16,7 +16,6 @@ from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
 
 from .groups import group_for_attempt, group_for_resource_stats
-from .report_outcome import report_outcome_for_attempt, ReportOutcomeFailure, ReportOutcomeConnectionError
 
 import os
 import shutil
@@ -584,7 +583,7 @@ class Attempt(models.Model):
     def finalise(self):
         if self.end_time is None:
             self.end_time = timezone.now()
-            self.save()
+            self.save(update_fields=['end_time'])
             group_for_attempt(self).send({'text':json.dumps({
                 'completion_status':'completed',
             })})
@@ -817,7 +816,7 @@ class Attempt(models.Model):
             fail_silently=False
         )
         self.sent_receipt = True
-        self.save()
+        self.save(update_fields=['sent_receipt'])
             
 
 class AttemptLaunch(models.Model):
@@ -975,12 +974,9 @@ def scorm_set_score(sender,instance,created,**kwargs):
 
     instance.attempt.scaled_score = float(instance.value)
     instance.attempt.scaled_score_element = instance
-    instance.attempt.save()
+    instance.attempt.save(update_fields=['scaled_score','scaled_score_element'])
     if instance.attempt.resource.report_mark_time == 'immediately':
-        try:
-            report_outcome_for_attempt(instance.attempt)
-        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
-            pass
+        Channel('report.attempt').send({'pk':instance.attempt.pk})
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -990,27 +986,24 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     if not (instance.attempt.completion_status_element is None or instance.newer_than(instance.attempt.completion_status_element)):
         return
 
+
     instance.attempt.completion_status = instance.value
     instance.attempt.completion_status_element = instance
-    instance.attempt.save()
+    update_fields = ['completion_status','completion_status_element']
+    if instance.attempt.completion_status == 'incomplete':
+        instance.attempt.end_time = None
+        update_fields.append('end_time')
+    instance.attempt.save(update_fields=update_fields)
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        try:
-            report_outcome_for_attempt(instance.attempt)
-        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
-            pass
+        Channel('report.attempt').send({'pk':instance.attempt.pk})
 
-@receiver(models.signals.post_save)
+@receiver(models.signals.post_save,sender=Attempt)
 def send_receipt_on_completion(sender,instance, **kwargs):
-    if sender == Attempt:
-        attempt = instance
-    elif sender == ScormElement:
-        attempt = instance.attempt
-    else:
-        return
+    attempt = Attempt.objects.get(pk=instance.pk)
     if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
         if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
-            attempt.send_completion_receipt()
+            Channel('attempt.email_receipt').send({'pk': attempt.pk})
 
 
 @receiver(models.signals.post_save,sender=ScormElement)
@@ -1024,7 +1017,7 @@ def scorm_set_num_questions(sender,instance,created,**kwargs):
     
     if number>resource.num_questions:
         resource.num_questions = number
-        resource.save()
+        resource.save(update_fields=['num_questions'])
 
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name='Editor name')

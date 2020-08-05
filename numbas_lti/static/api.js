@@ -514,11 +514,13 @@ SCORM_API.prototype = {
             .then(
                 function(response) {
                     if(!response.ok) {
-                        response.text().then(function(t){
-                            console.error('SCORM HTTP fallback error message: '+t);
+                        return new Promise(function(resolve,reject) {
+                            response.text().then(function(t){
+                                console.error('SCORM HTTP fallback error message: '+t);
+                                sc.ajax_failed(t);
+                                reject(t);
+                            });
                         });
-                        sc.ajax_failed(error);
-                        return Promise.reject(error.message);
                     }
                     sc.ajax_succeeded();
                     return response.json();

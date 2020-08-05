@@ -354,9 +354,9 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
         'unsaved_elements':unsaved_elements, 
     }
     if complete:
-        attempt.all_data_received = True
         attempt.finalise()
-        attempt.save()
+        attempt.all_data_received = True
+        attempt.save(update_fields=['all_data_received'])
         receipt_context = attempt.completion_receipt_context()
         response['signed_receipt'] = receipt_context['signed_summary']
 
