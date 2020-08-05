@@ -152,6 +152,7 @@ class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
     def get(self, request, *args, **kwargs):
         attempt = self.get_object()
         attempt.end_time = None
+        attempt.save()
         e = ScormElement.objects.create(
                 attempt=attempt,
                 key='cmi.completion_status',
