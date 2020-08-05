@@ -989,7 +989,11 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
     instance.attempt.completion_status = instance.value
     instance.attempt.completion_status_element = instance
-    instance.attempt.save(update_fields=['completion_status','completion_status_element'])
+    update_fields = ['completion_status','completion_status_element']
+    if instance.attempt.completion_status == 'incomplete':
+        instance.attempt.end_time = None
+        update_fields.append('end_time')
+    instance.attempt.save(update_fields=update_fields)
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
         Channel('report.attempt').send({'pk':instance.attempt.pk})
