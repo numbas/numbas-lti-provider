@@ -275,6 +275,14 @@ Make sure that :file:`/etc/cron.daily/renew-certbot` is executable by the root u
 
 If you have no other way of obtaining a certificate, you can `create a self-signed certificate <https://help.ubuntu.com/lts/serverguide/certificates-and-security.html.en#creating-a-self-signed-certificate>`_ which will produce a security warning in web browsers.
 
+Ensure outcome reporting works
+------------------------------
+
+In order to report scores back to the :term:`tool consumer <Tool consumer>`, the Numbas LTI provider must make an HTTPS request to an address provided by the consumer.
+Normally, this is on the same domain as the consumer.
+
+Ensure that the machine on which the LTI provider is running can make HTTPS requests to the consumer - if you're working in a testing environment, you may need to configure the consumer's server to allow connections on 443 from the provider's IP address.
+
 Updating the software
 ---------------------
 

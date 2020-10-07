@@ -35,8 +35,8 @@ These are the pieces of information that the consumer will use to establish a se
 You must now set up the connection from the consumer's end.
 There are instructions for some of the most popular VLEs below.
 
-Blackboard
-**********
+Blackboard Learn
+****************
 
 Follow `Blackboard's instructions <https://en-us.help.blackboard.com/Learn/Administrator/SaaS/Integrations/Learning_Tools_Interoperability>`_ - you'll need to add Numbas as a new LTI Tool provider, and then add a placement for it. 
 
