@@ -69,6 +69,9 @@ def resource_stats_ws_receive(message,pk):
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
+    if ReportProcess.objects.filter(resource=resource,status='reporting').exists():
+        return
+
     process = ReportProcess.objects.create(resource=resource)
 
     errors = []
@@ -83,7 +86,8 @@ def report_scores(message,**kwargs):
         process.response = '\n'.join(e.message for e in errors)
     else:
         process.status = 'complete'
-    process.save()
+    process.dismissed = False
+    process.save(update_fields=['status','response','dismissed'])
 
 def report_score(message,**kwargs):
     attempt = Attempt.objects.get(pk=message['pk'])

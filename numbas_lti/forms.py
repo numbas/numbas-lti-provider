@@ -1,5 +1,6 @@
 import zipfile
 
+from django.conf import settings
 from django.forms import ModelForm, Form
 from django import forms
 from django.utils.translation import ugettext_lazy as _
@@ -91,9 +92,9 @@ class CreateExamForm(ModelForm):
         exam = super(CreateExamForm,self).save(commit=False)
         retrieve_url = self.cleaned_data.get('retrieve_url')
         if retrieve_url:
-            zip = requests.get(retrieve_url+'?scorm').content
+            zipfile = requests.get(retrieve_url+'?scorm',timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
             exam.retrieve_url = retrieve_url
-            exam.package.save('exam.zip',File(BytesIO(zip)))
+            exam.package.save('exam.zip',File(BytesIO(zipfile)))
         if commit:
             exam.save()
         return exam
@@ -122,7 +123,7 @@ class CreateEditorLinkForm(ModelForm):
     def clean_url(self):
         url = self.cleaned_data['url']
         try:
-            response = requests.get('{}/api/handshake'.format(url))
+            response = requests.get('{}/api/handshake'.format(url), timeout=getattr(settings,'REQUEST_TIMEOUT',60))
             if response.status_code != 200:
                 raise Exception("Request returned HTTP status code {}.".format(response.status_code))
             data = response.json()
