@@ -335,8 +335,9 @@ class RunAttemptView(generic.detail.DetailView):
             'attempt_pk': attempt.pk,
             'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
             'show_attempts_url': reverse('show_attempts'),
-            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else str(None),
-            'available_until': attempt.resource.available_until.isoformat() if attempt.resource.available_until else str(None),
+            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
+            'available_from': attempt.resource.available_from.isoformat() if attempt.resource.available_from else None,
+            'available_until': attempt.resource.available_until.isoformat() if attempt.resource.available_until else None,
         }
 
         return context

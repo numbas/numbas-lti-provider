@@ -238,7 +238,12 @@ class Resource(models.Model):
 
     def is_available(self):
         now = timezone.now()
-        return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
+        if self.available_from is None or self.available_until is None:
+            return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
+        if self.available_from < self.available_until:
+            return self.available_from <= now <= self.available_until
+        else:
+            return now <= self.available_until or now >= self.available_from
 
     def can_start_new_attempt(self,user):
         if not self.is_available():

@@ -314,6 +314,23 @@ If a date and time are set, students may only review their attempts after that t
 
 Instructors may always review students' attempts, from the :guilabel:`Attempts` tab.
 
+.. _availability:
+
+Available from and available until
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify when students are allowed to access the resource.
+
+You can set none, one or both of the options :guilabel:`Available from` and :guilabel:`Available until`.
+
+If :guilabel:`Available from` is before :guilabel:`Available until`, the resource will be available only between those two times.
+Use this for a resource which should only be available for a certain period, such as an exam.
+
+If :guilabel:`Available from` is after :guilabel:`Available until`, the resource will be *unavailable* between those two times, but available any time before :guilabel:`Available until` and any time after :guilabel:`Available from`.
+Use this for a resource which should be made unavailable for a certain period, such as a bank of practice material which students should not have access to during a summative assessment period.
+
+Any students who have the resource open when it becomes unavailable will be forced to quit.
+
 .. _email-receipts-option:
 
 Email attempt receipts to students on completion?

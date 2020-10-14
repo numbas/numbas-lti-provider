@@ -18,6 +18,7 @@ function SCORM_API(options) {
     this.show_attempts_url = options.show_attempts_url;
 
     this.allow_review_from = load_date(options.allow_review_from);
+    this.available_from = load_date(options.available_from);
     this.available_until = load_date(options.available_until);
 
     /** Key to save data under in localStorage
@@ -317,10 +318,25 @@ SCORM_API.prototype = {
         this.callbacks.trigger('update_interval');
 
         if(this.mode=='normal') {
-            var t = DateTime.local();
-            if(this.available_until && t>this.available_until) {
+            if(!this.is_available()) {
                 this.end();
             }
+        }
+    },
+
+    /** Is this attempt available to the student?
+     *
+     * @returns {boolean}
+     */
+    is_available: function() {
+        var now = DateTime.local();
+        if(this.available_from===undefined || this.available_until===undefined) {
+            return (this.available_from===undefined || now >= this.available_from) && (this.available_until===undefined || now <= this.available_until);
+        }
+        if(this.available_from < this.available_until) {
+            return this.available_from <= now && now <= this.available_until;
+        } else {
+            return now <= this.available_until || now >= this.available_from;
         }
     },
 
