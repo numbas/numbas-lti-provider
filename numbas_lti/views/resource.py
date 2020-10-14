@@ -90,7 +90,7 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
 
         context['students'] = User.objects.filter(attempts__resource=resource).distinct()
         last_report_process = resource.report_processes.first()
-        if last_report_process.dismissed and last_report_process.status == 'reporting':
+        if last_report_process and last_report_process.dismissed and last_report_process.status == 'reporting':
             context['dismissed_report_process'] = last_report_process
         if last_report_process and (not last_report_process.dismissed):
             context['last_report_process'] = last_report_process
