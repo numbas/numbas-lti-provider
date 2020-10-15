@@ -1,4 +1,5 @@
 import zipfile
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 from django.conf import settings
 from django.forms import ModelForm, Form
@@ -92,7 +93,11 @@ class CreateExamForm(ModelForm):
         exam = super(CreateExamForm,self).save(commit=False)
         retrieve_url = self.cleaned_data.get('retrieve_url')
         if retrieve_url:
-            zipfile = requests.get(retrieve_url+'?scorm',timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
+            scheme, netloc, path, params, qs, fragment = urlparse(retrieve_url)
+            query = parse_qs(qs)
+            query.setdefault('scorm','')
+            retrieve_url = urlunparse((scheme, netloc, path, params, urlencode(query,True), fragment))
+            zipfile = requests.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
             exam.retrieve_url = retrieve_url
             exam.package.save('exam.zip',File(BytesIO(zipfile)))
         if commit:

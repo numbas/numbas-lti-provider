@@ -5,7 +5,7 @@
 {% block management_content %}
 <h1>{% trans "Replace exam" %}</h1>
 
-{% if current_exam.rest_url %}
+{% if current_exam.retrieve_url %}
     {% blocktrans %}
     <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
     {% endblocktrans %}

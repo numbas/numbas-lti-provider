@@ -137,7 +137,12 @@ def set_exam_name_from_package(sender,instance,**kwargs):
     with z.open('imsmanifest.xml','r') as manifest_file:
         manifest = etree.parse(manifest_file)
     instance.title = manifest.find('.//ims:title',namespaces={'ims':'http://www.imsglobal.org/xsd/imscp_v1p1'}).text
-
+    if not instance.retrieve_url:
+        try:
+            with z.open('downloaded-from.txt','r') as f:
+                instance.retrieve_url = f.read().strip().decode('utf-8')
+        except KeyError:
+            pass
 
 GRADING_METHODS = [
     ('highest',_('Highest score')),
