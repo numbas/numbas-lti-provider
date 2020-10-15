@@ -61,16 +61,13 @@ class ReplaceExamView(CreateExamView):
         return context
 
     def form_valid(self,form):
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa\n\n\n\n\AAAAAAA")
         resource = self.request.resource
         old_exam = resource.exam
         response = super().form_valid(form)
 
         new_exam = self.object
-        print(old_exam.pk,new_exam.pk)
         if form.cleaned_data['safe_replacement']:
             resource.attempts.filter(exam=old_exam).update(exam=new_exam)
-            print("replaced")
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
@@ -429,7 +426,6 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
         return super().dispatch(request,*args,**kwargs)
 
     def get(self,request,*args,**kwargs):
-        print(type(self.get_context_data()))
         return super().get(request,*args,**kwargs)
 
     def form_valid(self, form):
