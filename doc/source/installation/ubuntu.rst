@@ -233,10 +233,10 @@ Overwrite :file:`/etc/apache2/sites-available/000-default.conf` with the followi
       ProxyRequests Off
       ProxyPass /static !
       Alias "/static" "/srv/numbas-lti-static"
-      ProxyPass "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPassReverse "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPass / http://0.0.0.0:8707/
-      ProxyPassReverse / http://0.0.0.0:8707/
+      ProxyPass "/websocket" "ws://0.0.0.0:8700/websocket"
+      ProxyPassReverse "/websocket" "ws://0.0.0.0:8700/websocket"
+      ProxyPass / http://0.0.0.0:8700/
+      ProxyPassReverse / http://0.0.0.0:8700/
 
       RequestHeader set X-Scheme "https"
       RequestHeader set X-Forwarded-Proto "https"
