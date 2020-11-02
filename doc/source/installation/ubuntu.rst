@@ -233,6 +233,8 @@ Overwrite :file:`/etc/apache2/sites-available/000-default.conf` with the followi
       ProxyRequests Off
       ProxyPass /static !
       Alias "/static" "/srv/numbas-lti-static"
+      ProxyPass /media !
+      Alias "/media" "/srv/numbas-lti-media"
       ProxyPass "/websocket" "ws://0.0.0.0:8700/websocket"
       ProxyPassReverse "/websocket" "ws://0.0.0.0:8700/websocket"
       ProxyPass / http://0.0.0.0:8700/
@@ -242,6 +244,12 @@ Overwrite :file:`/etc/apache2/sites-available/000-default.conf` with the followi
       RequestHeader set X-Forwarded-Proto "https"
 
       <Directory "/srv/numbas-lti-static">
+        AllowOverride None
+        Options FollowSymLinks
+        Require all granted
+      </Directory>
+
+      <Directory "/srv/numbas-lti-media">
         AllowOverride None
         Options FollowSymLinks
         Require all granted
