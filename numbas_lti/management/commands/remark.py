@@ -17,7 +17,7 @@ class Command(BaseCommand):
         parser.add_argument('resource_pk',type=int)
         parser.add_argument('--save',dest='save',action='store_true')
         parser.add_argument('--attempts',nargs='+',dest='attempt_pks')
-        parser.add_arguments('--show-all-scores',dest='show_all_scores',action='store_true')
+        parser.add_argument('--show-all-scores',dest='show_all_scores',action='store_true')
 
     def handle(self, *args, **options):
         self.options = options
