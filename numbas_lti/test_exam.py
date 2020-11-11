@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import datetime
+import tempfile
 
 class ExamTestException(Exception):
     def __init__(self, message, stdout='', stderr='', code=0):
@@ -35,23 +36,33 @@ def run_package(extracted_path,command='test',stdin=None):
     if not manifest_path.exists():
         raise ExamTestException("This package doesn't contain a numbas-manifest.json file.")
 
-    with open(manifest_path) as f:
+    with open(str(manifest_path)) as f:
         manifest = json.loads(f.read())
 
     features = manifest.get('features',{})
     if not features.get('run_headless'):
         raise ExamTestException("This package can not run outside of a browser.")
 
-
     command = [
-        Path(settings.NUMBAS_TESTING_FRAMEWORK_PATH) / 'test_exam',
-        Path(os.getcwd()) / extracted_path,
+        str(Path(settings.NUMBAS_TESTING_FRAMEWORK_PATH) / 'test_exam'),
+        str(Path(os.getcwd()) / extracted_path),
         command
     ]
 
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,encoding='utf-8')
-    stdout, stderr = process.communicate(input=stdin)
-    code = process.poll()
+    with open('/tmp/poo','w') as f:
+        f.write(stdin)
+
+    with tempfile.TemporaryFile() as stdoutf:
+        with tempfile.TemporaryFile() as stderrf:
+            process = subprocess.Popen(command, stdout=stdoutf, stdin=subprocess.PIPE, stderr=stderrf)
+            print("Remarking")
+            process.communicate(input=stdin.encode('utf-8'))
+            print("Finished remarking")
+            stdoutf.seek(0)
+            stdout = stdoutf.read().decode('utf-8')
+            stderrf.seek(0)
+            stderr = stderrf.read().decode('utf-8')
+            code = process.poll()
     if code != 0:
         raise ExamTestException('There was an error while running the exam.', stdout=stdout, stderr=stderr, code=code)
 
@@ -65,7 +76,8 @@ def run_package(extracted_path,command='test',stdin=None):
     if not result.get('success',False):
         raise ExamTestException(result.get('message','The exam did not work as expected.'),stdout=stdout,stderr=stderr)
 
-    print(stderr)
+    if stderr:
+        print(stderr)
     return result
 
 def test_package(extracted_path):
@@ -90,9 +102,10 @@ def test_zipfile(zipfile):
         shutil.rmtree(path)
     return result
 
-def remark_attempts(exam):
+def remark_attempts(exam, attempts):
     cmis = []
-    for a in exam.attempts.all():
+    print("Gathering attempt data")
+    for a in attempts:
         cmi = a.scorm_cmi()
 
         dynamic_cmi = {
