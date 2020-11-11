@@ -17,6 +17,7 @@ class Command(BaseCommand):
         parser.add_argument('resource_pk',type=int)
         parser.add_argument('--save',dest='save',action='store_true')
         parser.add_argument('--attempts',nargs='+',dest='attempt_pks')
+        parser.add_arguments('--show-all-scores',dest='show_all_scores',action='store_true')
 
     def handle(self, *args, **options):
         self.options = options
@@ -30,7 +31,6 @@ class Command(BaseCommand):
                 attempts = resource.attempts.filter(pk__in=self.options['attempt_pks'])
             else:
                 attempts = resource.attempts.all()
-                print(self.options['attempt_pks'])
             results = remark_attempts(resource.exam, attempts)
             for result in results['results']:
                 self.update_attempt(result)
@@ -60,4 +60,5 @@ class Command(BaseCommand):
             new_raw_score = attempt.raw_score
         else:
             new_raw_score = float(changed_keys.get('cmi.score.raw',old_raw_score))
-        print("Attempt {} by {}: score was {}, is now {}.".format(attempt.pk, attempt.user.get_full_name(), old_raw_score, new_raw_score))
+        if self.options['show_all_scores'] or old_raw_score != new_raw_score:
+            print("Attempt {} by {}: score was {}, is now {}.".format(attempt.pk, attempt.user.get_full_name(), old_raw_score, new_raw_score))
