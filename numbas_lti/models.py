@@ -103,7 +103,7 @@ class ExtractPackageMixin(object):
 
     @property
     def extracted_path(self):
-        return os.path.join(settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.pk))
+        return os.path.join(os.getcwd(), settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.pk))
 
     @property
     def extracted_url(self):

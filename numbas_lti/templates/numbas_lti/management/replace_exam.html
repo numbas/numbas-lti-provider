@@ -30,7 +30,22 @@
 
 <form method="POST" enctype="multipart/form-data" action="{% url 'replace_exam' request.resource.pk %}">
     {% csrf_token %}
-    {{form|bootstrap}}
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            <a class="close" data-dismiss="alert">&times;</a>
+            {% for non_field_error in form.non_field_errors %}
+                 {{ non_field_error|safe }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% for field in form.hidden_fields %}
+        {{ field }}
+    {% endfor %}
+
+    {% for field in form.visible_fields %}
+        {% include 'bootstrapform/field.html' %}
+    {% endfor %}
     <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-import"></span> {% trans "Replace" %}</button> 
 </form>
 
