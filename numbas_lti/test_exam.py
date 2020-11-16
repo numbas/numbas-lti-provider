@@ -27,7 +27,7 @@ class ExamTestException(Exception):
     
     pass
 
-def run_package(extracted_path,command='test',stdin=None):
+def run_package(extracted_path,command='test',stdin=''):
     if not hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
         raise ExamTestException("The NUMBAS_TESTING_FRAMEWORK_PATH setting has not been set.")
 
@@ -48,9 +48,6 @@ def run_package(extracted_path,command='test',stdin=None):
         str(Path(os.getcwd()) / extracted_path),
         command
     ]
-
-    with open('/tmp/poo','w') as f:
-        f.write(stdin)
 
     with tempfile.TemporaryFile() as stdoutf:
         with tempfile.TemporaryFile() as stderrf:
