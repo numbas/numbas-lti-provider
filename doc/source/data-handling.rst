@@ -18,8 +18,6 @@ Data is sent using a request signed using OAuth, to an address provided by the t
 If you have set up an :term:`editor link <Editor link>`, the LTI tool will occasionally request a list of available exams from the linked editor.
 This request is made anonymously, and no personally identifying information is sent.
 
-You are responsible for ensuring the security of data held by the Numbas LTI tool.
-
 User roles
 ----------
 
