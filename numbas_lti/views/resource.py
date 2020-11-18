@@ -18,7 +18,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required
+from pathlib import Path
 import csv
+import datetime
 import json
 import itertools
 import string
@@ -413,6 +415,82 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
 
         context['data'] = resource.live_stats_data()
 
+        return context
+
+class RemarkView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_remark.html'
+    management_tab = 'remark'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        resource = self.object
+        attempts = resource.attempts.all()
+
+        context['attempts'] = [
+            {
+                'pk': a.pk,
+                'user': { 
+                    'full_name': a.user.get_full_name(),
+                    'identifier': a.user_data().identifier(),
+                },
+            }
+            for a in attempts
+        ]
+
+        source_path = Path(resource.exam.extracted_path) / 'source.exam'
+        if source_path.exists():
+            with open(str(source_path)) as f:
+                text = f.read()
+                i = text.find('\n')
+                data = json.loads(text[i+1:])
+                context['exam_source'] = data
+
+        return context
+
+class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    """ 
+        Get the SCORM CMI for the given attempts 
+    """
+    model = Resource
+
+    def get(self,request,*args,**kwargs):
+        pks = request.GET.get('attempt_pks','')
+        if pks:
+            pks = [int(x) for x in pks.split(',')]
+        else:
+            pks = []
+        attempts = self.resource.attempts.filter(pk__in=pks)
+
+        cmis = []
+        for a in attempts:
+            cmi = a.scorm_cmi()
+
+            dynamic_cmi = {
+                'cmi.mode': 'review',
+                'cmi.entry': 'resume',
+                'numbas.user_role': 'student',
+            }
+            etime = datetime.datetime.now().timestamp()
+            dynamic_cmi = {k: {'value':v,'time':etime} for k,v in dynamic_cmi.items()}
+            cmi.update(dynamic_cmi)
+            cmis.append({
+                'pk': a.pk, 
+                'cmi': cmi
+                })
+
+        return JsonResponse({'cmis': cmis})
+
+class RemarkIframeView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_remark_iframe.html'
+    management_tab = 'remark'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args,**kwargs)
+        resource = self.object
+        context['scripts_url'] = resource.exam.extracted_url +'/scripts.js'
         return context
 
 class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):

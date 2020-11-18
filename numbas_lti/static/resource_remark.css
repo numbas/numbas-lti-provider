@@ -1,0 +1,11 @@
+#exam-iframe {
+    display: none;
+}
+
+#attempts-table col.score {
+    width: 5em;
+}
+
+.progress-bar {
+    min-width: 2em;
+}

@@ -1,0 +1,89 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block management_content %}
+<h2>
+    {% blocktrans with resource_name=resource.title %}Remark <strong>{{resource_name}}</strong>{% endblocktrans %}
+    <br>
+    <small>{{resource.context.name}}</small>
+</h2>
+
+<div id="app">
+    <p>
+        <button class="btn btn-primary" @click="remark_all"><span class="glyphicon glyphicon-repeat"></span> Remark all attempts</button>
+        <button class="btn btn-warning" @click="stop_marking"><span class="glyphicon glyphicon-stop"></span> Stop marking</button>
+    </p>
+
+{% verbatim %}
+    <div v-if="remarking_all">
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" :aria-valuenow="remarking_progress|percent" aria-valuemin="0" aria-valuemax="100" :style="{width: (100*remarking_progress)+'%'}">
+                {{remarking_progress|percent}}%
+          </div>
+        </div>
+        <p>Time taken: <span v-if="remark_all_time">{{remark_all_time|duration}}</span></p>
+        <p>Estimated end: <span v-if="estimated_end">{{estimated_end|duration}}</span></p>
+    </div>
+{% endverbatim %}
+
+    <table class="table" id="attempts-table">
+        <colgroup>
+            <col class="pk" style="width:5em">
+            <col class="full-name">
+            <col class="identifier">
+            <col class="score current-score">
+            <col class="score remarked-score">
+            <col class="controls">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>PK</th>
+                <th>{% trans "Student" %}</th>
+                <th><!-- identifier --></th>
+                <th>{% trans "Current score" %}</th>
+                <th>{% trans "Remarked score" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+{% verbatim %}
+        <tbody>
+            <tr v-for="attempt in attempts">
+                <td>{{attempt.pk}} {{attempt.status}}</td>
+                <td>{{attempt.user.full_name}}</td>
+                <td>{{attempt.user.identifier}}</td>
+                <td>{{attempt.original_raw_score}}/{{attempt.max_score}}</td>
+                <td><span v-if="attempt.status=='remarked'">{{attempt.remarked_raw_score}}/{{attempt.max_score}}</span></td>
+                <td>
+                    <button class="btn btn-default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)"><span class="glyphicon glyphicon-repeat"></span> Remark</button>
+{% endverbatim %}
+                    <a class="btn btn-link" target="review_attempt" {% verbatim %}:href="attempt.review_url"{% endverbatim %}><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+<iframe id="exam-iframe" src="{% url 'resource_remark_iframe' resource.pk %}">
+</iframe>
+
+{% endblock management_content %}
+
+{% block stylesheets %}
+{{block.super}}
+
+    <link rel="stylesheet" href="{% static 'resource_remark.css' %}">
+{% endblock stylesheets %}
+
+{% block javascripts %}
+{{block.super}}
+
+    {{attempts|json_script:"attempts-json"}}
+    {{exam_source|json_script:"exam-source-json"}}
+
+    {% include "numbas_lti/scripts/luxon.html" %}
+    <script src="{% static 'vue.js' %}"></script>
+    <script src="{% static 'api.js' %}"></script>
+    <script src="{% static 'resource_remark.js' %}" defer></script>
+{% endblock %}

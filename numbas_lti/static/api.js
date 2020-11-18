@@ -13,6 +13,8 @@ function SCORM_API(options) {
 
     this.callbacks = new CallbackHandler();
 
+    this.offline = options.offline;
+
     this.attempt_pk = options.attempt_pk;
     this.fallback_url = options.fallback_url;
     this.show_attempts_url = options.show_attempts_url;
@@ -47,29 +49,31 @@ function SCORM_API(options) {
 
     this.initialise_api();
 
-    /** Initialise the WebSocket connection
-     */
-    this.initialise_socket();
+    if(!this.offline) {
+        /** Initialise the WebSocket connection
+         */
+        this.initialise_socket();
 
-    /** Periodically, update the connection status display
-     */
-    this.update_interval = setInterval(function() {
-        sc.update();
-    },50);
+        /** Periodically, update the connection status display
+         */
+        this.update_interval = setInterval(function() {
+            sc.update();
+        },50);
 
-    /** Periodically send data over the websocket
-     */
-    this.socket_interval = setInterval(function() {
-        sc.send_queue_socket();
-    },this.socket_period);
+        /** Periodically send data over the websocket
+         */
+        this.socket_interval = setInterval(function() {
+            sc.send_queue_socket();
+        },this.socket_period);
 
-    this.ajax_period = this.base_ajax_period;
+        this.ajax_period = this.base_ajax_period;
 
-    function send_ajax_interval() {
-        sc.send_ajax();
+        function send_ajax_interval() {
+            sc.send_ajax();
+            setTimeout(send_ajax_interval,sc.ajax_period);
+        }
         setTimeout(send_ajax_interval,sc.ajax_period);
     }
-    setTimeout(send_ajax_interval,sc.ajax_period);
 }
 SCORM_API.prototype = {
 
@@ -214,6 +218,9 @@ SCORM_API.prototype = {
     },
 
     initialise_socket: function() {
+        if(this.offline) {
+            return;
+        }
         var sc = this;
 
         var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
@@ -329,6 +336,9 @@ SCORM_API.prototype = {
      * @returns {boolean}
      */
     is_available: function() {
+        if(this.offline) {
+            return true;
+        }
         var now = DateTime.local();
         if(this.available_from===undefined || this.available_until===undefined) {
             return (this.available_from===undefined || now >= this.available_from) && (this.available_until===undefined || now <= this.available_until);
@@ -365,6 +375,9 @@ SCORM_API.prototype = {
     /** Store information which hasn't been confirmed received by the server to localStorage.
      */
     set_localstorage: function() {
+        if(this.offline) {
+            return;
+        }
         try {
             var data = {
                 sent: {},
@@ -386,6 +399,9 @@ SCORM_API.prototype = {
      * @returns {object} of the form `{sent: {id: [{key,value,time,counter}]}}`
      */
     get_localstorage: function() {
+        if(this.offline) {
+            return {sent:{}};
+        }
         try {
             var stored = window.localStorage.getItem(this.localstorage_key);
             if(stored===null) {
@@ -426,12 +442,18 @@ SCORM_API.prototype = {
     /** Is the WebSocket connection open?
      */
     socket_is_open: function() {
+        if(this.offline) {
+            return false;
+        }
         return this.socket.readyState==WebSocket.OPEN && Object.keys(this.sent).length==0;
     },
 
     /** Did the last AJAX call succeed?
      */
     ajax_is_working: function() {
+        if(this.offline) {
+            return false;
+        }
         return this.last_ajax_succeeded===undefined || this.last_ajax_succeeded;
     },
 
@@ -440,6 +462,9 @@ SCORM_API.prototype = {
      *  A copy of the sent elements is saved in `this.sent`, so we can resend it if the server doesn't confirm it saved them.
      */
     send_queue_socket: function() {
+        if(this.offline) {
+            return;
+        }
         if(!this.queue.length || !this.socket_is_open()) {
             return;
         }
@@ -457,6 +482,9 @@ SCORM_API.prototype = {
      * @returns {boolean} if the elements were sent.
      */
     send_elements_socket: function(elements,id) {
+        if(this.offline) {
+            return;
+        }
         if(!this.socket_is_open()) {
             return false;
         }
@@ -484,6 +512,9 @@ SCORM_API.prototype = {
      * If there's no data to send, or the websocket connection is open, do nothing.
      */
     send_ajax: function(force) {
+        if(this.offline) {
+            return;
+        }
         var sc = this;
 
         if(this.pending_ajax && !force) {
