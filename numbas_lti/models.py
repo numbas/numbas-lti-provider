@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core import signing
 from django.core.mail import send_mail
 from django.db import models
+from django.db.utils import OperationalError
 from django.db.models import Min, Count
 from django.dispatch import receiver
 from django.contrib.auth.models import User
@@ -24,6 +25,7 @@ from lxml import etree
 import re
 import json
 from collections import defaultdict
+import time
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -593,7 +595,16 @@ class Attempt(models.Model):
     def finalise(self):
         if self.end_time is None:
             self.end_time = timezone.now()
-            self.save(update_fields=['end_time'])
+
+            tries = 0
+            while tries<3:
+                tries += 1
+                try:
+                    self.save(update_fields=['end_time'])
+                    break
+                except OperationalError:
+                    time.sleep(tries)
+
             group_for_attempt(self).send({'text':json.dumps({
                 'completion_status':'completed',
             })})
