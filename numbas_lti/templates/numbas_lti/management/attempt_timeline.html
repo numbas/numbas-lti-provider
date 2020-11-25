@@ -39,10 +39,16 @@
                     <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: time_string"></span></td>
                     <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
                     <td class="message"><span data-bind="html: message"></span></td>
-                    <td class="exam-raw-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
+                    <td class="exam-score raw" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                        <!-- ko if: $parent.exam_score_changed -->
                         <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
+                        <!-- /ko -->
                     </td>
-                    <td class="exam-scaled-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: $parent.exam_scaled_score"></span></td>
+                    <td class="exam-score scaled" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                        <!-- ko if: $parent.exam_score_changed -->
+                        <span data-bind="text: $parent.exam_scaled_score"></span>
+                        <!-- /ko -->
+                    </td>
                 </tr>
             <!-- /ko -->
         <!-- /ko -->
