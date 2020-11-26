@@ -335,7 +335,10 @@ class Resource(models.Model):
         return data
 
     def receipt_salt(self):
-        return 'numbas_lti:consumer:'+self.context.consumer.key
+        if self.context and self.context.consumer:
+            return 'numbas_lti:consumer:'+self.context.consumer.key
+        else:
+            return 'numbas_lti:resource:'+str(self.pk)
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
