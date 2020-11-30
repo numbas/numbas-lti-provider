@@ -182,6 +182,9 @@ class LTIContext(models.Model):
         else:
             return '{} ({})'.format(self.name, self.label)
 
+    def get_absolute_url(self):
+        return reverse('view_context', args=(self.pk,))
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)

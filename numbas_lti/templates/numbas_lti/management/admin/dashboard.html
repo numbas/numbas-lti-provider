@@ -5,13 +5,24 @@
 {% block title %}{% trans "Dashboard" %} - {{block.super}}{% endblock %}
 
 {% block stylesheets %}
-{{block.super}}
-<style type="text/css">
-</style>
+    {{block.super}}
+    <link rel="stylesheet" href="{% static 'admin-dashboard.css' %}">
 {% endblock stylesheets %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script src="{% static 'bootstrap-autocomplete.js' %}"></script>
+    <script src="{% static 'admin-dashboard.js' %}"></script>
+{% endblock %}
 
 {% block management_content %}
 <h1>{% trans "Dashboard" %}</h1>
+
+<form method="GET" action="{% url 'global_search' %}">
+    <label for="search">Search for users, contexts or resources:</label>
+    <input type="text" id="search" name="query" autocomplete="off">
+    <button type="submit" class="btn btn-default">{% trans "Search" %}</button>
+</form>
 
 <h2>{% trans "Today" %}</h2>
 <table class="table">

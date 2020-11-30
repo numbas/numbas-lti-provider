@@ -1,3 +1,4 @@
+from django.urls import path
 from django.conf.urls import url
 from django.contrib import auth
 
@@ -11,6 +12,10 @@ urlpatterns = [
     url(r'^create-superuser$', views.admin.CreateSuperuserView.as_view(), name='create_superuser'),
 
     url(r'^dashboard$', views.admin.DashboardView.as_view(), name='global_dashboard'),
+    path('user-info/<pk>', views.admin.GlobalUserInfoView.as_view(), name='global_user_info'),
+
+    path('search-autocomplete', views.search.search_autocomplete, name='search_autocomplete'),
+    path('global-search', views.search.global_search, name='global_search'),
 
     url(r'^resource/(?P<pk>\d+)/create_exam$', views.resource.CreateExamView.as_view(), name='create_exam'),
     url(r'^exam/(?P<pk>\d+)/run$', views.resource.RunExamView.as_view(), name='run_exam'),

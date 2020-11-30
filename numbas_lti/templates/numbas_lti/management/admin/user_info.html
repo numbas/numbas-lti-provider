@@ -1,0 +1,81 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}{{user.get_full_name}} - {{block.super}}{% endblock %}
+
+{% block management_content %}
+<h1>{{user.get_full_name}}</h1>
+
+<section>
+    <dl>
+        <dt>{% trans "Username" %}</dt>
+        <dd>{{user.username}}</dd>
+        <dt>{% trans "Email address" %}</dt>
+        <dd><a href="mailto:{{user.email}}">{{user.email}}</a></dd>
+        <dt>{% trans "Consumer" %}</dt>
+        <dd>
+            {% for consumer in consumers %}
+            <a href="{% url 'view_consumer' consumer.pk %}"><code>{{consumer.key}}</code></a>
+            {% endfor %}
+        </dd>
+    </dl>
+</section>
+
+<section>
+    <h2>{% trans "Recent launches" %}</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{% trans "Resource" %}</th>
+                <th>{% trans "Time" %}</th>
+                <th>{% trans "IP address" %}</th>
+                <th>{% trans "Browser user agent" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for launch in user.lti_launches.all|slice:":5" %}
+            <tr>
+                <td><a href="{% url 'resource_dashboard' launch.resource.pk %}">{{launch.resource.title}} ({{launch.resource.context.name}})</a></td>
+                <td>{{launch.time}}</td>
+                <td>{{launch.ip_address}}</td>
+                <td class="monospace">{{launch.user_agent}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{% trans "Attempt" %}</th>
+                <th>{% trans "Launch time" %}</th>
+                <th>{% trans "Attempt start time" %}</th>
+                <th>{% trans "Mode" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for launch in user.attempt_launches.all|slice:":15" %}
+            <tr>
+                <td><a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a></td>
+                <td>{{launch.time}}</td>
+                <td>{{launch.attempt.start_time}}</td>
+                <td>{{launch.mode}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% if user.attempts.exists %}
+<section>
+    <h2>Recent attempts</h2>
+    <ul>
+        {% for attempt in user.attempts.all|slice:":10" %}
+        <li>
+            <a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> ({{attempt.start_time}})
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endblock management_content %}
