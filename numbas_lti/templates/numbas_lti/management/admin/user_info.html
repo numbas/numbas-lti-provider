@@ -24,26 +24,7 @@
 
 <section>
     <h2>{% trans "Recent launches" %}</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>{% trans "Resource" %}</th>
-                <th>{% trans "Time" %}</th>
-                <th>{% trans "IP address" %}</th>
-                <th>{% trans "Browser user agent" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for launch in user.lti_launches.all|slice:":5" %}
-            <tr>
-                <td><a href="{% url 'resource_dashboard' launch.resource.pk %}">{{launch.resource.title}} ({{launch.resource.context.name}})</a></td>
-                <td>{{launch.time}}</td>
-                <td>{{launch.ip_address}}</td>
-                <td class="monospace">{{launch.user_agent}}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h3>{% trans "Attempts" %}</h3>
     <table class="table">
         <thead>
             <tr>
@@ -54,7 +35,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for launch in user.attempt_launches.all|slice:":15" %}
+            {% for launch in user.attempt_launches.all|slice:":10" %}
             <tr>
                 <td><a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a></td>
                 <td>{{launch.time}}</td>
@@ -64,18 +45,52 @@
             {% endfor %}
         </tbody>
     </table>
+    <h3>{% trans "Resources" %}</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{% trans "Resource" %}</th>
+                <th>{% trans "Time" %}</th>
+                <th>{% trans "IP address" %}</th>
+                <th>{% trans "Browser user agent" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for launch in user.lti_launches.all|slice:":10" %}
+            <tr>
+                <td><a href="{% url 'manage_attempts' launch.resource.pk %}?userid={{user.username}}">{{launch.resource.title}} ({{launch.resource.context.name}})</a></td>
+                <td>{{launch.time}}</td>
+                <td>{{launch.ip_address}}</td>
+                <td class="monospace">{{launch.user_agent}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </section>
 
 {% if user.attempts.exists %}
 <section>
     <h2>Recent attempts</h2>
-    <ul>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{% trans "Resource" %}</th>
+                <th>{% trans "Start time" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
         {% for attempt in user.attempts.all|slice:":10" %}
-        <li>
-            <a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> ({{attempt.start_time}})
-        </li>
+        <tr>
+            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a></td>
+            <td>{{attempt.start_time}}</td>
+            <td>
+                <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>
+            </td>
+        </tr>
         {% endfor %}
-    </ul>
+        </tbody>
+    </table>
 </section>
 {% endif %}
 {% endblock management_content %}
