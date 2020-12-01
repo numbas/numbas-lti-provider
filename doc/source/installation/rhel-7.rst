@@ -160,6 +160,13 @@ Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
     programs=numbas_lti_daphne,numbas_lti_workers
     priority=999
 
+.. note::
+
+    If your server must use a proxy to make HTTP or HTTPS requests, you should set environment variables ``HTTP_PROXY`` and ``HTTPS_PROXY`` in the supervisor configuration.
+    Add them to the lines starting ``environment=``, for example::
+
+        environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings",HTTP_PROXY=http://web.proxy:4321,HTTPS_PROXY=http://web.proxy:4321
+
 Once you've set this up, run::
 
     systemctl restart supervisord
