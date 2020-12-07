@@ -52,7 +52,7 @@ class Command(BaseCommand):
         old_scaled_score = attempt.scaled_score
         old_raw_score = attempt.raw_score
         for key,value in changed_keys.items():
-            if key in self.remark_ignore_keys:
+            if key in Attempt.remark_ignore_keys:
                 continue
             if self.options['save']:
                 e = ScormElement.objects.create(
