@@ -11,6 +11,8 @@
 
 {% block attempt_content %}
 
+<p><a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review this attempt" %}</span></a></p>
+
 <p><a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View raw SCORM data for this attempt" %}</a></p>
 
 <p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
