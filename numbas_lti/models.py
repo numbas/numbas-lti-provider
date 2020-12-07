@@ -260,7 +260,7 @@ class Resource(models.Model):
             return False
         if self.max_attempts==0:
             return True
-        return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
+        return self.attempts.filter(user=user).exclude(broken=True).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
 
     def user_data(self,user):
         return LTIUserData.objects.filter(resource=self,user=user).last()
