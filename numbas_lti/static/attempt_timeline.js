@@ -51,7 +51,7 @@ function Timeline(elements, launches) {
         var groups = [];
         var current_group = null;
         timeline.forEach(function(item) {
-            if(current_group==null || item.time!=current_group.time) {
+            if(current_group==null || item.time.diff(current_group.time).as('seconds')>1) {
                 current_group = {
                     time: item.time,
                     items: []
@@ -73,16 +73,19 @@ function Timeline(elements, launches) {
         function score_for_item(item) {
             return item_order.indexOf(item.kind);
         }
+        var previous_exam_score = NaN;
         groups.forEach(function(g) {
-            var exam_score = 0;
             if(g.items.length) {
                 var element_items = g.items.filter(function(i){ return i.css.scorm });
                 var element = element_items.length ? element_items[element_items.length-1].element : {time: g.items[g.items.length-1].time, counter: Infinity};
-                var dm = tl.datamodel_at(element);
-                g.exam_raw_score = parseFloat(dm['cmi.score.raw'] || 0);
-                g.exam_max_score = parseFloat(dm['cmi.score.max'] || 0);
-                var exam_scaled_score = parseFloat(dm['cmi.score.scaled'] || 0);
+                g.exam_raw_score = parseFloat(tl.element_at('cmi.score.raw',element) || 0);
+                g.exam_max_score = parseFloat(tl.element_at('cmi.score.max',element) || 0);
+                var exam_scaled_score = parseFloat(tl.element_at('cmi.score.scaled',element) || 0);
                 g.exam_scaled_score = percentage(exam_scaled_score);
+                if(g.exam_raw_score!=previous_exam_score) {
+                    g.exam_score_changed = true;
+                    previous_exam_score = g.exam_raw_score;
+                }
             }
             g.items.sort(function(a,b) {
                 a = score_for_item(a);
@@ -94,6 +97,24 @@ function Timeline(elements, launches) {
     },this);
 }
 Timeline.prototype = {
+    element_at: function(key,element) {
+        var t,counter;
+        if(!element) {
+            t = Infinity;
+            counter = Infinity;
+        } else {
+            t = (new Date(element.time))-0;
+            counter = element.counter;
+        }
+        var value;
+        this.all_elements().forEach(function(e) {
+            var et = (new Date(e.time))-0;
+            if(e.key==key && (et<t || et==t && e.counter<counter)) {
+                value = e.value;
+            }
+        });
+        return value;
+    },
     datamodel_at: function(element) {
         var t,counter;
         if(!element) {
@@ -114,8 +135,7 @@ Timeline.prototype = {
     },
 
     suspend_data_at: function(element) {
-        var data = this.datamodel_at(element);
-        var json_suspend_data = data['cmi.suspend_data'];
+        var json_suspend_data = this.element_at('cmi.suspend_data',element);
         if(json_suspend_data) {
             return JSON.parse(json_suspend_data);
         } else {
@@ -124,9 +144,8 @@ Timeline.prototype = {
     },
 
     getPart: function(id,element) {
-        var datamodel = this.datamodel_at(element);
         var id_key = 'cmi.interactions.'+id+'.id';
-        var path = datamodel[id_key];
+        var path = this.element_at(id_key,element);
         var desc = parse_part_path(path);
         var suspend_data = this.suspend_data_at(element);
         var part;
@@ -137,8 +156,8 @@ Timeline.prototype = {
             } else if(!isNaN(desc.step)) {
                 p = p.steps[desc.step];
             }
-            var part_type = datamodel['cmi.interactions.'+id+'.description'];
-            var marks = parseFloat(datamodel['cmi.interactions.'+id+'.weighting']);
+            var part_type = this.element_at('cmi.interactions.'+id+'.description',element);
+            var marks = parseFloat(this.element_at('cmi.interactions.'+id+'.weighting',element));
             part = {
                 id: id,
                 name: p.name || path,

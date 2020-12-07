@@ -12,6 +12,7 @@ Contents
     :maxdepth: 2
 
     how-it-works
+    data-handling
     getting-started
     installation/index
     admin/index

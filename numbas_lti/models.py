@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core import signing
 from django.core.mail import send_mail
 from django.db import models
+from django.db.utils import OperationalError
 from django.db.models import Min, Count
 from django.dispatch import receiver
 from django.contrib.auth.models import User
@@ -24,6 +25,7 @@ from lxml import etree
 import re
 import json
 from collections import defaultdict
+import time
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -180,6 +182,9 @@ class LTIContext(models.Model):
         else:
             return '{} ({})'.format(self.name, self.label)
 
+    def get_absolute_url(self):
+        return reverse('view_context', args=(self.pk,))
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)
@@ -255,7 +260,7 @@ class Resource(models.Model):
             return False
         if self.max_attempts==0:
             return True
-        return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
+        return self.attempts.filter(user=user).exclude(broken=True).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
 
     def user_data(self,user):
         return LTIUserData.objects.filter(resource=self,user=user).last()
@@ -333,7 +338,10 @@ class Resource(models.Model):
         return data
 
     def receipt_salt(self):
-        return 'numbas_lti:consumer:'+self.context.consumer.key
+        if self.context and self.context.consumer:
+            return 'numbas_lti:consumer:'+self.context.consumer.key
+        else:
+            return 'numbas_lti:resource:'+str(self.pk)
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -595,7 +603,16 @@ class Attempt(models.Model):
     def finalise(self):
         if self.end_time is None:
             self.end_time = timezone.now()
-            self.save(update_fields=['end_time'])
+
+            tries = 0
+            while tries<3:
+                tries += 1
+                try:
+                    self.save(update_fields=['end_time'])
+                    break
+                except OperationalError:
+                    time.sleep(tries)
+
             group_for_attempt(self).send({'text':json.dumps({
                 'completion_status':'completed',
             })})

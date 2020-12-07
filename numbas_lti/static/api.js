@@ -153,7 +153,9 @@ SCORM_API.prototype = {
         if(this.data['cmi.completion_status'] == 'completed') {
             if(this.allow_review_from!==null && DateTime.local()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
                 var player = document.getElementById('scorm-player');
-                player.parentElement.removeChild(player);
+                if(player) {
+                    player.parentElement.removeChild(player);
+                }
                 this.ajax_period = 0;
                 this.send_ajax().then(function(m) {
                     redirect(this.show_attempts_url+'&back_from_unsaved_complete_attempt=1');
@@ -300,7 +302,7 @@ SCORM_API.prototype = {
         var confirmation = this.signed_receipt !== undefined;
         if(confirmation) {
             var receipt_code_display = document.getElementById('receipt-code');
-            if(receipt_code_display.textContent != this.signed_receipt) {
+            if(receipt_code_display && receipt_code_display.textContent != this.signed_receipt) {
                 receipt_code_display.textContent = this.signed_receipt;
             }
         }

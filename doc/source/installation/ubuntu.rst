@@ -106,7 +106,7 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     autostart=true
     autorestart=true
     stopasgroup=true
-    environment=DJANGO_SETTINGS_MODULE=numbasltiprovider.settings
+    environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings"
     numprocs=4
     process_name=%(program_name)s_%(process_num)02d
     stderr_logfile=/var/log/supervisor/numbas_lti_daphne_stderr.log
@@ -129,6 +129,13 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     [group:numbas_lti]
     programs=numbas_lti_daphne,numbas_lti_workers
     priority=999
+
+.. note::
+
+    If your server must use a proxy to make HTTP or HTTPS requests, you should set environment variables ``HTTP_PROXY`` and ``HTTPS_PROXY`` in the supervisor configuration.
+    Add them to the lines starting ``environment=``, for example::
+
+        environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings",HTTP_PROXY=http://web.proxy:4321,HTTPS_PROXY=http://web.proxy:4321
 
 Once you've set this up, run::
 
