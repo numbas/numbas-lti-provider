@@ -48,6 +48,8 @@ def run_package(extracted_path,command='test',stdin='',options={}):
         if isinstance(v,bool):
             if v:
                 option_args += ['--'+k]
+        elif isinstance(v,list):
+            option_args += ['--'+k,' '.join(v)]
         else:
             option_args += ['--'+k,v]
 
@@ -107,7 +109,7 @@ def test_zipfile(zipfile):
         shutil.rmtree(path)
     return result
 
-def remark_attempts(exam, attempts, apply_unsubmitted_answers=False):
+def remark_attempts(exam, attempts, apply_unsubmitted_answers=False, reevaluate_variables=[]):
     cmis = []
     print("Gathering attempt data for {} attempts".format(attempts.count()))
     for a in attempts:
@@ -124,6 +126,7 @@ def remark_attempts(exam, attempts, apply_unsubmitted_answers=False):
         cmis.append({'attempt_pk': a.pk, 'cmi': cmi})
     options = {
         'unsubmitted': apply_unsubmitted_answers,
+        'reevaluate_variables': reevaluate_variables,
     }
     result = run_package(exam.extracted_path, stdin=json.dumps(cmis), command='remark',options = options)
     return result

@@ -17,6 +17,7 @@ class Command(BaseCommand):
         parser.add_argument('--attempts',nargs='+',dest='attempt_pks')
         parser.add_argument('--show-all-scores',dest='show_all_scores',action='store_true')
         parser.add_argument('--unsubmitted',dest='unsubmitted',action='store_true')
+        parser.add_argument('--reevaluate',nargs='+',dest='reevaluate',default=[])
 
     def handle(self, *args, **options):
         self.options = options
@@ -30,7 +31,12 @@ class Command(BaseCommand):
                 attempts = resource.attempts.filter(pk__in=self.options['attempt_pks'])
             else:
                 attempts = resource.attempts.all()
-            results = remark_attempts(resource.exam, attempts, apply_unsubmitted_answers=options['unsubmitted'])
+            results = remark_attempts(
+                resource.exam,
+                attempts,
+                apply_unsubmitted_answers = options['unsubmitted'],
+                reevaluate_variables = options['reevaluate']
+            )
             print(len(results['results']),'results')
             for result in results['results']:
                 self.update_attempt(result)
