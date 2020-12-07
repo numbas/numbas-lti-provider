@@ -77,14 +77,25 @@ function load_exam() {
     });
 }
 
-function remark_session() {
+function remark_session(options) {
+    options = options || {};
     const promise = new Promise((resolve,reject) => {
         load_exam().then(exam => {
             exam.questionList.forEach(function(q) {
                 q.store.saveQuestion(q);
                 q.allParts().forEach(function(p) {
                     p.store.partAnswered(p);
+                    p.revealed = false;
+                    if(options.use_unsubmitted) {
+                        p.stagedAnswer = p.resume_stagedAnswer || p.stagedAnswer;
+                    }
                 });
+                if(options.use_unsubmitted) {
+                    q.parts.forEach(function(p) {
+                        p.revealed = false;
+                        p.submit();
+                    });
+                }
             });
             exam.store.saveExam(exam);
 
@@ -101,7 +112,7 @@ window.addEventListener('message', (event) => {
     switch(action) {
         case 'start':
             numbas_ready.then(N=>{
-                remark_session().then(result=>{
+                remark_session({use_unsubmitted: event.data.use_unsubmitted}).then(result=>{
                     window.parent.postMessage({success: result.success, pk: pk});
                 });
             });

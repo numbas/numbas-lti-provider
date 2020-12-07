@@ -1,4 +1,4 @@
-const BATCH_SIZE = 20;
+const BATCH_SIZE = 50;
 
 Vue.filter('duration', function (value) {
     const d = luxon.Duration.fromMillis(value);
@@ -16,6 +16,9 @@ class Attempt {
         this.pk = data.pk;
         this.user = data.user;
         this.status = 'not loaded';
+        this.original_raw_score = null;
+        this.remarked_raw_score = null;
+        this.is_changed = false;
 
         /** possible values for status:
          * not loaded
@@ -47,38 +50,45 @@ class Attempt {
     get review_url() {
         return '/run_attempt/'+this.pk;
     }
+
+    get timeline_url() {
+        return '/attempt/'+this.pk+'/timeline';
+    }
+
+    get score_change_classes() {
+        if(this.remarked_raw_score !== null) {
+            const rs = this.remarked_raw_score;
+            const os = this.original_raw_score;
+            return {
+                'score-change': true,
+                decreased: rs<os,
+                unchanged: rs==os,
+                increased: rs>os
+            }
+        }
+        return {};
+    }
+
+    get can_save() {
+        return this.status=='remarked' && this.remarked_raw_score!=this.original_raw_score && this.status != 'saved';
+    }
 }
 
+const parameters_json = document.getElementById('parameters-json').textContent;
+const parameters = JSON.parse(parameters_json);
 const attempts_json = document.getElementById('attempts-json').textContent;
 const attempts = JSON.parse(attempts_json).map(data => new Attempt(data));
-
-/*
-const exam_source = JSON.parse( document.getElementById('exam-source-json').textContent);
-
-const exam_structure = exam_source.question_groups.map(g=>{
-    const gs = g.questions.map((q,qi)=>{
-        const qs = {
-            number: qi,
-            name: q.name,
-            parts: [],
-            remark: true
-        }
-        q.parts.forEach((p,pi)=>{
-            const name = p.customName || `p${pi}`;
-            qs.parts.push({
-                name: name,
-                remark: true
-            })
-        });
-        return qs;
-    });
-    return gs;
-})
-*/
+const exam_source_json = document.getElementById('exam-source-json').textContent;
+const exam_source = JSON.parse(exam_source_json);
 
 const exam_window = document.getElementById('exam-iframe').contentWindow;
 
+const ignore_keys = {
+    'cmi.suspend_data': true
+};
+
 const app = new Vue({
+    delimiters: ['[[',']]'],
     el: '#app',
     data: {
         attempts: attempts,
@@ -86,21 +96,35 @@ const app = new Vue({
         remarking_all: false,
         start_remark_all: new Date(),
         end_remark_all: 0,
-        stopping_marking: false
+        stopping_marking: false,
+        use_unsubmitted: false,
+        show_only: 'all',
+        save_url: parameters['save_url'],
+        saving: false,
+        save_error: null
     },
     methods: {
         stop_marking: function() {
             this.stopping_marking = true;
             this.attempts.forEach(a=>a.await_remark=false);
         },
+        fetch_all_attempt_data: function() {
+            const promise = this.fetch_attempt_data();
+            if(promise) {
+                promise.then(d=>{ this.fetch_all_attempt_data() })
+            }
+        },
         fetch_attempt_data: function(include_attempt) {
             const unloaded_attempts = this.attempts.filter(a=>a.status=='not loaded');
             const batch = unloaded_attempts.slice(0,BATCH_SIZE);
-            if(include_attempt.status=='not loaded' && batch.indexOf(include_attempt)==-1) {
+            if(include_attempt && include_attempt.status=='not loaded' && batch.indexOf(include_attempt)==-1) {
                 batch.splice(0,1,include_attempt);
             }
             const pks = batch.map(a=>a.pk);
-            fetch('remark/attempt_data?attempt_pks='+pks.join(','),{method:'GET',credentials:'same-origin'}).then(r=>r.json()).then(d => {
+            if(!pks.length) { 
+                return;
+            }
+            return fetch('remark/attempt_data?attempt_pks='+pks.join(','),{method:'GET',credentials:'same-origin'}).then(r=>r.json()).then(d => {
                 d.cmis.forEach(cd=>{
                     const a = this.attempts.find(a=>a.pk==cd.pk);
                     a.load_data_resolve(cd);
@@ -130,7 +154,58 @@ const app = new Vue({
                 api.allow_set = true;
                 attempt.status = 'remarking';
                 attempt.await_remark = false;
-                exam_window.postMessage({action:'start',pk:attempt.pk});
+                exam_window.postMessage({action:'start',pk:attempt.pk,use_unsubmitted: this.use_unsubmitted});
+            });
+        },
+
+        save_single_attempt: function(attempt) {
+            this.save_attempts([attempt]);
+        },
+
+        save_changed_attempts: function() {
+            this.save_attempts(this.shown_attempts.filter(a=>a.can_save));
+        },
+
+        save_attempts: function(attempts) {
+            var csrftoken = getCookie('csrftoken');
+            this.saving = true;
+
+            const data = attempts.map(a=>{
+                const changed_data = {}
+                Object.entries(a.changed_keys).forEach(([key,value]) => {
+                    changed_data[key] = value[1];
+                });
+                return {
+                    pk: a.pk,
+                    changed_keys: changed_data
+                }
+            });
+
+            this.save_error = null;
+
+            var request = fetch(this.save_url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    attempts: data
+                })
+            })
+
+            request.finally(()=>{
+                this.saving = false;
+            });
+
+            request.then(r=>r.json()).then(d=>{
+                if(!d.success) {
+                    this.save_error = d.message;
+                }
+                attempts.forEach(a=>a.status= d.saved.indexOf(a.pk)!=-1 ? 'saved' : 'error saving');
+            }).catch(err=>{
+                this.save_error = err;
             });
         },
 
@@ -140,8 +215,10 @@ const app = new Vue({
             const attempt = this.attempts.find(a=>a.pk==pk);
 
             const changed_keys = {};
+            attempt.is_changed = false;
             Object.keys(api.data).forEach(x=>{
-                if(!(x.match(/\._count$/)) && (attempt.cmi[x]===undefined || api.data[x]!=attempt.cmi[x].value)) {
+                if(!ignore_keys[x] && !x.match(/\._count$/) && (attempt.cmi[x]===undefined || api.data[x]!=attempt.cmi[x].value)) {
+                    attempt.is_changed = true;
                     changed_keys[x] = [attempt.cmi[x] && attempt.cmi[x].value,api.data[x]];
                 }
             })
@@ -155,6 +232,7 @@ const app = new Vue({
                 this.remark_attempt(next_to_remark);
             } else {
                 this.end_remark_all = new Date();
+                this.remarking_all = false;
             }
         },
 
@@ -182,9 +260,30 @@ const app = new Vue({
         estimated_end: function() {
             const total = this.remark_all_time/this.remarking_progress;
             return total - this.remark_all_time;
+        },
+        shown_attempts: function() {
+            return this.attempts.filter(a=>{
+                switch(this.show_only) {
+                    case 'all':
+                        return true;
+                    case 'changed':
+                        return a.remarked_raw_score !== null && a.original_raw_score != a.remarked_raw_score;
+                    case 'increased':
+                        return a.remarked_raw_score !== null && a.original_raw_score < a.remarked_raw_score;
+                    case 'decreased':
+                        return a.remarked_raw_score !== null && a.original_raw_score > a.remarked_raw_score;
+                }
+            });
+        },
+        num_attempts_hidden: function() {
+            return this.attempts.length - this.shown_attempts.length;
+        },
+        changed_attempts: function() {
+            return this.shown_attempts.filter(a=>a.can_save);
         }
     }
 });
+app.fetch_all_attempt_data();
 
 window.addEventListener('message',(event) => {
     app.get_remarking_results(event.data);

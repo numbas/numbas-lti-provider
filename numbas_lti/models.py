@@ -415,6 +415,8 @@ class Attempt(models.Model):
 
     objects = NotDeletedManager()
 
+    remark_ignore_keys = ['cmi.suspend_data','cmi.session_time']    # CMI keys not to resave when auto-remarking
+
     class Meta:
         ordering = ['-start_time',]
 
@@ -967,6 +969,10 @@ class ScormElement(models.Model):
             'time': self.time.isoformat(),
             'counter': self.counter,
         }
+
+class RemarkedScormElement(models.Model):
+    element = models.OneToOneField(ScormElement,on_delete=models.CASCADE,related_name='remarked')
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,related_name='remarked_elements')
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):

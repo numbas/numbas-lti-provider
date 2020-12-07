@@ -27,7 +27,7 @@ class ExamTestException(Exception):
     
     pass
 
-def run_package(extracted_path,command='test',stdin=''):
+def run_package(extracted_path,command='test',stdin='',options={}):
     if not hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
         raise ExamTestException("The NUMBAS_TESTING_FRAMEWORK_PATH setting has not been set.")
 
@@ -43,11 +43,19 @@ def run_package(extracted_path,command='test',stdin=''):
     if not features.get('run_headless'):
         raise ExamTestException("This package can not run outside of a browser.")
 
+    option_args = []
+    for k,v in options.items():
+        if isinstance(v,bool):
+            if v:
+                option_args += ['--'+k]
+        else:
+            option_args += ['--'+k,v]
+
     command = [
         str(Path(settings.NUMBAS_TESTING_FRAMEWORK_PATH) / 'test_exam'),
         str(Path(os.getcwd()) / extracted_path),
         command
-    ]
+    ] + option_args
 
     with tempfile.TemporaryFile() as stdoutf:
         with tempfile.TemporaryFile() as stderrf:
@@ -99,9 +107,9 @@ def test_zipfile(zipfile):
         shutil.rmtree(path)
     return result
 
-def remark_attempts(exam, attempts):
+def remark_attempts(exam, attempts, apply_unsubmitted_answers=False):
     cmis = []
-    print("Gathering attempt data")
+    print("Gathering attempt data for {} attempts".format(attempts.count()))
     for a in attempts:
         cmi = a.scorm_cmi()
 
@@ -114,5 +122,8 @@ def remark_attempts(exam, attempts):
         dynamic_cmi = {k: {'value':v,'time':etime} for k,v in dynamic_cmi.items()}
         cmi.update(dynamic_cmi)
         cmis.append({'attempt_pk': a.pk, 'cmi': cmi})
-    result = run_package(exam.extracted_path, stdin=json.dumps(cmis), command='remark')
+    options = {
+        'unsubmitted': apply_unsubmitted_answers,
+    }
+    result = run_package(exam.extracted_path, stdin=json.dumps(cmis), command='remark',options = options)
     return result

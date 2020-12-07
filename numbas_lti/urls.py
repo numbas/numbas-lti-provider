@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/remark$', views.resource.RemarkView.as_view(), name='resource_remark'),
     url(r'^resource/(?P<pk>\d+)/remark/iframe$', views.resource.RemarkIframeView.as_view(), name='resource_remark_iframe'),
     url(r'^resource/(?P<pk>\d+)/remark/attempt_data$', views.resource.RemarkGetAttemptDataView.as_view(), name='resource_remark_attempt_data'),
+    url(r'^resource/(?P<pk>\d+)/remark/save_data$', views.resource.RemarkSaveChangedDataView.as_view(), name='resource_remark_save_data'),
     url(r'^resource/(?P<pk>\d+)/settings$', views.resource.ResourceSettingsView.as_view(), name='resource_settings'),
     url(r'^resource/(?P<pk>\d+)/replace$', views.resource.ReplaceExamView.as_view(), name='replace_exam'),
     url(r'^resource/(?P<pk>\d+)/report_scores$', views.resource.ReportAllScoresView.as_view(), name='report_scores'),

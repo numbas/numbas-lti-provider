@@ -1,7 +1,7 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView, JSONView
 from numbas_lti import forms
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement
 from channels import Channel
 from django import http
 from django.conf import settings
@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core import signing
 from django.db.models import Q,Count
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
@@ -439,6 +440,10 @@ class RemarkView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorM
             for a in attempts
         ]
 
+        context['parameters'] = {
+            'save_url': reverse('resource_remark_save_data',args=(resource.pk,)),
+        }
+
         source_path = Path(resource.exam.extracted_path) / 'source.exam'
         if source_path.exists():
             with open(str(source_path)) as f:
@@ -481,6 +486,36 @@ class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,Mus
                 })
 
         return JsonResponse({'cmis': cmis})
+
+class RemarkSaveChangedDataView(MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+    """
+        Save changed SCORM elements after remarking
+    """
+    model = Resource
+
+    def post(self, request, *args, **kwargs):
+        saved = []
+        try:
+            data = json.loads(request.body.decode())
+            now = timezone.make_aware(datetime.datetime.now())
+            with transaction.atomic():
+                for ad in data['attempts']:
+                    try:
+                        attempt = Attempt.objects.get(pk=ad['pk'])
+                    except Attempt.DoesNotExist:
+                        continue
+
+                    for k,v in ad['changed_keys'].items():
+                        e = ScormElement.objects.create(attempt=attempt, key=k, value=v, time=now, counter=0)
+                        RemarkedScormElement.objects.create(element=e,user=request.user)
+                    saved.append(ad['pk'])
+            response = {'success': True, 'saved': saved}
+            if len(saved)<len(data['attempts']):
+                response['success'] = False
+                response['message'] = _("There was an error while saving some data.")
+            return JsonResponse(response, status=200 if response['success'] else 500)
+        except Exception as err:
+            return JsonResponse({'success': False, 'message': str(err), 'saved': saved},status=500)
 
 class RemarkIframeView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
     model = Resource

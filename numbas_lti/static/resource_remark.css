@@ -6,6 +6,32 @@
     width: 5em;
 }
 
+#attempts-table col.status {
+  width: 7em;
+}
+#attempts-table col.controls {
+  width: 7em;
+}
+#attempts-table col.save {
+  width: 7em;
+}
+
 .progress-bar {
     min-width: 2em;
+}
+
+.score-change.decreased {
+    color: red;
+    font-weight: bold;
+}
+
+.score-change.increased {
+    color: blue;
+    font-weight: bold;
+}
+
+.attempt button.save[disabled],
+.attempt:not(.error-saving) .error-saving,
+.attempt:not(.saved) .saved {
+    display: none;
 }
