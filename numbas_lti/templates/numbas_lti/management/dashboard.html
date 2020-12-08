@@ -18,7 +18,7 @@
 
     {% if resource.attempts.count %}
 
-    <p><strong>{{resource.attempts.count}}</strong> {% blocktrans count counter=resource.attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
+    <p><strong>{{resource.unbroken_attempts.count}}</strong> {% blocktrans count counter=resource.unbroken_attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
 
     {% if last_report_process %}
     <section>

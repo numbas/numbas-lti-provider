@@ -241,6 +241,9 @@ class Resource(models.Model):
         else:
             return 'resource'
 
+    def unbroken_attempts(self):
+        return self.attempts.filter(broken=False)
+
     def grade_user(self,user):
         methods = {
             'highest': self.grade_highest,
