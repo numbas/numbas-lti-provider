@@ -192,6 +192,11 @@ The new score is saved as you type, and the totals for the question and the whol
 
     Remarking an attempt.
 
+.. note::
+   After updating the exam package associated with a resource, you can :ref:`automatically remark all attempts <auto-remark>` using the :guilabel:`Remark` tab.
+
+.. _attempt-timeline:
+
 Data
 ^^^^
 
@@ -243,6 +248,8 @@ If you discover an error in your exam, you can update it by downloading it again
 Any new attempts will use the latest version of the exam package.
 Because the new version might have changed in a way that is incompatible with existing attempts, for example by removing or rearranging question parts, any attempts started with the old package will by default continue to use the old package.
 If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`This is a safe replacement for the previous exam package`. All attempts using the old package will be updated to use the new one.
+
+If the new version of the exam fixes problems with marking, you can try :ref:`automatically remarking existing attempts <auto-remark>`.
 
 .. _grading-method:
 
@@ -340,6 +347,45 @@ If ticked, then when a student completes an attempt at this resource they will b
 
 The receipt contains a code which instructors can use to confirm the receipt's contents. See :ref:`validate-receipt`.
 
+.. _auto-remark:
+
+Remark
+------
+
+.. figure:: _static/remark-attempts.png
+    :alt: The remark resource view.
+    
+    Remarking a resource.
+
+The :guilabel:`Remark` tab provides an interface for automatically re-running attempts at the resource using the latest version of the exam package.
+If the total score awarded for an attempt is different to the saved score, you can overwrite it.
+
+When the page loads, you are shown all attempts at the resource.
+You can remark individual attempts, or remark all the attempts automatically.
+
+.. note::
+
+    Remarking an exam is computationally intensive, so your browser may appear unresponsive.
+
+If :guilabel:`Use unsubmitted answers` is ticked, then any answers entered by the student but not submitted will be considered to be submitted.
+You can use this in cases where a student forgot to submit their answers and you want to have them marked anyway.
+
+After you click :guilabel:`Remark all attempts`, each attempt will be remarked in turn.
+A progress bar shows the proportion of attempts that have been remarked, and an estimated time until completion.
+
+To stop the process of remarking all attempts, click :guilabel:`Stop marking`.
+If an attempt is currently being remarked, it can't be interrupted - the process will stop after that attempt is finished.
+
+You can choose to :guilabel:`Show` all attempts, only attempts with changed scores, or only attempts with either increased or decreased scores.
+
+When one or more attempts have been remarked and produced different scores, the :guilabel:`Save all changed attempts` button becomes available.
+After clicking this button, any changed data corresponding to the shown attempts is saved to the database.
+This data will appear in the :ref:`timeline for the attempt <attempt-timeline>` and will affect the reported scores for the attempt.
+
+Each attempt has its own :guilabel:`Remark` button, which will remark only that attempt.
+When an attempt has been remarked, the change in total score is shown. 
+If the total score is different to that stored in the database, a :guilabel:`Save` button appears.
+Clicking the button causes changed data corresponding to the attempt to be saved to the database, updating its timeline and reported score.
 
 Test run
 --------
