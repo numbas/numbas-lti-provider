@@ -219,7 +219,7 @@ class Resource(models.Model):
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
     email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
-    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
+    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'), help_text='Zero means unlimited attempts.')
 
     num_questions = models.PositiveIntegerField(default=0)
 
