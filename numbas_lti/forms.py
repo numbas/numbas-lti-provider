@@ -102,7 +102,7 @@ class CreateExamForm(ModelForm):
             package_bytes = requests.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
             cleaned_data['package'] = File(BytesIO(package_bytes),name='exam.zip')
 
-        if getattr(settings,'TEST_UPLOADED_EXAMS') and hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
+        if getattr(settings,'TEST_UPLOADED_EXAMS',False) and hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
             try:
                 test_zipfile(zipfile.ZipFile(cleaned_data['package'].file))
             except ExamTestException as e:
