@@ -39,7 +39,7 @@ section {
     fill: red;
 }
 .num_partial rect {
-    fill: lightslategrey;
+    fill: hsl(120, 40%, 50%);
 }
 .num_correct rect {
     fill: lime;
