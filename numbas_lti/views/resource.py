@@ -441,7 +441,7 @@ class RemarkView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorM
         context = super().get_context_data(*args,**kwargs)
 
         resource = self.object
-        attempts = resource.attempts.all()
+        attempts = resource.unbroken_attempts()
 
         context['attempts'] = [
             {
