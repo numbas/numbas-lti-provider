@@ -103,11 +103,11 @@ def test_zipfile(zipfile):
         i += 1
     path = path / str(i)
     path.mkdir(parents=True, exist_ok=True)
-    zipfile.extractall(path)
+    zipfile.extractall(str(path))
     try:
         result = test_package(path)
     finally:
-        shutil.rmtree(path)
+        shutil.rmtree(str(path))
     return result
 
 def remark_attempts(exam, attempts, apply_unsubmitted_answers=False, reevaluate_variables=[]):
