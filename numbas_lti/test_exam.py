@@ -49,7 +49,8 @@ def run_package(extracted_path,command='test',stdin='',options={}):
             if v:
                 option_args += ['--'+k]
         elif isinstance(v,list):
-            option_args += ['--'+k,' '.join(v)]
+            if len(v)>0:
+                option_args += ['--'+k,' '.join(v)]
         else:
             option_args += ['--'+k,v]
 
@@ -76,8 +77,8 @@ def run_package(extracted_path,command='test',stdin='',options={}):
     try:
         result = json.loads(stdout.strip())
     except json.JSONDecodeError as e:
-        print(stdout)
-        print(stderr)
+        print("STDOUT:",stdout)
+        print("STDERR:",stderr)
         raise ExamTestException('There was an error decoding the results of the test.', stdout=stdout, stderr=stderr)
 
     if not result.get('success',False):
