@@ -45,10 +45,11 @@ class Command(BaseCommand):
 
     def update_attempt(self, result):
         t = now()
-        changed_keys = result.get('changed_keys',[])
         attempt = Attempt.objects.get(pk=result['attempt_pk'])
         if not result.get('success'):
             print("Attempt {} by {} failed.".format(attempt.pk, attempt.user.get_full_name()))
+            return
+        changed_keys = result.get('changed_keys',{})
         old_scaled_score = attempt.scaled_score
         old_raw_score = attempt.raw_score
         for key,value in changed_keys.items():
