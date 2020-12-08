@@ -26,6 +26,7 @@ import re
 import json
 from collections import defaultdict
 import time
+from pathlib import Path
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -132,6 +133,21 @@ class Exam(ExtractPackageMixin,models.Model):
 
     def __str__(self):
         return self.title
+
+    def supports_feature(self, feature):
+        root = Path(self.extracted_path)
+        manifest_path = root / 'numbas-manifest.json'
+        if not manifest_path.exists():
+            return False
+
+        try:
+            with open(str(manifest_path)) as f:
+                manifest = json.loads(f.read())
+        except Exception as e:
+            return False
+
+        features = manifest.get('features',{})
+        return features.get(feature)
 
 @receiver(models.signals.pre_save, sender=Exam)
 def set_exam_name_from_package(sender,instance,**kwargs):

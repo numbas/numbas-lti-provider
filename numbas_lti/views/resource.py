@@ -13,6 +13,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
+from django.template.response import TemplateResponse
 from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone, dateparse
 from django.utils.translation import ugettext_lazy as _
@@ -422,6 +423,17 @@ class RemarkView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorM
     model = Resource
     template_name = 'numbas_lti/management/resource_remark.html'
     management_tab = 'remark'
+
+    def get(self, request, *args, **kwargs):
+        resource = self.object = self.get_object()
+        if not resource.exam.supports_feature('run_headless'):
+            return TemplateResponse(
+                request=self.request,
+                template=['numbas_lti/management/resource_remark_not_supported.html'],
+                context=super().get_context_data(object=self.object),
+                using=self.template_engine
+            )
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args,**kwargs)
