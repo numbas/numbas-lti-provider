@@ -10,6 +10,7 @@ from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django_auth_lti.verification import is_allowed
 from functools import wraps
 from numbas_lti.models import Resource, Exam
+import urllib.parse
 
 INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES',['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant'])
 
@@ -27,7 +28,13 @@ def request_is_instructor(request):
 def static_view(template_name):
     return generic.TemplateView.as_view(template_name=template_name)
 
+
+
 class LTIRoleOrSuperuserMixin(LTIRoleRestrictionMixin):
+    @property
+    def redirect_url(self):
+        return reverse('not_authorized')+'?originalurl='+urllib.parse.quote(self.request.path+'?'+self.request.META.get('QUERY_STRING',''))
+
     def check_allowed(self, request):
         if request.user.is_superuser:
             return True
@@ -44,7 +51,7 @@ def lti_role_or_superuser_required(allowed_roles, redirect_url=reverse_lazy('not
             if request.user.is_superuser or is_allowed(request, allowed_roles, raise_exception):
                 return view_func(request, *args, **kwargs)
             
-            return redirect(redirect_url)
+            return redirect(redirect_url+'?originalurl='+urllib.parse.quote(self.request.path+'?'+self.request.META.get('QUERY_STRING',''))
         return _wrapped_view
     return decorator
 
