@@ -55,6 +55,7 @@
         <label for="show-only">{% trans "Show:" %}</label> 
         <select id="show-only" v-model="show_only">
             <option value="all">All attempts</option>
+            <option value="completed">Only completed attempts</option>
             <option value="changed">Only changed scores</option>
             <option value="increased">Only increased scores</option>
             <option value="decreased">Only decreased scores</option>
@@ -65,6 +66,7 @@
         <colgroup>
             <col class="full-name">
             <col class="identifier">
+            <col class="completion-status">
             <col class="score current-score">
             <col class="score remarked-score">
             <col class="status">
@@ -76,6 +78,7 @@
             <tr>
                 <th>{% trans "Student" %}</th>
                 <th><!-- identifier --></th>
+                <th>{% trans "Completion status" %}</th>
                 <th>{% trans "Current score" %}</th>
                 <th>{% trans "Remarked score" %}</th>
                 <th>{% trans "Status" %}</th>
@@ -83,21 +86,22 @@
             </tr>
         </thead>
         <tbody>
-            <tr class="hidden-attempts-count" v-if="num_attempts_hidden > 0">
+            <tr class="hidden-attempts-count text-muted" v-if="num_attempts_hidden > 0">
                 <td colspan="6">
-                    [[num_attempts_hidden]] hidden attempts.
+                    [[num_attempts_hidden]] hidden [[ 'attempt' | pluralize(num_attempts_hidden) ]].
                 </td>
             </tr>
             <tr class="attempt" v-for="attempt in shown_attempts" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
                 <td>[[attempt.user.full_name]]</td>
                 <td>[[attempt.user.identifier]]</td>
+                <td>[[attempt.completion_status]]</td>
                 <td>[[attempt.original_raw_score]]/[[attempt.max_score]]</td>
                 <td><span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score]]/[[attempt.max_score]]</span></td>
                 <td :class="attempt.score_change_classes">
                     [[attempt.score_change_description]]
                     <div v-if="attempt.remarked_raw_score!==null">
-                        <span v-if="attempt.remarked_raw_score < attempt.original_raw_score">{% trans "Decreased" %}</span>
-                        <span v-if="attempt.remarked_raw_score > attempt.original_raw_score">{% trans "Increased" %}</span>
+                        <span v-if="attempt.remarked_raw_score < attempt.original_raw_score">{% trans "Decreased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
+                        <span v-if="attempt.remarked_raw_score > attempt.original_raw_score">{% trans "Increased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
                         <span v-if="attempt.remarked_raw_score == attempt.original_raw_score">{% trans "Unchanged" %}</span>
                     </div>
                 </td>

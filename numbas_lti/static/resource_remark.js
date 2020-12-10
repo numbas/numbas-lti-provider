@@ -10,10 +10,24 @@ Vue.filter('percent', function (value) {
     return pc;
 })
 
+Vue.filter('pluralize', function (str, number) {
+    console.log(str,number);
+    return str + (Math.abs(number)==1 ? '' : 's');
+})
+
+Vue.filter('change', function(n) {
+    if(n>=0) {
+        return '+'+n;
+    } else {
+        return n;
+    }
+})
+
 class Attempt {
     constructor(data) {
         const a = this;
         this.pk = data.pk;
+        this.completion_status = data.completion_status;
         this.user = data.user;
         this.status = 'not loaded';
         this.original_raw_score = null;
@@ -266,6 +280,8 @@ const app = new Vue({
                 switch(this.show_only) {
                     case 'all':
                         return true;
+                    case 'completed':
+                        return a.completion_status == 'completed';
                     case 'changed':
                         return a.remarked_raw_score !== null && a.original_raw_score != a.remarked_raw_score;
                     case 'increased':

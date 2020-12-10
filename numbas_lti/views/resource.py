@@ -446,6 +446,7 @@ class RemarkView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorM
         context['attempts'] = [
             {
                 'pk': a.pk,
+                'completion_status': a.completion_status,
                 'user': { 
                     'full_name': a.user.get_full_name(),
                     'identifier': a.user_data().identifier(),
