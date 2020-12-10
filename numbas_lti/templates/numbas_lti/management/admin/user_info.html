@@ -22,6 +22,32 @@
     </dl>
 </section>
 
+{% if user.attempts.exists %}
+<section>
+    <h2>Recent attempts</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{% trans "Resource" %}</th>
+                <th>{% trans "Start time" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for attempt in user.attempts.all|slice:":10" %}
+        <tr>
+            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a></td>
+            <td>{{attempt.start_time}}</td>
+            <td>
+                <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
 <section>
     <h2>{% trans "Recent launches" %}</h2>
     <h3>{% trans "Attempts" %}</h3>
@@ -67,30 +93,4 @@
         </tbody>
     </table>
 </section>
-
-{% if user.attempts.exists %}
-<section>
-    <h2>Recent attempts</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>{% trans "Resource" %}</th>
-                <th>{% trans "Start time" %}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for attempt in user.attempts.all|slice:":10" %}
-        <tr>
-            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a></td>
-            <td>{{attempt.start_time}}</td>
-            <td>
-                <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</section>
-{% endif %}
 {% endblock management_content %}

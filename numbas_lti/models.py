@@ -419,7 +419,7 @@ class LTILaunch(models.Model):
         return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)
 
     class Meta:
-        ordering = ('time',)
+        ordering = ('-time',)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
@@ -885,7 +885,7 @@ class AttemptLaunch(models.Model):
         }
 
     class Meta:
-        ordering = ('time',)
+        ordering = ('-time',)
 
 
 class AttemptNotDeletedManager(models.Manager):
