@@ -252,7 +252,7 @@ const app = new Vue({
 
         remark_all: function() {
             this.stopping_marking = false;
-            this.attempts.forEach(a=> a.await_remark = a.status != 'remarked');
+            this.attempts.forEach(a=> a.await_remark = true);
             const first = this.attempts[0];
             if(!first) {
                 return;
