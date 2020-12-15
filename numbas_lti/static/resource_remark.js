@@ -62,11 +62,11 @@ class Attempt {
     }
 
     get review_url() {
-        return '/run_attempt/'+this.pk;
+        return '/run_attempt/'+this.pk+'?'+resource_link_id;
     }
 
     get timeline_url() {
-        return '/attempt/'+this.pk+'/timeline';
+        return '/attempt/'+this.pk+'/timeline?'+resource_link_id;
     }
 
     get score_change_classes() {
@@ -100,6 +100,17 @@ const exam_window = document.getElementById('exam-iframe').contentWindow;
 const ignore_keys = {
     'cmi.suspend_data': true
 };
+
+let resource_link_id;
+if(location.search) {
+    const bits = location.search.slice(1).split('&');
+    bits.forEach(bit => {
+        const [k,v] = bit.split('=');
+        if(k=='resource_link_id') {
+            resource_link_id = bit;
+        }
+    });
+}
 
 const app = new Vue({
     delimiters: ['[[',']]'],
@@ -138,7 +149,13 @@ const app = new Vue({
             if(!pks.length) { 
                 return;
             }
-            return fetch('remark/attempt_data?attempt_pks='+pks.join(','),{method:'GET',credentials:'same-origin'}).then(r=>r.json()).then(d => {
+            let query_params = [
+                'attempt_pks='+pks.join(',')
+            ];
+            if(resource_link_id) {
+                query_params.push(resource_link_id);
+            }
+            return fetch('remark/attempt_data?'+query_params.join('&'),{method:'GET',credentials:'same-origin'}).then(r=>r.json()).then(d => {
                 d.cmis.forEach(cd=>{
                     const a = this.attempts.find(a=>a.pk==cd.pk);
                     a.load_data_resolve(cd);
