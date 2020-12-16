@@ -1052,7 +1052,10 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
 @receiver(models.signals.post_save,sender=Attempt)
 def send_receipt_on_completion(sender,instance, **kwargs):
-    attempt = Attempt.objects.get(pk=instance.pk)
+    try:
+        attempt = Attempt.objects.get(pk=instance.pk)
+    except Attempt.DoesNotExist:
+        return
     if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
         if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
             Channel('attempt.email_receipt').send({'pk': attempt.pk})
