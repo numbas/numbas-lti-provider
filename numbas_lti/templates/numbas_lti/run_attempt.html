@@ -11,7 +11,7 @@
     <span class="symbol">!</span>
     <span class="status-message text-ended">
         <div class="text">
-            <p>{% blocktrans with available_until=available_until|date:"r" %}This resource automatically closed at {{available_until}}{% endblocktrans %}</p>
+            <p>{% blocktrans with available_until=available_until|date:"r" %}This resource automatically closed at <span class="available-until">{{available_until}}</span>{% endblocktrans %}</p>
         </div>
     </span>
     <span class="status-message text-terminated">
@@ -66,8 +66,8 @@ if(!Modernizr.websockets) {
         var sc = new SCORM_API(js_vars);
         window.API_1484_11 = sc.API_1484_11;
     } catch(e) {
+        console.error(e);
         alert("{% trans "A connection to the server could not be created. Please report this." %}");
-        console.error(e.stack);
         window.location.href = '{% url 'show_attempts' %}';
     }
 	window.addEventListener('load',function() {

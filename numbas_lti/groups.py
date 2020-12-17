@@ -6,5 +6,8 @@ def group_for_user(user):
 def group_for_attempt(attempt):
     return Group('attempt-{}'.format(attempt.id))
 
+def group_for_resource(resource):
+    return Group('resource-{}'.format(resource.id))
+
 def group_for_resource_stats(resource):
-    return Group('resource-{}-stats'.format(resource.pk))
+    return Group('resource-{}-stats'.format(resource.id))

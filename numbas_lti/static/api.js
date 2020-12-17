@@ -19,9 +19,7 @@ function SCORM_API(options) {
     this.fallback_url = options.fallback_url;
     this.show_attempts_url = options.show_attempts_url;
 
-    this.allow_review_from = load_date(options.allow_review_from);
-    this.available_from = load_date(options.available_from);
-    this.available_until = load_date(options.available_until);
+    this.update_availability_dates(options);
 
     /** Key to save data under in localStorage
      */
@@ -104,6 +102,20 @@ SCORM_API.prototype = {
     /** The code of the last error that was raised
      */
 	last_error: 0,
+
+    /** Update the availability dates for the resource
+     */
+    update_availability_dates: function(data) {
+        var sc = this;
+        this.allow_review_from = load_date(data.allow_review_from);
+        this.available_from = load_date(data.available_from);
+        this.available_until = load_date(data.available_until);
+        if(this.available_until) {
+            Array.from(document.querySelectorAll('.available-until')).forEach(function(s) {
+                s.textContent = sc.available_until.toLocaleString(DateTime.DATETIME_FULL);
+            });
+        }
+    },
 
     /** Setup the SCORM data model.
      *  Merge in elements loaded from the page with elements saved to localStorage, taking the most recent value when there's a clash.
@@ -239,6 +251,10 @@ SCORM_API.prototype = {
             } catch(e) {
                 console.log("Error reading socket message",e.data);
                 return;
+            }
+
+            if(d.availability_dates) {
+                sc.update_availability_dates(d.availability_dates);
             }
 
             // The server sends back confirmation of each batch of elements it received.

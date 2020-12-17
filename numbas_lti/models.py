@@ -16,7 +16,7 @@ from django.utils import timezone
 from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
 
-from .groups import group_for_attempt, group_for_resource_stats
+from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 
 import os
 import shutil
@@ -361,6 +361,19 @@ class Resource(models.Model):
             return 'numbas_lti:consumer:'+self.context.consumer.key
         else:
             return 'numbas_lti:resource:'+str(self.pk)
+
+    def availability_json(self):
+        return {
+            'available_from': self.available_from.isoformat() if self.available_from else None,
+            'available_until': self.available_until.isoformat() if self.available_until else None,
+            'allow_review_from': self.allow_review_from.isoformat() if self.allow_review_from else None,
+        }
+
+@receiver(models.signals.post_save,sender=Resource)
+def resource_availability_changed(sender,instance,**kwargs):
+    resource = instance
+    group = group_for_resource(resource)
+    group.send({"text": json.dumps({'availability_dates': resource.availability_json()})})
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')

@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django_auth_lti.patch_reverse import reverse
 
-from .groups import group_for_attempt, group_for_resource_stats
+from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .models import Attempt, ScormElement, Resource, ReportProcess, EditorLink
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .save_scorm_data import save_scorm_data
@@ -25,16 +25,23 @@ def attempt_ws_connect(message,pk):
     attempt = Attempt.objects.get(pk=pk)
     group = group_for_attempt(attempt)
     group.add(message.reply_channel)
+
+    resource = attempt.resource
+    resource_group = group_for_resource(attempt.resource)
+    resource_group.add(message.reply_channel)
+
     query = parse_qs(message.content['query_string'].decode('utf-8'))
     uid = query.get('uid',[''])[0]
     mode= query.get('mode',[''])[0]
+
     if mode!='review':
-        group.send({'text': json.dumps({'current_uid': uid})})
+        group.send({'text': json.dumps({'current_uid': uid, 'availability_dates':resource.availability_json()})})
 
 @channel_session_user_from_http
 def attempt_ws_disconnect(message,pk):
     attempt = Attempt.objects.get(pk=pk)
     group_for_attempt(attempt).discard(message.reply_channel)
+    group_for_resource(resource).discard(message.reply_channel)
 
 @channel_session_user
 def scorm_set_element(message,pk):
