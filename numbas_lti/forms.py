@@ -20,16 +20,19 @@ import requests
 import json
 
 from django.utils.crypto import get_random_string
+from django.utils.formats import get_format
 import string
+
+datetime_format = get_format('DATETIME_INPUT_FORMATS')[0]
 
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts']
         widgets = {
-            'allow_review_from': DateTimePickerInput(),
-            'available_from': DateTimePickerInput(),
-            'available_until': DateTimePickerInput(),
+            'allow_review_from': DateTimePickerInput(format=datetime_format),
+            'available_from': DateTimePickerInput(format=datetime_format),
+            'available_until': DateTimePickerInput(format=datetime_format),
         }
 
 class RemarkPartScoreForm(ModelForm):
