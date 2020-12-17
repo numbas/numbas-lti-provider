@@ -17,6 +17,7 @@ from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
 
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
+from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 
 import os
 import shutil
@@ -27,6 +28,13 @@ import json
 from collections import defaultdict
 import time
 from pathlib import Path
+
+USE_HUEY = 'huey.contrib.djhuey' in settings.INSTALLED_APPS
+
+try:
+    from . import tasks
+except Exception as e:
+    USE_HUEY = False
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -368,6 +376,34 @@ class Resource(models.Model):
             'available_until': self.available_until.isoformat() if self.available_until else None,
             'allow_review_from': self.allow_review_from.isoformat() if self.allow_review_from else None,
         }
+
+    def report_scores(self):
+        if ReportProcess.objects.filter(resource=self,status='reporting').exists():
+            return
+
+        process = ReportProcess.objects.create(resource=self)
+
+        errors = []
+        for user in User.objects.filter(attempts__resource=self).distinct():
+            try:
+                request = report_outcome(self,user)
+            except ReportOutcomeException as e:
+                errors.append(e)
+
+        if len(errors):
+            process.status = 'error'
+            process.response = '\n'.join(e.message for e in errors)
+        else:
+            process.status = 'complete'
+        process.dismissed = False
+        process.save(update_fields=['status','response','dismissed'])
+
+    def task_report_scores(self):
+        if USE_HUEY:
+            tasks.resource_report_scores(self)
+        else:
+            Channel("report.all_scores").send({'pk':self.pk})
+
 
 @receiver(models.signals.post_save,sender=Resource)
 def resource_availability_changed(sender,instance,**kwargs):
@@ -878,7 +914,10 @@ class Attempt(models.Model):
         )
         self.sent_receipt = True
         self.save(update_fields=['sent_receipt'])
-            
+ 
+    def report_outcome(self):
+        report_outcome(self.resource,self.user)
+
 
 class AttemptLaunch(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='launches', on_delete=models.CASCADE)
@@ -1041,7 +1080,10 @@ def scorm_set_score(sender,instance,created,**kwargs):
     instance.attempt.scaled_score_element = instance
     instance.attempt.save(update_fields=['scaled_score','scaled_score_element'])
     if instance.attempt.resource.report_mark_time == 'immediately':
-        Channel('report.attempt').send({'pk':instance.attempt.pk})
+        if USE_HUEY:
+            tasks.attempt_report_outcome(instance.attempt)
+        else:
+            Channel('report.attempt').send({'pk':instance.attempt.pk})
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -1061,7 +1103,10 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     instance.attempt.save(update_fields=update_fields)
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        Channel('report.attempt').send({'pk':instance.attempt.pk})
+        if USE_HUEY:
+            tasks.attempt_report_outcome(attempt)
+        else:
+            Channel('report.attempt').send({'pk':instance.attempt.pk})
 
 @receiver(models.signals.post_save,sender=Attempt)
 def send_receipt_on_completion(sender,instance, **kwargs):
@@ -1071,7 +1116,10 @@ def send_receipt_on_completion(sender,instance, **kwargs):
         return
     if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
         if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
-            Channel('attempt.email_receipt').send({'pk': attempt.pk})
+            if USE_HUEY:
+                tasks.send_attempt_completion_receipt(attempt)
+            else:
+                Channel('attempt.email_receipt').send({'pk': attempt.pk})
 
 
 @receiver(models.signals.post_save,sender=ScormElement)
@@ -1117,7 +1165,10 @@ class EditorLink(models.Model):
     @property
     def available_exams(self):
         if self.time_since_last_update().seconds> 30:
-            Channel("editorlink.update_cache").send({'pk':self.pk})
+            if USE_HUEY:
+                tasks.editorlink_update_cache(self)
+            else:
+                Channel("editorlink.update_cache").send({'pk':self.pk})
         if self.cached_available_exams:
             return json.loads(self.cached_available_exams)
         else:
@@ -1139,7 +1190,7 @@ class EditorLinkProject(models.Model):
 
 @receiver(models.signals.pre_save,sender=EditorLink)
 def update_editor_cache_before_save(sender,instance,**kwargs):
-    instance.update_cache()
+    exams = instance.available_exams
 
 class StressTest(models.Model):
     resource = models.OneToOneField(Resource,on_delete=models.CASCADE,primary_key=True)

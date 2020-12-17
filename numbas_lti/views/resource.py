@@ -3,7 +3,6 @@ from .generic import CSVView, JSONView
 from numbas_lti import forms
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement
 from numbas_lti.util import transform_part_hierarchy
-from channels import Channel
 from django import http
 from django.conf import settings
 from django.contrib import messages
@@ -274,7 +273,8 @@ class ReportAllScoresView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     context_object_name = 'resource'
 
     def get(self,*args,**kwargs):
-        Channel("report.all_scores").send({'pk':self.get_object().pk})
+        resource = self.get_object()
+        resource.task_report_scores()
         return super(ReportAllScoresView,self).get(*args,**kwargs)
 
 @lti_role_or_superuser_required(INSTRUCTOR_ROLES)

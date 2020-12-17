@@ -1,5 +1,4 @@
 from .mixins import ManagementViewMixin
-from channels import Channel
 from django import http
 from django.conf import settings
 from django.contrib import messages
@@ -105,7 +104,7 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
             if pform.cleaned_data['use']:
                 pform.instance.editor = self.object
                 link = pform.save()
-        Channel("editorlink.update_cache").send({'pk':self.object.pk,'bounce':False})
+        exams = self.object.available_exams
 
         return http.HttpResponseRedirect(self.get_success_url())
 

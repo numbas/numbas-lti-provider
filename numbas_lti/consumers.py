@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponse
 from channels.handler import AsgiHandler
 from channels import Group
@@ -16,7 +17,7 @@ from django_auth_lti.patch_reverse import reverse
 
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .models import Attempt, ScormElement, Resource, ReportProcess, EditorLink
-from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
+from .report_outcome import ReportOutcomeException
 from .save_scorm_data import save_scorm_data
 
 @channel_session_user_from_http
@@ -76,30 +77,12 @@ def resource_stats_ws_receive(message,pk):
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
-    if ReportProcess.objects.filter(resource=resource,status='reporting').exists():
-        return
-
-    process = ReportProcess.objects.create(resource=resource)
-
-    errors = []
-    for user in User.objects.filter(attempts__resource=resource).distinct():
-        try:
-            request = report_outcome(resource,user)
-        except ReportOutcomeException as e:
-            errors.append(e)
-
-    if len(errors):
-        process.status = 'error'
-        process.response = '\n'.join(e.message for e in errors)
-    else:
-        process.status = 'complete'
-    process.dismissed = False
-    process.save(update_fields=['status','response','dismissed'])
+    resource.report_scores()
 
 def report_score(message,**kwargs):
     attempt = Attempt.objects.get(pk=message['pk'])
     try:
-        report_outcome_for_attempt(attempt)
+        attempt.report_outcome()
     except ReportOutcomeException:
         pass
     
