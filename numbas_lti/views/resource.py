@@ -2,6 +2,7 @@ from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHave
 from .generic import CSVView, JSONView
 from numbas_lti import forms
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement
+from numbas_lti.util import transform_part_hierarchy
 from channels import Channel
 from django import http
 from django.conf import settings
@@ -25,7 +26,6 @@ import csv
 import datetime
 import json
 import itertools
-import string
 
 class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
@@ -126,13 +126,6 @@ class StudentProgressView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeIn
         return context
 
 
-def hierarchy_key(x):
-    key = x[0]
-    try:
-        return int(key)
-    except ValueError:
-        return key
-
 class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/discount.html'
@@ -143,20 +136,8 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
         context = super(DiscountPartsView,self).get_context_data(*args,**kwargs)
 
         resource = self.get_object()
-        hierarchy = resource.part_hierarchy()
-        out = []
 
-        def row(q,p=None,g=None):
-            qnum = int(q)+1
-            path = 'q{}'.format(q)
-            if p is not None:
-                pletter = string.ascii_lowercase[int(p)]
-                path += 'p{}'.format(p)
-                if g is not None:
-                    path += 'g{}'.format(g)
-            else:
-                pletter = None
-
+        def row(q,p,g,qnum,path,pletter,**kwargs):
             out = {
                 'q': qnum,
                 'p': pletter,
@@ -172,17 +153,7 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
-            qnum = int(i)+1
-            out.append(row(i))
-
-            for j,p in sorted(q.items(),key=hierarchy_key):
-                out.append(row(i,j))
-
-                for g in p['gaps']:
-                    out.append(row(i,j,g))
-        
-        context['parts'] = out
+        context['parts'] = transform_part_hierarchy(resource.part_hierarchy(),row)
 
         return context
 

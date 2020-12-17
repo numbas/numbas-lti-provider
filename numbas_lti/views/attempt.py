@@ -16,17 +16,10 @@ from itertools import groupby
 from numbas_lti.forms import RemarkPartScoreForm
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch
 from numbas_lti.save_scorm_data import save_scorm_data
+from numbas_lti.util import transform_part_hierarchy
 import datetime
 import json
 import simplejson
-import string
-
-def hierarchy_key(x):
-    key = x[0]
-    try:
-        return int(key)
-    except ValueError:
-        return key
 
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
@@ -41,19 +34,8 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
         context = super(RemarkPartsView,self).get_context_data(*args,**kwargs)
 
         attempt = self.get_object()
-        hierarchy = attempt.part_hierarchy()
-        out = []
 
-        def row(q,p=None,g=None,parent=None,has_gaps=False):
-            qnum = int(q)+1
-            path = 'q{}'.format(q)
-            if p is not None:
-                pletter = string.ascii_lowercase[int(p)]
-                path += 'p{}'.format(p)
-                if g is not None:
-                    path += 'g{}'.format(g)
-            else:
-                pletter = None
+        def row(qnum,q,p,g,parent,has_gaps,path,pletter,**kwargs):
 
             remark = RemarkPart.objects.filter(attempt=attempt,part=path).first()
             out = {
@@ -80,19 +62,7 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
-            qnum = int(i)+1
-            out.append(row(i))
-
-            for j,p in sorted(q.items(),key=hierarchy_key):
-                has_gaps = len(p['gaps'])>0
-                prow = row(i,j,has_gaps=has_gaps)
-                out.append(prow)
-
-                for g in p['gaps']:
-                    out.append(row(i,j,g,prow))
-
-        context['parts'] = out
+        context['parts'] = transform_part_hierarchy(attempt.part_hierarchy(), row)
 
         return context
 
