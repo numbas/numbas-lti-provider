@@ -31,10 +31,8 @@ from pathlib import Path
 
 USE_HUEY = 'huey.contrib.djhuey' in settings.INSTALLED_APPS
 
-try:
+if USE_HUEY:
     from . import tasks
-except Exception as e:
-    USE_HUEY = False
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
