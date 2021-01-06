@@ -1102,7 +1102,7 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
         if USE_HUEY:
-            tasks.attempt_report_outcome(attempt)
+            tasks.attempt_report_outcome(instance.attempt)
         else:
             Channel('report.attempt').send({'pk':instance.attempt.pk})
 

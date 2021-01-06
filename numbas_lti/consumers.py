@@ -42,7 +42,7 @@ def attempt_ws_connect(message,pk):
 def attempt_ws_disconnect(message,pk):
     attempt = Attempt.objects.get(pk=pk)
     group_for_attempt(attempt).discard(message.reply_channel)
-    group_for_resource(resource).discard(message.reply_channel)
+    group_for_resource(attempt.resource).discard(message.reply_channel)
 
 @channel_session_user
 def scorm_set_element(message,pk):
