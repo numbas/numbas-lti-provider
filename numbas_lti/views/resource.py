@@ -51,7 +51,7 @@ class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.e
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('resource_dashboard',args=(self.request.resource.pk,))
+        return reverse('resource_settings',args=(self.request.resource.pk,))
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
