@@ -1,6 +1,6 @@
 Django==2.2.13
 oauthlib==3.0.1
-lxml==4.3.0
+lxml==4.6.2
 channels==1.1.8
 git+https://github.com/christianp/django-auth-lti@oauthlib#egg=django_auth_lti
 requests==2.21.0
