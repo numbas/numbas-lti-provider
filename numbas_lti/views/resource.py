@@ -224,18 +224,23 @@ class ResourceSettingsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeI
 class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
     model = Resource
     def get_rows(self):
-        headers = [_(x) for x in ['First name','Last name','Email','Username','Percentage']]
+        headers = [_(x) for x in ['First name','Last name','Email','Username','Percentage','Raw score', 'Max score']]
         yield headers
 
         resource = self.object
         for student in resource.students().all():
             user_data = resource.user_data(student)
+            scaled_score = resource.grade_user(student)
+            max_score = max(a.max_score for a in resource.attempts.filter(user=student))
+            raw_score = scaled_score * max_score    # This might introduce a rounding error
             yield (
                 student.first_name,
                 student.last_name,
                 student.email,
                 user_data.get_source_id(),
-                resource.grade_user(student)*100
+                scaled_score*100,
+                raw_score,
+                max_score
             )
 
     def get_filename(self):
