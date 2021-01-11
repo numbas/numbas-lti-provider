@@ -11,7 +11,7 @@
     <span class="symbol">!</span>
     <span class="status-message text-ended">
         <div class="text">
-            <p>{% blocktrans with available_until=available_until|date:"r" %}This resource automatically closed at {{available_until}}{% endblocktrans %}</p>
+            <p>{% blocktrans with available_until=available_until|date:"r" %}This resource automatically closed at <span class="available-until">{{available_until}}</span>{% endblocktrans %}</p>
         </div>
     </span>
     <span class="status-message text-terminated">
@@ -39,7 +39,9 @@
         </div>
     </span>
 </div>
-<iframe id="scorm-player" width="100%" height="100%" src="{{attempt.exam.extracted_url}}/index.html"></iframe>
+<div id="scorm-player-container">
+    <h1 style="text-align: center">Loading "{{attempt.resource.title}}"</h1>
+</div>
 
 {% if scorm_cmi %}
 <script>
@@ -55,6 +57,7 @@ if(!Modernizr.websockets) {
 <script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'fetch.js' %}"></script>
 <script type="text/javascript" src="{% static 'polyfills.js' %}"></script>
+{% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'api.js' %}"></script>
 {{js_vars|json_script:"js_vars"}}
 <script type="text/javascript">
@@ -63,19 +66,29 @@ if(!Modernizr.websockets) {
         var sc = new SCORM_API(js_vars);
         window.API_1484_11 = sc.API_1484_11;
     } catch(e) {
+        console.error(e);
         alert("{% trans "A connection to the server could not be created. Please report this." %}");
-        console.error(e.stack);
         window.location.href = '{% url 'show_attempts' %}';
     }
+	window.addEventListener('load',function() {
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('id','scorm-player');
+        iframe.setAttribute('width','100%');
+        iframe.setAttribute('height','100%');
+        iframe.setAttribute('src',js_vars.exam_url);
+        var iframe_container = document.getElementById('scorm-player-container');
+        iframe_container.innerHTML = '';
+        iframe_container.appendChild(iframe);
+    });
 </script>
 {% endif %}
 
 <script type="text/javascript">
 	window.addEventListener('load',function() {
-		var iframe = document.getElementById('scorm-player');
 
 		function resize_iframe() {
-			if(!iframe.contentWindow) {
+            var iframe = document.getElementById('scorm-player');
+			if(!(iframe && iframe.contentWindow)) {
 				return;
 			}
 			try {

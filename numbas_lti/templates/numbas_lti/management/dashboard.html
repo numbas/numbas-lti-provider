@@ -5,9 +5,20 @@
 {% block body_class %}dashboard{% endblock %}
 
 {% block management_content %}
+
+    {% if resource.is_available %}
+    <div class="text-info">
+        <p>{% trans "This resource is currently available to students." %}</p>
+    </div>
+    {% else %}
+    <div class="text-warning">
+        <p>{% trans "This resource is not currently available to students." %}</p>
+    </div>
+    {% endif %}
+
     {% if resource.attempts.count %}
 
-    <p><strong>{{resource.attempts.count}}</strong> {% blocktrans count counter=resource.attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
+    <p><strong>{{resource.unbroken_attempts.count}}</strong> {% blocktrans count counter=resource.unbroken_attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
 
     {% if last_report_process %}
     <section>
@@ -36,7 +47,12 @@
         <ul class="list-unstyled actions">
             <li><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></li>
             {% if not last_report_process %}
-            <li><a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a></li>
+            <li>
+                <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>
+                {% if dismissed_report_process %}
+                <span class="text-warning">{% trans "A report process is being cancelled. Consider waiting until it has finished." %}</span>
+                {% endif %}
+            </li>
             {% endif %}
             <li><a href="{% url 'student_progress' resource.pk %}"><span class="glyphicon glyphicon-user"></span> {% trans "View individual student progress and grant access tokens" %}</a></li>
             <li>

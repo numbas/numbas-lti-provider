@@ -14,8 +14,11 @@ class NumbasLTIResourceMiddleware(object):
         logger.debug('Numbas LTI middleware processing request {}'.format(request))
         if resource_link_id is not None and tool_consumer_instance_guid is not None:
             context_id = request.LTI.get('context_id')
+            context_id = context_id if context_id is not None else resource_link_id
             name = request.LTI.get('context_title')
+            name = name if name is not None else context_id
             label = request.LTI.get('context_label')
+            label = label if label is not None else name
             instance_guid = request.LTI.get('tool_consumer_instance_guid')
             try:
                 context = LTIContext.objects.get(context_id=context_id,instance_guid=instance_guid)
@@ -27,9 +30,9 @@ class NumbasLTIResourceMiddleware(object):
                 context = LTIContext.objects.create(
                         consumer = LTIConsumer.objects.get(key=request.POST.get('oauth_consumer_key')),
                         context_id=context_id, 
-                        name=request.LTI.get('context_title'), 
-                        label=request.LTI.get('context_label'), 
-                        instance_guid=request.LTI.get('tool_consumer_instance_guid')
+                        name=name, 
+                        label=label, 
+                        instance_guid=instance_guid
                     )
             title = request.LTI.get('resource_link_title')
             if title is None:

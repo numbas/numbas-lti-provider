@@ -1,0 +1,15 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block management_content %}
+<h2>
+    {% blocktrans with resource_name=resource.title %}Remark <strong>{{resource_name}}</strong>{% endblocktrans %}
+    <br>
+    <small>{{resource.context.name}}</small>
+</h2>
+
+<p>{% blocktrans %}This resource's exam package does not support automatic remarking. If you can, please update it with a newer version.{% endblocktrans %}</p>
+
+{% endblock management_content %}

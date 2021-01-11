@@ -13,12 +13,13 @@ function SCORM_API(options) {
 
     this.callbacks = new CallbackHandler();
 
+    this.offline = options.offline;
+
     this.attempt_pk = options.attempt_pk;
     this.fallback_url = options.fallback_url;
     this.show_attempts_url = options.show_attempts_url;
 
-    this.allow_review_from = load_date(options.allow_review_from);
-    this.available_until = load_date(options.available_until);
+    this.update_availability_dates(options);
 
     /** Key to save data under in localStorage
      */
@@ -46,29 +47,31 @@ function SCORM_API(options) {
 
     this.initialise_api();
 
-    /** Initialise the WebSocket connection
-     */
-    this.initialise_socket();
+    if(!this.offline) {
+        /** Initialise the WebSocket connection
+         */
+        this.initialise_socket();
 
-    /** Periodically, update the connection status display
-     */
-    this.update_interval = setInterval(function() {
-        sc.update();
-    },50);
+        /** Periodically, update the connection status display
+         */
+        this.update_interval = setInterval(function() {
+            sc.update();
+        },50);
 
-    /** Periodically send data over the websocket
-     */
-    this.socket_interval = setInterval(function() {
-        sc.send_queue_socket();
-    },this.socket_period);
+        /** Periodically send data over the websocket
+         */
+        this.socket_interval = setInterval(function() {
+            sc.send_queue_socket();
+        },this.socket_period);
 
-    this.ajax_period = this.base_ajax_period;
+        this.ajax_period = this.base_ajax_period;
 
-    function send_ajax_interval() {
-        sc.send_ajax();
+        function send_ajax_interval() {
+            sc.send_ajax();
+            setTimeout(send_ajax_interval,sc.ajax_period);
+        }
         setTimeout(send_ajax_interval,sc.ajax_period);
     }
-    setTimeout(send_ajax_interval,sc.ajax_period);
 }
 SCORM_API.prototype = {
 
@@ -100,6 +103,20 @@ SCORM_API.prototype = {
      */
 	last_error: 0,
 
+    /** Update the availability dates for the resource
+     */
+    update_availability_dates: function(data) {
+        var sc = this;
+        this.allow_review_from = load_date(data.allow_review_from);
+        this.available_from = load_date(data.available_from);
+        this.available_until = load_date(data.available_until);
+        if(this.available_until) {
+            Array.from(document.querySelectorAll('.available-until')).forEach(function(s) {
+                s.textContent = sc.available_until.toLocaleString(DateTime.DATETIME_FULL);
+            });
+        }
+    },
+
     /** Setup the SCORM data model.
      *  Merge in elements loaded from the page with elements saved to localStorage, taking the most recent value when there's a clash.
      */
@@ -110,9 +127,9 @@ SCORM_API.prototype = {
         for(var id in stored_data.sent) {
             this.sent[id] = {
                 elements: stored_data.sent[id].map(function(e) {
-                    return new SCORMData(e.key,e.value,new Date(e.time*1000));
+                    return new SCORMData(e.key,e.value,DateTime.fromSeconds(e.time));
                 }),
-                time: new Date()
+                time: DateTime.local()
             }
         }
 
@@ -146,9 +163,11 @@ SCORM_API.prototype = {
 
         // Force review mode from now on if activity is completed - could be out of sync if resuming a session which wasn't saved properly.
         if(this.data['cmi.completion_status'] == 'completed') {
-            if(this.allow_review_from!==null && new Date()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
+            if(this.allow_review_from!==null && DateTime.local()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
                 var player = document.getElementById('scorm-player');
-                player.parentElement.removeChild(player);
+                if(player) {
+                    player.parentElement.removeChild(player);
+                }
                 this.ajax_period = 0;
                 this.send_ajax().then(function(m) {
                     redirect(this.show_attempts_url+'&back_from_unsaved_complete_attempt=1');
@@ -213,6 +232,9 @@ SCORM_API.prototype = {
     },
 
     initialise_socket: function() {
+        if(this.offline) {
+            return;
+        }
         var sc = this;
 
         var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
@@ -229,6 +251,10 @@ SCORM_API.prototype = {
             } catch(e) {
                 console.log("Error reading socket message",e.data);
                 return;
+            }
+
+            if(d.availability_dates) {
+                sc.update_availability_dates(d.availability_dates);
             }
 
             // The server sends back confirmation of each batch of elements it received.
@@ -282,17 +308,17 @@ SCORM_API.prototype = {
         var ok = !((unreceived || queued) && (disconnected || this.terminated));
 
         if(!ok) {
-            this.last_show_warning = new Date();
+            this.last_show_warning = DateTime.local();
         }
         warning_linger_duration = this.terminated ? 0 : this.warning_linger_duration;
-        var show_warning = !ok || (new Date()-this.last_show_warning)<warning_linger_duration;
+        var show_warning = !ok || (DateTime.local()-this.last_show_warning)<warning_linger_duration;
 
         var status_display = document.getElementById('status-display');
 
         var confirmation = this.signed_receipt !== undefined;
         if(confirmation) {
             var receipt_code_display = document.getElementById('receipt-code');
-            if(receipt_code_display.textContent != this.signed_receipt) {
+            if(receipt_code_display && receipt_code_display.textContent != this.signed_receipt) {
                 receipt_code_display.textContent = this.signed_receipt;
             }
         }
@@ -317,10 +343,28 @@ SCORM_API.prototype = {
         this.callbacks.trigger('update_interval');
 
         if(this.mode=='normal') {
-            var t = new Date();
-            if(this.available_until && t>this.available_until) {
+            if(!this.is_available()) {
                 this.end();
             }
+        }
+    },
+
+    /** Is this attempt available to the student?
+     *
+     * @returns {boolean}
+     */
+    is_available: function() {
+        if(this.offline) {
+            return true;
+        }
+        var now = DateTime.local();
+        if(this.available_from===undefined || this.available_until===undefined) {
+            return (this.available_from===undefined || now >= this.available_from) && (this.available_until===undefined || now <= this.available_until);
+        }
+        if(this.available_from < this.available_until) {
+            return this.available_from <= now && now <= this.available_until;
+        } else {
+            return now <= this.available_until || now >= this.available_from;
         }
     },
 
@@ -331,7 +375,7 @@ SCORM_API.prototype = {
     batch_sent: function(elements,id) {
         this.sent[id] = {
             elements: elements,
-            time: new Date()
+            time: DateTime.local()
         };
         this.set_localstorage();
         this.callbacks.trigger('batch_sent',elements,id);
@@ -349,11 +393,14 @@ SCORM_API.prototype = {
     /** Store information which hasn't been confirmed received by the server to localStorage.
      */
     set_localstorage: function() {
+        if(this.offline) {
+            return;
+        }
         try {
             var data = {
                 sent: {},
                 current: this.data,
-                save_time: (new Date())-0
+                save_time: DateTime.local().toMillis()
             }
             for(var id in this.sent) {
                 data.sent[id] = this.make_batch(this.sent[id].elements);
@@ -370,6 +417,9 @@ SCORM_API.prototype = {
      * @returns {object} of the form `{sent: {id: [{key,value,time,counter}]}}`
      */
     get_localstorage: function() {
+        if(this.offline) {
+            return {sent:{}};
+        }
         try {
             var stored = window.localStorage.getItem(this.localstorage_key);
             if(stored===null) {
@@ -410,12 +460,18 @@ SCORM_API.prototype = {
     /** Is the WebSocket connection open?
      */
     socket_is_open: function() {
+        if(this.offline) {
+            return false;
+        }
         return this.socket.readyState==WebSocket.OPEN && Object.keys(this.sent).length==0;
     },
 
     /** Did the last AJAX call succeed?
      */
     ajax_is_working: function() {
+        if(this.offline) {
+            return false;
+        }
         return this.last_ajax_succeeded===undefined || this.last_ajax_succeeded;
     },
 
@@ -424,6 +480,9 @@ SCORM_API.prototype = {
      *  A copy of the sent elements is saved in `this.sent`, so we can resend it if the server doesn't confirm it saved them.
      */
     send_queue_socket: function() {
+        if(this.offline) {
+            return;
+        }
         if(!this.queue.length || !this.socket_is_open()) {
             return;
         }
@@ -441,6 +500,9 @@ SCORM_API.prototype = {
      * @returns {boolean} if the elements were sent.
      */
     send_elements_socket: function(elements,id) {
+        if(this.offline) {
+            return;
+        }
         if(!this.socket_is_open()) {
             return false;
         }
@@ -468,6 +530,9 @@ SCORM_API.prototype = {
      * If there's no data to send, or the websocket connection is open, do nothing.
      */
     send_ajax: function(force) {
+        if(this.offline) {
+            return;
+        }
         var sc = this;
 
         if(this.pending_ajax && !force) {
@@ -481,7 +546,7 @@ SCORM_API.prototype = {
 
         var stuff_to_send = false;
         var batches = {};
-        var now = new Date();
+        var now = DateTime.local().toMillis();
         for(var key in this.sent) {
             var dt = now - this.sent[key].time;
             if(this.sent[key].elements.length && dt>this.ajax_period) {
@@ -514,11 +579,13 @@ SCORM_API.prototype = {
             .then(
                 function(response) {
                     if(!response.ok) {
-                        response.text().then(function(t){
-                            console.error('SCORM HTTP fallback error message: '+t);
+                        return new Promise(function(resolve,reject) {
+                            response.text().then(function(t){
+                                console.error('SCORM HTTP fallback error message: '+t);
+                                sc.ajax_failed(t);
+                                reject(t);
+                            });
                         });
-                        sc.ajax_failed(error);
-                        return Promise.reject(error.message);
                     }
                     sc.ajax_succeeded();
                     return response.json();
@@ -613,7 +680,7 @@ SCORM_API.prototype = {
         if(changed) {
     		this.data[key] = value;
             this.check_key_counts_something(key);
-            this.queue.push(new SCORMData(key,value, new Date(),this.element_acc++));
+            this.queue.push(new SCORMData(key,value, DateTime.local(),this.element_acc++));
         }
         this.callbacks.trigger('SetValue',key,value,changed);
 	},
@@ -664,7 +731,7 @@ SCORMData.prototype = {
     },
 
     timestamp: function() {
-        return this.time.getTime()/1000
+        return this.time.toSeconds()
     }
 }
 
@@ -686,7 +753,7 @@ function getCookie(name) {
 
 function load_date(date) {
     if(date!==null) {
-        return new Date(date);
+        return DateTime.fromISO(date);
     }
 }
 

@@ -4,3 +4,18 @@ body.dashboard ul.actions li ~ li {
 body.dashboard ul.actions li {
     padding: 1em 0;
 }
+.navbar-default .navbar-brand {
+    color: #333;
+}
+.navbar-default .navbar-nav > li > a {
+    color: #555;
+}
+
+.navbar-default.resource-management-navbar .navbar-brand {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.resource-management-navbar .navbar-brand .context-name {
+    font-style: italic;
+}

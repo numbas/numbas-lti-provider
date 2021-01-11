@@ -3,15 +3,19 @@ import re
 import os
 import traceback
 import urllib.parse
-from importlib import reload
+import importlib
 
 def print_notice(s):
     print('\033[92m'+s+'\033[0m\n')
 
 def path_exists(path):
     if not os.path.exists(path):
-        print("That path doesn't exist")
-        return False
+        answer = input("That path doesn't exist. Create it? [y/n]").strip().lower()
+        if answer=='y':
+            os.makedirs(path)
+            return True
+        else:
+            return False
     else:
         return True
 
@@ -22,6 +26,12 @@ class Question(object):
         self.default = default
         self.validation = validation
 
+    def get_default(self, values):
+        if callable(self.default):
+            return self.default(values)
+        else:
+            return self.default
+
     def validate(self, value):
         return self.validation is None or self.validation(value)
 
@@ -30,7 +40,7 @@ class Command(object):
     questions = [
         Question('DEBUG', 'Is this installation for development?', False),
         Question('ALLOWED_HOSTS', 'Domain names that the site will be served from', 'numbas-lti.youruni.edu'),
-        Question('DB_ENGINE', 'Which database engine are you using?', 'mysql'),
+        Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgres, mysql, sqlite3)', 'mysql'),
         Question('STATIC_ROOT', 'Where are static files stored?', '/srv/numbas-lti-static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?', '/srv/numbas-lti-media/', validation=path_exists),
         Question('EMAIL_COMPLETION_RECEIPTS', 'Email students a receipt on completion of attempts?', True),
@@ -88,7 +98,7 @@ class Command(object):
         self.write_files()
 
         import numbasltiprovider.settings
-        reload(numbasltiprovider.settings)
+        importlib.reload(numbasltiprovider.settings)
 
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "numbasltiprovider.settings")
 
@@ -131,7 +141,7 @@ class Command(object):
                     for question in self.db_questions:
                         self.get_value(question)
                 else:
-                    self.values['DB_NAME'] = self.get_input('Name of the database file:', 'db.sqlite3')
+                    self.get_value(Question('DB_NAME', 'Name of the database file:', 'db.sqlite3'))
 
         def enrep(value):
             rep = repr(value)
@@ -141,20 +151,28 @@ class Command(object):
 
         self.rvalues = {key: enrep(value) for key, value in self.values.items()}
 
-    def get_value(self, question):
-        default = question.default
+    def get_default_value(self, question):
+        default = question.get_default(self.values)
         if os.path.exists('numbasltiprovider/settings.py'):
             import numbasltiprovider.settings
             try:
-                default = getattr(numbasltiprovider.settings, question.key)
-                if isinstance(default,list):
-                    default = default[0] if len(default)==1 else ''
-            except AttributeError:
                 if question.key=='DB_ENGINE':
                     default = numbasltiprovider.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.', '')
                 elif question.key[:3]=='DB_' and question.key[3:] in numbasltiprovider.settings.DATABASES['default']:
                     default = numbasltiprovider.settings.DATABASES['default'][question.key[3:]]
-        self.values[question.key] = self.get_input(question.question, default, question.validation)
+                else:
+                    try:
+                        default = getattr(numbasltiprovider.settings, question.key)
+                    except AttributeError:
+                        default = numbasltiprovider.settings.GLOBAL_SETTINGS[question.key]
+                    if isinstance(default,list):
+                        default = default[0] if len(default)==1 else ''
+            except (AttributeError,KeyError):
+                pass
+        return default
+
+    def get_value(self, question):
+        self.values[question.key] = self.get_input(question.question, self.get_default_value(question), question.validation)
 
 
     def write_files(self):
@@ -167,16 +185,29 @@ class Command(object):
             template = self.inmemory_template if self.values['DEBUG'] else self.redis_template
             return template.format(**rvalues)
 
+        def sub_not(name):
+            value = repr(not self.values[name])
+            def fn(m,rvalues):
+                t = m.group(0)
+                start, end = m.span(1)
+                ts, te = m.span(0)
+                start -= ts
+                end -= ts
+                return t[:start]+value+t[end:]
+            return fn
+
         settings_subs = [
-            (r"^DEBUG = (False)", 'DEBUG'),
-            (r"^STATIC_ROOT = '(static/)'", 'STATIC_ROOT'),
-            (r"^MEDIA_ROOT = '(media/)'", 'MEDIA_ROOT'),
+            (r"^DEBUG = (.*?)$", 'DEBUG'),
+            (r"^SESSION_COOKIE_SECURE = (.*?)$", sub_not('DEBUG')),
+            (r"^CSRF_COOKIE_SECURE = (.*?)$", sub_not('DEBUG')),
+            (r"^STATIC_ROOT = '(.*?)'", 'STATIC_ROOT'),
+            (r"^MEDIA_ROOT = '(.*?)'", 'MEDIA_ROOT'),
             (r"^DATABASES = {.*?^}", set_database),
             (r"^CHANNEL_LAYERS = {.*?^}", set_channel_layers),
-            (r"^SECRET_KEY = '()'", 'SECRET_KEY'),
-            (r"^ALLOWED_HOSTS = \['(localhost)'\]", 'ALLOWED_HOSTS'),
-            (r"EMAIL_COMPLETION_RECEIPTS = (True)", "EMAIL_COMPLETION_RECEIPTS"),
-            (r"DEFAULT_FROM_EMAIL = '()'", "DEFAULT_FROM_EMAIL"),
+            (r"^SECRET_KEY = '(.*?)'", 'SECRET_KEY'),
+            (r"^ALLOWED_HOSTS = \['(.*?)'\]", 'ALLOWED_HOSTS'),
+            (r"EMAIL_COMPLETION_RECEIPTS = (.*?)$", "EMAIL_COMPLETION_RECEIPTS"),
+            (r"DEFAULT_FROM_EMAIL = '(.*?)'", "DEFAULT_FROM_EMAIL"),
         ]
         self.sub_file('numbasltiprovider/settings.py', settings_subs)
 
@@ -186,9 +217,9 @@ class Command(object):
                 print_notice(' * '+f)
             print('')
 
-    def sub_file(self, fname, subs):
-        if os.path.exists(fname):
-            overwrite = self.get_input("{} already exists. Overwrite it?".format(fname), False)
+    def sub_file(self, fname, subs, confirm_overwrite=True):
+        if os.path.exists(fname) and confirm_overwrite:
+            overwrite = self.get_input("{} already exists. Overwrite it?".format(fname),True)
             if not overwrite:
                 return
 

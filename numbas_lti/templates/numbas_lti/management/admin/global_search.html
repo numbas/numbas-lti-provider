@@ -1,0 +1,99 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% load querystring %}
+
+{% block title %}{% if query %}{% blocktrans with query=query %}Searching for "{{query}}" {% endblocktrans %}{% else %}Global search{% endif %} - {{block.super}}{% endblock %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% static 'admin-dashboard.css' %}">
+{% endblock stylesheets %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script src="{% static 'bootstrap-autocomplete.js' %}"></script>
+    <script src="{% static 'admin-dashboard.js' %}"></script>
+{% endblock %}
+
+{% block management_content %}
+<h1>{% trans "Search" %}</h1>
+
+<form method="GET">
+    <label for="search">{% trans "Search for users, contexts or resources:" %}</label>
+    <input type="text" id="search" name="query" autocomplete="off" value="{{query}}">
+    <input type="hidden" name="model" value="{{model}}">
+    <button type="submit" class="btn btn-default">{% trans "Search" %}</button>
+</form>
+
+{% if query %}
+    <p>
+    {% trans "Search for:" %}
+    <a href="?{% set_query_values page=0 model="users" %}" class="btn btn-link"><span class="glyphicon glyphicon-user"></span> {% trans "Users" %} ({{users.count}})</a>
+    <a href="?{% set_query_values page=0 model="contexts" %}" class="btn btn-link"><span class="glyphicon glyphicon-blackboard"></span> {% trans "Contexts" %} ({{contexts.count}})</a>
+    <a href="?{% set_query_values page=0 model="resources" %}" class="btn btn-link"><span class="glyphicon glyphicon-book"></span> {% trans "Resources" %} ({{resources.count}})</a>
+    </p>
+    {% if num_results %}
+    <ul class="pager">
+        {% if has_prev_page %}
+        <li class="previous">
+            <a href="?query={{query}}&model={{model}}&page={{page|add:"-1"}}"><span aria-hidden="true">&laquo;</span> {% trans "Previous page" %}</a>
+        </li>
+        {% endif %}
+
+        <li>{% blocktrans with model=single_model models=models start=start end=end count count=num_results %}Showing the only {{model}}{% plural %}Showing {{models}} {{start}} - {{end}} of {{count}}{% endblocktrans %}</li>
+
+        {% if has_next_page %}
+        <li class="next">
+            <a href="?query={{query}}&model={{model}}&page={{page|add:"1"}}">{% trans "Next page" %} <span aria-hidden="true">&raquo;</span></a>
+        </li>
+        {% endif %}
+    </ul>
+    {% else %}
+    <p>{% blocktrans with models=models %}There were no {{models}} matching this query.{% endblocktrans %}</p>
+    {% endif %}
+    <table class="table">
+        <thead>
+            <tr>
+                {% if model == 'users' %}
+                <th>{% trans "User" %}</th>
+                <th>{% trans "Username" %}</th>
+                <th>{% trans "Email address" %}</th>
+                {% endif %}
+
+                {% if model == 'contexts' %}
+                <th>{% trans "Context" %}</th>
+                <th>{% trans "Consumer" %}</th>
+                {% endif %}
+
+                {% if model == 'resources' %}
+                <th>{% trans "Resource" %}</th>
+                <th>{% trans "Context" %}</th>
+                <th>{% trans "Consumer" %}</th>
+                {% endif %}
+        </thead>
+        <tbody>
+        {% for result in results %}
+            <tr>
+                {% if model == 'users' %}
+                <td><a href="{% url 'global_user_info' result.pk %}">{{result.get_full_name}}</a></td>
+                <td>{{result.username}}</td>
+                <td><a href="mailto:{{result.email}}">{{result.email}}</a></td>
+                {% endif %}
+
+                {% if model == 'contexts' %}
+                <td><a href="{{result.get_absolute_url}}">{{result.name}}</a></td>
+                <td><code>{{result.consumer.key}}</code></td>
+                {% endif %}
+
+                {% if model == 'resources' %}
+                <td><a href="{% url 'resource_dashboard' result.pk %}">{{result.title}} (<em class="text-muted">{{result.exam.title}}</em>)</a></td>
+                <td>{{result.context.name}}</td>
+                <td><code>{{result.context.consumer.key}}</code></td>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock management_content %}

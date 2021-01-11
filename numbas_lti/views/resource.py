@@ -1,7 +1,8 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView, JSONView
 from numbas_lti import forms
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement
+from numbas_lti.util import transform_part_hierarchy
 from channels import Channel
 from django import http
 from django.conf import settings
@@ -9,19 +10,22 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core import signing
 from django.db.models import Q,Count
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
+from django.template.response import TemplateResponse
 from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone, dateparse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required
+from pathlib import Path
 import csv
+import datetime
 import json
 import itertools
-import string
 
 class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
@@ -61,16 +65,13 @@ class ReplaceExamView(CreateExamView):
         return context
 
     def form_valid(self,form):
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa\n\n\n\n\AAAAAAA")
         resource = self.request.resource
         old_exam = resource.exam
         response = super().form_valid(form)
 
         new_exam = self.object
-        print(old_exam.pk,new_exam.pk)
         if form.cleaned_data['safe_replacement']:
             resource.attempts.filter(exam=old_exam).update(exam=new_exam)
-            print("replaced")
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
@@ -88,8 +89,12 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
 
         context['instructors'] = User.objects.filter(lti_data__in=LTIUserData.objects.filter(resource=resource,is_instructor=True)).distinct()
 
+        context['num_unbroken_attempts'] = resource.attempts.exclude(broken=True).count()
+
         context['students'] = User.objects.filter(attempts__resource=resource).distinct()
         last_report_process = resource.report_processes.first()
+        if last_report_process and last_report_process.dismissed and last_report_process.status == 'reporting':
+            context['dismissed_report_process'] = last_report_process
         if last_report_process and (not last_report_process.dismissed):
             context['last_report_process'] = last_report_process
 
@@ -121,13 +126,6 @@ class StudentProgressView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeIn
         return context
 
 
-def hierarchy_key(x):
-    key = x[0]
-    try:
-        return int(key)
-    except ValueError:
-        return key
-
 class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/discount.html'
@@ -138,20 +136,8 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
         context = super(DiscountPartsView,self).get_context_data(*args,**kwargs)
 
         resource = self.get_object()
-        hierarchy = resource.part_hierarchy()
-        out = []
 
-        def row(q,p=None,g=None):
-            qnum = int(q)+1
-            path = 'q{}'.format(q)
-            if p is not None:
-                pletter = string.ascii_lowercase[int(p)]
-                path += 'p{}'.format(p)
-                if g is not None:
-                    path += 'g{}'.format(g)
-            else:
-                pletter = None
-
+        def row(q,p,g,qnum,path,pletter,**kwargs):
             out = {
                 'q': qnum,
                 'p': pletter,
@@ -167,17 +153,7 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
-            qnum = int(i)+1
-            out.append(row(i))
-
-            for j,p in sorted(q.items(),key=hierarchy_key):
-                out.append(row(i,j))
-
-                for g in p['gaps']:
-                    out.append(row(i,j,g))
-        
-        context['parts'] = out
+        context['parts'] = transform_part_hierarchy(resource.part_hierarchy(),row)
 
         return context
 
@@ -421,6 +397,128 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
 
         return context
 
+class RemarkView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_remark.html'
+    management_tab = 'remark'
+
+    def get(self, request, *args, **kwargs):
+        resource = self.object = self.get_object()
+        if not resource.exam.supports_feature('run_headless'):
+            return TemplateResponse(
+                request=self.request,
+                template=['numbas_lti/management/resource_remark_not_supported.html'],
+                context=super().get_context_data(object=self.object),
+                using=self.template_engine
+            )
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        resource = self.object
+        attempts = resource.unbroken_attempts()
+
+        context['attempts'] = [
+            {
+                'pk': a.pk,
+                'completion_status': a.completion_status,
+                'user': { 
+                    'full_name': a.user.get_full_name(),
+                    'identifier': a.user_data().identifier(),
+                },
+            }
+            for a in attempts
+        ]
+
+        context['parameters'] = {
+            'save_url': reverse('resource_remark_save_data',args=(resource.pk,)),
+        }
+
+        source_path = Path(resource.exam.extracted_path) / 'source.exam'
+        if source_path.exists():
+            with open(str(source_path)) as f:
+                text = f.read()
+                i = text.find('\n')
+                data = json.loads(text[i+1:])
+                context['exam_source'] = data
+
+        return context
+
+class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    """ 
+        Get the SCORM CMI for the given attempts 
+    """
+    model = Resource
+
+    def get(self,request,*args,**kwargs):
+        pks = request.GET.get('attempt_pks','')
+        if pks:
+            pks = [int(x) for x in pks.split(',')]
+        else:
+            pks = []
+        attempts = self.resource.attempts.filter(pk__in=pks)
+
+        cmis = []
+        for a in attempts:
+            cmi = a.scorm_cmi()
+
+            dynamic_cmi = {
+                'cmi.mode': 'review',
+                'cmi.entry': 'resume',
+                'numbas.user_role': 'student',
+            }
+            etime = datetime.datetime.now().timestamp()
+            dynamic_cmi = {k: {'value':v,'time':etime} for k,v in dynamic_cmi.items()}
+            cmi.update(dynamic_cmi)
+            cmis.append({
+                'pk': a.pk, 
+                'cmi': cmi
+                })
+
+        return JsonResponse({'cmis': cmis})
+
+class RemarkSaveChangedDataView(MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+    """
+        Save changed SCORM elements after remarking
+    """
+    model = Resource
+
+    def post(self, request, *args, **kwargs):
+        saved = []
+        try:
+            data = json.loads(request.body.decode())
+            now = timezone.make_aware(datetime.datetime.now())
+            with transaction.atomic():
+                for ad in data['attempts']:
+                    try:
+                        attempt = Attempt.objects.get(pk=ad['pk'])
+                    except Attempt.DoesNotExist:
+                        continue
+
+                    for k,v in ad['changed_keys'].items():
+                        e = ScormElement.objects.create(attempt=attempt, key=k, value=v, time=now, counter=0)
+                        RemarkedScormElement.objects.create(element=e,user=request.user)
+                    saved.append(ad['pk'])
+            response = {'success': True, 'saved': saved}
+            if len(saved)<len(data['attempts']):
+                response['success'] = False
+                response['message'] = _("There was an error while saving some data.")
+            return JsonResponse(response, status=200 if response['success'] else 500)
+        except Exception as err:
+            return JsonResponse({'success': False, 'message': str(err), 'saved': saved},status=500)
+
+class RemarkIframeView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_remark_iframe.html'
+    management_tab = 'remark'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args,**kwargs)
+        resource = self.object
+        context['scripts_url'] = resource.exam.extracted_url +'/scripts.js'
+        return context
+
 class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
     model = Resource
     form_class = forms.ValidateReceiptForm
@@ -432,7 +530,6 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
         return super().dispatch(request,*args,**kwargs)
 
     def get(self,request,*args,**kwargs):
-        print(type(self.get_context_data()))
         return super().get(request,*args,**kwargs)
 
     def form_valid(self, form):

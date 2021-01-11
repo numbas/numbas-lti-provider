@@ -22,7 +22,7 @@
             </td>
             <td>{% trans "Created" %} {{resource.creation_time}}</td>
             <td>
-                {% blocktrans count num_attempts=resource.attempts.count %}
+                {% blocktrans count num_attempts=resource.unbroken_attempts.count %}
                 1 attempt.
                 {% plural %}
                 {{num_attempts}} attempts.

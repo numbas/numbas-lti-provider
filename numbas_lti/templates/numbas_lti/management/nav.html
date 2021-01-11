@@ -1,13 +1,19 @@
 {% load i18n %}
-<nav class="navbar navbar-default navbar-static-top">
+<nav class="navbar navbar-default navbar-static-top resource-management-navbar">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="{% url 'resource_dashboard' request.resource.pk %}">{% block title %}{{request.resource.title}}{% if request.resource.exam.title != request.resource.title %} ({{request.resource.exam.title}}){% endif %}{% endblock %}</a>
+            <a class="navbar-brand" href="{% url 'resource_dashboard' request.resource.pk %}">
+                {% block title %}
+                    {% if request.resource.context %}<small class="context-name">{{request.resource.context.name}}</small><br/>{% endif %}
+                    {{request.resource.title}}{% if request.resource.exam.title != request.resource.title %} ({{request.resource.exam.title}}){% endif %}
+                {% endblock %}
+            </a>
         </div>
         <ul class="nav navbar-nav">
             <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'resource_dashboard' request.resource.pk %}"><span class="glyphicon glyphicon-dashboard"></span> {% trans "Dashboard" %}</a></li>
             <li class="{% if management_tab == 'attempts' %}active{% endif %}"><a href="{% url 'manage_attempts' request.resource.pk %}"><span class="glyphicon glyphicon-stats"></span> {% trans "Attempts" %}</a></li>
             <li class="{% if management_tab == 'stats' %}active{% endif %}"><a href="{% url 'resource_stats' request.resource.pk %}"><span class="glyphicon glyphicon-stats"></span> {% trans "Statistics" %}</a></li>
+            <li class="{% if management_tab == 'remark' %}active{% endif %}"><a href="{% url 'resource_remark' request.resource.pk %}"><span class="glyphicon glyphicon-pencil"></span> {% trans "Remark" %}</a></li>
             <li class="{% if management_tab == 'settings' %}active{% endif %}"><a href="{% url 'resource_settings' request.resource.pk %}"><span class="glyphicon glyphicon-cog"></span> {% trans "Settings" %}</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">

@@ -1,0 +1,6 @@
+{% load staticfiles %}
+<script src="{% static 'luxon/luxon.js' %}"></script>
+<script>
+    luxon.Settings.defaultZoneName = '{{TIME_ZONE}}';
+    var DateTime = luxon.DateTime;
+</script>

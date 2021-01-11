@@ -1,6 +1,7 @@
 from .mixins import ManagementViewMixin
 from channels import Channel
 from django import http
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
@@ -50,9 +51,9 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
     def get_projects_data(self):
         try:
             link = self.get_object()
-            projects_data = requests.get('{}/api/projects'.format(link.url)).json()
+            projects_data = requests.get('{}/api/projects'.format(link.url), timeout=getattr(settings,'REQUEST_TIMEOUT',60)).json()
             return projects_data
-        except (json.JSONDecodeError, requests.ConnectionError) as e:
+        except (json.JSONDecodeError, requests.exceptions.RequestException) as e:
             raise GettingProjectDataException(str(e))
 
     def get(self, request, *args, **kwargs):

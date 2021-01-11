@@ -16,17 +16,10 @@ from itertools import groupby
 from numbas_lti.forms import RemarkPartScoreForm
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch
 from numbas_lti.save_scorm_data import save_scorm_data
+from numbas_lti.util import transform_part_hierarchy
 import datetime
 import json
 import simplejson
-import string
-
-def hierarchy_key(x):
-    key = x[0]
-    try:
-        return int(key)
-    except ValueError:
-        return key
 
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
@@ -41,19 +34,8 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
         context = super(RemarkPartsView,self).get_context_data(*args,**kwargs)
 
         attempt = self.get_object()
-        hierarchy = attempt.part_hierarchy()
-        out = []
 
-        def row(q,p=None,g=None,parent=None,has_gaps=False):
-            qnum = int(q)+1
-            path = 'q{}'.format(q)
-            if p is not None:
-                pletter = string.ascii_lowercase[int(p)]
-                path += 'p{}'.format(p)
-                if g is not None:
-                    path += 'g{}'.format(g)
-            else:
-                pletter = None
+        def row(qnum,q,p,g,parent,has_gaps,path,pletter,**kwargs):
 
             remark = RemarkPart.objects.filter(attempt=attempt,part=path).first()
             out = {
@@ -80,19 +62,7 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
-            qnum = int(i)+1
-            out.append(row(i))
-
-            for j,p in sorted(q.items(),key=hierarchy_key):
-                has_gaps = len(p['gaps'])>0
-                prow = row(i,j,has_gaps=has_gaps)
-                out.append(prow)
-
-                for g in p['gaps']:
-                    out.append(row(i,j,g,prow))
-
-        context['parts'] = out
+        context['parts'] = transform_part_hierarchy(attempt.part_hierarchy(), row)
 
         return context
 
@@ -173,7 +143,7 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     def get_context_data(self,*args,**kwargs):
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 
-        context['keys'] = [(x,list(y)) for x,y in groupby(self.object.scormelements.order_by('key','-time','-counter'),key=lambda x:x.key)]
+        context['elements'] = [e.as_json() for e in self.object.scormelements.all()]
         context['show_stale_elements'] = True
         context['resource'] = self.object.resource
 
@@ -330,12 +300,14 @@ class RunAttemptView(generic.detail.DetailView):
         context['available_until'] = attempt.resource.available_until
 
         context['js_vars'] = {
+            'exam_url': attempt.exam.extracted_url+'/index.html',
             'scorm_cmi': scorm_cmi,
             'attempt_pk': attempt.pk,
             'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
             'show_attempts_url': reverse('show_attempts'),
-            'allow_review_from': str(attempt.resource.allow_review_from),
-            'available_until': str(attempt.resource.available_until),
+            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
+            'available_from': attempt.resource.available_from.isoformat() if attempt.resource.available_from else None,
+            'available_until': attempt.resource.available_until.isoformat() if attempt.resource.available_until else None,
         }
 
         return context
@@ -353,9 +325,9 @@ def scorm_data_fallback(request,pk,*args,**kwargs):
         'unsaved_elements':unsaved_elements, 
     }
     if complete:
-        attempt.all_data_received = True
         attempt.finalise()
-        attempt.save()
+        attempt.all_data_received = True
+        attempt.save(update_fields=['all_data_received'])
         receipt_context = attempt.completion_receipt_context()
         response['signed_receipt'] = receipt_context['signed_summary']
 

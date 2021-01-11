@@ -16,12 +16,16 @@ These instructions will take a fresh machine running Ubuntu 16.04 and set up the
 On different operating systems or with different web servers, the process will be different. 
 There are alternate instructions for :ref:`installation on RedHat Enterprise Linux 7 <installation-rhel-7>`.
 
+The Numbas LTI provider is a `Django <https://www.djangoproject.com/>`_ app.
+See `the Django documentation <https://docs.djangoproject.com/en/2.2/ref/settings/>`_ for configuration options not described here.
+
 We will set up:
 
 * The Numbas LTI provider Django app running inside a virtual Python environment, isolated from the system's Python environment.
-* A PostgreSQL database for the LTI provider to use.
+* A PostgreSQL database for the LTI provider to use. You can use any database supported by Django; see the `list of supported databases in the Django documentation <https://docs.djangoproject.com/en/2.2/ref/databases/>`_.
 * `Supervisord <http://supervisord.org/>`_ will ensure the app is always running.
-* The `NGINX webserver <https://nginx.org/>`_ as a reverse proxy to serve the LTI provider to the outside world.
+* The `NGINX webserver <https://nginx.org/>`_ as a reverse proxy to serve the LTI provider to the outside world. 
+  If necessary, you can use Apache as a reverse proxy (see the `guide in the Apache documentation <https://httpd.apache.org/docs/2.4/howto/reverse_proxy.html>`_), but it can not handle as many simultaneous connections.
 
 Set up the environment
 ----------------------
@@ -82,6 +86,12 @@ It will set up the database, and create an admin user account which you will use
 
 Once you've run this script, the last remaining steps are to start the app, and then set up a webserver to expose it to the outside world.
 
+At this point, you can try running a development server to check that the Django part of the LTI provider is set up properly::
+
+    python manage.py runserver
+
+Access the development server at `http://localhost:8000`_.
+
 Configure supervisord
 ---------------------
 
@@ -96,7 +106,7 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     autostart=true
     autorestart=true
     stopasgroup=true
-    environment=DJANGO_SETTINGS_MODULE=numbasltiprovider.settings
+    environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings"
     numprocs=4
     process_name=%(program_name)s_%(process_num)02d
     stderr_logfile=/var/log/supervisor/numbas_lti_daphne_stderr.log
@@ -119,6 +129,13 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     [group:numbas_lti]
     programs=numbas_lti_daphne,numbas_lti_workers
     priority=999
+
+.. note::
+
+    If your server must use a proxy to make HTTP or HTTPS requests, you should set environment variables ``HTTP_PROXY`` and ``HTTPS_PROXY`` in the supervisor configuration.
+    Add them to the lines starting ``environment=``, for example::
+
+        environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings",HTTP_PROXY=http://web.proxy:4321,HTTPS_PROXY=http://web.proxy:4321
 
 Once you've set this up, run::
 
@@ -174,25 +191,25 @@ Overwrite :file:`/etc/nginx/sites-available/default` with the following::
         }
 
         location / {
-                proxy_pass http://backend_hosts;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
-                proxy_buffering off;
-                proxy_redirect     off;
-                proxy_set_header   Host $host;
-                proxy_set_header   X-Real-IP $remote_addr;
-                proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header   X-Forwarded-Host $server_name;
-                proxy_set_header   X-Scheme https;
-                proxy_set_header   X-Forwarded-Proto https;
-                proxy_read_timeout 600s;
-            }
+            proxy_pass http://backend_hosts;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_buffering off;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Host $server_name;
+            proxy_set_header   X-Scheme https;
+            proxy_set_header   X-Forwarded-Proto https;
+            proxy_read_timeout 600s;
+        }
 
     }
     
 Set the ``ssl_certificate`` and ``ssl_certificate_key`` lines to the paths to your SSL certificate and key files.
-If you're using certbot, it will add those lines for you.
+If you're using :command:`certbot`, it will add those lines for you.
 
 You should put something in :file:`/srv/www/server-error/502.html`, to be shown when there's a server error.
 This can happen if the Numbas LTI provider isn't running, or otherwise fails to communicate with NGINX.
@@ -223,15 +240,23 @@ Overwrite :file:`/etc/apache2/sites-available/000-default.conf` with the followi
       ProxyRequests Off
       ProxyPass /static !
       Alias "/static" "/srv/numbas-lti-static"
-      ProxyPass "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPassReverse "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPass / http://0.0.0.0:8707/
-      ProxyPassReverse / http://0.0.0.0:8707/
+      ProxyPass /media !
+      Alias "/media" "/srv/numbas-lti-media"
+      ProxyPass "/websocket" "ws://0.0.0.0:8700/websocket"
+      ProxyPassReverse "/websocket" "ws://0.0.0.0:8700/websocket"
+      ProxyPass / http://0.0.0.0:8700/
+      ProxyPassReverse / http://0.0.0.0:8700/
 
       RequestHeader set X-Scheme "https"
       RequestHeader set X-Forwarded-Proto "https"
 
       <Directory "/srv/numbas-lti-static">
+        AllowOverride None
+        Options FollowSymLinks
+        Require all granted
+      </Directory>
+
+      <Directory "/srv/numbas-lti-media">
         AllowOverride None
         Options FollowSymLinks
         Require all granted
@@ -259,9 +284,19 @@ You can do this automatically by running ``certbot renew`` as a cron job; put th
     #!/bin/sh
     certbot renew
 
-Make sure that :file:`/etc/cron.daily/renew-certbot` is executable by the root user.
+Make sure that :file:`/etc/cron.daily/renew-certbot` is executable by the root user::
+
+    chmod +x /etc/cron.daily/renew-certbot
 
 If you have no other way of obtaining a certificate, you can `create a self-signed certificate <https://help.ubuntu.com/lts/serverguide/certificates-and-security.html.en#creating-a-self-signed-certificate>`_ which will produce a security warning in web browsers.
+
+Ensure outcome reporting works
+------------------------------
+
+In order to report scores back to the :term:`tool consumer <Tool consumer>`, the Numbas LTI provider must make an HTTPS request to an address provided by the consumer.
+Normally, this is on the same domain as the consumer.
+
+Ensure that the machine on which the LTI provider is running can make HTTPS requests to the consumer - if you're working in a testing environment, you may need to configure the consumer's server to allow connections on 443 from the provider's IP address.
 
 Updating the software
 ---------------------
@@ -284,5 +319,7 @@ Ready to use
 Once you've got everything running, the LTI provider will be available to use, at the domain name you configured.
 
 Open the site in a web browser and log in using the admin account credentials you set up earlier.
+
+If you encounter any problems, see the :ref:`installation-troubleshooting` page.
 
 The next step is to add an LTI consumer key so that your VLE can connect to the LTI provider.

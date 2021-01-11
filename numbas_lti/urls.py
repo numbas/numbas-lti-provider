@@ -1,3 +1,4 @@
+from django.urls import path
 from django.conf.urls import url
 from django.contrib import auth
 
@@ -11,6 +12,10 @@ urlpatterns = [
     url(r'^create-superuser$', views.admin.CreateSuperuserView.as_view(), name='create_superuser'),
 
     url(r'^dashboard$', views.admin.DashboardView.as_view(), name='global_dashboard'),
+    path('user-info/<pk>', views.admin.GlobalUserInfoView.as_view(), name='global_user_info'),
+
+    path('search-autocomplete', views.search.search_autocomplete, name='search_autocomplete'),
+    path('global-search', views.search.global_search, name='global_search'),
 
     url(r'^resource/(?P<pk>\d+)/create_exam$', views.resource.CreateExamView.as_view(), name='create_exam'),
     url(r'^exam/(?P<pk>\d+)/run$', views.resource.RunExamView.as_view(), name='run_exam'),
@@ -27,6 +32,10 @@ urlpatterns = [
     url(r'^remark_part/(?P<pk>\d+)/delete$', views.attempt.RemarkPartDeleteView.as_view(), name='remark_part_delete'),
     url(r'^resource/(?P<pk>\d+)/attempts$', views.resource.AllAttemptsView.as_view(), name='manage_attempts'),
     url(r'^resource/(?P<pk>\d+)/stats$', views.resource.StatsView.as_view(), name='resource_stats'),
+    url(r'^resource/(?P<pk>\d+)/remark$', views.resource.RemarkView.as_view(), name='resource_remark'),
+    url(r'^resource/(?P<pk>\d+)/remark/iframe$', views.resource.RemarkIframeView.as_view(), name='resource_remark_iframe'),
+    url(r'^resource/(?P<pk>\d+)/remark/attempt_data$', views.resource.RemarkGetAttemptDataView.as_view(), name='resource_remark_attempt_data'),
+    url(r'^resource/(?P<pk>\d+)/remark/save_data$', views.resource.RemarkSaveChangedDataView.as_view(), name='resource_remark_save_data'),
     url(r'^resource/(?P<pk>\d+)/settings$', views.resource.ResourceSettingsView.as_view(), name='resource_settings'),
     url(r'^resource/(?P<pk>\d+)/replace$', views.resource.ReplaceExamView.as_view(), name='replace_exam'),
     url(r'^resource/(?P<pk>\d+)/report_scores$', views.resource.ReportAllScoresView.as_view(), name='report_scores'),

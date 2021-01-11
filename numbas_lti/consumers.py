@@ -14,9 +14,9 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django_auth_lti.patch_reverse import reverse
 
-from .groups import group_for_attempt, group_for_resource_stats
+from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .models import Attempt, ScormElement, Resource, ReportProcess, EditorLink
-from .report_outcome import report_outcome, ReportOutcomeException
+from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .save_scorm_data import save_scorm_data
 
 @channel_session_user_from_http
@@ -25,16 +25,23 @@ def attempt_ws_connect(message,pk):
     attempt = Attempt.objects.get(pk=pk)
     group = group_for_attempt(attempt)
     group.add(message.reply_channel)
+
+    resource = attempt.resource
+    resource_group = group_for_resource(attempt.resource)
+    resource_group.add(message.reply_channel)
+
     query = parse_qs(message.content['query_string'].decode('utf-8'))
     uid = query.get('uid',[''])[0]
     mode= query.get('mode',[''])[0]
+
     if mode!='review':
-        group.send({'text': json.dumps({'current_uid': uid})})
+        group.send({'text': json.dumps({'current_uid': uid, 'availability_dates':resource.availability_json()})})
 
 @channel_session_user_from_http
 def attempt_ws_disconnect(message,pk):
     attempt = Attempt.objects.get(pk=pk)
     group_for_attempt(attempt).discard(message.reply_channel)
+    group_for_resource(resource).discard(message.reply_channel)
 
 @channel_session_user
 def scorm_set_element(message,pk):
@@ -69,6 +76,9 @@ def resource_stats_ws_receive(message,pk):
 
 def report_scores(message,**kwargs):
     resource = Resource.objects.get(pk=message['pk'])
+    if ReportProcess.objects.filter(resource=resource,status='reporting').exists():
+        return
+
     process = ReportProcess.objects.create(resource=resource)
 
     errors = []
@@ -83,7 +93,16 @@ def report_scores(message,**kwargs):
         process.response = '\n'.join(e.message for e in errors)
     else:
         process.status = 'complete'
-    process.save()
+    process.dismissed = False
+    process.save(update_fields=['status','response','dismissed'])
+
+def report_score(message,**kwargs):
+    attempt = Attempt.objects.get(pk=message['pk'])
+    try:
+        report_outcome_for_attempt(attempt)
+    except ReportOutcomeException:
+        pass
+    
 
 class AttemptScormListingConsumer(WebsocketConsumer):
     def connection_groups(self,pk,**kwargs):
@@ -95,3 +114,8 @@ def update_editorlink(message,**kwargs):
 
     editorlink.update_cache(bounce=message.get('bounce',False))
     editorlink.save()
+
+def email_receipt(message,**kwargs):
+    attempt = Attempt.objects.get(pk=message['pk'])
+    if not attempt.sent_receipt:
+        attempt.send_completion_receipt()

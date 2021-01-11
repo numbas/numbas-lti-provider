@@ -1,0 +1,147 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block management_content %}
+<h2>
+    {% blocktrans with resource_name=resource.title %}Remark <strong>{{resource_name}}</strong>{% endblocktrans %}
+    <br>
+    <small>{{resource.context.name}}</small>
+</h2>
+
+<div class="help-block">
+    <p>
+    {% blocktrans %}
+        On this page you can automatically remark attempts at this resource, using the latest version of the exam package.
+        Changed scores are not automatically saved.
+    {% endblocktrans %}
+    </p>
+    <p>
+    {% blocktrans %}
+        Remarking is computationally intensive. Your browser may become unresponsive while remarking all attempts.
+    {% endblocktrans %}
+    </p>
+</div>
+
+<div id="app">
+    <p class="form-inline">
+        <input id="use-unsubmitted" type="checkbox" v-model="use_unsubmitted"> <label for="use-unsubmitted">{% trans "Use unsubmitted answers" %}
+    </p>
+    <p>
+        <button class="btn btn-primary" @click="remark_all"><span class="glyphicon glyphicon-repeat"></span> Remark all attempts</button>
+        <button class="btn btn-warning" @click="stop_marking"><span class="glyphicon glyphicon-stop"></span> Stop marking</button>
+        <button class="btn btn-danger" @click="save_changed_attempts" :disabled="changed_attempts.length==0 || saving"><span class="glyphicon glyphicon-save"></span> Save all changed attempts</button>
+    </p>
+
+    <div class="alert alert-default" v-if="remarking_all">
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" :aria-valuenow="remarking_progress|percent" aria-valuemin="0" aria-valuemax="100" :style="{width: (100*remarking_progress)+'%'}">
+                [[remarking_progress|percent]]%
+          </div>
+        </div>
+        <p>Time taken: <span v-if="remark_all_time">[[remark_all_time|duration]]</span></p>
+        <p>Estimated end: <span v-if="estimated_end">[[estimated_end|duration]]</span></p>
+    </div>
+
+    <div class="alert alert-warning" v-if="save_error">
+        <p>{% trans "There was an error saving changed data:" %}</p>
+        <pre>[[save_error]]</pre>
+    </div>
+
+    <p>
+        [[shown_attempts.length]] of [[num_attempts]] attempts shown.
+        [[changed_attempts.length]] {% trans " changed attempts" %}.
+        <label for="show-only">{% trans "Show:" %}</label> 
+        <select id="show-only" v-model="show_only">
+            <option value="all">All attempts</option>
+            <option value="completed">Only completed attempts</option>
+            <option value="changed">Only changed scores</option>
+            <option value="increased">Only increased scores</option>
+            <option value="decreased">Only decreased scores</option>
+        </select>
+    </p>
+
+    <table class="table" id="attempts-table">
+        <colgroup>
+            <col class="full-name">
+            <col class="identifier">
+            <col class="completion-status">
+            <col class="score current-score">
+            <col class="score remarked-score">
+            <col class="status">
+            <col class="controls">
+            <col class="save">
+            <col class="views">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>{% trans "Student" %}</th>
+                <th><!-- identifier --></th>
+                <th>{% trans "Completion status" %}</th>
+                <th>{% trans "Current score" %}</th>
+                <th>{% trans "Remarked score" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th colspan="3"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="hidden-attempts-count text-muted" v-if="num_attempts_hidden > 0">
+                <td colspan="6">
+                    [[num_attempts_hidden]] hidden [[ 'attempt' | pluralize(num_attempts_hidden) ]].
+                </td>
+            </tr>
+            <tr class="attempt" v-for="attempt in shown_attempts" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
+                <td>[[attempt.user.full_name]]</td>
+                <td>[[attempt.user.identifier]]</td>
+                <td>[[attempt.completion_status]]</td>
+                <td>[[attempt.original_raw_score]]/[[attempt.max_score]]</td>
+                <td><span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score]]/[[attempt.max_score]]</span></td>
+                <td :class="attempt.score_change_classes">
+                    [[attempt.score_change_description]]
+                    <div v-if="attempt.remarked_raw_score!==null">
+                        <span v-if="attempt.remarked_raw_score < attempt.original_raw_score">{% trans "Decreased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
+                        <span v-if="attempt.remarked_raw_score > attempt.original_raw_score">{% trans "Increased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
+                        <span v-if="attempt.remarked_raw_score == attempt.original_raw_score">{% trans "Unchanged" %}</span>
+                    </div>
+                </td>
+                <td>
+                    <button class="btn btn-default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)"><span class="glyphicon glyphicon-repeat"></span> {% trans "Remark" %}</button>
+                </td>
+                <td>
+                    <button class="btn btn-danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)"><span class="glyphicon glyphicon-save"></span> {% trans "Save" %}</button>
+                    <span class="text-success saved">{% trans "Saved" %}</span>
+                    <span class="text-warning error-saving">{% trans "Saving error" %}</span>
+                </td>
+                <td>
+                    <a class="btn btn-link" target="review_attempt" :href="attempt.review_url"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>
+                    <a class="btn btn-link" target="_blank" :href="attempt.timeline_url"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+<iframe id="exam-iframe" src="{% url 'resource_remark_iframe' resource.pk %}">
+</iframe>
+
+{% endblock management_content %}
+
+{% block stylesheets %}
+{{block.super}}
+
+    <link rel="stylesheet" href="{% static 'resource_remark.css' %}">
+{% endblock stylesheets %}
+
+{% block javascripts %}
+{{block.super}}
+
+    {{parameters|json_script:"parameters-json"}}
+    {{attempts|json_script:"attempts-json"}}
+    {{exam_source|json_script:"exam-source-json"}}
+
+    {% include "numbas_lti/scripts/luxon.html" %}
+    <script src="{% static 'vue.js' %}"></script>
+    <script src="{% static 'api.js' %}"></script>
+    <script src="{% static 'resource_remark.js' %}" defer></script>
+{% endblock %}

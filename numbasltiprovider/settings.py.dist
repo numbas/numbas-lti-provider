@@ -177,9 +177,13 @@ SUPPORT_NAME = 'the Numbas team' # the name of your support contact
 SUPPORT_URL = None  # set to "mailto:your_email_address", or the URL of a page containing contact info
 
 SESSION_COOKIE_SAMESITE = None  # Allow cookies to be set through cross-origin POST requests, such as when a resource is embedded in an iframe
+SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = None  
+CSRF_COOKIE_SECURE = False
 DCS_SESSION_COOKIE_SAMESITE = 'None'  # Allow cookies to be set through cross-origin POST requests, such as when a resource is embedded in an iframe
 DCS_CSRF_COOKIE_SAMESITE = 'None'
 
-EMAIL_COMPLETION_RECEIPTS = True
+EMAIL_COMPLETION_RECEIPTS = False
 DEFAULT_FROM_EMAIL = ''
+
+REQUEST_TIMEOUT = 60    # Number of seconds to wait for requests to timeout, such as outcome reports or fetching SCORM packages

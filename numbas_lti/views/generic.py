@@ -1,11 +1,22 @@
 from django.http import StreamingHttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
+from datetime import datetime
+from django.utils import timezone
 import csv
 
 class EchoFile(object):
     def write(self,value):
         return value
+
+def fixtime(cell):
+    if isinstance(cell,datetime):
+        return cell.astimezone(timezone.get_current_timezone()).isoformat()
+    else:
+        return cell
+
+def fixrow(row):
+    return [fixtime(c) for c in row]
 
 class CSVView(object):
     def get_rows(self):
@@ -17,7 +28,7 @@ class CSVView(object):
         buffer = EchoFile()
         writer = csv.writer(buffer)
         rows = self.get_rows()
-        response = StreamingHttpResponse((writer.writerow(row) for row in rows),content_type="text/csv")
+        response = StreamingHttpResponse((writer.writerow(fixrow(row)) for row in rows),content_type="text/csv")
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(self.get_filename())
         return response
 

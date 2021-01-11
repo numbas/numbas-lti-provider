@@ -1,10 +1,13 @@
 import zipfile
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
+from django.conf import settings
 from django.forms import ModelForm, Form
-from django import forms
+from django import forms, utils
 from django.utils.translation import ugettext_lazy as _
 
 from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod
+from .test_exam import test_zipfile, ExamTestException
 
 from django.core.files import File
 from io import BytesIO
@@ -17,16 +20,19 @@ import requests
 import json
 
 from django.utils.crypto import get_random_string
+from django.utils.formats import get_format
 import string
+
+datetime_format = get_format('DATETIME_INPUT_FORMATS')[0]
 
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts']
         widgets = {
-            'allow_review_from': DateTimePickerInput(),
-            'available_from': DateTimePickerInput(),
-            'available_until': DateTimePickerInput(),
+            'allow_review_from': DateTimePickerInput(format=datetime_format),
+            'available_from': DateTimePickerInput(format=datetime_format),
+            'available_until': DateTimePickerInput(format=datetime_format),
         }
 
 class RemarkPartScoreForm(ModelForm):
@@ -87,16 +93,25 @@ class CreateExamForm(ModelForm):
 
         return package
 
-    def save(self,commit=True):
-        exam = super(CreateExamForm,self).save(commit=False)
-        retrieve_url = self.cleaned_data.get('retrieve_url')
-        if retrieve_url:
-            zip = requests.get(retrieve_url+'?scorm').content
-            exam.retrieve_url = retrieve_url
-            exam.package.save('exam.zip',File(BytesIO(zip)))
-        if commit:
-            exam.save()
-        return exam
+    def clean(self):
+        cleaned_data = super().clean()
+        package = cleaned_data['package']
+        retrieve_url = cleaned_data.get('retrieve_url')
+        if package is None and retrieve_url:
+            scheme, netloc, path, params, qs, fragment = urlparse(retrieve_url)
+            query = parse_qs(qs)
+            query.setdefault('scorm','')
+            retrieve_url = urlunparse((scheme, netloc, path, params, urlencode(query,True), fragment))
+            package_bytes = requests.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
+            cleaned_data['package'] = File(BytesIO(package_bytes),name='exam.zip')
+
+        if getattr(settings,'TEST_UPLOADED_EXAMS',False) and hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
+            try:
+                test_zipfile(zipfile.ZipFile(cleaned_data['package'].file))
+            except ExamTestException as e:
+                raise forms.ValidationError("There was an error while testing this exam package: <pre>{}</pre>".format(utils.html.escape(e)))
+
+        return cleaned_data
 
 class ReplaceExamForm(CreateExamForm):
     safe_replacement = forms.BooleanField(required=False,label='This is a safe replacement for the previous exam package')
@@ -122,7 +137,7 @@ class CreateEditorLinkForm(ModelForm):
     def clean_url(self):
         url = self.cleaned_data['url']
         try:
-            response = requests.get('{}/api/handshake'.format(url))
+            response = requests.get('{}/api/handshake'.format(url), timeout=getattr(settings,'REQUEST_TIMEOUT',60))
             if response.status_code != 200:
                 raise Exception("Request returned HTTP status code {}.".format(response.status_code))
             data = response.json()

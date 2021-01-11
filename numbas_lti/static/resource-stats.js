@@ -1,3 +1,5 @@
+var DateTime = luxon.DateTime;
+
 var completed_toggle = document.getElementById('completed-toggle');
 
 var data = JSON.parse(document.getElementById('data-json').textContent);
@@ -31,7 +33,8 @@ function update_summary_stats_table() {
         }
     }
     function timeFormat(t) {
-        return t!==undefined ? d3.timeFormat('%Y-%m-%d %H:%M')(t) : '';
+        console.log(t);
+        return t!==undefined ? DateTime.fromMillis(t).toLocaleString(DateTime.DATETIME_SHORT) : '';
     }
     function percentFormat(s) {
         return s!==undefined ? d3.format('.0%')(s) : '';
@@ -368,10 +371,11 @@ function update_time_chart() {
     const y_tooltip = d3.scaleLinear([0,1],[height-margin.bottom,margin.top]);
 
     function time_format(t) {
-        if(d3.timeFormat('%H:%M')(t)=='00:00') {
-            return d3.timeFormat('%Y-%m-%d')(t);
+        var t2 = DateTime.fromJSDate(t);
+        if(t2.hour==0 && t2.minute==0) {
+            return t2.toLocaleString(DateTime.DATE_SHORT);
         } else {
-            return d3.timeFormat('%Y-%m-%d %H:%M')(t);
+            return t2.toLocaleString(DateTime.DATETIME_SHORT);
         }
     }
 
@@ -468,7 +472,7 @@ function update_time_chart() {
         let [mx,my] = d3.mouse(this);
         mx = x(x.invert(mx));
         const t = x.invert(mx);
-        time_tip.text(d3.timeFormat('%Y-%m-%d %H:%M')(t));
+        time_tip.text(DateTime.fromJSDate(t).toLocaleString(DateTime.DATETIME_SHORT));
         const b_tip = time_tip.node().getBoundingClientRect();
         const tx = Math.min(Math.max(mx,b_tip.width/2),width-b_tip.width/2);
         time_tip.attr('transform',`translate(${tx},0)`);
@@ -480,8 +484,8 @@ function update_time_chart() {
 function update() {
     only_completed = completed_toggle.checked;
     data.attempts.forEach(function(a) {
-        a.start_time = new Date(a.start_time)
-        a.end_time = a.end_time ? new Date(a.end_time) : null;
+        a.start_time = DateTime.fromISO(a.start_time)
+        a.end_time = a.end_time ? DateTime.fromISO(a.end_time) : null;
     });
     update_completion_table();
     update_summary_stats_table();

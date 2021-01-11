@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core import signing
 from django.core.mail import send_mail
 from django.db import models
+from django.db.utils import OperationalError
 from django.db.models import Min, Count
 from django.dispatch import receiver
 from django.contrib.auth.models import User
@@ -15,8 +16,7 @@ from django.utils import timezone
 from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
 
-from .groups import group_for_attempt, group_for_resource_stats
-from .report_outcome import report_outcome_for_attempt, ReportOutcomeFailure, ReportOutcomeConnectionError
+from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 
 import os
 import shutil
@@ -25,6 +25,8 @@ from lxml import etree
 import re
 import json
 from collections import defaultdict
+import time
+from pathlib import Path
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -104,7 +106,7 @@ class ExtractPackageMixin(object):
 
     @property
     def extracted_path(self):
-        return os.path.join(settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.pk))
+        return os.path.join(os.getcwd(), settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.pk))
 
     @property
     def extracted_url(self):
@@ -132,13 +134,33 @@ class Exam(ExtractPackageMixin,models.Model):
     def __str__(self):
         return self.title
 
+    def supports_feature(self, feature):
+        root = Path(self.extracted_path)
+        manifest_path = root / 'numbas-manifest.json'
+        if not manifest_path.exists():
+            return False
+
+        try:
+            with open(str(manifest_path)) as f:
+                manifest = json.loads(f.read())
+        except Exception as e:
+            return False
+
+        features = manifest.get('features',{})
+        return features.get(feature)
+
 @receiver(models.signals.pre_save, sender=Exam)
 def set_exam_name_from_package(sender,instance,**kwargs):
     z = ZipFile(instance.package.file,'r')
     with z.open('imsmanifest.xml','r') as manifest_file:
         manifest = etree.parse(manifest_file)
     instance.title = manifest.find('.//ims:title',namespaces={'ims':'http://www.imsglobal.org/xsd/imscp_v1p1'}).text
-
+    if not instance.retrieve_url:
+        try:
+            with z.open('downloaded-from.txt','r') as f:
+                instance.retrieve_url = f.read().strip().decode('utf-8')
+        except KeyError:
+            pass
 
 GRADING_METHODS = [
     ('highest',_('Highest score')),
@@ -176,6 +198,9 @@ class LTIContext(models.Model):
         else:
             return '{} ({})'.format(self.name, self.label)
 
+    def get_absolute_url(self):
+        return reverse('view_context', args=(self.pk,))
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)
@@ -194,7 +219,7 @@ class Resource(models.Model):
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
     email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
-    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
+    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'), help_text='Zero means unlimited attempts.')
 
     num_questions = models.PositiveIntegerField(default=0)
 
@@ -215,6 +240,9 @@ class Resource(models.Model):
             return slugify(self.exam.title)
         else:
             return 'resource'
+
+    def unbroken_attempts(self):
+        return self.attempts.filter(broken=False)
 
     def grade_user(self,user):
         methods = {
@@ -239,14 +267,19 @@ class Resource(models.Model):
 
     def is_available(self):
         now = timezone.now()
-        return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
+        if self.available_from is None or self.available_until is None:
+            return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
+        if self.available_from < self.available_until:
+            return self.available_from <= now <= self.available_until
+        else:
+            return now <= self.available_until or now >= self.available_from
 
     def can_start_new_attempt(self,user):
         if not self.is_available():
             return False
         if self.max_attempts==0:
             return True
-        return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
+        return self.attempts.filter(user=user).exclude(broken=True).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
 
     def user_data(self,user):
         return LTIUserData.objects.filter(resource=self,user=user).last()
@@ -324,7 +357,23 @@ class Resource(models.Model):
         return data
 
     def receipt_salt(self):
-        return 'numbas_lti:consumer:'+self.context.consumer.key
+        if self.context and self.context.consumer:
+            return 'numbas_lti:consumer:'+self.context.consumer.key
+        else:
+            return 'numbas_lti:resource:'+str(self.pk)
+
+    def availability_json(self):
+        return {
+            'available_from': self.available_from.isoformat() if self.available_from else None,
+            'available_until': self.available_until.isoformat() if self.available_until else None,
+            'allow_review_from': self.allow_review_from.isoformat() if self.allow_review_from else None,
+        }
+
+@receiver(models.signals.post_save,sender=Resource)
+def resource_availability_changed(sender,instance,**kwargs):
+    resource = instance
+    group = group_for_resource(resource)
+    group.send({"text": json.dumps({'availability_dates': resource.availability_json()})})
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -383,7 +432,7 @@ class LTILaunch(models.Model):
         return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)
 
     class Meta:
-        ordering = ('time',)
+        ordering = ('-time',)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
@@ -405,6 +454,8 @@ class Attempt(models.Model):
     all_data_received = models.BooleanField(default=False)
 
     objects = NotDeletedManager()
+
+    remark_ignore_keys = ['cmi.suspend_data','cmi.session_time']    # CMI keys not to resave when auto-remarking
 
     class Meta:
         ordering = ['-start_time',]
@@ -584,7 +635,16 @@ class Attempt(models.Model):
     def finalise(self):
         if self.end_time is None:
             self.end_time = timezone.now()
-            self.save()
+
+            tries = 0
+            while tries<3:
+                tries += 1
+                try:
+                    self.save(update_fields=['end_time'])
+                    break
+                except OperationalError:
+                    time.sleep(tries)
+
             group_for_attempt(self).send({'text':json.dumps({
                 'completion_status':'completed',
             })})
@@ -817,7 +877,7 @@ class Attempt(models.Model):
             fail_silently=False
         )
         self.sent_receipt = True
-        self.save()
+        self.save(update_fields=['sent_receipt'])
             
 
 class AttemptLaunch(models.Model):
@@ -832,13 +892,13 @@ class AttemptLaunch(models.Model):
     def as_json(self):
         return {
             'attempt': self.attempt.pk,
-            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'time': self.time.isoformat(),
             'mode': self.mode,
             'user': self.user.get_full_name() if self.user else None,
         }
 
     class Meta:
-        ordering = ('time',)
+        ordering = ('-time',)
 
 
 class AttemptNotDeletedManager(models.Manager):
@@ -955,9 +1015,13 @@ class ScormElement(models.Model):
         return {
             'key': self.key,
             'value': self.value,
-            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'time': self.time.isoformat(),
             'counter': self.counter,
         }
+
+class RemarkedScormElement(models.Model):
+    element = models.OneToOneField(ScormElement,on_delete=models.CASCADE,related_name='remarked')
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,related_name='remarked_elements')
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
@@ -975,12 +1039,9 @@ def scorm_set_score(sender,instance,created,**kwargs):
 
     instance.attempt.scaled_score = float(instance.value)
     instance.attempt.scaled_score_element = instance
-    instance.attempt.save()
+    instance.attempt.save(update_fields=['scaled_score','scaled_score_element'])
     if instance.attempt.resource.report_mark_time == 'immediately':
-        try:
-            report_outcome_for_attempt(instance.attempt)
-        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
-            pass
+        Channel('report.attempt').send({'pk':instance.attempt.pk})
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -990,27 +1051,27 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     if not (instance.attempt.completion_status_element is None or instance.newer_than(instance.attempt.completion_status_element)):
         return
 
+
     instance.attempt.completion_status = instance.value
     instance.attempt.completion_status_element = instance
-    instance.attempt.save()
+    update_fields = ['completion_status','completion_status_element']
+    if instance.attempt.completion_status == 'incomplete':
+        instance.attempt.end_time = None
+        update_fields.append('end_time')
+    instance.attempt.save(update_fields=update_fields)
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        try:
-            report_outcome_for_attempt(instance.attempt)
-        except (ReportOutcomeFailure, ReportOutcomeConnectionError):
-            pass
+        Channel('report.attempt').send({'pk':instance.attempt.pk})
 
-@receiver(models.signals.post_save)
+@receiver(models.signals.post_save,sender=Attempt)
 def send_receipt_on_completion(sender,instance, **kwargs):
-    if sender == Attempt:
-        attempt = instance
-    elif sender == ScormElement:
-        attempt = instance.attempt
-    else:
+    try:
+        attempt = Attempt.objects.get(pk=instance.pk)
+    except Attempt.DoesNotExist:
         return
     if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
         if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
-            attempt.send_completion_receipt()
+            Channel('attempt.email_receipt').send({'pk': attempt.pk})
 
 
 @receiver(models.signals.post_save,sender=ScormElement)
@@ -1024,7 +1085,7 @@ def scorm_set_num_questions(sender,instance,created,**kwargs):
     
     if number>resource.num_questions:
         resource.num_questions = number
-        resource.save()
+        resource.save(update_fields=['num_questions'])
 
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name='Editor name')
