@@ -156,8 +156,22 @@ Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
     stderr_logfile=/var/log/supervisor/numbas_lti_workers_stderr.log
     stdout_logfile=/var/log/supervisor/numbas_lti_workers_stdout.log
 
+    [program:numbas_lti_huey]
+    command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py run_huey -w 8
+    directory=/srv/numbas-lti-provider/
+    user=www-data
+    autostart=true
+    autorestart=true
+    redirect_stderr=True
+    stopasgroup=true
+    environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings"
+    numprocs=1
+    process_name=%(program_name)s_%(process_num)02d
+    stderr_logfile=/var/log/supervisor/numbas_lti_huey_stderr.log
+    stdout_logfile=/var/log/supervisor/numbas_lti_huey_stdout.log
+
     [group:numbas_lti]
-    programs=numbas_lti_daphne,numbas_lti_workers
+    programs=numbas_lti_daphne,numbas_lti_workers,numbas_lti_huey
     priority=999
 
 .. note::
