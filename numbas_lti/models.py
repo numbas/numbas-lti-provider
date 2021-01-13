@@ -1106,6 +1106,24 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
         else:
             Channel('report.attempt').send({'pk':instance.attempt.pk})
 
+@receiver(models.signals.post_save,sender=ScormElement)
+def scorm_set_start_time(sender,instance,created,**kwargs):
+    if instance.key != 'cmi.suspend_data':
+        return
+
+    try:
+        data = json.loads(instance.value)
+        if data['start'] is not None:
+            start_time = timezone.make_aware(datetime.fromtimestamp(data['start']/1000))
+        else:
+            return
+    except (json.JSONDecodeError, KeyError):
+        return
+
+    if start_time != instance.attempt.start_time:
+        instance.attempt.start_time = start_time
+        instance.attempt.save(update_fields=['start_time'])
+
 @receiver(models.signals.post_save,sender=Attempt)
 def send_receipt_on_completion(sender,instance, **kwargs):
     try:
