@@ -7,7 +7,8 @@ Their answers and scores are saved as soon as they are submitted.
 
 .. warning::
     
-    Unsubmitted answers are not saved, so if the student's computer crashes, there will be no record of unsubmitted answers.
+    Unsubmitted answers are saved but not marked, so they will not receive any marks for answers not submitted before a resource's deadline.
+    The automatic remarking tool can mark unsubmitted answers, if necessary.
     It's important to make this clear to students during high-stakes tests, because they may want to wait until they've finished the whole question or exam before submitting.
     Numbas allows students to submit answers as many times as they like, with no penalty, so encourage them to submit as soon as they've entered an answer.
 
