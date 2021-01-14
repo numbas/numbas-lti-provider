@@ -50,6 +50,9 @@ def lti_entry(request):
         'ToolProxyRegistrationRequest': consumer_registration_request,
     }
 
+    for k,v in request.POST.items():
+        print(k,v)
+
     if lti_message_type in launch_types:
         return launch_types[lti_message_type](request)
     else:
