@@ -28,6 +28,7 @@ import json
 from collections import defaultdict
 import time
 from pathlib import Path
+import uuid
 
 USE_HUEY = 'huey.contrib.djhuey' in settings.INSTALLED_APPS
 
@@ -107,20 +108,24 @@ class ConsumerTimePeriod(models.Model):
     class Meta:
         ordering = ['-end','-start']
 
-class ExtractPackageMixin(object):
+class ExtractPackage(models.Model):
     extract_folder = 'extracted_zips'
+    static_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name='UUID of exam package on disk')
+
+    class Meta:
+        abstract = True
 
     @property
     def extracted_path(self):
-        return os.path.join(os.getcwd(), settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.pk))
+        return os.path.join(os.getcwd(), settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.static_uuid))
 
     @property
     def extracted_url(self):
-        return '{}{}/{}/{}'.format(settings.MEDIA_URL,self.extract_folder,self.__class__.__name__,str(self.pk))
+        return '{}{}/{}/{}'.format(settings.MEDIA_URL,self.extract_folder,self.__class__.__name__,str(self.static_uuid))
 
 @receiver(models.signals.post_save)
 def extract_package(sender,instance,**kwargs):
-    if not issubclass(sender,ExtractPackageMixin):
+    if not issubclass(sender,ExtractPackage):
         return
     if os.path.exists(instance.extracted_path):
         shutil.rmtree(instance.extracted_path)
@@ -130,7 +135,7 @@ def extract_package(sender,instance,**kwargs):
 
 
 # Create your models here.
-class Exam(ExtractPackageMixin,models.Model):
+class Exam(ExtractPackage):
     title = models.CharField(max_length=300)
     package = models.FileField(upload_to='exams/',verbose_name='Package file')
     retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
