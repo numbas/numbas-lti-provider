@@ -61,7 +61,7 @@ Check that the server running the LTI provider can make HTTPS requests to the ad
 If the connection always times out or there's an error making a connection, it may be the case that HTTPS connections are blocked.
 
 If you get any other error, check that the Numbas LTI provider is reporting back to the right address. 
-You can find the address used for a particular resource using the Django shell. First, find the ID of the :term:`resource` you're interested in - it's the numerical part of the address when you're looking at a resource's dashboard.
+You can find the address used for a particular resource using the Django shell. First, find the ID of the :term:`resource <Resource>` you're interested in - it's the numerical part of the address when you're looking at a resource's dashboard.
 
 In a terminal, navigate to the Numbas LTI provider's directory and run the following (commands after ``>>>`` are Python code)::
 

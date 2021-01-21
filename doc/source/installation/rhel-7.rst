@@ -125,7 +125,7 @@ Access the development server at `http://localhost:8000`_.
 Configure supervisord
 ---------------------
 
-Supervisord ensures that the Numbas LTI provider app is always running.
+`Supervisord <http://supervisord.org/>`_ ensures that the Numbas LTI provider app is always running.
 
 Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
 

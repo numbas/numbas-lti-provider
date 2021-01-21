@@ -12,7 +12,7 @@ You will need:
 * An SSL certificate: LTI content must be served over HTTPS. 
   These can be obtained easily and for free from `Let's Encrypt <https://letsencrypt.org/>`_.
 
-These instructions will take a fresh machine running Ubuntu 16.04 and set up the Numbas LTI tool provider to run through NGINX or Apache.
+These instructions will take a fresh machine running Ubuntu 16.04 or newer and set up the Numbas LTI tool provider to run through NGINX or Apache.
 On different operating systems or with different web servers, the process will be different. 
 There are alternate instructions for :ref:`installation on RedHat Enterprise Linux 7 <installation-rhel-7>`.
 
@@ -86,16 +86,10 @@ It will set up the database, and create an admin user account which you will use
 
 Once you've run this script, the last remaining steps are to start the app, and then set up a webserver to expose it to the outside world.
 
-At this point, you can try running a development server to check that the Django part of the LTI provider is set up properly::
-
-    python manage.py runserver
-
-Access the development server at `http://localhost:8000`_.
-
 Configure supervisord
 ---------------------
 
-Supervisord ensures that the Numbas LTI provider app is always running.
+`Supervisord <http://supervisord.org/>`_ ensures that the Numbas LTI provider app is always running.
 
 Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
 
@@ -234,8 +228,12 @@ With Apache
 ***********
 
 `Apache <https://httpd.apache.org/>`_ is a very commonly-used webserver.
-While it can be used as a reverse proxy for the Numbas LTI provider, it's not great at dealing with the many simultaneous connections that the LTI provider requires.
-In some circumstances, Apache might be your only option, so the instructions are provided as a reference.
+
+.. warning::
+
+    While it can be used as a reverse proxy for the Numbas LTI provider, it's not great at dealing with the many simultaneous connections that the LTI provider requires.
+    Apache will start having trouble at around 100 simultaneous connections.
+    In some circumstances, Apache might be your only option, so the instructions are provided as a reference.
 
 Install required packages::
 
