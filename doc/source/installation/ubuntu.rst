@@ -84,6 +84,14 @@ Run::
 This script will ask a few questions, and configure the Numbas LTI provider accordingly.
 It will set up the database, and create an admin user account which you will use to manage the LTI provider through its web interface.
 
+.. note::
+
+   The first question that the setup script asks is "Is this installation for development?".
+   The settings for development mode are not compatible with serving the LTI provider to external clients.
+
+   Only answer 'yes' to this question if the installation is for the purpose of making changes to the LTI provider's code.
+   For all other purposes, answer 'no'.
+
 Once you've run this script, the last remaining steps are to start the app, and then set up a webserver to expose it to the outside world.
 
 Configure supervisord
