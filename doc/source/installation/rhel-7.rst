@@ -78,7 +78,7 @@ Run the following commands as root::
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
     # create the virtualenv for the python modules
-    virtualenv-3 /opt/numbas_lti_python
+    virtualenv -p python3 /opt/numbas_lti_python
     chown -R numbas_lti:numbas_lti /opt/numbas_lti_python
     chmod -R 770 /opt/numbas_lti_python
 
