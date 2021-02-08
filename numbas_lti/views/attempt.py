@@ -17,9 +17,12 @@ from numbas_lti.forms import RemarkPartScoreForm
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch
 from numbas_lti.save_scorm_data import save_scorm_data
 from numbas_lti.util import transform_part_hierarchy
+from numbas_lti.diff import apply_diff
 import datetime
 import json
 import simplejson
+
+from numbas_lti.diff import apply_diff
 
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
@@ -131,6 +134,34 @@ class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
         messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
         return redirect(reverse('manage_attempts',args=(attempt.resource.pk,)))
 
+def resolve_dependency_order(deps):
+    order = list(deps.keys())
+    i = 0
+    while i<len(order):
+        a = order[i]
+        if a in deps:
+            b = deps[a]
+            if b in order:
+                j = order.index(b)
+                if j<i:
+                    order.pop(j)
+                    order.append(b)
+                    i -= 1
+        i += 1
+    return list(reversed(order))
+
+def resolve_diffed_scormelements(elements):
+    elements = list(elements)
+    emap = {e.pk: e for e in elements}
+    diffmap = {e.pk: e.diff_of.pk for e in elements if e.diff_of is not None}
+    order = resolve_dependency_order(diffmap)
+    for p in order:
+        e1 = emap[p]
+        e2 = emap[e1.diff_of.pk]
+        e1.value = apply_diff(e1.value, e2.value)
+        
+    return elements
+
 class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     model = Attempt
     management_tab = 'attempts'
@@ -143,7 +174,7 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     def get_context_data(self,*args,**kwargs):
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 
-        context['elements'] = [e.as_json() for e in self.object.scormelements.all()]
+        context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.all())]
         context['show_stale_elements'] = True
         context['resource'] = self.object.resource
 
@@ -162,7 +193,7 @@ class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
         context = super().get_context_data(*args,**kwargs)
 
         context['resource'] = self.object.resource
-        context['elements'] = [e.as_json() for e in self.object.scormelements.order_by('time','counter')]
+        context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.order_by('time','counter'))]
         context['launches'] = [l.as_json() for l in self.object.launches.all()]
 
         return context

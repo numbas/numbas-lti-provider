@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.core import signing
 from django.core.mail import send_mail
-from django.db import models
+from django.db import models, transaction
 from django.db.utils import OperationalError
 from django.db.models import Min, Count
-from django.dispatch import receiver
 from django.contrib.auth.models import User
 import requests
 from django.template.loader import get_template
@@ -18,6 +17,7 @@ from django_auth_lti.patch_reverse import reverse
 
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
+from .diff import make_diff
 
 import os
 import shutil
@@ -29,11 +29,6 @@ from collections import defaultdict
 import time
 from pathlib import Path
 import uuid
-
-USE_HUEY = 'huey.contrib.djhuey' in settings.INSTALLED_APPS
-
-if USE_HUEY:
-    from . import tasks
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -123,17 +118,6 @@ class ExtractPackage(models.Model):
     def extracted_url(self):
         return '{}{}/{}/{}'.format(settings.MEDIA_URL,self.extract_folder,self.__class__.__name__,str(self.static_uuid))
 
-@receiver(models.signals.post_save)
-def extract_package(sender,instance,**kwargs):
-    if not issubclass(sender,ExtractPackage):
-        return
-    if os.path.exists(instance.extracted_path):
-        shutil.rmtree(instance.extracted_path)
-    os.makedirs(instance.extracted_path)
-    z = ZipFile(instance.package.file,'r')
-    z.extractall(instance.extracted_path)
-
-
 # Create your models here.
 class Exam(ExtractPackage):
     title = models.CharField(max_length=300)
@@ -159,19 +143,6 @@ class Exam(ExtractPackage):
 
         features = manifest.get('features',{})
         return features.get(feature)
-
-@receiver(models.signals.pre_save, sender=Exam)
-def set_exam_name_from_package(sender,instance,**kwargs):
-    z = ZipFile(instance.package.file,'r')
-    with z.open('imsmanifest.xml','r') as manifest_file:
-        manifest = etree.parse(manifest_file)
-    instance.title = manifest.find('.//ims:title',namespaces={'ims':'http://www.imsglobal.org/xsd/imscp_v1p1'}).text
-    if not instance.retrieve_url:
-        try:
-            with z.open('downloaded-from.txt','r') as f:
-                instance.retrieve_url = f.read().strip().decode('utf-8')
-        except KeyError:
-            pass
 
 GRADING_METHODS = [
     ('highest',_('Highest score')),
@@ -402,17 +373,13 @@ class Resource(models.Model):
         process.save(update_fields=['status','response','dismissed'])
 
     def task_report_scores(self):
+        from .signals import USE_HUEY
         if USE_HUEY:
+            from . import tasks
             tasks.resource_report_scores(self)
         else:
             Channel("report.all_scores").send({'pk':self.pk})
 
-
-@receiver(models.signals.post_save,sender=Resource)
-def resource_availability_changed(sender,instance,**kwargs):
-    resource = instance
-    group = group_for_resource(resource)
-    group.send({"text": json.dumps({'availability_dates': resource.availability_json()})})
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -963,15 +930,6 @@ class AttemptQuestionScore(models.Model):
     def __str__(self):
         return '{}/{} on question {} of {}'.format(self.raw_score,self.max_score,self.number,self.attempt)
 
-"""
-# Removed because it might be killing the server
-@receiver(models.signals.post_save,sender=AttemptQuestionScore)
-def question_score_live_stats(sender,instance,**kwargs):
-    resource = instance.attempt.resource
-    group = group_for_resource_stats(resource)
-    group.send({"text": json.dumps(resource.live_stats_data())})
-"""
-
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
@@ -1044,6 +1002,8 @@ class ScormElement(models.Model):
     counter = models.IntegerField(default=0,verbose_name='Element counter to disambiguate elements with the same timestamp')
     current = models.BooleanField(default=True) # is this the latest version?
 
+    diff_of = models.ForeignKey('ScormElement', on_delete=models.PROTECT, null=True, default=None)
+
     class Meta:
         ordering = ['-time','-counter']
 
@@ -1061,100 +1021,30 @@ class ScormElement(models.Model):
             'counter': self.counter,
         }
 
+def diff_scormelements(attempt, key='cmi.suspend_data'):
+    """
+        For SCORM elements for the given attempt with the given key, replace the full value with a diff, relative to the most recent value.
+        The most recent ScormElement object has the full value saved, so it can be read off easily, but the earlier values are stored as diffs to save on space.
+    """
+    elements = attempt.scormelements.filter(key='cmi.suspend_data',diff_of=None)
+    n = elements.count()
+    last = None
+    with transaction.atomic():
+        for i,e in enumerate(elements):
+            #print(f'{i}/{n}')
+            value = e.value
+            if last is not None:
+                d = make_diff(lastvalue,e.value)
+                e.value = d
+                e.diff_of = last
+                e.save()
+                #print(d)
+            last = e
+            lastvalue = value
+
 class RemarkedScormElement(models.Model):
     element = models.OneToOneField(ScormElement,on_delete=models.CASCADE,related_name='remarked')
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,related_name='remarked_elements')
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
-    Group(instance.attempt.channels_group()).send({
-        "text": json.dumps(instance.as_json())
-    })
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_score(sender,instance,created,**kwargs):
-    if instance.key!='cmi.score.scaled' or not created:
-        return
-
-    if not (instance.attempt.scaled_score_element is None or instance.newer_than(instance.attempt.scaled_score_element)):
-        return
-
-    instance.attempt.scaled_score = float(instance.value)
-    instance.attempt.scaled_score_element = instance
-    instance.attempt.save(update_fields=['scaled_score','scaled_score_element'])
-    if instance.attempt.resource.report_mark_time == 'immediately':
-        if USE_HUEY:
-            tasks.attempt_report_outcome(instance.attempt)
-        else:
-            Channel('report.attempt').send({'pk':instance.attempt.pk})
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_completion_status(sender,instance,created,**kwargs):
-    if instance.key!='cmi.completion_status' or not created:
-        return
-
-    if not (instance.attempt.completion_status_element is None or instance.newer_than(instance.attempt.completion_status_element)):
-        return
-
-
-    instance.attempt.completion_status = instance.value
-    instance.attempt.completion_status_element = instance
-    update_fields = ['completion_status','completion_status_element']
-    if instance.attempt.completion_status == 'incomplete':
-        instance.attempt.end_time = None
-        update_fields.append('end_time')
-    instance.attempt.save(update_fields=update_fields)
-
-    if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        if USE_HUEY:
-            tasks.attempt_report_outcome(instance.attempt)
-        else:
-            Channel('report.attempt').send({'pk':instance.attempt.pk})
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_start_time(sender,instance,created,**kwargs):
-    if instance.key != 'cmi.suspend_data':
-        return
-
-    try:
-        data = json.loads(instance.value)
-        if data['start'] is not None:
-            start_time = timezone.make_aware(datetime.fromtimestamp(data['start']/1000))
-        else:
-            return
-    except (json.JSONDecodeError, KeyError):
-        return
-
-    if start_time != instance.attempt.start_time:
-        instance.attempt.start_time = start_time
-        instance.attempt.save(update_fields=['start_time'])
-
-@receiver(models.signals.post_save,sender=Attempt)
-def send_receipt_on_completion(sender,instance, **kwargs):
-    try:
-        attempt = Attempt.objects.get(pk=instance.pk)
-    except Attempt.DoesNotExist:
-        return
-    if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
-        if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
-            if USE_HUEY:
-                tasks.send_attempt_completion_receipt(attempt)
-            else:
-                Channel('attempt.email_receipt').send({'pk': attempt.pk})
-
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_num_questions(sender,instance,created,**kwargs):
-    """ Set the number of questions for this resource - can only work this out once the exam has been run! """
-    if not re.match(r'^cmi.objectives.([0-9]+).id$',instance.key) or not created:
-        return
-
-    number = int(re.match(r'q(\d+)',instance.value).group(1))+1
-    resource = instance.attempt.resource
-    
-    if number>resource.num_questions:
-        resource.num_questions = number
-        resource.save(update_fields=['num_questions'])
 
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name='Editor name')
@@ -1186,7 +1076,9 @@ class EditorLink(models.Model):
     @property
     def available_exams(self):
         if self.time_since_last_update().seconds> 30:
+            from .signals import USE_HUEY
             if USE_HUEY:
+                from . import tasks
                 tasks.editorlink_update_cache(self)
             else:
                 Channel("editorlink.update_cache").send({'pk':self.pk})
@@ -1208,10 +1100,6 @@ class EditorLinkProject(models.Model):
 
     def __str__(self):
         return self.name
-
-@receiver(models.signals.pre_save,sender=EditorLink)
-def update_editor_cache_before_save(sender,instance,**kwargs):
-    exams = instance.available_exams
 
 class StressTest(models.Model):
     resource = models.OneToOneField(Resource,on_delete=models.CASCADE,primary_key=True)
