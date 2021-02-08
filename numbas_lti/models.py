@@ -17,7 +17,7 @@ from django_auth_lti.patch_reverse import reverse
 
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
-from .diff import make_diff
+from .diff import make_diff, apply_diff
 
 import os
 import shutil
@@ -1041,6 +1041,34 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
                 #print(d)
             last = e
             lastvalue = value
+
+def resolve_dependency_order(deps):
+    order = list(deps.keys())
+    i = 0
+    while i<len(order):
+        a = order[i]
+        if a in deps:
+            b = deps[a]
+            if b in order:
+                j = order.index(b)
+                if j<i:
+                    order.pop(j)
+                    order.append(b)
+                    i -= 1
+        i += 1
+    return list(reversed(order))
+
+def resolve_diffed_scormelements(elements):
+    elements = list(elements)
+    emap = {e.pk: e for e in elements}
+    diffmap = {e.pk: e.diff_of.pk for e in elements if e.diff_of is not None}
+    order = resolve_dependency_order(diffmap)
+    for p in order:
+        e1 = emap[p]
+        e2 = emap[e1.diff_of.pk]
+        e1.value = apply_diff(e1.value, e2.value)
+        
+    return elements
 
 class RemarkedScormElement(models.Model):
     element = models.OneToOneField(ScormElement,on_delete=models.CASCADE,related_name='remarked')
