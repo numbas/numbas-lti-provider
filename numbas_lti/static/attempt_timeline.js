@@ -260,6 +260,13 @@ Timeline.prototype = {
                 'scorm exam score raw',
                 ''
             ));
+        } else if(key=='x.reason ended') {
+            this.add_timeline_item(new TimelineItem(
+                'The session was ended automatically because: <strong>'+element.value+'</strong>.',
+                element,
+                'scorm reason-ended',
+                'saved'
+            ));
         }
     },
     add_launch: function(launch) {

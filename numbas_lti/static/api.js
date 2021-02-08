@@ -225,7 +225,10 @@ SCORM_API.prototype = {
 
     /** Force the exam to end.
      */
-    end: function() {
+    end: function(reason) {
+        if(reason!==undefined) {
+            this.SetValue('x.reason ended',reason);
+        }
         this.Terminate('');
         this.ended = true;
         document.body.classList.add('ended');
@@ -344,7 +347,7 @@ SCORM_API.prototype = {
 
         if(this.mode=='normal') {
             if(!this.is_available()) {
-                this.end();
+                this.end('not available');
             }
         }
     },
