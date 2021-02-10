@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core import signing
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
@@ -1002,8 +1003,6 @@ class ScormElement(models.Model):
     counter = models.IntegerField(default=0,verbose_name='Element counter to disambiguate elements with the same timestamp')
     current = models.BooleanField(default=True) # is this the latest version?
 
-    diff_of = models.ForeignKey('ScormElement', on_delete=models.PROTECT, null=True, default=None)
-
     class Meta:
         ordering = ['-time','-counter']
 
@@ -1021,24 +1020,27 @@ class ScormElement(models.Model):
             'counter': self.counter,
         }
 
+class ScormElementDiff(models.Model):
+    element = models.OneToOneField('ScormElement', on_delete=models.CASCADE, related_name='diff')
+    diff_of = models.OneToOneField('ScormElement', on_delete=models.PROTECT, related_name='diffs')
+
+
 def diff_scormelements(attempt, key='cmi.suspend_data'):
     """
         For SCORM elements for the given attempt with the given key, replace the full value with a diff, relative to the most recent value.
         The most recent ScormElement object has the full value saved, so it can be read off easily, but the earlier values are stored as diffs to save on space.
     """
-    elements = attempt.scormelements.filter(key='cmi.suspend_data',diff_of=None)
+    elements = attempt.scormelements.filter(key='cmi.suspend_data',diff=None)
     n = elements.count()
     last = None
     with transaction.atomic():
         for i,e in enumerate(elements):
-            #print(f'{i}/{n}')
             value = e.value
             if last is not None:
                 d = make_diff(lastvalue,e.value)
                 e.value = d
-                e.diff_of = last
+                ScormElementDiff.objects.get_or_create(element=e,diff_of=last)
                 e.save()
-                #print(d)
             last = e
             lastvalue = value
 
@@ -1059,13 +1061,20 @@ def resolve_dependency_order(deps):
     return list(reversed(order))
 
 def resolve_diffed_scormelements(elements):
+    if isinstance(elements,models.QuerySet):
+        elements = elements.select_related('diff')
     elements = list(elements)
     emap = {e.pk: e for e in elements}
-    diffmap = {e.pk: e.diff_of.pk for e in elements if e.diff_of is not None}
+    diffmap = {}
+    for e in elements:
+        try:
+            diffmap[e.pk] = e.diff.diff_of.pk
+        except ObjectDoesNotExist:
+            pass
     order = resolve_dependency_order(diffmap)
     for p in order:
         e1 = emap[p]
-        e2 = emap[e1.diff_of.pk]
+        e2 = emap[e1.diff.diff_of.pk]
         e1.value = apply_diff(e1.value, e2.value)
         
     return elements

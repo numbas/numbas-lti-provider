@@ -19,13 +19,13 @@ def make_diff(a,b):
         if opcode == 'equal':
             pass
         elif opcode == 'delete':
-            output.append(f'd{i1:x},{i2:x}')
+            output.append('d{:x},{:x}'.format(i1,i2))
         elif opcode == 'insert':
             s = escape(d.b[j1:j2])
-            output.append(f'i{i1:x},{s}')
+            output.append('i{:x},{}'.format(i1,s))
         elif opcode == 'replace':
             s = escape(d.b[j1:j2])
-            output.append(f'r{i1:x},{i2:x},{s}')
+            output.append('r{:x},{:x},{}'.format(i1,i2,s))
     return '\n'.join(output)
 
 def apply_diff(d,a):
