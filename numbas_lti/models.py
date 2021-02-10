@@ -714,6 +714,8 @@ class Attempt(models.Model):
 
     def part_interaction_id(self,part):
         id_element = self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id',value=part).first()
+        if id_element is None:
+            return None
         n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
         return n
 
@@ -730,9 +732,8 @@ class Attempt(models.Model):
             gaps = self.part_gaps(part)
             return sum(self.part_raw_score(g) for g in gaps)
 
-        try:
-            id = self.part_interaction_id(part)
-        except ScormElement.DoesNotExist:
+        id = self.part_interaction_id(part)
+        if id is None:
             return 0
 
         score = self.get_element_default('cmi.interactions.{}.result'.format(id),0)
@@ -744,13 +745,12 @@ class Attempt(models.Model):
             if discounted.behaviour == 'remove':
                 return 0
 
-        if DiscountPart.objects.filter(part__startswith=part+'g').exists():
+        if self.resource.discounted_part.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
             return sum(self.part_max_score(g) for g in gaps)
 
-        try:
-            id = self.part_interaction_id(part)
-        except ScormElement.DoesNotExist:
+        id = self.part_interaction_id(part)
+        if id is None:
             return 0
 
         return float(self.get_element_default('cmi.interactions.{}.weighting'.format(id),0))
