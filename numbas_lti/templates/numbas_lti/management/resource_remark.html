@@ -95,8 +95,8 @@
                 <td>[[attempt.user.full_name]]</td>
                 <td>[[attempt.user.identifier]]</td>
                 <td>[[attempt.completion_status]]</td>
-                <td>[[attempt.original_raw_score]]/[[attempt.max_score]]</td>
-                <td><span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score]]/[[attempt.max_score]]</span></td>
+                <td>[[attempt.original_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</td>
+                <td><span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</span></td>
                 <td :class="attempt.score_change_classes">
                     [[attempt.score_change_description]]
                     <div v-if="attempt.remarked_raw_score!==null">

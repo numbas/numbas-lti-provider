@@ -15,11 +15,24 @@ Vue.filter('pluralize', function (str, number) {
     return str + (Math.abs(number)==1 ? '' : 's');
 })
 
-Vue.filter('change', function(n) {
-    if(n>=0) {
-        return '+'+n;
-    } else {
+function todp(n,p) {
+    const s = n.toFixed(p);
+    return s.replace(/\.?0+$/,'')
+}
+
+Vue.filter('dp', function(n,p) {
+    if(isNaN(n) || typeof(n)!='number') {
         return n;
+    }
+    return todp(n,p);
+})
+
+Vue.filter('change', function(n) {
+    const sn = todp(n,3)
+    if(n>=0) {
+        return '+'+sn;
+    } else {
+        return sn;
     }
 })
 
