@@ -33,6 +33,7 @@ function Timeline(elements, launches) {
     this.scaled_score = ko.observable(0);
     this.completion_status = ko.observable('');
 
+    this.raw_elements = elements;
     this.all_elements = ko.observableArray([]);
     this.timeline = ko.observableArray([]);
 
@@ -146,6 +147,14 @@ Timeline.prototype = {
     getPart: function(id,element) {
         var id_key = 'cmi.interactions.'+id+'.id';
         var path = this.element_at(id_key,element);
+        if(!path) {
+            return {
+                id: id,
+                name: 'Part with id '+id,
+                path: '',
+                marks: 0
+            };
+        }
         var desc = parse_part_path(path);
         var suspend_data = this.suspend_data_at(element);
         var part;
@@ -235,6 +244,20 @@ Timeline.prototype = {
                     'pencil'
                 ));
             }
+        } else if(m = key.match(/^cmi.interactions.(\d+).staged_answer$/)) {
+            var id = parseInt(m[1]);
+            var p = this.getPart(id,element);
+            var later = this.raw_elements.find(function(e2) {
+                return e2.time>element.time && (e2.key=='cmi.interactions.'+id+'.staged_answer' || e2.key=='cmi.interactions.'+id+'.learner_response');
+            });
+            if(!later && p.type!=='gapfill' && element.value!='undefined') {
+                this.add_timeline_item(new TimelineItem(
+                    'Entered but did not submit answer <code>'+element.value+'</code> for <em class="part">'+p.name+'</em>.',
+                    element,
+                    'scorm part answer',
+                    'pencil'
+                ));
+            }
         } else if(m = key.match(/^cmi.interactions.(\d+).result$/)) {
             var id = parseInt(m[1]);
             var p = this.getPart(id,element);
@@ -316,7 +339,7 @@ function TimelineItem(message,element,kind,icon) {
     this.time = DateTime.fromISO(element.time);
     this.time_string = this.time.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
     this.kind = kind;
-    this.css = {}
+    this.css = {};
     kind.split(' ').forEach(function(cls) {
         ti.css[cls] = true;
     });
