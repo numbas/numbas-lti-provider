@@ -123,7 +123,7 @@ window.addEventListener('message', (event) => {
         case 'start':
             numbas_ready.then(N=>{
                 remark_session({use_unsubmitted: event.data.use_unsubmitted}).then(result=>{
-                    window.parent.postMessage({success: result.success, pk: pk, error: result.error.message});
+                    window.parent.postMessage({success: result.success, pk: pk, error: result.error ? result.error.message : undefined});
                 });
             });
 
