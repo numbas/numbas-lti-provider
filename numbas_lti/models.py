@@ -746,7 +746,7 @@ class Attempt(models.Model):
             if discounted.behaviour == 'remove':
                 return 0
 
-        if self.resource.discounted_part.filter(part__startswith=part+'g').exists():
+        if self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
             return sum(self.part_max_score(g) for g in gaps)
 
