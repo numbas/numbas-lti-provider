@@ -91,18 +91,24 @@
                     [[num_attempts_hidden]] hidden [[ 'attempt' | pluralize(num_attempts_hidden) ]].
                 </td>
             </tr>
-            <tr class="attempt" v-for="attempt in shown_attempts" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
+            <template v-for="attempt in shown_attempts">
+            <tr class="attempt" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
                 <td>[[attempt.user.full_name]]</td>
                 <td>[[attempt.user.identifier]]</td>
                 <td>[[attempt.completion_status]]</td>
                 <td>[[attempt.original_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</td>
-                <td><span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</span></td>
+                <td>
+                    <span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</span>
+                </td>
                 <td :class="attempt.score_change_classes">
-                    [[attempt.score_change_description]]
-                    <div v-if="attempt.remarked_raw_score!==null">
-                        <span v-if="attempt.remarked_raw_score < attempt.original_raw_score">{% trans "Decreased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
-                        <span v-if="attempt.remarked_raw_score > attempt.original_raw_score">{% trans "Increased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
-                        <span v-if="attempt.remarked_raw_score == attempt.original_raw_score">{% trans "Unchanged" %}</span>
+                    <div v-if="attempt.status=='error'">{% trans "Error" %}</div>
+                    <div v-else>
+                        [[attempt.score_change_description]]
+                        <div v-if="attempt.remarked_raw_score!==null">
+                            <span v-if="attempt.remarked_raw_score < attempt.original_raw_score">{% trans "Decreased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
+                            <span v-if="attempt.remarked_raw_score > attempt.original_raw_score">{% trans "Increased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
+                            <span v-if="attempt.remarked_raw_score == attempt.original_raw_score">{% trans "Unchanged" %}</span>
+                        </div>
                     </div>
                 </td>
                 <td>
@@ -118,6 +124,10 @@
                     <a class="btn btn-link" target="_blank" :href="attempt.timeline_url"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
                 </td>
             </tr>
+            <tr v-if="attempt.status=='error'">
+                <td colspan="9" class="text-warning"><em>{% trans "There was an error remarking this attempt:" %}</em> [[attempt.remark_error]]</td>
+            </tr>
+            </template>
         </tbody>
     </table>
 

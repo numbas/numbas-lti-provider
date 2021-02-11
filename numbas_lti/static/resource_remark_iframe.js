@@ -23,7 +23,12 @@ const numbas_ready = new Promise((resolve,reject) => {
 
 function load_exam() {
     return numbas_ready.then(Numbas => {
-        Numbas.schedule.halted = false;
+        if(Numbas.schedule.unhalt) {
+            Numbas.schedule.unhalt();
+        } else {
+            Numbas.schedule.halted = false;
+            Numbas.signals.error = null;
+        }
         window.pipwerks.SCORM.API.handle = null;
         window.pipwerks.SCORM.API.isFound = null;
         window.pipwerks.SCORM.connection.isActive = false;
@@ -35,6 +40,18 @@ function load_exam() {
         var store = Numbas.store = new Numbas.storage.scorm.SCORMStorage();
         var xml = Numbas.xml.examXML.selectSingleNode('/exam');
         var exam = Numbas.exam = Numbas.createExamFromXML(xml,store,true);
+
+        const p = new Promise(function(resolve,reject) {
+            Numbas.signals.on('Numbas initialised').catch(error => {
+                reject(error);
+            });
+            exam.signals.on('ready',function() {
+                resolve(exam);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+
         exam.seed = Numbas.util.hashCode(seed);
         var entry = store.getEntry();
         if(store.getMode() == 'review') {
@@ -66,13 +83,6 @@ function load_exam() {
             Numbas.signals.trigger('Numbas initialised');
         });
 
-        const p = new Promise(function(resolve,reject) {
-            exam.signals.on('ready',function() {
-                resolve(exam);
-            }).catch(error => {
-                reject(error);
-            });
-        });
         return p;
     });
 }
@@ -113,7 +123,7 @@ window.addEventListener('message', (event) => {
         case 'start':
             numbas_ready.then(N=>{
                 remark_session({use_unsubmitted: event.data.use_unsubmitted}).then(result=>{
-                    window.parent.postMessage({success: result.success, pk: pk});
+                    window.parent.postMessage({success: result.success, pk: pk, error: result.error.message});
                 });
             });
 

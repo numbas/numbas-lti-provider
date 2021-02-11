@@ -270,6 +270,10 @@ const app = new Vue({
             attempt.remarked_raw_score = parseFloat(api.data['cmi.score.raw']);
             attempt.status = 'remarked';
             attempt.remark_success = data.success;
+            attempt.remark_error = data.error;
+            if(!attempt.remark_success) {
+                attempt.status = 'error';
+            }
             
             const next_to_remark = this.attempts.find(a=>a.await_remark);
             if(!this.stopping_marking && next_to_remark) {
