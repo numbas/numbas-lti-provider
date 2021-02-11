@@ -126,9 +126,16 @@ class Exam(ExtractPackage):
     retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
     rest_url = models.URLField(blank=True,default='',verbose_name='URL of the exam on the editor\'s REST API')
     creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this exam was created'))
+    resource = models.ForeignKey('Resource',null=True,blank=True,on_delete=models.SET_NULL,related_name='exams')
+
+    class Meta:
+        ordering = ['-creation_time','title']
 
     def __str__(self):
         return self.title
+
+    def is_active(self):
+        return self.resource is not None and self==self.resource.exam
 
     def supports_feature(self, feature):
         root = Path(self.extracted_path)
@@ -186,7 +193,7 @@ class LTIContext(models.Model):
 
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
-    exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)
+    exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL,related_name='main_exam_of')
     context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='resources')
     title = models.CharField(max_length=300,default='')
     description = models.TextField(default='')

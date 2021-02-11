@@ -44,9 +44,12 @@ class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.e
         return context
 
     def form_valid(self,form):
-        self.object = form.save()
-        self.request.resource.exam = self.object
-        self.request.resource.save()
+        resource = self.request.resource
+        exam = self.object = form.save(commit=False)
+        exam.resource = resource
+        exam.save()
+        resource.exam = exam
+        resource.save()
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
@@ -58,8 +61,14 @@ class ReplaceExamView(CreateExamView):
     form_class = forms.ReplaceExamForm
 
     def get_context_data(self,*args,**kwargs):
+        resource = self.request.resource
         context = super(ReplaceExamView,self).get_context_data(*args,**kwargs)
-        context['current_exam'] = self.request.resource.exam
+        context['current_exam'] = resource.exam
+        exams = []
+        for exam in resource.exams.all():
+            exams.append((exam,exam.attempts.count()))
+        context['exams'] = exams
+        context['num_attempts_other_versions'] = Attempt.objects.filter(resource=resource).exclude(exam=resource.exam).count()
 
         return context
 
@@ -75,6 +84,26 @@ class ReplaceExamView(CreateExamView):
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
         return response
+
+class RestoreExamView(MustBeInstructorMixin, ResourceManagementViewMixin,generic.edit.UpdateView):
+    model = Resource
+    form_class = forms.RestoreExamForm
+
+    def get_success_url(self):
+        return reverse('replace_exam',args=(self.request.resource.pk,))
+
+class AttemptsUseCurrentVersionView(MustBeInstructorMixin, ResourceManagementViewMixin, generic.UpdateView):
+    model = Resource
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        resource = self.request.resource
+        with transaction.atomic():
+            for a in Attempt.objects.filter(resource=resource).exclude(exam=resource.exam):
+                a.exam = resource.exam
+                a.save()
+        messages.add_message(self.request,messages.INFO,_('All attempts now use the active version of this resource\'s exam.'))
+        return redirect(reverse('replace_exam',args=(resource.pk,)))
 
 class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
