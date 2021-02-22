@@ -23,12 +23,12 @@
     {{form|bootstrap}}
     <fieldset>
         <h2>{% trans "Select projects to make available" %}</h2>
-        <p>{% trans "To appear in this list, a project must be marked \"Visible to non-members\" in the editor." %}</p>
+        <p>{% blocktrans %}To appear in this list, a project must be marked "Visible to non-members" in the editor.{% endblocktrans %}</p>
         <p>{% trans "Exams from selected projects will be made available to instructors when they create an activity." %}</p>
         {% if project_formset|length %}
             <p>{% trans "Select the projects you'd like to make available below." %}</p>
         {% else %}
-            <p class="alert alert-warning">{% trans "No projects have been made visible - go to the editor and mark a project \"Visible to non-members\" before proceeding." %}</p>
+            <p class="alert alert-warning">{% blocktrans %}No projects have been made visible - go to the editor and mark a project "Visible to non-members" before proceeding.{% endblocktrans %}</p>
         {% endif %}
         {{project_formset.management_form}}
         {{project_formset.non_form_errors}}
