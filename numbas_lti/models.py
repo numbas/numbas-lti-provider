@@ -42,11 +42,11 @@ IDENTIFIER_FIELDS = [
 ]
 
 class LTIConsumer(models.Model):
-    url = models.URLField(blank=True,default='',verbose_name='Home URL of consumer')
+    url = models.URLField(blank=True,default='',verbose_name=_('Home URL of consumer'))
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
     secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
-    identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name='Field used to identify students')
+    identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name=_('Field used to identify students'))
 
     objects = NotDeletedManager()
 
@@ -106,7 +106,7 @@ class ConsumerTimePeriod(models.Model):
 
 class ExtractPackage(models.Model):
     extract_folder = 'extracted_zips'
-    static_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name='UUID of exam package on disk')
+    static_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name=_('UUID of exam package on disk'))
 
     class Meta:
         abstract = True
@@ -122,9 +122,9 @@ class ExtractPackage(models.Model):
 # Create your models here.
 class Exam(ExtractPackage):
     title = models.CharField(max_length=300)
-    package = models.FileField(upload_to='exams/',verbose_name='Package file')
-    retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
-    rest_url = models.URLField(blank=True,default='',verbose_name='URL of the exam on the editor\'s REST API')
+    package = models.FileField(upload_to='exams/',verbose_name=_('Package file'))
+    retrieve_url = models.URLField(blank=True,default='',verbose_name=_('URL used to retrieve the exam package'))
+    rest_url = models.URLField(blank=True,default='',verbose_name=_('URL of the exam on the editor\'s REST API'))
     creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this exam was created'))
     resource = models.ForeignKey('Resource',null=True,blank=True,on_delete=models.SET_NULL,related_name='exams')
 
@@ -209,7 +209,7 @@ class Resource(models.Model):
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
     email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
-    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'), help_text='Zero means unlimited attempts.')
+    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
 
     num_questions = models.PositiveIntegerField(default=0)
 
@@ -459,8 +459,8 @@ class Attempt(models.Model):
     completion_status_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_completion_status_of", null=True)
     scaled_score = models.FloatField(default=0)
     scaled_score_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_scaled_score_of", null=True)
-    sent_receipt = models.BooleanField(default=False,verbose_name='Has a completion receipt been sent?')
-    receipt_time = models.DateTimeField(blank=True,null=True,verbose_name='Time the completion receipt was sent')
+    sent_receipt = models.BooleanField(default=False,verbose_name=_('Has a completion receipt been sent?'))
+    receipt_time = models.DateTimeField(blank=True,null=True,verbose_name=_('Time the completion receipt was sent'))
 
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
@@ -1007,7 +1007,7 @@ class ScormElement(models.Model):
     key = models.CharField(max_length=200)
     value = models.TextField()
     time = models.DateTimeField()
-    counter = models.IntegerField(default=0,verbose_name='Element counter to disambiguate elements with the same timestamp')
+    counter = models.IntegerField(default=0,verbose_name=_('Element counter to disambiguate elements with the same timestamp'))
     current = models.BooleanField(default=True) # is this the latest version?
 
     class Meta:
@@ -1091,10 +1091,10 @@ class RemarkedScormElement(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,related_name='remarked_elements')
 
 class EditorLink(models.Model):
-    name = models.CharField(max_length=200,verbose_name='Editor name')
-    url = models.URLField(verbose_name='Base URL of the editor',unique=True)
-    cached_available_exams = models.TextField(blank=True,editable=False,verbose_name='Cached JSON list of available exams from this editor')
-    last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name='Time of last cache update')
+    name = models.CharField(max_length=200,verbose_name=_('Editor name'))
+    url = models.URLField(verbose_name=_('Base URL of the editor'),unique=True)
+    cached_available_exams = models.TextField(blank=True,editable=False,verbose_name=_('Cached JSON list of available exams from this editor'))
+    last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name=_('Time of last cache update'))
 
     def __str__(self):
         return self.name
@@ -1132,12 +1132,12 @@ class EditorLink(models.Model):
             return []
 
 class EditorLinkProject(models.Model):
-    editor = models.ForeignKey(EditorLink,on_delete=models.CASCADE,related_name='projects',verbose_name='Editor that this project belongs to')
-    name = models.CharField(max_length=200,verbose_name='Name of the project')
-    description = models.TextField(blank=True,verbose_name='Description of the project')
-    remote_id = models.IntegerField(verbose_name='ID of the project on the editor')
-    homepage = models.URLField(verbose_name='URL of the project\'s homepage on the editor')
-    rest_url = models.URLField(verbose_name='URL of the project on the editor\'s REST API')
+    editor = models.ForeignKey(EditorLink,on_delete=models.CASCADE,related_name='projects',verbose_name=_('Editor that this project belongs to'))
+    name = models.CharField(max_length=200,verbose_name=_('Name of the project'))
+    description = models.TextField(blank=True,verbose_name=_('Description of the project'))
+    remote_id = models.IntegerField(verbose_name=_('ID of the project on the editor'))
+    homepage = models.URLField(verbose_name=_('URL of the project\'s homepage on the editor'))
+    rest_url = models.URLField(verbose_name=_('URL of the project on the editor\'s REST API'))
 
     class Meta:
         ordering = ['name']

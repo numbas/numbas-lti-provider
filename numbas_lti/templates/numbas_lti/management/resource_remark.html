@@ -29,9 +29,9 @@
         <input id="use-unsubmitted" type="checkbox" v-model="use_unsubmitted"> <label for="use-unsubmitted">{% trans "Use unsubmitted answers" %}
     </p>
     <p>
-        <button class="btn btn-primary" @click="remark_all"><span class="glyphicon glyphicon-repeat"></span> Remark all attempts</button>
-        <button class="btn btn-warning" @click="stop_marking"><span class="glyphicon glyphicon-stop"></span> Stop marking</button>
-        <button class="btn btn-danger" @click="save_changed_attempts" :disabled="changed_attempts.length==0 || saving"><span class="glyphicon glyphicon-save"></span> Save all changed attempts</button>
+        <button class="btn btn-primary" @click="remark_all"><span class="glyphicon glyphicon-repeat"></span> {% trans "Remark all attempts" %}</button>
+        <button class="btn btn-warning" @click="stop_marking"><span class="glyphicon glyphicon-stop"></span> {% trans "Stop marking" %}</button>
+        <button class="btn btn-danger" @click="save_changed_attempts" :disabled="changed_attempts.length==0 || saving"><span class="glyphicon glyphicon-save"></span> {% trans "Save all changed attempts" %}</button>
     </p>
 
     <div class="alert alert-default" v-if="remarking_all">
@@ -40,8 +40,8 @@
                 [[remarking_progress|percent]]%
           </div>
         </div>
-        <p>Time taken: <span v-if="remark_all_time">[[remark_all_time|duration]]</span></p>
-        <p>Estimated end: <span v-if="estimated_end">[[estimated_end|duration]]</span></p>
+        <p>{% trans "Time taken:" %} <span v-if="remark_all_time">[[remark_all_time|duration]]</span></p>
+        <p>{% trans "Estimated end:" %} <span v-if="estimated_end">[[estimated_end|duration]]</span></p>
     </div>
 
     <div class="alert alert-warning" v-if="save_error">
@@ -50,15 +50,15 @@
     </div>
 
     <p>
-        [[shown_attempts.length]] of [[num_attempts]] attempts shown.
+        [[shown_attempts.length]] {% trans "of" %} [[num_attempts]] {% trans "attempts shown." %}
         [[changed_attempts.length]] {% trans " changed attempts" %}.
         <label for="show-only">{% trans "Show:" %}</label> 
         <select id="show-only" v-model="show_only">
-            <option value="all">All attempts</option>
-            <option value="completed">Only completed attempts</option>
-            <option value="changed">Only changed scores</option>
-            <option value="increased">Only increased scores</option>
-            <option value="decreased">Only decreased scores</option>
+            <option value="all">{% trans "All attempts" %}</option>
+            <option value="completed">{% trans "Only completed attempts" %}</option>
+            <option value="changed">{% trans "Only changed scores" %}</option>
+            <option value="increased">{% trans "Only increased scores" %}</option>
+            <option value="decreased">{% trans "Only decreased scores" %}</option>
         </select>
     </p>
 
@@ -88,14 +88,14 @@
         <tbody>
             <tr class="hidden-attempts-count text-muted" v-if="num_attempts_hidden > 0">
                 <td colspan="6">
-                    [[num_attempts_hidden]] hidden [[ 'attempt' | pluralize(num_attempts_hidden) ]].
+                    {% trans "Number of hidden attempts:" %} [[num_attempts_hidden]].
                 </td>
             </tr>
             <template v-for="attempt in shown_attempts">
             <tr class="attempt" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
                 <td>[[attempt.user.full_name]]</td>
                 <td>[[attempt.user.identifier]]</td>
-                <td>[[attempt.completion_status]]</td>
+                <td>[[attempt.get_completion_status_display]]</td>
                 <td>[[attempt.original_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</td>
                 <td>
                     <span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</span>

@@ -19,7 +19,7 @@
 <h1>{% trans "Dashboard" %}</h1>
 
 <form method="GET" action="{% url 'global_search' %}">
-    <label for="search">Search for users, contexts or resources:</label>
+    <label for="search">{% trans "Search for users, contexts or resources:" %}</label>
     <input type="text" id="search" name="query" autocomplete="off">
     <button type="submit" class="btn btn-default">{% trans "Search" %}</button>
 </form>
