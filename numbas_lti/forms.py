@@ -109,12 +109,12 @@ class CreateExamForm(ModelForm):
             try:
                 test_zipfile(zipfile.ZipFile(cleaned_data['package'].file))
             except ExamTestException as e:
-                raise forms.ValidationError("There was an error while testing this exam package: <pre>{}</pre>".format(utils.html.escape(e)))
+                raise forms.ValidationError(_("There was an error while testing this exam package:") + "<pre>{}</pre>".format(utils.html.escape(e)))
 
         return cleaned_data
 
 class ReplaceExamForm(CreateExamForm):
-    safe_replacement = forms.BooleanField(required=False,label='This is a safe replacement for the previous exam package')
+    safe_replacement = forms.BooleanField(required=False,label=_('This is a safe replacement for the previous exam package'))
 
 class RestoreExamForm(ModelForm):
     class Meta:
@@ -144,13 +144,13 @@ class CreateEditorLinkForm(ModelForm):
         try:
             response = requests.get('{}/api/handshake'.format(url), timeout=getattr(settings,'REQUEST_TIMEOUT',60))
             if response.status_code != 200:
-                raise Exception("Request returned HTTP status code {}.".format(response.status_code))
+                raise Exception(_("Request returned HTTP status code") + " {}.".format(response.status_code))
             data = response.json()
             if data.get('numbas_editor')!=1:
-                raise Exception("This doesn't seem to be a Numbas editor instance.")
+                raise Exception(_("This doesn't seem to be a Numbas editor instance."))
             self.cleaned_data['name'] = data['site_title']
         except (Exception,json.JSONDecodeError,requests.exceptions.RequestException) as e:
-            raise forms.ValidationError("There was an error connecting to this URL: {}".format(e))
+            raise forms.ValidationError(_("There was an error connecting to this URL:") + " {}".format(e))
         return url
 
     def save(self,commit=True):
