@@ -110,10 +110,56 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
     template_name = 'numbas_lti/management/dashboard.html'
     management_tab = 'dashboard'
 
+    def get_exam_info(self):
+        content = self.get_object().exam.source()
+        if content is None:
+            return
+        nav = content.get('navigation',{})
+        timing = content.get('timing',{})
+        feedback = content.get('feedback',{})
+
+        showResultsPage =nav.get('showresultspage')
+        duration = content.get('duration')
+        percentPass = content.get('percentPass')
+        info = {
+            'hasPercentPass': percentPass and percentPass != '0',
+            'percentPass':  percentPass,
+            'hasTimeLimit': duration and duration != '0',
+            'duration':  int(duration)/60 if duration else None,
+            'allowPrinting':  content.get('allowPrinting'),
+
+            'allowRegen':  nav.get('allowregen'),
+            'allowReverse':  nav.get('reverse'),
+            'allowBrowse':  nav.get('browse'),
+            'allowSteps':  nav.get('allowsteps'),
+
+            'completionShowResultsPage': showResultsPage == 'oncompletion',
+            'reviewShowResultsPage': showResultsPage == 'oncompletion' or showResultsPage == 'review',
+
+            'leaveUnattempted': nav.get('onleave',{}).get('action') != 'preventifunattempted',
+            
+            'navigateMode':  nav.get('navigatemode'),
+            'startPassword':  nav.get('startpassword'),
+
+            'allowPause':  timing.get('allowPause'),
+
+            'showActualMark':  feedback.get('showactualmark'),
+            'showTotalMark':  feedback.get('showTotalMark'),
+            'showAnswerState':  feedback.get('showanswerstate'),
+            'allowRevealAnswer':  feedback.get('allowrevealanswer'),
+            'reviewShowScore':  feedback.get('reviewshowscore'),
+            'reviewShowFeedback':  feedback.get('reviewshowfeedback'),
+            'reviewShowAdvice':  feedback.get('reviewshowadvice'),
+            'reviewShowExpectedAnswer': feedback.get('reviewshowexpectedanswer'),
+        }
+        return info
+
     def get_context_data(self,*args,**kwargs):
         context = super(DashboardView,self).get_context_data(*args,**kwargs)
 
         resource = self.get_object()
+
+        context['exam_info'] = self.get_exam_info()
 
         context['instructors'] = User.objects.filter(lti_data__in=LTIUserData.objects.filter(resource=resource,is_instructor=True)).distinct()
 

@@ -152,6 +152,15 @@ class Exam(ExtractPackage):
         features = manifest.get('features',{})
         return features.get(feature)
 
+    def source(self):
+        try:
+            with open(str(Path(self.extracted_path) / 'source.exam')) as f:
+                content = json.loads(re.sub(r'^// Numbas version: .*\n','',f.read()))
+                return content
+        except (FileNotFoundError,json.JSONDecodeError):
+            return
+
+
 GRADING_METHODS = [
     ('highest',_('Highest score')),
     ('last',_('Last attempt')),
