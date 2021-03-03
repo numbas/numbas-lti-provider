@@ -33,6 +33,7 @@
 
 {% block javascripts %}
 {{block.super}}
+    {% get_current_language as LANGUAGE_CODE %}
     <script src="{% statici18n LANGUAGE_CODE %}"></script>
     <script src="{% static 'discount_remark.js' %}"></script>
     <script src="{% static 'zepto/zepto.js' %}"></script>

@@ -62,6 +62,7 @@
 
 {% block javascripts %}
 <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+{% get_current_language as LANGUAGE_CODE %}
 <script src="{% statici18n LANGUAGE_CODE %}"></script>
 {% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>

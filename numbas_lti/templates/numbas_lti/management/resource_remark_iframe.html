@@ -4,6 +4,7 @@
 <!doctype html>
 <html>
     <head>
+        {% get_current_language as LANGUAGE_CODE %}
         <script src="{% statici18n LANGUAGE_CODE %}"></script>
         <script src="{{scripts_url}}"></script>
         <script src="{% static 'resource_remark_iframe.js' %}"></script>

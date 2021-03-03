@@ -54,6 +54,7 @@ if(!Modernizr.websockets) {
     window.location = '/no-websockets';
 }
 </script>
+{% get_current_language as LANGUAGE_CODE %}
 <script src="{% statici18n LANGUAGE_CODE %}"></script>
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 <script type="text/javascript" src="{% static 'promise.min.js' %}"></script>

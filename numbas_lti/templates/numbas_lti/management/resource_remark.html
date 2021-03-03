@@ -151,6 +151,7 @@
     {{attempts|json_script:"attempts-json"}}
     {{exam_source|json_script:"exam-source-json"}}
 
+    {% get_current_language as LANGUAGE_CODE %}
     <script src="{% statici18n LANGUAGE_CODE %}"></script>
     {% include "numbas_lti/scripts/luxon.html" %}
     <script src="{% static 'vue.js' %}"></script>

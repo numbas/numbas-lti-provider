@@ -103,6 +103,7 @@
 
     {% include "numbas_lti/scripts/luxon.html" %}
     <script src="{% static 'd3/d3.min.js' %}"></script>
+    {% get_current_language as LANGUAGE_CODE %}
     <script src="{% statici18n LANGUAGE_CODE %}"></script>
 
     {{data|json_script:"data-json"}}
