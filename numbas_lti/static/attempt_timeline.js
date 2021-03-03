@@ -1,5 +1,7 @@
 var DateTime = luxon.DateTime;
 
+var _ = gettext;
+
 function percentage(n) {
     return Math.floor(100*n)+'%';
 }
@@ -12,7 +14,7 @@ function pluralise(n,single,plural) {
 function parse_part_path(path) {
     var m = path.match(/^q(\d+)(?:p(\d+)(?:g(\d+)|s(\d+))?)?$/);
     if(!m) {
-        throw(new Error("Can't parse part path "+path));
+        throw(new Error(interpolate("Can't parse part path %s"),[path]));
     }
     return {
         question: parseInt(m[1]),
@@ -200,8 +202,8 @@ Timeline.prototype = {
         if(key=='cmi.completion_status') {
             this.completion_status(element.value);
             var messages = {
-                'incomplete': 'Started the attempt.',
-                'completed': 'Ended the attempt.',
+                'incomplete': _('Started the attempt.'),
+                'completed': _('Ended the attempt.'),
             };
             var message = messages[element.value];
             var icons = {
@@ -227,7 +229,7 @@ Timeline.prototype = {
         if(key=='cmi.location') {
             var number = parseInt(element.value);
             this.add_timeline_item(new TimelineItem(
-                'Moved to <em class="question">Question '+(number+1)+'</em>.',
+                interpolate(_('Moved to <em class="question">Question %s</em>.'),[number+1]),
                 element,
                 'scorm location',
                 'list'
@@ -238,7 +240,7 @@ Timeline.prototype = {
             var p = this.getPart(id,element);
             if(p.type!=='gapfill' && element.value!='undefined') {
                 this.add_timeline_item(new TimelineItem(
-                    'Submitted answer <code>'+element.value+'</code> for <em class="part">'+p.name+'</em>.',
+                    interpolate(_('Submitted answer <code>%s</code> for <em class="part">%s</em>.'),[element.value,p.name]),
                     element,
                     'scorm part answer',
                     'pencil'
@@ -252,7 +254,7 @@ Timeline.prototype = {
             });
             if(!later && p.type!=='gapfill' && element.value!='undefined') {
                 this.add_timeline_item(new TimelineItem(
-                    'Entered but did not submit answer <code>'+element.value+'</code> for <em class="part">'+p.name+'</em>.',
+                    interpolate(_('Entered but did not submit answer <code>%s</code> for <em class="part">%s</em>.'),[element.value,p.name]),
                     element,
                     'scorm part answer',
                     'pencil'
@@ -263,7 +265,7 @@ Timeline.prototype = {
             var p = this.getPart(id,element);
             var score = parseFloat(element.value);
             this.add_timeline_item(new TimelineItem(
-                'Received <strong>'+score+'/'+p.marks+'</strong> '+pluralise(score,'mark','marks')+' for <em class="part">'+p.name+'</em>.',
+                interpolate(ngettext('Received <strong>%s/%s</strong> mark for <em class="part">%s</em>.','Received <strong>%s/%s</strong> marks for <em class="part">%s</em>.',score),[score,p.marks,p.name]),
                 element,
                 'scorm part score',
                 score_icon(score,p.marks)
@@ -271,21 +273,21 @@ Timeline.prototype = {
         } else if(m = key.match(/^cmi.objectives.(\d+).score.raw$/)) {
             var id = parseInt(m[1]);
             this.add_timeline_item(new TimelineItem(
-                'Total score for <em class="question">Question '+(id+1)+'</em> is <strong>'+element.value+'</strong>.',
+                interpolate(_('Total score for <em class="question">Question %s</em> is <strong>%s</strong>.'),[id+1,element.value]),
                 element,
                 'scorm question score raw',
                 ''
             ));
         } else if(key=='cmi.score.raw') {
             this.add_timeline_item(new TimelineItem(
-                'Total score for exam is <strong>'+element.value+'</strong>.',
+                interpolate(_('Total score for exam is <strong>%s</strong>.'),[element.value]),
                 element,
                 'scorm exam score raw',
                 ''
             ));
         } else if(key=='x.reason ended') {
             this.add_timeline_item(new TimelineItem(
-                'The session was ended automatically because: <strong>'+element.value+'</strong>.',
+                interoplate(_('The session was ended automatically because: <strong>%s</strong>.'),[element.value]),
                 element,
                 'scorm reason-ended',
                 'saved'
@@ -295,9 +297,9 @@ Timeline.prototype = {
     add_launch: function(launch) {
         var msg;
         if(launch.user!=null) {
-            msg = 'Launched in '+launch.mode+' mode by '+launch.user+'.';
+            msg = interpolate(_('Launched in %s mode by %s.'),[launch.mode,launch.user]);
         } else {
-            msg = 'Launched in '+launch.mode+' mode.';
+            msg = interpolate(_('Launched in %s mode.'),launch.mode);
         }
         this.add_timeline_item(new TimelineItem(
             msg,

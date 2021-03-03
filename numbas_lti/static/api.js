@@ -7,6 +7,8 @@
  * @param {number} attempt_pk - the id of the associated attempt in the database
  * @param {string} fallback_url - URL of the AJAX fallback endpoint
  */
+var _ = gettext;
+
 function SCORM_API(options) {
     var data = options.scorm_cmi;
     var sc = this;
@@ -252,7 +254,7 @@ SCORM_API.prototype = {
             try {
                 var d = JSON.parse(e.data);
             } catch(e) {
-                console.log("Error reading socket message",e.data);
+                console.log(_("Error reading socket message"),e.data);
                 return;
             }
 
@@ -267,11 +269,11 @@ SCORM_API.prototype = {
             }
 
             if(sc.mode!='review' && d.current_uid && d.current_uid != sc.uid) {
-                sc.external_kill("This attempt has been opened in another window. You may not enter any more answers here. You may continue in the other window. Click OK to leave this attempt.");
+                sc.external_kill(_("This attempt has been opened in another window. You may not enter any more answers here. You may continue in the other window. Click OK to leave this attempt."));
             }
 
             if(sc.mode!='review' && d.completion_status == 'completed') {
-                sc.external_kill("This attempt has been ended in another window. You may not enter any more answers here. Click OK to leave this attempt.");
+                sc.external_kill(_("This attempt has been ended in another window. You may not enter any more answers here. Click OK to leave this attempt."));
             }
         }
 
@@ -584,7 +586,7 @@ SCORM_API.prototype = {
                     if(!response.ok) {
                         return new Promise(function(resolve,reject) {
                             response.text().then(function(t){
-                                console.error('SCORM HTTP fallback error message: '+t);
+                                console.error(interpolate(_('SCORM HTTP fallback error message: %s'),[t]));
                                 sc.ajax_failed(t);
                                 reject(t);
                             });
@@ -622,7 +624,7 @@ SCORM_API.prototype = {
 
     ajax_failed: function(error) {
         this.pending_ajax = false;
-        console.error('failed to send SCORM data over HTTP');
+        console.error(_('Failed to send SCORM data over HTTP'));
         this.last_ajax_succeeded = false;
         this.ajax_period *= this.ajax_period_exponent;
         this.callbacks.trigger('ajax.failed',error.message);

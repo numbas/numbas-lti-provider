@@ -1,6 +1,6 @@
 function die(e) {
     console.error(e);
-    alert("There's been an error: "+e.message);
+    alert(interpolate(gettext("There's been an error: %s"),[e.message]));
 }
 
 const numbas_ready = new Promise((resolve,reject) => {

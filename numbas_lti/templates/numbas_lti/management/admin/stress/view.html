@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
 {% load staticfiles %}
+{% load statici18n %}
 
 {% block title %}{% blocktrans with time=object.resource.creation_time %}Stress test {{time}}{% endblocktrans %} - {{block.super}}{% endblock %}
 
@@ -17,6 +18,7 @@
 {% include 'numbas_lti/scripts/luxon.html' %}
 <script src="{% static 'api.js' %}"></script>
 <script src="{% static 'vue.js' %}"></script>
+<script src="{% statici18n LANGUAGE_CODE %}"></script>
 <script src="{% static 'stresstest.js' %}"></script>
 {% endblock %}
 

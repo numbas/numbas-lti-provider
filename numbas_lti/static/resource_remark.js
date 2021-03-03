@@ -11,7 +11,6 @@ Vue.filter('percent', function (value) {
 })
 
 Vue.filter('pluralize', function (str, number) {
-    console.log(str,number);
     return str + (Math.abs(number)==1 ? '' : 's');
 })
 
@@ -247,7 +246,7 @@ const app = new Vue({
                 if(!d.success) {
                     this.save_error = d.message;
                 }
-                attempts.forEach(a=>a.status= d.saved.indexOf(a.pk)!=-1 ? 'saved' : 'error saving');
+                attempts.forEach(a=>a.status = d.saved.indexOf(a.pk)!=-1 ? 'saved' : 'error saving');
             }).catch(err=>{
                 this.save_error = err;
             });

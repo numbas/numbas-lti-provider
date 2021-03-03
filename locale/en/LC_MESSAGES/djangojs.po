@@ -1,0 +1,178 @@
+# Numbas LTI provider client-side strings
+# Copyright (C) 2021 Newcastle University
+# This file is distributed under the Apache 2.0 licence.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: v2.10\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-03-03 10:20+0000\n"
+"PO-Revision-Date: 2021-03-02 11:49+0000\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: numbas_lti/static/api.js:257
+msgid "Error reading socket message"
+msgstr ""
+
+#: numbas_lti/static/api.js:272
+msgid ""
+"This attempt has been opened in another window. You may not enter any more "
+"answers here. You may continue in the other window. Click OK to leave this "
+"attempt."
+msgstr ""
+
+#: numbas_lti/static/api.js:276
+msgid ""
+"This attempt has been ended in another window. You may not enter any more "
+"answers here. Click OK to leave this attempt."
+msgstr ""
+
+#: numbas_lti/static/api.js:589
+#, javascript-format
+msgid "SCORM HTTP fallback error message: %s"
+msgstr ""
+
+#: numbas_lti/static/api.js:627
+msgid "Failed to send SCORM data over HTTP"
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:205
+msgid "Started the attempt."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:206
+msgid "Ended the attempt."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:232
+#, javascript-format
+msgid "Moved to <em class=\"question\">Question %s</em>."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:243
+#, javascript-format
+msgid "Submitted answer <code>%s</code> for <em class=\"part\">%s</em>."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:257
+#, javascript-format
+msgid ""
+"Entered but did not submit answer <code>%s</code> for <em class=\"part\">%s</"
+"em>."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:268
+#, javascript-format
+msgid "Received <strong>%s/%s</strong> mark for <em class=\"part\">%s</em>."
+msgid_plural ""
+"Received <strong>%s/%s</strong> marks for <em class=\"part\">%s</em>."
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/static/attempt_timeline.js:276
+#, javascript-format
+msgid ""
+"Total score for <em class=\"question\">Question %s</em> is <strong>%s</"
+"strong>."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:283
+#, javascript-format
+msgid "Total score for exam is <strong>%s</strong>."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:290
+#, javascript-format
+msgid "The session was ended automatically because: <strong>%s</strong>."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:300
+#, javascript-format
+msgid "Launched in %s mode by %s."
+msgstr ""
+
+#: numbas_lti/static/attempt_timeline.js:302
+#, javascript-format
+msgid "Launched in %s mode."
+msgstr ""
+
+#: numbas_lti/static/discount_remark.js:55
+#, javascript-format
+msgid "question %s part %s"
+msgstr ""
+
+#: numbas_lti/static/discount_remark.js:57
+#, javascript-format
+msgid " gap %s"
+msgstr ""
+
+#: numbas_lti/static/discount_remark.js:60
+#, javascript-format
+msgid " step %s"
+msgstr ""
+
+#: numbas_lti/static/resource-stats.js:30
+#, javascript-format
+msgid "%s minute"
+msgid_plural "%s minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/static/resource-stats.js:32
+#, javascript-format
+msgid "%s hour"
+msgid_plural "%s hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/static/resource-stats.js:34
+#, javascript-format
+msgid "%s day"
+msgid_plural "%s days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/static/resource-stats.js:49
+msgid "Total score"
+msgstr ""
+
+#: numbas_lti/static/resource-stats.js:50
+msgid "Start time"
+msgstr ""
+
+#: numbas_lti/static/resource-stats.js:51
+msgid "End time"
+msgstr ""
+
+#: numbas_lti/static/resource-stats.js:52
+msgid "Time taken"
+msgstr ""
+
+#: numbas_lti/static/resource-stats.js:96
+#, javascript-format
+msgctxt "question label"
+msgid "Q%s"
+msgstr ""
+
+#: numbas_lti/static/resource-stats.js:160
+#: numbas_lti/static/resource-stats.js:191
+#: numbas_lti/static/resource-stats.js:193
+#: numbas_lti/static/resource-stats.js:194
+#: numbas_lti/static/resource-stats.js:243
+msgid "Total"
+msgstr ""
+
+#: numbas_lti/static/resource_remark_iframe.js:3
+#, javascript-format
+msgid "There's been an error: %s"
+msgstr ""
+
+#: numbas_lti/static/stresstest.js:135
+#, javascript-format
+msgid "Error starting attempt: %s"
+msgstr ""

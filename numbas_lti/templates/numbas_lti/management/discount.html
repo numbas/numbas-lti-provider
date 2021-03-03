@@ -2,6 +2,7 @@
 {% load percentage %}
 {% load i18n %}
 {% load staticfiles %}
+{% load statici18n %}
 
 {% block stylesheets %}
 {{block.super}}
@@ -32,6 +33,7 @@
 
 {% block javascripts %}
 {{block.super}}
+    <script src="{% statici18n LANGUAGE_CODE %}"></script>
     <script src="{% static 'discount_remark.js' %}"></script>
     <script src="{% static 'zepto/zepto.js' %}"></script>
 

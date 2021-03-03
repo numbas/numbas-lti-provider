@@ -2,6 +2,7 @@
 {% load bootstrap %}
 {% load i18n %}
 {% load staticfiles %}
+{% load statici18n %}
 
 {% block management_content %}
 <h2>
@@ -102,6 +103,7 @@
 
     {% include "numbas_lti/scripts/luxon.html" %}
     <script src="{% static 'd3/d3.min.js' %}"></script>
+    <script src="{% statici18n LANGUAGE_CODE %}"></script>
 
     {{data|json_script:"data-json"}}
 

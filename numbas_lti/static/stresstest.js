@@ -1,3 +1,5 @@
+var _ = gettext;
+
 Vue.filter('pluralize',function(n,word,plural) {
     if(n==1) {
         return word;
@@ -130,7 +132,7 @@ var app = new Vue({
                     attempt.set_element();
                 }
             },function(error) {
-                console.error("Error starting attempt: ",error);
+                console.error(interpolate(_("Error starting attempt: %s"),[error]));
             })
         },
         wipe: function() {

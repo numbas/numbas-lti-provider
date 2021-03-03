@@ -1,3 +1,5 @@
+var _ = gettext;
+
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -50,12 +52,12 @@ function describe_part_path(path) {
         return path;
     }
     var ns = m.slice(1).map(function(x){ return parseInt(x)+1; })
-    var desc = 'question '+ns[0]+' part '+ns[1];
+    var desc = interpolate(_('question %s part %s'),[ns[0],ns[1]]);
     if(m[3]!=null) {
-        desc += ' gap '+ns[2];
+        desc += interpolate(_(' gap %s'),[ns[2]]);
     }
     if(m[4]!=null) {
-        desc += ' step '+ns[3];
+        desc += interpolate(_(' step %s'),[ns[3]]);
     }
     return desc;
 }

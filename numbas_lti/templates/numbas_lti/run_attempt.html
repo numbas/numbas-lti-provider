@@ -1,5 +1,6 @@
 {% load staticfiles %}
 {% load i18n %}
+{% load statici18n %}
 <!doctype html>
 <html>
 <head>
@@ -53,6 +54,7 @@ if(!Modernizr.websockets) {
     window.location = '/no-websockets';
 }
 </script>
+<script src="{% statici18n LANGUAGE_CODE %}"></script>
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 <script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'fetch.js' %}"></script>

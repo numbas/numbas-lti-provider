@@ -5,6 +5,8 @@ var completed_toggle = document.getElementById('completed-toggle');
 var data = JSON.parse(document.getElementById('data-json').textContent);
 var only_completed = false;
 
+var _ = gettext;
+
 var question_scores_svg = d3.select("#question_scores_chart .chart").append('svg');
 var question_scores_g = question_scores_svg.append('g');
 question_scores_g.append('g').attr('class','x-axis');
@@ -25,11 +27,11 @@ function update_summary_stats_table() {
     function format_duration(d) {
         d = luxon.Duration.fromMillis(d);
         if(d.as('minutes')<120) {
-            return d.toFormat('m')+' minutes';
+            return interpolate(ngettext('%s minute','%s minutes',d.toFormat('m')),[d.toFormat('m')]);
         } else if(d.as('hours')<48) {
-            return d.toFormat('h')+' hours';
+            return interpolate(ngettext('%s hour','%s hours',d.toFormat('h')),[d.toFormat('h')]);
         } else {
-            return d.toFormat('d')+' days';
+            return interpolate(ngettext('%s day','%s days',d.toFormat('d')),[d.toFormat('d')]);
         }
     }
     function timeFormat(t) {
@@ -44,10 +46,10 @@ function update_summary_stats_table() {
         attempts = attempts.filter(a=>a.completion_status=='completed');
     }
     var stats = [
-        {label: 'Total score', values: attempts.map(a=>a.scaled_score).sort(d3.ascending), format: percentFormat},
-        {label: 'Start time', values: attempts.map(a=>a.start_time).sort(d3.ascending), format: timeFormat},
-        {label: 'End time', values: attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: timeFormat},
-        {label: 'Time taken', values: attempts.filter(a=>a.end_time).map(a=>a.end_time-a.start_time).sort(d3.ascending), format: format_duration}
+        {label: _('Total score'), values: attempts.map(a=>a.scaled_score).sort(d3.ascending), format: percentFormat},
+        {label: _('Start time'), values: attempts.map(a=>a.start_time).sort(d3.ascending), format: timeFormat},
+        {label: _('End time'), values: attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: timeFormat},
+        {label: _('Time taken'), values: attempts.filter(a=>a.end_time).map(a=>a.end_time-a.start_time).sort(d3.ascending), format: format_duration}
     ];
     var table = d3.select('#summary-stats-table')
     var rows = table.select('tbody').selectAll('tr').data(stats)
@@ -91,7 +93,7 @@ function cmp(a,b) {
 }
 
 function question_label(n) {
-    return 'Q'+(parseInt(n)+1);
+    return interpolate(pgettext('question label','Q%s'),[parseInt(n)+1]);
 }
 
 function update_question_scores_chart() {
@@ -155,7 +157,7 @@ function update_question_scores_chart() {
     ;
 
     var yName = d3.scalePoint()
-        .domain(['Total'].concat(categories.map(question_label)))
+        .domain([_('Total')].concat(categories.map(question_label)))
         .range([yHeight/2, height-yHeight*0.3])
     ;
     question_scores_g.select('.y-axis')
@@ -186,10 +188,10 @@ function update_question_scores_chart() {
         var density = cumulative_path(qs);
         allDensity.push({key: key, density: density, number: number});
     }
-    allDensity.push({key: 'Total', density: cumulative_path(attempts.map(function(a) { return a.scaled_score; }))});
+    allDensity.push({key: _('Total'), density: cumulative_path(attempts.map(function(a) { return a.scaled_score; }))});
 
-    var question_colour = function(d) { return d.key=='Total' ? '#eee' : d3.schemeCategory10[d.number%10]; }
-    var circle_colour = function(d) { return d.key=='Total' ? '#555' : d3.schemeCategory10[d.number%10]; }
+    var question_colour = function(d) { return d.key==_('Total') ? '#eee' : d3.schemeCategory10[d.number%10]; }
+    var circle_colour = function(d) { return d.key==_('Total') ? '#555' : d3.schemeCategory10[d.number%10]; }
 
     var bgs = question_scores_g.selectAll('.question-bg').data(allDensity);
     bgs.enter()
@@ -238,7 +240,7 @@ function update_question_scores_chart() {
 
     var circle_data = 
         data.questions.map(function(q){ return {key: question_label(q.number), scaled_score: q.scaled_score, number: q.number} })
-        .concat(attempts.map(function(a){ return {key: 'Total', scaled_score: a.scaled_score} }))
+        .concat(attempts.map(function(a){ return {key: _('Total'), scaled_score: a.scaled_score} }))
     ;
 
     var circles = question_scores_g.selectAll('.question-dot')

@@ -2,6 +2,7 @@
 {% load bootstrap %}
 {% load i18n %}
 {% load staticfiles %}
+{% load statici18n %}
 
 {% block management_content %}
 <h2>
@@ -150,6 +151,7 @@
     {{attempts|json_script:"attempts-json"}}
     {{exam_source|json_script:"exam-source-json"}}
 
+    <script src="{% statici18n LANGUAGE_CODE %}"></script>
     {% include "numbas_lti/scripts/luxon.html" %}
     <script src="{% static 'vue.js' %}"></script>
     <script src="{% static 'api.js' %}"></script>

@@ -1,5 +1,6 @@
 {% extends "numbas_lti/management/attempt_base.html" %}
 {% load staticfiles %}
+{% load statici18n %}
 {% load i18n %}
 
 {% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}
@@ -61,6 +62,7 @@
 
 {% block javascripts %}
 <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+<script src="{% statici18n LANGUAGE_CODE %}"></script>
 {% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 {{elements|json_script:"scorm-elements"}}
