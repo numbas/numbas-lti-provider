@@ -95,7 +95,7 @@ class CreateExamForm(ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        package = cleaned_data['package']
+        package = cleaned_data.get('package')
         retrieve_url = cleaned_data.get('retrieve_url')
         if package is None and retrieve_url:
             scheme, netloc, path, params, qs, fragment = urlparse(retrieve_url)
