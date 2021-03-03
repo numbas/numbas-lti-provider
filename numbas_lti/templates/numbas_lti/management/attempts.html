@@ -54,10 +54,10 @@
             <input type="hidden" name="userid" value="">
             <input id="query" name="query" type="search" class="form-control" value="{{query}}">
             {% if query %}
-                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
+            <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">{% trans "Clear query" %}</span></a>
             {% endif %}
             <div class="input-group-btn">
-                <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">Search</span></button>
+                <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">{% trans "Search" %}</span></button>
             </div>
         </div>
     </form>

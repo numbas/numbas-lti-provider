@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Numbas LTI Tool Provider\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-03 10:41+0000\n"
+"POT-Creation-Date: 2021-03-03 10:53+0000\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -26,6 +26,30 @@ msgstr ""
 "Die hochgeladene zip-Datei enthält keine Datei imsmanifest.xml - stellen Sie "
 "sicher, dass Sie ein SCORM-Paket aus dem Editor herunterladen."
 
+#: numbas_lti/forms.py:112
+#, fuzzy
+#| msgid "There was an error while saving some data."
+msgid "There was an error while testing this exam package:"
+msgstr "Beim Speichern ist ein Fehler aufgetreten."
+
+#: numbas_lti/forms.py:117
+msgid "This is a safe replacement for the previous exam package"
+msgstr ""
+
+#: numbas_lti/forms.py:147
+msgid "Request returned HTTP status code"
+msgstr ""
+
+#: numbas_lti/forms.py:150
+msgid "This doesn't seem to be a Numbas editor instance."
+msgstr ""
+
+#: numbas_lti/forms.py:153
+#, fuzzy
+#| msgid "There was an error remarking this attempt:"
+msgid "There was an error connecting to this URL:"
+msgstr "Es ist ein Fehler beim Neubewerten dieses Versuchs aufgetreten:"
+
 #: numbas_lti/models.py:39
 #: numbas_lti/templates/numbas_lti/management/admin/global_search.html:60
 #: numbas_lti/templates/numbas_lti/management/admin/user_info.html:12
@@ -41,6 +65,10 @@ msgstr "Email-Adresse"
 #: numbas_lti/models.py:41
 msgid "None"
 msgstr "Keine Angabe"
+
+#: numbas_lti/models.py:45
+msgid "Home URL of consumer"
+msgstr ""
 
 #: numbas_lti/models.py:46
 #: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:25
@@ -58,140 +86,442 @@ msgstr ""
 msgid "Shared secret"
 msgstr "Gemeinsames Geheimnis"
 
-#: numbas_lti/models.py:128
+#: numbas_lti/models.py:49
+msgid "Field used to identify students"
+msgstr ""
+
+#: numbas_lti/models.py:54
+#, fuzzy
+#| msgid "LTI Consumers"
+msgid "LTI consumer"
+msgstr "LTI-Consumer"
+
+#: numbas_lti/models.py:55
+#, fuzzy
+#| msgid "LTI Consumers"
+msgid "LTI consumers"
+msgstr "LTI-Consumer"
+
+#: numbas_lti/models.py:109
+#, fuzzy
+#| msgid "Time period"
+msgid "time period"
+msgstr "Zeitspanne"
+
+#: numbas_lti/models.py:110
+#, fuzzy
+#| msgid "Time period"
+msgid "time periods"
+msgstr "Zeitspanne"
+
+#: numbas_lti/models.py:115
+#, fuzzy
+#| msgid "Download exam package"
+msgid "UUID of exam package on disk"
+msgstr "Testpaket herunterladen"
+
+#: numbas_lti/models.py:131
+msgid "Package file"
+msgstr ""
+
+#: numbas_lti/models.py:132
+#, fuzzy
+#| msgid "Replace the exam package"
+msgid "URL used to retrieve the exam package"
+msgstr "Das Testpaket ersetzen"
+
+#: numbas_lti/models.py:133
+msgid "URL of the exam on the editor's REST API"
+msgstr ""
+
+#: numbas_lti/models.py:134
 msgid "Time this exam was created"
 msgstr "Zeitpunkt, an dem dieser Test erstellt wurde."
 
-#: numbas_lti/models.py:156
+#: numbas_lti/models.py:138
+msgid "exam"
+msgstr ""
+
+#: numbas_lti/models.py:139
+msgid "exams"
+msgstr ""
+
+#: numbas_lti/models.py:164
 msgid "Highest score"
 msgstr "Höchste Punktzahl"
 
-#: numbas_lti/models.py:157
+#: numbas_lti/models.py:165
 msgid "Last attempt"
 msgstr "Letzter Versuch"
 
-#: numbas_lti/models.py:161
+#: numbas_lti/models.py:169
 msgid "Immediately"
 msgstr "Sofort"
 
-#: numbas_lti/models.py:162
+#: numbas_lti/models.py:170
 msgid "On completion"
 msgstr "Nach Beendigung"
 
-#: numbas_lti/models.py:163
+#: numbas_lti/models.py:171
 msgid "Manually, by instructor"
 msgstr "Manuell durch die Lehrperson"
 
-#: numbas_lti/models.py:166
+#: numbas_lti/models.py:174
 msgid "Reporting scores"
 msgstr "Punktzahlen werden zurückgemeldet"
 
-#: numbas_lti/models.py:167
+#: numbas_lti/models.py:175
 msgid "Error encountered"
 msgstr "Es ist ein Fehler aufgetreten"
 
-#: numbas_lti/models.py:168
+#: numbas_lti/models.py:176
 msgid "All scores reported"
 msgstr "Alle Punktzahlen zurückgegeben"
 
-#: numbas_lti/models.py:172
+#: numbas_lti/models.py:180
 msgid "Always"
 msgstr "Immer"
 
-#: numbas_lti/models.py:173
+#: numbas_lti/models.py:181
 msgid "When attempt is complete"
 msgstr "Wenn der Versuch beendet wurde"
 
-#: numbas_lti/models.py:174
+#: numbas_lti/models.py:182
 msgid "When review is allowed"
 msgstr "Wann die Einsicht erlaubt ist"
 
-#: numbas_lti/models.py:175
+#: numbas_lti/models.py:183
 msgid "Never"
 msgstr "Nie"
 
-#: numbas_lti/models.py:201
+#: numbas_lti/models.py:194
+#, fuzzy
+#| msgid "context"
+msgid "LTI context"
+msgstr "Kontext"
+
+#: numbas_lti/models.py:195
+#, fuzzy
+#| msgid "context"
+msgid "LTI contexts"
+msgstr "Kontext"
+
+#: numbas_lti/models.py:213
 msgid "Time this resource was created"
 msgstr "Erstellungszeitpunkt"
 
-#: numbas_lti/models.py:203
+#: numbas_lti/models.py:215
 msgid "Grading method"
 msgstr "Bewertungsmethode"
 
-#: numbas_lti/models.py:204
+#: numbas_lti/models.py:216
 msgid "Include incomplete attempts in grading?"
 msgstr "Unvollständige Versuche für die Bewertung berücksichtigen?"
 
-#: numbas_lti/models.py:205
+#: numbas_lti/models.py:217
 msgid "When to show scores to students"
 msgstr "Wann die erreichte Punktzahl den Studierenden gezeigt wird"
 
-#: numbas_lti/models.py:206
+#: numbas_lti/models.py:218
 msgid "Available from"
 msgstr "Verfügbar von"
 
-#: numbas_lti/models.py:207
+#: numbas_lti/models.py:219
 msgid "Available until"
 msgstr "Verfügbar bis"
 
-#: numbas_lti/models.py:208
+#: numbas_lti/models.py:220
 msgid "Allow students to review attempts from"
 msgstr "Studierenden Einsicht erlauben von"
 
-#: numbas_lti/models.py:209
+#: numbas_lti/models.py:221
 msgid "When to report scores back"
 msgstr "Wann die Ergebnisse zurückgemeldet werden"
 
-#: numbas_lti/models.py:210
+#: numbas_lti/models.py:222
 msgid "Email attempt receipts to students on completion?"
 msgstr ""
 "Den Studierenden beim Abschluss eines Versuchs eine Email-Bestätigung "
 "schicken?"
 
-#: numbas_lti/models.py:212
+#: numbas_lti/models.py:224
 msgid "Maximum attempts per user"
 msgstr "Höchste Zahl von Versuchen pro Studierendem"
 
-#: numbas_lti/models.py:223
+#: numbas_lti/models.py:224
+msgid "Zero means unlimited attempts."
+msgstr ""
+
+#: numbas_lti/models.py:229 numbas_lti/views/search.py:149
+msgid "resource"
+msgstr "Ressource"
+
+#: numbas_lti/models.py:230
+msgid "resources"
+msgstr "Ressourcen"
+
+#: numbas_lti/models.py:237
 msgid "Resource in \"{}\" - no exam uploaded"
 msgstr "Ressource in \"{}\" - kein Test hochgeladen"
 
-#: numbas_lti/models.py:225
+#: numbas_lti/models.py:239
 msgid "Resource with no context"
 msgstr "Ressource ohne Kontext"
 
-#: numbas_lti/models.py:394
+#: numbas_lti/models.py:408
 msgid "Current status of the process"
 msgstr "Momentaner Status des Prozesses"
 
-#: numbas_lti/models.py:395
+#: numbas_lti/models.py:409
 msgid "Time the reporting process started"
 msgstr "Startzeitpunkt des Rückmeldeprozesses"
 
-#: numbas_lti/models.py:396
+#: numbas_lti/models.py:410
 msgid "Description of any error"
 msgstr "Fehlerbeschreibung"
 
-#: numbas_lti/models.py:397
+#: numbas_lti/models.py:411
 msgid "Has the result of this process been dismissed by the instructor?"
 msgstr "Wurde das Ergebnis dieses Prozesses von der Lehrperson verworfen?"
 
-#: numbas_lti/models.py:403
+#: numbas_lti/models.py:414
+#, fuzzy
+#| msgid "Reporting scores"
+msgid "report process"
+msgstr "Punktzahlen werden zurückgemeldet"
+
+#: numbas_lti/models.py:415
+#, fuzzy
+#| msgid "Time the reporting process started"
+msgid "report processes"
+msgstr "Startzeitpunkt des Rückmeldeprozesses"
+
+#: numbas_lti/models.py:419
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:56
 msgid "Not attempted"
 msgstr "Kein Versuch unternommen"
 
-#: numbas_lti/models.py:404
+#: numbas_lti/models.py:420
 msgid "Incomplete"
 msgstr "Unvollständig"
 
-#: numbas_lti/models.py:405
+#: numbas_lti/models.py:421
 msgid "Complete"
 msgstr "Vollständig"
 
-#: numbas_lti/models.py:887
+#: numbas_lti/models.py:429
+#, fuzzy
+#| msgid "Access tokens"
+msgid "access token"
+msgstr "Zugangstoken"
+
+#: numbas_lti/models.py:430
+#, fuzzy
+#| msgid "Access tokens"
+msgid "access tokens"
+msgstr "Zugangstoken"
+
+#: numbas_lti/models.py:445 numbas_lti/models.py:446
+msgid "LTI user data"
+msgstr ""
+
+#: numbas_lti/models.py:474
+#, fuzzy
+#| msgid "Not an LTI launch"
+msgid "LTI launch"
+msgstr "Kein LTI-Launch"
+
+#: numbas_lti/models.py:475
+#, fuzzy
+#| msgid "Not an LTI launch"
+msgid "LTI launches"
+msgstr "Kein LTI-Launch"
+
+#: numbas_lti/models.py:489
+msgid "Has a completion receipt been sent?"
+msgstr ""
+
+#: numbas_lti/models.py:490
+#, fuzzy
+#| msgid "Time this resource was created"
+msgid "Time the completion receipt was sent"
+msgstr "Erstellungszeitpunkt"
+
+#: numbas_lti/models.py:502
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:21
+msgid "attempt"
+msgid_plural "attempts"
+msgstr[0] "Versuch"
+msgstr[1] "Versuche"
+
+#: numbas_lti/models.py:503
+#, fuzzy
+#| msgid "attempt"
+#| msgid_plural "attempts"
+msgid "attempts"
+msgstr "Versuch"
+
+#: numbas_lti/models.py:916
 #, python-brace-format
 msgid "Numbas: Receipt for {resource_name}"
 msgstr "Numbas: Beleg für {resource_name}"
+
+#: numbas_lti/models.py:947
+#, fuzzy
+#| msgid "attempt"
+#| msgid_plural "attempts"
+msgid "attempt launch"
+msgstr "Versuch"
+
+#: numbas_lti/models.py:948
+#, fuzzy
+#| msgid "Recent launches"
+msgid "attempt launches"
+msgstr "Kürzlich begonnen"
+
+#: numbas_lti/models.py:967
+#, fuzzy
+#| msgid "Question scores"
+msgid "question score"
+msgstr "Ergebnisse der Fragen"
+
+#: numbas_lti/models.py:968
+#, fuzzy
+#| msgid "Question scores"
+msgid "question scores"
+msgstr "Ergebnisse der Fragen"
+
+#: numbas_lti/models.py:980
+#, fuzzy
+#| msgid "(remarked)"
+msgid "remarked part"
+msgstr "(neu bewertet)"
+
+#: numbas_lti/models.py:981
+#, fuzzy
+#| msgid "Remark question parts"
+msgid "remarked parts"
+msgstr "Fragenteile neu bewerten"
+
+#: numbas_lti/models.py:1011
+#, fuzzy
+#| msgid "Discount this part"
+msgid "discounted part"
+msgstr "Diesen Abschnitt aus der Wertung nehmen"
+
+#: numbas_lti/models.py:1012
+#, fuzzy
+#| msgid "Discount question parts"
+msgid "discounted parts"
+msgstr "Abschnitte aus der Wertung nehmen"
+
+#: numbas_lti/models.py:1051
+msgid "Element counter to disambiguate elements with the same timestamp"
+msgstr ""
+
+#: numbas_lti/models.py:1055
+msgid "SCORM element"
+msgstr ""
+
+#: numbas_lti/models.py:1056
+msgid "SCORM elements"
+msgstr ""
+
+#: numbas_lti/models.py:1078
+msgid "SCORM element diff"
+msgstr ""
+
+#: numbas_lti/models.py:1079
+msgid "SCORM element diffs"
+msgstr ""
+
+#: numbas_lti/models.py:1140 numbas_lti/models.py:1141
+msgid "remarked SCORM element"
+msgstr ""
+
+#: numbas_lti/models.py:1144
+#, fuzzy
+#| msgid "Editor"
+msgid "Editor name"
+msgstr "Editor"
+
+#: numbas_lti/models.py:1145
+msgid "Base URL of the editor"
+msgstr ""
+
+#: numbas_lti/models.py:1146
+msgid "Cached JSON list of available exams from this editor"
+msgstr ""
+
+#: numbas_lti/models.py:1147
+msgid "Time of last cache update"
+msgstr ""
+
+#: numbas_lti/models.py:1150
+#, fuzzy
+#| msgid "Editor links"
+msgid "editor link"
+msgstr "Links zum Editor"
+
+#: numbas_lti/models.py:1151
+#, fuzzy
+#| msgid "Editor links"
+msgid "editor links"
+msgstr "Links zum Editor"
+
+#: numbas_lti/models.py:1189
+msgid "Editor that this project belongs to"
+msgstr ""
+
+#: numbas_lti/models.py:1190
+msgid "Name of the project"
+msgstr ""
+
+#: numbas_lti/models.py:1191
+#, fuzzy
+#| msgid "Description of any error"
+msgid "Description of the project"
+msgstr "Fehlerbeschreibung"
+
+#: numbas_lti/models.py:1192
+msgid "ID of the project on the editor"
+msgstr ""
+
+#: numbas_lti/models.py:1193
+msgid "URL of the project's homepage on the editor"
+msgstr ""
+
+#: numbas_lti/models.py:1194
+msgid "URL of the project on the editor's REST API"
+msgstr ""
+
+#: numbas_lti/models.py:1197 numbas_lti/models.py:1198
+msgid "linked editor project"
+msgstr ""
+
+#: numbas_lti/models.py:1208
+#, fuzzy
+#| msgid "Stress tests"
+msgid "stress test"
+msgstr "Belastungstest"
+
+#: numbas_lti/models.py:1209
+#, fuzzy
+#| msgid "Stress tests"
+msgid "stress tests"
+msgstr "Belastungstest"
+
+#: numbas_lti/models.py:1224
+#, fuzzy
+#| msgid "Stress test %(time)s"
+msgid "stress test note"
+msgstr "Belastungstest %(time)s"
+
+#: numbas_lti/models.py:1225
+#, fuzzy
+#| msgid "Stress tests"
+msgid "stress test notes"
+msgstr "Belastungstest"
 
 #: numbas_lti/report_outcome.py:22
 #, python-brace-format
@@ -509,6 +839,16 @@ msgstr "Besuchen"
 msgid "Configuration information"
 msgstr "Informationen zur Konfiguration"
 
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:58
+#, fuzzy
+#| msgid "Configuration information"
+msgid "Configuration by URL"
+msgstr "Informationen zur Konfiguration"
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:59
+msgid "Manual configuration"
+msgstr ""
+
 #: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:63
 msgid "Here's the automatic configuration URL:"
 msgstr "Dies ist die automatische Konfigurations-URL:"
@@ -668,9 +1008,15 @@ msgstr[1] ""
 "                %(num_attempts)s Versuche.\n"
 "                "
 
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:22
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:23
+msgid "Search for users, contexts or resources:"
+msgstr "Suchen nach Benutzern, Kontexten, Ressourcen"
+
 #: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:24
 #: numbas_lti/templates/numbas_lti/management/admin/global_search.html:20
 #: numbas_lti/templates/numbas_lti/management/admin/global_search.html:26
+#: numbas_lti/templates/numbas_lti/management/attempts.html:60
 #: numbas_lti/templates/numbas_lti/management/create_exam.html:92
 msgid "Search"
 msgstr "Suche"
@@ -715,6 +1061,7 @@ msgid "Delete this connection"
 msgstr "Diese Verbindung löschen"
 
 #: numbas_lti/templates/numbas_lti/management/admin/editorlink/create.html:5
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/create.html:10
 #: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:49
 #: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:54
 msgid "Connect to a Numbas editor"
@@ -831,10 +1178,6 @@ msgstr "Bisher wurden keine Links zum Numbas-Editor angelegt."
 #, python-format
 msgid "Searching for \"%(query)s\" "
 msgstr "Suche nach \"%(query)s\" "
-
-#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:23
-msgid "Search for users, contexts or resources:"
-msgstr "Suchen nach Benutzern, Kontexten, Ressourcen"
 
 #: numbas_lti/templates/numbas_lti/management/admin/global_search.html:31
 msgid "Search for:"
@@ -954,6 +1297,10 @@ msgstr "IP-Adresse"
 msgid "Browser user agent"
 msgstr "Webbrowser"
 
+#: numbas_lti/templates/numbas_lti/management/attempt_base.html:5
+msgid "Back to attempts listing"
+msgstr ""
+
 #: numbas_lti/templates/numbas_lti/management/attempt_base.html:8
 #: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:5
 #: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:6
@@ -1025,6 +1372,10 @@ msgstr "Vollständige Daten im JSON-Format herunterladen"
 #: numbas_lti/templates/numbas_lti/management/student_progress.html:10
 msgid "Search for a student:"
 msgstr "Nach einer/m Studentin/en suchen"
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:57
+msgid "Clear query"
+msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempts.html:68
 msgid "Later"
@@ -1186,12 +1537,6 @@ msgstr "Diese Ressource kann momentan von Studierenden bearbeitet werden"
 msgid "This resource is not currently available to students."
 msgstr ""
 "Diese Ressource kann momentan nicht von Studierenden bearbeitet werden."
-
-#: numbas_lti/templates/numbas_lti/management/dashboard.html:21
-msgid "attempt"
-msgid_plural "attempts"
-msgstr[0] "Versuch"
-msgstr[1] "Versuche"
 
 #: numbas_lti/templates/numbas_lti/management/dashboard.html:21
 msgid "student"
@@ -1488,9 +1833,44 @@ msgstr ""
 msgid "Use unsubmitted answers"
 msgstr "Nicht eingereichte Antworten berücksichtigen"
 
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:33
+#, fuzzy
+#| msgid "Start a new attempt"
+msgid "Remark all attempts"
+msgstr "Einen neuen Versuch beginnen"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:34
+msgid "Stop marking"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:35
+#, fuzzy
+#| msgid " changed attempts"
+msgid "Save all changed attempts"
+msgstr " geänderte Versuche"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:44
+msgid "Time taken:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:45
+msgid "Estimated end:"
+msgstr ""
+
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:49
 msgid "There was an error saving changed data:"
 msgstr "Beim Speichern der geänderten Daten ist ein Fehler aufgetreten:"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:54
+msgid "of"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:54
+#, fuzzy
+#| msgid "attempt"
+#| msgid_plural "attempts"
+msgid "attempts shown."
+msgstr "Versuch"
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:55
 msgid " changed attempts"
@@ -1499,6 +1879,32 @@ msgstr " geänderte Versuche"
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:56
 msgid "Show:"
 msgstr "Anzeigen:"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:58
+#, fuzzy
+#| msgid "Attempts"
+msgid "All attempts"
+msgstr "Versuche"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:59
+#, fuzzy
+#| msgid "Only count completed attempts"
+msgid "Only completed attempts"
+msgstr "Nur beendete Versuche zählen"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:60
+#, fuzzy
+#| msgid " changed attempts"
+msgid "Only changed scores"
+msgstr " geänderte Versuche"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:61
+msgid "Only increased scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:62
+msgid "Only decreased scores"
+msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:83
 msgid "Current score"
@@ -1511,6 +1917,10 @@ msgstr "Punktzahl nach neuer Bewertung"
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:85
 msgid "Status"
 msgstr "Status"
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:92
+msgid "Number of hidden attempts:"
+msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:105
 msgid "Error"
@@ -1597,6 +2007,22 @@ msgstr "Median"
 #: numbas_lti/templates/numbas_lti/management/resource_stats.html:44
 msgid "Upper quartile"
 msgstr "Oberes Quartil"
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:60
+#, fuzzy
+#| msgid "Incorrect access"
+msgid "Incorrect"
+msgstr "Fehlerhafter Zugang"
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:64
+#, fuzzy
+#| msgid "Part scores"
+msgid "Partially correct"
+msgstr "Ergebnisse der Abschnitte"
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:68
+msgid "Correct"
+msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_stats.html:78
 msgid "Score distribution"
@@ -1919,7 +2345,3 @@ msgstr "Benutzer"
 #: numbas_lti/views/search.py:147
 msgid "context"
 msgstr "Kontext"
-
-#: numbas_lti/views/search.py:149
-msgid "resource"
-msgstr "Ressource"

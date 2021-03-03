@@ -50,6 +50,10 @@ class LTIConsumer(models.Model):
 
     objects = NotDeletedManager()
 
+    class Meta:
+        verbose_name = _('LTI consumer')
+        verbose_name_plural = _('LTI consumers')
+
     def __str__(self):
         return self.key
 
@@ -102,6 +106,8 @@ class ConsumerTimePeriod(models.Model):
     name = models.CharField(max_length=300)
 
     class Meta:
+        verbose_name = _('time period')
+        verbose_name_plural = _('time periods')
         ordering = ['-end','-start']
 
 class ExtractPackage(models.Model):
@@ -129,6 +135,8 @@ class Exam(ExtractPackage):
     resource = models.ForeignKey('Resource',null=True,blank=True,on_delete=models.SET_NULL,related_name='exams')
 
     class Meta:
+        verbose_name = _('exam')
+        verbose_name_plural = _('exams')
         ordering = ['-creation_time','title']
 
     def __str__(self):
@@ -182,6 +190,10 @@ class LTIContext(models.Model):
     label = models.CharField(max_length=300)
     instance_guid = models.CharField(max_length=300)
 
+    class Meta:
+        verbose_name = _('LTI context')
+        verbose_name_plural = _('LTI contexts')
+
     def __str__(self):
         if self.name == self.label:
             return self.name
@@ -214,6 +226,8 @@ class Resource(models.Model):
     num_questions = models.PositiveIntegerField(default=0)
 
     class Meta:
+        verbose_name = _('resource')
+        verbose_name_plural = _('resources')
         ordering = ['-creation_time','title']
 
     def __str__(self):
@@ -397,6 +411,8 @@ class ReportProcess(models.Model):
     dismissed = models.BooleanField(default=False,verbose_name=_('Has the result of this process been dismissed by the instructor?'))
 
     class Meta:
+        verbose_name = _('report process')
+        verbose_name_plural = _('report processes')
         ordering = ['-time',]
 
 COMPLETION_STATUSES = [
@@ -409,6 +425,11 @@ class AccessToken(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='access_tokens')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_tokens')
 
+    class Meta:
+        verbose_name = _('access token')
+        verbose_name_plural = _('access tokens')
+
+
 class LTIUserData(models.Model):
     consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
@@ -419,6 +440,10 @@ class LTIUserData(models.Model):
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _('LTI user data')
+        verbose_name_plural = _('LTI user data')
 
     def get_source_id(self):
         if self.lis_person_sourcedid:
@@ -446,6 +471,8 @@ class LTILaunch(models.Model):
         return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)
 
     class Meta:
+        verbose_name = _('LTI launch')
+        verbose_name_plural = _('LTI launches')
         ordering = ('-time',)
 
 class Attempt(models.Model):
@@ -472,6 +499,8 @@ class Attempt(models.Model):
     remark_ignore_keys = ['cmi.suspend_data','cmi.session_time']    # CMI keys not to resave when auto-remarking
 
     class Meta:
+        verbose_name = _('attempt')
+        verbose_name_plural = _('attempts')
         ordering = ['-start_time',]
 
     def __str__(self):
@@ -915,6 +944,8 @@ class AttemptLaunch(models.Model):
         }
 
     class Meta:
+        verbose_name = _('attempt launch')
+        verbose_name_plural = _('attempt launches')
         ordering = ('-time',)
 
 
@@ -933,6 +964,8 @@ class AttemptQuestionScore(models.Model):
     objects = AttemptNotDeletedManager()
 
     class Meta:
+        verbose_name = _('question score')
+        verbose_name_plural = _('question scores')
         unique_together = (('attempt','number'),)
 
     def __str__(self):
@@ -942,6 +975,10 @@ class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
     score = models.FloatField()
+
+    class Meta:
+        verbose_name = _('remarked part')
+        verbose_name_plural = _('remarked parts')
     
     def __str__(self):
         return '{} on part {} in {}'.format(self.score, self.part, self.attempt)
@@ -969,6 +1006,10 @@ class DiscountPart(models.Model):
     resource = models.ForeignKey(Resource,related_name='discounted_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
     behaviour = models.CharField(max_length=10,choices=DISCOUNT_BEHAVIOURS,default='remove')
+
+    class Meta:
+        verbose_name = _('discounted part')
+        verbose_name_plural = _('discounted parts')
 
 def discount_update_scaled_score(sender,instance,**kwargs):
     for attempt in instance.resource.attempts.all():
@@ -1011,6 +1052,8 @@ class ScormElement(models.Model):
     current = models.BooleanField(default=True) # is this the latest version?
 
     class Meta:
+        verbose_name = _('SCORM element')
+        verbose_name_plural = _('SCORM elements')
         ordering = ['-time','-counter']
 
     def __str__(self):
@@ -1031,6 +1074,9 @@ class ScormElementDiff(models.Model):
     element = models.OneToOneField('ScormElement', on_delete=models.CASCADE, related_name='diff')
     diff_of = models.OneToOneField('ScormElement', on_delete=models.PROTECT, related_name='diffs')
 
+    class Meta:
+        verbose_name = _('SCORM element diff')
+        verbose_name_plural = _('SCORM element diffs')
 
 def diff_scormelements(attempt, key='cmi.suspend_data'):
     """
@@ -1090,11 +1136,19 @@ class RemarkedScormElement(models.Model):
     element = models.OneToOneField(ScormElement,on_delete=models.CASCADE,related_name='remarked')
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,related_name='remarked_elements')
 
+    class Meta:
+        verbose_name = _('remarked SCORM element')
+        verbose_name_plural = _('remarked SCORM element')
+
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name=_('Editor name'))
     url = models.URLField(verbose_name=_('Base URL of the editor'),unique=True)
     cached_available_exams = models.TextField(blank=True,editable=False,verbose_name=_('Cached JSON list of available exams from this editor'))
     last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name=_('Time of last cache update'))
+
+    class Meta:
+        verbose_name = _('editor link')
+        verbose_name_plural = _('editor links')
 
     def __str__(self):
         return self.name
@@ -1140,6 +1194,8 @@ class EditorLinkProject(models.Model):
     rest_url = models.URLField(verbose_name=_('URL of the project on the editor\'s REST API'))
 
     class Meta:
+        verbose_name = _('linked editor project')
+        verbose_name_plural = _('linked editor project')
         ordering = ['name']
 
     def __str__(self):
@@ -1149,6 +1205,8 @@ class StressTest(models.Model):
     resource = models.OneToOneField(Resource,on_delete=models.CASCADE,primary_key=True)
 
     class Meta:
+        verbose_name = _('stress test')
+        verbose_name_plural = _('stress tests')
         ordering = ['-resource__creation_time']
 
     def __str__(self):
@@ -1161,3 +1219,7 @@ class StressTestNote(models.Model):
     stresstest = models.ForeignKey(StressTest,on_delete=models.CASCADE,related_name='notes')
     text = models.TextField()
     time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('stress test note')
+        verbose_name_plural = _('stress test notes')
