@@ -16,9 +16,9 @@
 <script type="text/javascript" src="{% static 'fetch.js' %}"></script>
 <script type="text/javascript" src="{% static 'polyfills.js' %}"></script>
 {% include 'numbas_lti/scripts/luxon.html' %}
+<script src="{% statici18n LANGUAGE_CODE %}"></script>
 <script src="{% static 'api.js' %}"></script>
 <script src="{% static 'vue.js' %}"></script>
-<script src="{% statici18n LANGUAGE_CODE %}"></script>
 <script src="{% static 'stresstest.js' %}"></script>
 {% endblock %}
 
