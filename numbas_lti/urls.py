@@ -6,6 +6,8 @@ from . import views
 urlpatterns = [
     url(r'^$', views.entry.index, name='index'),
     url(r'^lti_entry$', views.entry.lti_entry, name='lti_entry'),
+    url(r'^check_cookie_entry$', views.entry.check_cookie_entry, name='check_cookie_entry'),
+    url(r'^set_cookie_entry$', views.entry.set_cookie_entry, name='set_cookie_entry'),
 
     url(r'^login$', auth.views.LoginView.as_view(), name='login'),
 

@@ -7,9 +7,12 @@ from django.shortcuts import render, redirect
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
+from importlib import import_module
 import json
 import logging
 from ipware import get_client_ip
+from urllib.parse import urlparse, urlunparse, parse_qs
+from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +39,34 @@ def config_xml(request):
         content_type='application/xml' 
     )
 
+def add_query_param(url,extras):
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    for k,v in extras.items():
+        if k not in query:
+            query[k] = [v]
+    url = urlunparse(
+        (parsed.scheme, parsed.netloc, parsed.path, parsed.params,
+         urlencode(query,doseq=True), parsed.fragment)
+    )
+    return url
+    
 @csrf_exempt
 def lti_entry(request):
     if request.method != 'POST':
         return not_post(request)
 
-    lti_message_type = request.POST.get('lti_message_type')
+    session_key = request.session.session_key
+    if session_key is None:
+        session_key = ''
+    return redirect(add_query_param(reverse('check_cookie_entry'),{'session_key':session_key}))
+
+def do_lti_entry(request):
+    data = {}
+    if hasattr(request,'LTI'):
+        lti_message_type = request.LTI.get('lti_message_type')
+    else:
+        lti_message_type = request.POST.get('lti_message_type')
     if lti_message_type is None:
         return not_an_lti_launch(request)
 
@@ -49,12 +74,29 @@ def lti_entry(request):
         'basic-lti-launch-request': basic_lti_launch,
         'ToolProxyRegistrationRequest': consumer_registration_request,
     }
-
+    
     if lti_message_type in launch_types:
         return launch_types[lti_message_type](request)
     else:
         return unrecognised_message_type(request)
 
+def check_cookie_entry(request):
+    sent_session_key = request.GET.get('session_key')
+    resource_link_id = request.GET.get('resource_link_id')
+    if sent_session_key == request.session.session_key:
+        return do_lti_entry(request)
+    else:
+        url = add_query_param(reverse('set_cookie_entry'),{'session_key': sent_session_key, 'resource_link_id': resource_link_id})
+        return render(request, 'numbas_lti/check_cookie_entry.html',{'url':url})
+    
+def set_cookie_entry(request):
+    session_key = request.GET.get('session_key')
+    resource_link_id = request.GET.get('resource_link_id')
+    engine = import_module(settings.SESSION_ENGINE)
+    request.session = engine.SessionStore(session_key)
+    request.session.modified = True
+    return redirect(add_query_param(reverse('check_cookie_entry'),{'session_key':session_key, 'resource_link_id': resource_link_id}))
+    
 def not_post(request):
     return render(request,'numbas_lti/launch_errors/not_post.html',{})
 
@@ -67,8 +109,7 @@ def basic_lti_launch(request):
     except AttributeError:
         return no_resource(request)
 
-    client_key = request.POST.get('oauth_consumer_key')
-    consumer = LTIConsumer.objects.get(key=client_key)
+    consumer = request.resource.context.consumer
 
     is_instructor = request_is_instructor(request)
 
