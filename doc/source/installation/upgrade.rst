@@ -9,6 +9,31 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v2.11
+-----
+
+This release adds a dependency on the `django-statici18n <https://django-statici18n.readthedocs.io/en/latest/index.html>`_ package to translate dynamically-generated text.
+
+In :file:`numbasltiprovider/settings.py`, add ``'statici18n'`` to ``INSTALLED_APPS``. 
+
+The whole list should now be::
+
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'channels',
+        'huey.contrib.djhuey',
+        'statici18n',
+        'numbas_lti',
+        'bootstrapform',
+        'bootstrap_datepicker_plus',
+        'django_token',
+    ]
+
 v2.10
 -----
 
