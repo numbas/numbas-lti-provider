@@ -35,6 +35,11 @@ class ResourceSettingsForm(ModelForm):
             'available_until': DateTimePickerInput(format=datetime_format),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not settings.EMAIL_COMPLETION_RECEIPTS:
+            del self.fields['email_receipts']
+
 class RemarkPartScoreForm(ModelForm):
     class Meta:
         model = RemarkPart
