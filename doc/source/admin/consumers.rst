@@ -104,7 +104,6 @@ Now you can add a Numbas exam in your :guilabel:`Modules` page:
 
 * Click the button to add an item.
 * Select :guilabel:`External tool` and click on :guilabel:`Numbas`.
-* Tick :guilabel:`Load in a new tab`.
 * Click :guilabel:`Add item`.
 
 Managing a consumer
