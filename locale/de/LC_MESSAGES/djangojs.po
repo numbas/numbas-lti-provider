@@ -1,166 +1,129 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-03 10:20+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: POEditor.com\n"
+"Project-Id-Version: Numbas LTI Tool Provider - client-side strings\n"
+"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: numbas_lti/static/api.js:257
 msgid "Error reading socket message"
-msgstr ""
+msgstr "Fehler beim Lesen der Socket-Nachricht"
 
 #: numbas_lti/static/api.js:272
-msgid ""
-"This attempt has been opened in another window. You may not enter any more "
-"answers here. You may continue in the other window. Click OK to leave this "
-"attempt."
-msgstr ""
+msgid "This attempt has been opened in another window. You may not enter any more answers here. You may continue in the other window. Click OK to leave this attempt."
+msgstr "Dieser Versuch ist in einem anderen Fenster geöffnet worden. Sie können hier keine Antworten mehr eingeben. Sie können in dem anderen Fenster weiterarbeiten. Klicken Sie OK, um diesen Versuch zu verlassen."
 
 #: numbas_lti/static/api.js:276
-msgid ""
-"This attempt has been ended in another window. You may not enter any more "
-"answers here. Click OK to leave this attempt."
-msgstr ""
+msgid "This attempt has been ended in another window. You may not enter any more answers here. Click OK to leave this attempt."
+msgstr "Dieser Versuch ist in einem anderen Fenster abgeschlossen worden. Sie können hier keine weiteren Antworten eingeben. Klicken Sie OK, um diesen Versuch zu verlassen."
 
 #: numbas_lti/static/api.js:589
-#, javascript-format
 msgid "SCORM HTTP fallback error message: %s"
-msgstr ""
+msgstr "SCORM-HTTP-Fallback Fehlermeldung: %s"
 
 #: numbas_lti/static/api.js:627
 msgid "Failed to send SCORM data over HTTP"
-msgstr ""
+msgstr "Fehler beim Senden der SCORM-Daten über HTTP"
 
 #: numbas_lti/static/attempt_timeline.js:205
 msgid "Started the attempt."
-msgstr ""
+msgstr "Versuch gestartet"
 
 #: numbas_lti/static/attempt_timeline.js:206
 msgid "Ended the attempt."
-msgstr ""
+msgstr "Versuch abgeschlossen"
 
 #: numbas_lti/static/attempt_timeline.js:232
-#, javascript-format
 msgid "Moved to <em class=\"question\">Question %s</em>."
-msgstr ""
+msgstr "Zu <em class=\"question\">Frage %s</em> gegangen."
 
 #: numbas_lti/static/attempt_timeline.js:243
-#, javascript-format
 msgid "Submitted answer <code>%s</code> for <em class=\"part\">%s</em>."
-msgstr ""
+msgstr "Antwort <code>%s</code> für <em class=\"part\">%s</em> eingereicht."
 
 #: numbas_lti/static/attempt_timeline.js:257
-#, javascript-format
-msgid ""
-"Entered but did not submit answer <code>%s</code> for <em class=\"part\">%s</"
-"em>."
-msgstr ""
+msgid "Entered but did not submit answer <code>%s</code> for <em class=\"part\">%s</em>."
+msgstr "Antwort <code>%s</code> für <em class=\"part\">%s</em> eingegeben, aber nicht eingereicht."
 
 #: numbas_lti/static/attempt_timeline.js:268
-#, javascript-format
 msgid "Received <strong>%s/%s</strong> mark for <em class=\"part\">%s</em>."
-msgid_plural ""
-"Received <strong>%s/%s</strong> marks for <em class=\"part\">%s</em>."
-msgstr[0] ""
-msgstr[1] ""
+msgid_plural "Received <strong>%s/%s</strong> marks for <em class=\"part\">%s</em>."
+msgstr[0] "<strong>%s/%s</strong> Punkte für <em class=\"part\">%s</em> erhalten."
+msgstr[1] "<strong>%s/%s</strong> Punkte für <em class=\"part\">%s</em> erhalten."
 
 #: numbas_lti/static/attempt_timeline.js:276
-#, javascript-format
-msgid ""
-"Total score for <em class=\"question\">Question %s</em> is <strong>%s</"
-"strong>."
-msgstr ""
+msgid "Total score for <em class=\"question\">Question %s</em> is <strong>%s</strong>."
+msgstr "Gesamtpunktzahl für <em class=\"question\">Frage %s</em> ist <strong>%s</strong>."
 
 #: numbas_lti/static/attempt_timeline.js:283
-#, javascript-format
 msgid "Total score for exam is <strong>%s</strong>."
-msgstr ""
+msgstr "Gesamtpunktzahl für den Test ist <strong>%s</strong>."
 
 #: numbas_lti/static/attempt_timeline.js:290
-#, javascript-format
 msgid "The session was ended automatically because: <strong>%s</strong>."
-msgstr ""
+msgstr "Die Sitzung wurde automatisch beendet, Grund: <strong>%s</strong>."
 
 #: numbas_lti/static/attempt_timeline.js:300
-#, javascript-format
 msgid "Launched in %s mode by %s."
-msgstr ""
+msgstr "Gestartet im %s-Modus von %s."
 
 #: numbas_lti/static/attempt_timeline.js:302
-#, javascript-format
 msgid "Launched in %s mode."
-msgstr ""
+msgstr "Gestartet im %s-Modus."
 
 #: numbas_lti/static/discount_remark.js:55
-#, javascript-format
 msgid "question %s part %s"
-msgstr ""
+msgstr "Frage %s Abschnitt %s"
 
 #: numbas_lti/static/discount_remark.js:57
-#, javascript-format
 msgid " gap %s"
-msgstr ""
+msgstr " Lücke %s"
 
 #: numbas_lti/static/discount_remark.js:60
-#, javascript-format
 msgid " step %s"
-msgstr ""
+msgstr " Schritt %s"
 
 #: numbas_lti/static/resource-stats.js:30
-#, javascript-format
 msgid "%s minute"
 msgid_plural "%s minutes"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s Minute"
+msgstr[1] "%s Minuten"
 
 #: numbas_lti/static/resource-stats.js:32
-#, javascript-format
 msgid "%s hour"
 msgid_plural "%s hours"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s Stunde"
+msgstr[1] "%s Stunden"
 
 #: numbas_lti/static/resource-stats.js:34
-#, javascript-format
 msgid "%s day"
 msgid_plural "%s days"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s Tag"
+msgstr[1] "%s Tage"
 
 #: numbas_lti/static/resource-stats.js:49
 msgid "Total score"
-msgstr ""
+msgstr "Gesamtpunktzahl"
 
 #: numbas_lti/static/resource-stats.js:50
 msgid "Start time"
-msgstr ""
+msgstr "Anfangszeit"
 
 #: numbas_lti/static/resource-stats.js:51
 msgid "End time"
-msgstr ""
+msgstr "Endzeit"
 
 #: numbas_lti/static/resource-stats.js:52
 msgid "Time taken"
-msgstr ""
+msgstr "Verbrauchte Zeit"
 
 #: numbas_lti/static/resource-stats.js:96
-#, javascript-format
 msgctxt "question label"
 msgid "Q%s"
-msgstr ""
+msgstr "F%s"
 
 #: numbas_lti/static/resource-stats.js:160
 #: numbas_lti/static/resource-stats.js:191
@@ -168,14 +131,13 @@ msgstr ""
 #: numbas_lti/static/resource-stats.js:194
 #: numbas_lti/static/resource-stats.js:243
 msgid "Total"
-msgstr ""
+msgstr "Insgesamt"
 
 #: numbas_lti/static/resource_remark_iframe.js:3
-#, javascript-format
 msgid "There's been an error: %s"
-msgstr ""
+msgstr "Es ist ein Fehler aufgetreten: %s"
 
 #: numbas_lti/static/stresstest.js:135
-#, javascript-format
 msgid "Error starting attempt: %s"
-msgstr ""
+msgstr "Fehler beim Starten des Versuchs: %s"
+

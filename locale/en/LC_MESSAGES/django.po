@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: v2.10\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-03 11:06+0000\n"
+"POT-Creation-Date: 2021-03-08 08:45+0000\n"
 "PO-Revision-Date: 2021-03-02 11:49+0000\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -19,33 +19,33 @@ msgstr ""
 msgid "Numbas LTI"
 msgstr ""
 
-#: numbas_lti/forms.py:90
+#: numbas_lti/forms.py:95
 msgid "The uploaded file is not a .zip file"
 msgstr ""
 
-#: numbas_lti/forms.py:92
+#: numbas_lti/forms.py:97
 msgid ""
 "The uploaded .zip file does not contain an imsmanifest.xml file - make sure "
 "you download a SCORM package from the editor."
 msgstr ""
 
-#: numbas_lti/forms.py:112
+#: numbas_lti/forms.py:117
 msgid "There was an error while testing this exam package:"
 msgstr ""
 
-#: numbas_lti/forms.py:117
+#: numbas_lti/forms.py:122
 msgid "This is a safe replacement for the previous exam package"
 msgstr ""
 
-#: numbas_lti/forms.py:147
+#: numbas_lti/forms.py:152
 msgid "Request returned HTTP status code"
 msgstr ""
 
-#: numbas_lti/forms.py:150
+#: numbas_lti/forms.py:155
 msgid "This doesn't seem to be a Numbas editor instance."
 msgstr ""
 
-#: numbas_lti/forms.py:153
+#: numbas_lti/forms.py:158
 msgid "There was an error connecting to this URL:"
 msgstr ""
 
@@ -131,324 +131,324 @@ msgstr ""
 msgid "exams"
 msgstr ""
 
-#: numbas_lti/models.py:164
+#: numbas_lti/models.py:173
 msgid "Highest score"
 msgstr ""
 
-#: numbas_lti/models.py:165
+#: numbas_lti/models.py:174
 msgid "Last attempt"
 msgstr ""
 
-#: numbas_lti/models.py:169
+#: numbas_lti/models.py:178
 msgid "Immediately"
 msgstr ""
 
-#: numbas_lti/models.py:170
+#: numbas_lti/models.py:179
 msgid "On completion"
 msgstr ""
 
-#: numbas_lti/models.py:171
+#: numbas_lti/models.py:180
 msgid "Manually, by instructor"
 msgstr ""
 
-#: numbas_lti/models.py:174
+#: numbas_lti/models.py:183
 msgid "Reporting scores"
 msgstr ""
 
-#: numbas_lti/models.py:175
+#: numbas_lti/models.py:184
 msgid "Error encountered"
 msgstr ""
 
-#: numbas_lti/models.py:176
+#: numbas_lti/models.py:185
 msgid "All scores reported"
 msgstr ""
 
-#: numbas_lti/models.py:180
+#: numbas_lti/models.py:189
 msgid "Always"
 msgstr ""
 
-#: numbas_lti/models.py:181
+#: numbas_lti/models.py:190
 msgid "When attempt is complete"
 msgstr ""
 
-#: numbas_lti/models.py:182
+#: numbas_lti/models.py:191
 msgid "When review is allowed"
 msgstr ""
 
-#: numbas_lti/models.py:183
+#: numbas_lti/models.py:192
 msgid "Never"
 msgstr ""
 
-#: numbas_lti/models.py:194
+#: numbas_lti/models.py:203
 msgid "LTI context"
 msgstr ""
 
-#: numbas_lti/models.py:195
+#: numbas_lti/models.py:204
 msgid "LTI contexts"
 msgstr ""
 
-#: numbas_lti/models.py:213
+#: numbas_lti/models.py:222
 msgid "Time this resource was created"
 msgstr ""
 
-#: numbas_lti/models.py:215
+#: numbas_lti/models.py:224
 msgid "Grading method"
 msgstr ""
 
-#: numbas_lti/models.py:216
+#: numbas_lti/models.py:225
 msgid "Include incomplete attempts in grading?"
 msgstr ""
 
-#: numbas_lti/models.py:217
+#: numbas_lti/models.py:226
 msgid "When to show scores to students"
 msgstr ""
 
-#: numbas_lti/models.py:218
+#: numbas_lti/models.py:227
 msgid "Available from"
 msgstr ""
 
-#: numbas_lti/models.py:219
+#: numbas_lti/models.py:228
 msgid "Available until"
 msgstr ""
 
-#: numbas_lti/models.py:220
+#: numbas_lti/models.py:229
 msgid "Allow students to review attempts from"
 msgstr ""
 
-#: numbas_lti/models.py:221
+#: numbas_lti/models.py:230
 msgid "When to report scores back"
 msgstr ""
 
-#: numbas_lti/models.py:222
+#: numbas_lti/models.py:231
 msgid "Email attempt receipts to students on completion?"
 msgstr ""
 
-#: numbas_lti/models.py:224
+#: numbas_lti/models.py:233
 msgid "Maximum attempts per user"
 msgstr ""
 
-#: numbas_lti/models.py:224
+#: numbas_lti/models.py:233
 msgid "Zero means unlimited attempts."
 msgstr ""
 
-#: numbas_lti/models.py:229 numbas_lti/views/search.py:149
+#: numbas_lti/models.py:238 numbas_lti/views/search.py:149
 msgid "resource"
 msgstr ""
 
-#: numbas_lti/models.py:230
+#: numbas_lti/models.py:239
 msgid "resources"
 msgstr ""
 
-#: numbas_lti/models.py:237
+#: numbas_lti/models.py:246
 msgid "Resource in \"{}\" - no exam uploaded"
 msgstr ""
 
-#: numbas_lti/models.py:239
+#: numbas_lti/models.py:248
 msgid "Resource with no context"
 msgstr ""
 
-#: numbas_lti/models.py:408
+#: numbas_lti/models.py:417
 msgid "Current status of the process"
 msgstr ""
 
-#: numbas_lti/models.py:409
+#: numbas_lti/models.py:418
 msgid "Time the reporting process started"
 msgstr ""
 
-#: numbas_lti/models.py:410
+#: numbas_lti/models.py:419
 msgid "Description of any error"
 msgstr ""
 
-#: numbas_lti/models.py:411
+#: numbas_lti/models.py:420
 msgid "Has the result of this process been dismissed by the instructor?"
 msgstr ""
 
-#: numbas_lti/models.py:414
+#: numbas_lti/models.py:423
 msgid "report process"
 msgstr ""
 
-#: numbas_lti/models.py:415
+#: numbas_lti/models.py:424
 msgid "report processes"
 msgstr ""
 
-#: numbas_lti/models.py:419
+#: numbas_lti/models.py:428
 #: numbas_lti/templates/numbas_lti/management/resource_stats.html:56
 msgid "Not attempted"
 msgstr ""
 
-#: numbas_lti/models.py:420
+#: numbas_lti/models.py:429
 msgid "Incomplete"
 msgstr ""
 
-#: numbas_lti/models.py:421
+#: numbas_lti/models.py:430
 msgid "Complete"
 msgstr ""
 
-#: numbas_lti/models.py:429
+#: numbas_lti/models.py:438
 msgid "access token"
 msgstr ""
 
-#: numbas_lti/models.py:430
+#: numbas_lti/models.py:439
 msgid "access tokens"
 msgstr ""
 
-#: numbas_lti/models.py:445 numbas_lti/models.py:446
+#: numbas_lti/models.py:454 numbas_lti/models.py:455
 msgid "LTI user data"
 msgstr ""
 
-#: numbas_lti/models.py:474
+#: numbas_lti/models.py:483
 msgid "LTI launch"
 msgstr ""
 
-#: numbas_lti/models.py:475
+#: numbas_lti/models.py:484
 msgid "LTI launches"
 msgstr ""
 
-#: numbas_lti/models.py:489
+#: numbas_lti/models.py:498
 msgid "Has a completion receipt been sent?"
 msgstr ""
 
-#: numbas_lti/models.py:490
+#: numbas_lti/models.py:499
 msgid "Time the completion receipt was sent"
 msgstr ""
 
-#: numbas_lti/models.py:502
+#: numbas_lti/models.py:511
 #: numbas_lti/templates/numbas_lti/management/dashboard.html:21
 msgid "attempt"
 msgid_plural "attempts"
 msgstr[0] ""
 msgstr[1] ""
 
-#: numbas_lti/models.py:503
+#: numbas_lti/models.py:512
 msgid "attempts"
 msgstr ""
 
-#: numbas_lti/models.py:916
+#: numbas_lti/models.py:925
 #, python-brace-format
 msgid "Numbas: Receipt for {resource_name}"
 msgstr ""
 
-#: numbas_lti/models.py:947
+#: numbas_lti/models.py:956
 msgid "attempt launch"
 msgstr ""
 
-#: numbas_lti/models.py:948
+#: numbas_lti/models.py:957
 msgid "attempt launches"
 msgstr ""
 
-#: numbas_lti/models.py:967
+#: numbas_lti/models.py:976
 msgid "question score"
 msgstr ""
 
-#: numbas_lti/models.py:968
+#: numbas_lti/models.py:977
 msgid "question scores"
 msgstr ""
 
-#: numbas_lti/models.py:980
+#: numbas_lti/models.py:989
 msgid "remarked part"
 msgstr ""
 
-#: numbas_lti/models.py:981
+#: numbas_lti/models.py:990
 msgid "remarked parts"
 msgstr ""
 
-#: numbas_lti/models.py:1011
+#: numbas_lti/models.py:1020
 msgid "discounted part"
 msgstr ""
 
-#: numbas_lti/models.py:1012
+#: numbas_lti/models.py:1021
 msgid "discounted parts"
 msgstr ""
 
-#: numbas_lti/models.py:1051
+#: numbas_lti/models.py:1060
 msgid "Element counter to disambiguate elements with the same timestamp"
 msgstr ""
 
-#: numbas_lti/models.py:1055
+#: numbas_lti/models.py:1064
 msgid "SCORM element"
 msgstr ""
 
-#: numbas_lti/models.py:1056
+#: numbas_lti/models.py:1065
 msgid "SCORM elements"
 msgstr ""
 
-#: numbas_lti/models.py:1078
+#: numbas_lti/models.py:1087
 msgid "SCORM element diff"
 msgstr ""
 
-#: numbas_lti/models.py:1079
+#: numbas_lti/models.py:1088
 msgid "SCORM element diffs"
 msgstr ""
 
-#: numbas_lti/models.py:1140 numbas_lti/models.py:1141
+#: numbas_lti/models.py:1149 numbas_lti/models.py:1150
 msgid "remarked SCORM element"
 msgstr ""
 
-#: numbas_lti/models.py:1144
+#: numbas_lti/models.py:1153
 msgid "Editor name"
 msgstr ""
 
-#: numbas_lti/models.py:1145
+#: numbas_lti/models.py:1154
 msgid "Base URL of the editor"
 msgstr ""
 
-#: numbas_lti/models.py:1146
+#: numbas_lti/models.py:1155
 msgid "Cached JSON list of available exams from this editor"
 msgstr ""
 
-#: numbas_lti/models.py:1147
+#: numbas_lti/models.py:1156
 msgid "Time of last cache update"
 msgstr ""
 
-#: numbas_lti/models.py:1150
+#: numbas_lti/models.py:1159
 msgid "editor link"
 msgstr ""
 
-#: numbas_lti/models.py:1151
+#: numbas_lti/models.py:1160
 msgid "editor links"
 msgstr ""
 
-#: numbas_lti/models.py:1189
+#: numbas_lti/models.py:1198
 msgid "Editor that this project belongs to"
 msgstr ""
 
-#: numbas_lti/models.py:1190
+#: numbas_lti/models.py:1199
 msgid "Name of the project"
 msgstr ""
 
-#: numbas_lti/models.py:1191
+#: numbas_lti/models.py:1200
 msgid "Description of the project"
 msgstr ""
 
-#: numbas_lti/models.py:1192
+#: numbas_lti/models.py:1201
 msgid "ID of the project on the editor"
 msgstr ""
 
-#: numbas_lti/models.py:1193
+#: numbas_lti/models.py:1202
 msgid "URL of the project's homepage on the editor"
 msgstr ""
 
-#: numbas_lti/models.py:1194
+#: numbas_lti/models.py:1203
 msgid "URL of the project on the editor's REST API"
 msgstr ""
 
-#: numbas_lti/models.py:1197 numbas_lti/models.py:1198
+#: numbas_lti/models.py:1206 numbas_lti/models.py:1207
 msgid "linked editor project"
 msgstr ""
 
-#: numbas_lti/models.py:1208
+#: numbas_lti/models.py:1217
 msgid "stress test"
 msgstr ""
 
-#: numbas_lti/models.py:1209
+#: numbas_lti/models.py:1218
 msgid "stress tests"
 msgstr ""
 
-#: numbas_lti/models.py:1224
+#: numbas_lti/models.py:1233
 msgid "stress test note"
 msgstr ""
 
-#: numbas_lti/models.py:1225
+#: numbas_lti/models.py:1234
 msgid "stress test notes"
 msgstr ""
 
@@ -518,6 +518,14 @@ msgstr ""
 
 #: numbas_lti/templates/numbas_lti/base.html:6
 msgid "Numbas LTI Provider"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/check_cookie_entry.html:7
+msgid "This resource needs to open in a new tab."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/check_cookie_entry.html:8
+msgid "Click to open this resource in a new tab"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/consumer_registration.html:7
@@ -1254,7 +1262,7 @@ msgid "Completion status"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempts.html:88
-#: numbas_lti/templates/numbas_lti/management/remark.html:137
+#: numbas_lti/templates/numbas_lti/management/remark.html:138
 #: numbas_lti/templates/numbas_lti/management/student_progress.html:16
 #: numbas_lti/templates/numbas_lti/management/validate_receipt.html:115
 #: numbas_lti/templates/numbas_lti/show_attempts.html:25
@@ -1425,7 +1433,7 @@ msgid "View individual student progress and grant access tokens"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/dashboard.html:59
-#: numbas_lti/templates/numbas_lti/management/discount.html:97
+#: numbas_lti/templates/numbas_lti/management/discount.html:98
 msgid "Discount question parts"
 msgstr ""
 
@@ -1444,6 +1452,254 @@ msgid ""
 "appear here once a student attempts this exam."
 msgstr ""
 
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:76
+msgid ""
+"This exam is in <strong>sequential mode</strong>, best for summative "
+"assessments."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:79
+msgid ""
+"This exam is in <strong>choose from a menu mode</strong>, best for formative "
+"material."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:83
+msgid "Students are allowed to start as many attempts as they like."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:85
+#, python-format
+msgid "Students may make <strong>one</strong> attempt."
+msgid_plural "Students may start <strong>%(max_attempts)s</strong> attempts."
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:88
+msgid "Students will be shown the following information:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:94
+msgid "During an attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:95
+msgid "Immediately after finishing an attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:96
+msgid "When viewing an attempt in review mode"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:101
+msgid "Total awarded scores for each attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:102
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:103
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:104
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:108
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:109
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:110
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:114
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:115
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:116
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:121
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:122
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:127
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:128
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:132
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:133
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:134
+msgid "Shown"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:102
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:103
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:104
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:108
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:109
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:110
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:114
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:115
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:116
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:120
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:121
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:122
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:126
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:127
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:128
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:132
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:133
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:134
+msgid "Not shown"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:107
+msgid "Part and question maximum scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:113
+msgid "Awarded scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:119
+msgid "Expected answers"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:120
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:126
+msgid "Available"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:125
+msgid "Question advice"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:131
+msgid "Part feedback"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:137
+msgid "Print a transcript"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:138
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:139
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:140
+msgid "Allowed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:138
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:139
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:140
+msgid "Not allowed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:146
+msgid "Students <strong>must</strong> enter a password to begin this exam."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:148
+msgid ""
+"Students <strong>do not</strong> need to enter a password to begin this exam."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:152
+#, python-format
+msgid "There is a pass threshold of <strong>%(threshold)s%%</strong>."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:156
+#, python-format
+msgid "There is a time limit of <strong>%(duration)s minutes</strong>."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:158
+msgid "This exam has no time limit."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:161
+msgid "During an attempt, students:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:163
+msgid "<strong>may</strong> regenerate questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:163
+msgid "<strong>may not</strong> regenerate questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:164
+msgid "may move freely between questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:164
+msgid "may move to the next question or previous questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:164
+msgid "<strong>may not</strong> return to questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:166
+msgid "<strong>may</strong> pause the timer."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:166
+msgid "<strong>may not</strong> pause the timer."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:168
+msgid "<strong>may</strong> leave the attempt and resume later."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:174
+msgid "This will happen"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:175
+msgid "When"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:180
+msgid "Students may attempt the exam"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:183
+msgid "any time"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:183
+#, python-format
+msgid "until %(available_until)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:186
+#, python-format
+msgid "from %(available_from)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:189
+#, python-format
+msgid "between %(available_from)s and %(available_until)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:191
+#, python-format
+msgid "before %(available_from)s, or after %(available_until)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:198
+msgid "Students may review their attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:199
+msgid "immediately after finishing an attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:199
+#, python-format
+msgid "from %(allow_review_from)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:202
+msgid "Each student's score will be reported back to the consumer"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:203
+msgid "as soon as it changes"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:203
+msgid "immediately after each attempt is completed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:203
+msgid "when the instructor requests it"
+msgstr ""
+
 #: numbas_lti/templates/numbas_lti/management/delete_attempt.html:5
 msgid "Are you sure you want to delete this attempt?"
 msgstr ""
@@ -1452,18 +1708,18 @@ msgstr ""
 msgid "Delete it"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/discount.html:108
-#: numbas_lti/templates/numbas_lti/management/remark.html:134
-msgid "Question"
-msgstr ""
-
 #: numbas_lti/templates/numbas_lti/management/discount.html:109
 #: numbas_lti/templates/numbas_lti/management/remark.html:135
-msgid "Part"
+msgid "Question"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/discount.html:110
 #: numbas_lti/templates/numbas_lti/management/remark.html:136
+msgid "Part"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/discount.html:111
+#: numbas_lti/templates/numbas_lti/management/remark.html:137
 msgid "Gap"
 msgstr ""
 
@@ -1503,7 +1759,7 @@ msgstr ""
 msgid "Doesn't match"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/remark.html:123
+#: numbas_lti/templates/numbas_lti/management/remark.html:124
 msgid "Remark question parts"
 msgstr ""
 
@@ -1978,7 +2234,7 @@ msgid ""
 "in this receipt:"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:73
+#: numbas_lti/templates/numbas_lti/run_attempt.html:74
 msgid "A connection to the server could not be created. Please report this."
 msgstr ""
 
@@ -2056,11 +2312,11 @@ msgstr ""
 msgid "The connection to {} has been deleted."
 msgstr ""
 
-#: numbas_lti/views/entry.py:115
+#: numbas_lti/views/entry.py:156
 msgid "No resource found for an LTI entry:\n"
 msgstr ""
 
-#: numbas_lti/views/entry.py:122
+#: numbas_lti/views/entry.py:163
 msgid ""
 "Unrecognised LTI launch type: {}\n"
 "{}"
@@ -2074,22 +2330,22 @@ msgstr ""
 msgid "All attempts now use the active version of this resource's exam."
 msgstr ""
 
-#: numbas_lti/views/resource.py:251
+#: numbas_lti/views/resource.py:297
 #, python-brace-format
 msgid "{slug}-scores.csv"
 msgstr ""
 
-#: numbas_lti/views/resource.py:282
+#: numbas_lti/views/resource.py:328
 #, python-brace-format
 msgid "Question {n}"
 msgstr ""
 
-#: numbas_lti/views/resource.py:301
+#: numbas_lti/views/resource.py:347
 #, python-brace-format
 msgid "{slug}-attempts.csv"
 msgstr ""
 
-#: numbas_lti/views/resource.py:535
+#: numbas_lti/views/resource.py:581
 msgid "There was an error while saving some data."
 msgstr ""
 
