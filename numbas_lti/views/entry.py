@@ -56,9 +56,9 @@ def lti_entry(request):
     if request.method != 'POST':
         return not_post(request)
 
+    if request.session.session_key is None:
+        request.session.save()
     session_key = request.session.session_key
-    if session_key is None:
-        session_key = ''
     return redirect(add_query_param(reverse('check_cookie_entry'),{'session_key':session_key}))
 
 def do_lti_entry(request):
