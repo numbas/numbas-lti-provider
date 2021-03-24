@@ -15,6 +15,7 @@ urlpatterns = [
 
     url(r'^dashboard$', views.admin.DashboardView.as_view(), name='global_dashboard'),
     path('user-info/<pk>', views.admin.GlobalUserInfoView.as_view(), name='global_user_info'),
+    path('calendar.ics', views.admin.calendar, name='calendar'),
 
     path('search-autocomplete', views.search.search_autocomplete, name='search_autocomplete'),
     path('global-search', views.search.global_search, name='global_search'),

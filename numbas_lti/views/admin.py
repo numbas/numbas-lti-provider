@@ -1,7 +1,11 @@
 from datetime import timedelta
+from django.core import exceptions
+from django.conf import settings
 from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
+from django import http
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -70,3 +74,29 @@ class GlobalUserInfoView(ManagementViewMixin, generic.DetailView):
         context['consumers'] = consumers
         
         return context
+
+def calendar(request):
+    token = request.GET.get('token')
+    if token != settings.CALENDAR_TOKEN:
+        raise exceptions.PermissionDenied()
+
+    from icalendar import Calendar, Event
+    from icalendar.prop import vDatetime
+    c = Calendar()
+    c.add('prodid','-//Numbas LTI//{host}//'.format(host=request.get_host()))
+    c.add('version','2.0')
+    for r in Resource.objects.exclude(available_from=None).exclude(available_until=None):
+        if r.available_until < r.available_from:
+            continue
+        e = Event()
+        e['summary'] = '{context} - {resource}'.format(context=r.context.name if r.context else '', resource=r.title)
+        e['dtstart'] = vDatetime(r.available_from)
+        e['dtend'] = vDatetime(r.available_until)
+        e['uid'] = r.pk
+        e['dtstamp'] = vDatetime(r.creation_time)
+        c.add_component(e)
+
+    content = c.to_ical().decode('utf-8')
+    response = http.HttpResponse(content, content_type="text/calendar")
+    response['Content-Disposition'] = 'attachment; filename="numbas-lti-calendar.ics"'
+    return response
