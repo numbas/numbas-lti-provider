@@ -145,7 +145,7 @@ class Exam(ExtractPackage):
     def is_active(self):
         return self.resource is not None and self==self.resource.exam
 
-    def supports_feature(self, feature):
+    def manifest(self):
         root = Path(self.extracted_path)
         manifest_path = root / 'numbas-manifest.json'
         if not manifest_path.exists():
@@ -154,10 +154,12 @@ class Exam(ExtractPackage):
         try:
             with open(str(manifest_path)) as f:
                 manifest = json.loads(f.read())
+                return manifest
         except Exception as e:
-            return False
+            return {}
 
-        features = manifest.get('features',{})
+    def supports_feature(self, feature):
+        features = self.manifest().get('features',{})
         return features.get(feature)
 
     def source(self):
