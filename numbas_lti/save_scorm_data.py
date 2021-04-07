@@ -15,6 +15,7 @@ def save_scorm_data(attempt,batches):
     unsaved_elements = []
     question_scores_changed = set()
     with transaction.atomic():
+        needs_diff = False
         for id,elements in batches.items():
             for element in elements:
                 time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time']))
@@ -44,7 +45,13 @@ def save_scorm_data(attempt,batches):
                             unsaved_elements.append(element)
                         else:
                             raise e
+                if element['key'] == 'cmi.suspend_data':
+                    needs_diff = True
             done.append(id)
+
+    if needs_diff:
+        attempt.diffed = False
+        attempts.save(update_fields=('diffed',))
 
     for number in question_scores_changed:
         attempt.update_question_score_info(number)

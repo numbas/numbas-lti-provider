@@ -27,7 +27,7 @@ def attempt_report_outcome(attempt):
 
 @periodic_task(crontab(minute='*'))
 def diff_suspend_data():
-    attempts = Attempt.objects.filter(scormelements__key='cmi.suspend_data',scormelements__diff=None).annotate(n=Count('scormelements')).filter(n__gt=1)
+    attempts = Attempt.objects.filter(diffed=False)
     MAX_TIME = 10
     start = datetime.now()
     if attempts.exists():

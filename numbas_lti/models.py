@@ -502,6 +502,7 @@ class Attempt(models.Model):
 
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
+    diffed = models.BooleanField(default=False)
 
     all_data_received = models.BooleanField(default=False)
 
@@ -1107,6 +1108,8 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
                 e.save()
             last = e
             lastvalue = value
+        attempt.diffed = True
+        attempt.save()
 
 def resolve_dependency_order(deps):
     order = list(deps.keys())
