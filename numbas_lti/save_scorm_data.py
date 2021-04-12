@@ -51,7 +51,7 @@ def save_scorm_data(attempt,batches):
 
     if needs_diff:
         attempt.diffed = False
-        attempts.save(update_fields=('diffed',))
+        attempt.save(update_fields=('diffed',))
 
     for number in question_scores_changed:
         attempt.update_question_score_info(number)
