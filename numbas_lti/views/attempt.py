@@ -162,7 +162,7 @@ class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
         context = super().get_context_data(*args,**kwargs)
 
         context['resource'] = self.object.resource
-        context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.order_by('time','counter'))]
+        context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.all())]
         context['launches'] = [l.as_json() for l in self.object.launches.all()]
 
         return context

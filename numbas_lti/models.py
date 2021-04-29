@@ -553,7 +553,7 @@ class Attempt(models.Model):
 
         latest_elements = {}
 
-        for e in self.scormelements.all().order_by('time','counter'):
+        for e in self.scormelements.all().reverse():
             latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
 
         scorm_cmi.update(latest_elements)
@@ -592,7 +592,7 @@ class Attempt(models.Model):
             'current': scorm_cmi,
         }
         if include_all_scorm:
-            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')]
+            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().reverse()]
 
         re_interaction_id = re.compile(r'^cmi\.interactions\.(\d+)\.id$')
         part_ids = {}
@@ -1038,7 +1038,7 @@ models.signals.post_delete.connect(discount_update_scaled_score,sender=DiscountP
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
         """ Return the last value of this field """
-        elements = self.filter(key=key).order_by('-time','-counter')
+        elements = self.filter(key=key)
         if not elements.exists():
             raise ScormElement.DoesNotExist()
         else:
@@ -1066,7 +1066,7 @@ class ScormElement(models.Model):
     class Meta:
         verbose_name = _('SCORM element')
         verbose_name_plural = _('SCORM elements')
-        ordering = ['-time','-counter']
+        ordering = ['-time','-counter','-pk',]
 
     def __str__(self):
         return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))
@@ -1096,10 +1096,9 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
         The most recent ScormElement object has the full value saved, so it can be read off easily, but the earlier values are stored as diffs to save on space.
     """
     elements = attempt.scormelements.filter(key='cmi.suspend_data',diff=None)
-    n = elements.count()
     last = None
     with transaction.atomic():
-        for i,e in enumerate(elements):
+        for e in elements:
             value = e.value
             if last is not None:
                 d = make_diff(lastvalue,e.value)
