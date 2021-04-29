@@ -1098,7 +1098,7 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
     elements = attempt.scormelements.filter(key='cmi.suspend_data',diff=None)
     last = None
     with transaction.atomic():
-        for e in elements:
+        for e in sorted(elements, key=lambda x: hasattr(x,'diffs')):
             value = e.value
             if last is not None:
                 d = make_diff(lastvalue,e.value)
@@ -1107,6 +1107,8 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
                 e.save()
             last = e
             lastvalue = value
+            if hasattr(x,'diffs'):
+                break
         attempt.diffed = True
         attempt.save()
 
