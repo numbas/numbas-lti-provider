@@ -1108,7 +1108,7 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
                 e.save()
             last = e
             lastvalue = value
-            if hasattr(x,'diffs'):
+            if hasattr(e,'diffs'):
                 break
         attempt.diffed = True
         attempt.save()
