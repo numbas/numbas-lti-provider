@@ -4,12 +4,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
-from django.db.models import Min, Count
+from django.db.models import Min, Count, Q
 from django.contrib.auth.models import User
 import requests
 from django.template.loader import get_template
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import gettext_lazy as _, gettext, ngettext
 from django.core import validators
 from channels import Group, Channel
 from django.utils import timezone
@@ -247,7 +247,7 @@ class Resource(models.Model):
         elif self.context:
             return _('Resource in "{}" - no exam uploaded').format(self.context.name)
         else:
-            return ugettext('Resource with no context')
+            return gettext('Resource with no context')
 
     @property
     def slug(self):
@@ -280,21 +280,60 @@ class Resource(models.Model):
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
 
-    def is_available(self):
+    def is_available(self,user=None):
+        available_intervals = [
+            (self.available_from, self.available_until),
+        ]
+
+        if self.available_from is None and self.available_until is None:
+            return True
+
+        deadline_extension = timedelta(0)
+        if user is not None:
+            changes = self.access_changes.for_user(user)
+            for change in changes:
+                if change.extend_deadline is not None:
+                    deadline_extension = max(deadline_extension, change.extend_deadline)
+                available_from = change.available_from or self.available_from
+                available_until = change.available_until or self.available_until
+                if available_from is not None or available_until is not None:
+                    available_intervals.append((available_from, available_until))
+
         now = timezone.now()
-        if self.available_from is None or self.available_until is None:
-            return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
-        if self.available_from < self.available_until:
-            return self.available_from <= now <= self.available_until
-        else:
-            return now <= self.available_until or now >= self.available_from
+
+        for available_from, available_until in available_intervals:
+            available = False
+            if available_from is None or available_until is None:
+                available = (available_from is None or now >= available_from) and (available_until is None or now<=available_until+deadline_extension)
+            elif available_from < available_until:
+                available = available_from <= now <= available_until+deadline_extension
+            else:
+                available = now <= available_until or now >= available_from
+            if available:
+                return True
+        return False
+
+    def max_attempts_for_user(self,user):
+        max_attempts = self.max_attempts
+        if max_attempts>0:
+            for ac in self.access_changes.for_user(user).exclude(max_attempts=None):
+                if ac.max_attempts == 0:
+                    max_attempts = 0
+                    break
+                else:
+                    max_attempts = max(max_attempts,ac.max_attempts)
+        return max_attempts
 
     def can_start_new_attempt(self,user):
         if not self.is_available():
             return False
-        if self.max_attempts==0:
+
+        max_attempts = self.max_attempts_for_user(user)
+
+        if max_attempts==0:
             return True
-        return self.attempts.filter(user=user).exclude(broken=True).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
+
+        return self.attempts.filter(user=user).exclude(broken=True).count()<max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
 
     def user_data(self,user):
         return LTIUserData.objects.filter(resource=self,user=user).last()
@@ -440,6 +479,54 @@ class AccessToken(models.Model):
         verbose_name = _('access token')
         verbose_name_plural = _('access tokens')
 
+class AccessChangeManager(models.Manager):
+    use_for_related_fields = True
+
+    def for_user(self,user):
+        query = Q(users=user) | Q(usernames__username=user.username) | Q(emails__email__iexact=user.email)
+        return self.get_queryset().filter(query).distinct()
+
+class AccessChange(models.Model):
+    resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_changes')
+    available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'))
+    available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'))
+    extend_deadline = models.DurationField(blank=True, null=True, verbose_name=_('Extend deadline by'))
+    max_attempts = models.PositiveIntegerField(blank=True, null=True, verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
+
+    users = models.ManyToManyField(User, blank=True, related_name='access_changes')
+
+    objects = AccessChangeManager()
+
+    class Meta:
+        verbose_name = _('access change')
+        verbose_name_plural = _('access changes')
+
+    def applies_to_summary(self):
+        num_users = self.users.count()
+        num_usernames = self.usernames.count()
+        num_emails = self.emails.count()
+
+        o = []
+
+        if num_users>0:
+            o.append(ngettext('{count} user', '{count} users',num_users).format(count=num_users))
+        if num_usernames:
+            o.append(ngettext('{count} username', '{count} usernames',num_usernames).format(count=num_usernames))
+        if num_emails>0:
+            o.append(ngettext('{count} email address', '{count} email addresses',num_emails).format(count=num_emails))
+
+        if len(o)>0:
+            return ', '.join(o)
+        else:
+            return _('Nobody')
+
+class UsernameAccessChange(models.Model):
+    access_change = models.ForeignKey(AccessChange, on_delete=models.CASCADE, related_name='usernames')
+    username = models.CharField(max_length=200)
+
+class EmailAccessChange(models.Model):
+    access_change = models.ForeignKey(AccessChange, on_delete=models.CASCADE, related_name='emails')
+    email = models.EmailField()
 
 class LTIUserData(models.Model):
     consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE,null=True)
@@ -925,7 +1012,7 @@ class Attempt(models.Model):
     def send_completion_receipt(self):
         message = self.completion_receipt()
         send_mail(
-            ugettext('Numbas: Receipt for {resource_name}').format(resource_name=self.resource.title),
+            gettext('Numbas: Receipt for {resource_name}').format(resource_name=self.resource.title),
             message,
             settings.DEFAULT_FROM_EMAIL,
             [self.user.email],

@@ -48,6 +48,9 @@ urlpatterns = [
     url(r'^resource/(?P<pk>\d+)/attempts.json$', views.resource.JSONDumpView.as_view(), name='resource_json_dump'),
     url(r'^resource/(?P<resource_id>\d+)/grant_access_token/(?P<user_id>\d+)$', views.resource.grant_access_token, name='grant_access_token'),
     url(r'^resource/(?P<resource_id>\d+)/remove_access_token/(?P<user_id>\d+)$', views.resource.remove_access_token, name='remove_access_token'),
+    path(r'resource/<resource_id>/access_change/create', views.resource.CreateAccessChangeView.as_view(), name='create_access_change'),
+    path(r'access_change/<pk>', views.resource.UpdateAccessChangeView.as_view(), name='update_access_change'),
+    path(r'access_change/<pk>/delete', views.resource.DeleteAccessChangeView.as_view(), name='delete_access_change'),
 
     url(r'^attempt/(?P<pk>\d+)/remark_parts$', views.attempt.RemarkPartsView.as_view(), name='remark_parts'),
     url(r'^attempt/(?P<pk>\d+)/scorm-listing$', views.attempt.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),

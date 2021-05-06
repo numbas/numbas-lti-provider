@@ -1,7 +1,7 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView, JSONView
 from numbas_lti import forms
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange
 from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
@@ -631,3 +631,51 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
 
         return self.render_to_response(context)
     
+class CreateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.CreateView):
+    model = AccessChange
+    form_class = forms.AccessChangeForm
+    template_name = 'numbas_lti/management/access_change/create.html'
+    management_tab = 'settings'
+    resource_pk_url_kwarg = 'resource_id'
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['resource'] = self.get_resource()
+
+        return initial
+
+    def get_success_url(self):
+        return reverse('resource_settings',args=(self.get_resource().pk,))
+
+class UpdateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+    model = AccessChange
+    form_class = forms.AccessChangeForm
+    management_tab = 'settings'
+    template_name = 'numbas_lti/management/access_change/update.html'
+
+    def get_resource(self):
+        return self.get_object().resource
+
+    def get_success_url(self):
+        return reverse('resource_settings',args=(self.get_resource().pk,))
+
+    def get_initial(self):
+        initial = super().get_initial()
+        ac = self.get_object()
+        initial['resource'] = ac.resource
+        initial['usernames'] = '\n'.join(u.username for u in ac.usernames.all())
+        initial['emails'] = '\n'.join(e.email for e in ac.emails.all())
+        if ac.extend_deadline is not None:
+            initial['extend_deadline_days'] = ac.extend_deadline.days
+            initial['extend_deadline_minutes'] = ac.extend_deadline.seconds // 60
+        return initial
+
+class DeleteAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.DeleteView):
+    model = AccessChange
+    management_tab = 'settings'
+
+    def get_resource(self):
+        return self.get_object().resource
+
+    def get_success_url(self):
+        return reverse('resource_settings',args=(self.get_resource().pk,))

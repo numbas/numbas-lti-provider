@@ -1,0 +1,54 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% load tz %}
+
+
+{% block management_content %}
+<h1>{% trans "Create an access change" %}</h1>
+<div class="help-block">
+    <p>{% blocktrans %}Only fill in the fields you wish to change. Fields left blank will not override the resource's normal settings.{% endblocktrans %}</p>
+</div>
+<form method="POST" action="{% url 'create_access_change' resource.pk %}">
+    {{form.resource}}
+    {% csrf_token %}
+    {% get_current_timezone as TIME_ZONE %}
+    <fieldset>
+        <legend>{% trans "Availability dates" %}</legend>
+        <p class="help-block">{% blocktrans with TIME_ZONE=TIME_ZONE %}All times are in the timezone {{TIME_ZONE}}.{% endblocktrans %}</p>
+        {{form.available_from|bootstrap}}
+        {{form.available_until|bootstrap}}
+        <div class="form-inline">
+            <label>
+            {% trans "Extend the deadline by" %}
+            </label>
+            <div class="form-group">
+               {{form.extend_deadline_days}}
+               <label for="{{form.extend_deadline_days.auto_id}}">{{form.extend_deadline_days.label}}</label>
+            </div>
+            <div class="form-group">
+                {{form.extend_deadline_minutes}}
+               <label for="{{form.extend_deadline_minutes.auto_id}}">{{form.extend_deadline_minutes.label}}</label>
+            </div>
+            <p class="help-block">
+                {% blocktrans %}Use "Extend the deadline by" to move the resource's normal "Available until" date.{% endblocktrans %}
+            </p>
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend>{% trans "Number of attempts" %}</legend>
+        {{form.max_attempts|bootstrap}}
+    </fieldset>
+    <fieldset>
+        <legend>{% trans "Applies to" %}</legend>
+        {{form.usernames|bootstrap}}
+        {{form.emails|bootstrap}}
+    </fieldset>
+    <p><button class="btn btn-lg btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url 'resource_settings' resource.pk %}">{% trans "Cancel" %}</a></p>
+</form>
+{% endblock management_content %}
+
+{% block javascripts %}
+{{block.super}}
+{{form.media}}
+{% endblock javascripts %}

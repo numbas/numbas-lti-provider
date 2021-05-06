@@ -74,6 +74,11 @@ class ResourceManagementViewMixin(ManagementViewMixin):
             pk = self.kwargs.get(self.resource_pk_url_kwarg)
             return Resource.objects.get(pk=pk)
 
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+        context['resource'] = self.get_resource()
+        return context
+
     def dispatch(self,*args,**kwargs):
         self.resource = self.get_resource()
         if not hasattr(self.request,'resource') or self.request.resource is None:
