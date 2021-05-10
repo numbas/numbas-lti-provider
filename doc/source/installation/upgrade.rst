@@ -31,7 +31,6 @@ The whole list should now be::
         'numbas_lti',
         'bootstrapform',
         'bootstrap_datepicker_plus',
-        'django_token',
     ]
 
 v2.10
@@ -62,7 +61,7 @@ Add a huey process to the supervisord configuration (in :file:`/etc/supervisor/c
     [program:numbas_lti_huey]
     command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py run_huey -w 8
     directory=/srv/numbas-lti-provider/
-    user=www-data
+    user=numbas_lti
     autostart=true
     autorestart=true
     redirect_stderr=True

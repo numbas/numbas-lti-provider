@@ -131,7 +131,7 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     [program:numbas_lti_huey]
     command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py run_huey -w 8
     directory=/srv/numbas-lti-provider/
-    user=www-data
+    user=numbas_lti
     autostart=true
     autorestart=true
     redirect_stderr=True
