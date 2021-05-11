@@ -39,10 +39,12 @@ class AccessChangeForm(ModelForm):
 
     class Meta:
         model = AccessChange
-        fields = ['resource','available_from', 'available_until', 'max_attempts']
+        fields = ['resource','available_from', 'available_until', 'max_attempts', 'extend_duration', 'extend_duration_units']
         widgets = {
             'available_from': DateTimePickerInput(format=datetime_format),
             'available_until': DateTimePickerInput(format=datetime_format),
+            'extend_duration': forms.TextInput(attrs={'class':'form-control'}),
+            'extend_duration_units': forms.Select(attrs={'class':'form-control'}),
             'resource': forms.HiddenInput(),
         }
 
@@ -74,6 +76,8 @@ class AccessChangeForm(ModelForm):
             new_emails = set(emails) - set(ac.emails.values_list('email',flat=True))
             for email in new_emails:
                 EmailAccessChange.objects.create(access_change = ac, email=email)
+
+            ac.resource.send_access_changes()
 
         return ac
 

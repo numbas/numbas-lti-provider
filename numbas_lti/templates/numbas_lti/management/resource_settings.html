@@ -47,6 +47,11 @@
                     <dd>{{ac.extend_deadline}}</dd>
                     {% endif %}
 
+                    {% if ac.extend_duration is not None %}
+                    <dt>{% trans "Extend exam duration by" %}</dt>
+                    <dd>{{ac.extend_duration_string}}</dd>
+                    {% endif %}
+
                     {% if ac.max_attempts is not None %}
                     <dt>{% trans "Maximum number of attempts" %}</dt>
                     <dd>{% if ac.max_attempts == 0 %}{% trans "Unlimited" %}{% else %}{{ac.max_attempts}}{% endif %}</dd>

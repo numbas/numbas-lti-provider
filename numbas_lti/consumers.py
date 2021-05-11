@@ -36,7 +36,7 @@ def attempt_ws_connect(message,pk):
     mode= query.get('mode',[''])[0]
 
     if mode!='review':
-        group.send({'text': json.dumps({'current_uid': uid, 'availability_dates':resource.availability_json()})})
+        group.send({'text': json.dumps({'current_uid': uid, 'availability_dates':resource.availability_json(attempt.user)})})
 
 @channel_session_user_from_http
 def attempt_ws_disconnect(message,pk):

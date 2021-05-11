@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
-from django.db.models import Min, Count, Q
+from django.db.models import Min, Count, Q, Subquery
 from django.contrib.auth.models import User
 import requests
 from django.template.loader import get_template
@@ -280,13 +280,9 @@ class Resource(models.Model):
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
 
-    def is_available(self,user=None):
-        available_intervals = [
-            (self.available_from, self.available_until),
-        ]
-
-        if self.available_from is None and self.available_until is None:
-            return True
+    def available_for_user(self,user=None):
+        afrom = self.available_from
+        auntil = self.available_until
 
         deadline_extension = timedelta(0)
         if user is not None:
@@ -294,24 +290,65 @@ class Resource(models.Model):
             for change in changes:
                 if change.extend_deadline is not None:
                     deadline_extension = max(deadline_extension, change.extend_deadline)
-                available_from = change.available_from or self.available_from
-                available_until = change.available_until or self.available_until
-                if available_from is not None or available_until is not None:
-                    available_intervals.append((available_from, available_until))
+
+                if change.available_from is not None:
+                    afrom = min(afrom, change.available_from) if afrom is not None else change.available_from
+                if change.available_until is not None:
+                    auntil = min(auntil, change.available_until) if auntil is not None else change.available_until
+
+        return (afrom, auntil + deadline_extension)
+
+    def duration_extension_for_user(self, user):
+        for ac in self.access_changes.for_user(user):
+            if ac.extend_duration is not None:
+                return (ac.extend_duration, ac.extend_duration_units)
+        return (None,None)
+
+    def availability_json(self,user=None):
+        available_from, available_until = self.available_for_user(user)
+        extension_amount, extension_units = self.duration_extension_for_user(user)
+        data = {
+            'available_from': available_from.isoformat() if available_from else None,
+            'available_until': available_until.isoformat() if available_until else None,
+            'allow_review_from': self.allow_review_from.isoformat() if self.allow_review_from else None,
+            'duration_extension': {
+                'amount': extension_amount,
+                'units': extension_units,
+            }
+        }
+        return data
+
+    def is_available(self,user=None):
+        available_from, available_until = self.available_for_user(user)
+
+        if available_from is None and available_until is None:
+            return True
 
         now = timezone.now()
 
-        for available_from, available_until in available_intervals:
-            available = False
-            if available_from is None or available_until is None:
-                available = (available_from is None or now >= available_from) and (available_until is None or now<=available_until+deadline_extension)
-            elif available_from < available_until:
-                available = available_from <= now <= available_until+deadline_extension
-            else:
-                available = now <= available_until or now >= available_from
-            if available:
-                return True
-        return False
+        available = False
+        if available_from is None or available_until is None:
+            available = (available_from is None or now >= available_from) and (available_until is None or now<=available_until)
+        elif available_from < available_until:
+            available = available_from <= now <= available_until
+        else:
+            available = now <= available_until or now >= available_from
+
+        return available
+
+
+    def send_access_changes(self):
+        if not self.access_changes.exists():
+            data = json.dumps({'availability_dates': self.availability_json(user=None)})
+            group = group_for_resource(self)
+            group.send({"text": data})
+        else:
+            users = User.objects.filter(attempts__resource=self).distinct()
+            for user in users:
+                data = json.dumps({'availability_dates': self.availability_json(user)})
+                for attempt in self.attempts.filter(user=user):
+                    group = group_for_attempt(attempt)
+                    group.send({"text": data})
 
     def max_attempts_for_user(self,user):
         max_attempts = self.max_attempts
@@ -416,13 +453,6 @@ class Resource(models.Model):
         else:
             return 'numbas_lti:resource:'+str(self.pk)
 
-    def availability_json(self):
-        return {
-            'available_from': self.available_from.isoformat() if self.available_from else None,
-            'available_until': self.available_until.isoformat() if self.available_until else None,
-            'allow_review_from': self.allow_review_from.isoformat() if self.allow_review_from else None,
-        }
-
     def report_scores(self):
         if ReportProcess.objects.filter(resource=self,status='reporting').exists():
             return
@@ -486,12 +516,19 @@ class AccessChangeManager(models.Manager):
         query = Q(users=user) | Q(usernames__username=user.username) | Q(emails__email__iexact=user.email)
         return self.get_queryset().filter(query).distinct()
 
+EXTEND_DURATION_UNITS = [
+    ('percent', _('percent')),
+    ('minutes', _('minutes')),
+]
+
 class AccessChange(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_changes')
     available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'))
     available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'))
     extend_deadline = models.DurationField(blank=True, null=True, verbose_name=_('Extend deadline by'))
     max_attempts = models.PositiveIntegerField(blank=True, null=True, verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
+    extend_duration = models.FloatField(blank=True, null=True, verbose_name=_('Extend exam duration by'))
+    extend_duration_units = models.CharField(max_length=10, default='percent', choices=EXTEND_DURATION_UNITS)
 
     users = models.ManyToManyField(User, blank=True, related_name='access_changes')
 
@@ -519,6 +556,15 @@ class AccessChange(models.Model):
             return ', '.join(o)
         else:
             return _('Nobody')
+
+    def affected_users(self):
+        return User.objects.filter(Q(pk__in=self.users.all()) | Q(username__in=Subquery(self.usernames.values('username'))) | Q(email__in=Subquery(self.emails.values('email'))))
+
+    def extend_duration_string(self):
+        if self.extend_duration_units == 'percent':
+            return gettext('{count:g}%'.format(count=self.extend_duration))
+        else:
+            return ngettext('{count:g} minute','{count:g} minutes}',self.extend_duration).format(count=self.extend_duration)
 
 class UsernameAccessChange(models.Model):
     access_change = models.ForeignKey(AccessChange, on_delete=models.CASCADE, related_name='usernames')

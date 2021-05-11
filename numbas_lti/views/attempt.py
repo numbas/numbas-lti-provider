@@ -246,7 +246,12 @@ class RunAttemptView(generic.detail.DetailView):
 
         attempt = self.get_object()
 
-        if attempt.completion_status=='not attempted':
+        try:
+            completion_status = attempt.scormelements.current('cmi.completion_status')
+        except ScormElement.DoesNotExist:
+            completion_status = 'not attempted'
+
+        if completion_status=='not attempted':
             entry = 'ab-initio'
         elif attempt.scormelements.filter(key='cmi.suspend_data').exists():
             entry = 'resume'
@@ -281,14 +286,20 @@ class RunAttemptView(generic.detail.DetailView):
 
         user = attempt.user
         user_data = attempt.resource.user_data(user)
+        available_from, available_until = attempt.resource.available_for_user(user)
 
         scorm_cmi = attempt.scorm_cmi()
 
+
+        duration_extension_amount, duration_extension_units = attempt.resource.duration_extension_for_user(user)
         dynamic_cmi = {
             'cmi.mode': mode,
             'cmi.entry': entry,
             'numbas.user_role': 'instructor' if request_is_instructor(self.request) else 'student',
+            'numbas.duration_extension.amount': duration_extension_amount,
+            'numbas.duration_extension.units': duration_extension_units,
         }
+
         now = datetime.datetime.now().timestamp()
         dynamic_cmi = {k: {'value':v,'time':now} for k,v in dynamic_cmi.items()}
         scorm_cmi.update(dynamic_cmi)
@@ -297,7 +308,7 @@ class RunAttemptView(generic.detail.DetailView):
         context['support_url'] = getattr(settings,'SUPPORT_URL',None)
         
         context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
-        context['available_until'] = attempt.resource.available_until
+        context['available_until'] = available_until
 
         context['js_vars'] = {
             'exam_url': attempt.exam.extracted_url+'/index.html',
@@ -306,8 +317,8 @@ class RunAttemptView(generic.detail.DetailView):
             'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
             'show_attempts_url': reverse('show_attempts'),
             'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
-            'available_from': attempt.resource.available_from.isoformat() if attempt.resource.available_from else None,
-            'available_until': attempt.resource.available_until.isoformat() if attempt.resource.available_until else None,
+            'available_from': available_from.isoformat() if available_from else None,
+            'available_until': available_until.isoformat() if available_until else None,
         }
 
         return context

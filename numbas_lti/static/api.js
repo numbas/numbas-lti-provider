@@ -21,7 +21,7 @@ function SCORM_API(options) {
     this.fallback_url = options.fallback_url;
     this.show_attempts_url = options.show_attempts_url;
 
-    this.update_availability_dates(options);
+    this.update_availability_dates(options,true);
 
     /** Key to save data under in localStorage
      */
@@ -74,6 +74,8 @@ function SCORM_API(options) {
         }
         setTimeout(send_ajax_interval,sc.ajax_period);
     }
+
+    this.initialise_display();
 }
 SCORM_API.prototype = {
 
@@ -107,16 +109,47 @@ SCORM_API.prototype = {
 
     /** Update the availability dates for the resource
      */
-    update_availability_dates: function(data) {
+    update_availability_dates: function(data,first) {
         var sc = this;
         this.allow_review_from = load_date(data.allow_review_from);
-        this.available_from = load_date(data.available_from);
-        this.available_until = load_date(data.available_until);
+        var available_from = load_date(data.available_from);
+        var available_until = load_date(data.available_until);
+        var changed = !(dates_equal(available_from, this.available_from) && dates_equal(available_until, this.available_until));
+        this.available_from = available_from;
+        this.available_until = available_until;
         if(this.available_until) {
             Array.from(document.querySelectorAll('.available-until')).forEach(function(s) {
                 s.textContent = sc.available_until.toLocaleString(DateTime.DATETIME_FULL);
             });
         }
+        if(changed) {
+            if(!first) {
+                var deadline_change_display = document.getElementById('deadline-change-display');
+                deadline_change_display.classList.add('show');
+            }
+        }
+
+        if(data.duration_extension) {
+            this.data['numbas.duration_extension.amount'] = data.duration_extension.amount;
+            this.data['numbas.duration_extension.units'] = data.duration_extension.units;
+            this.post_message({
+                'numbas change': 'exam duration extension'
+            });
+        }
+    },
+
+    post_message: function(data) {
+        var scorm_window = document.getElementById('scorm-player').contentWindow;
+        scorm_window.postMessage(data);
+    },
+
+    /** Bind events on the display
+     */
+    initialise_display: function() {
+        var deadline_change_display = document.getElementById('deadline-change-display');
+        deadline_change_display.addEventListener('click',function() {
+            deadline_change_display.classList.remove('show');
+        });
     },
 
     /** Setup the SCORM data model.
@@ -760,6 +793,9 @@ function load_date(date) {
     if(date!==null) {
         return DateTime.fromISO(date);
     }
+}
+function dates_equal(a,b) {
+    return a===null ? b===null : b!=null && a.equals(b);
 }
 
 function redirect(url) {

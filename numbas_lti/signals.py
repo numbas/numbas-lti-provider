@@ -4,10 +4,11 @@ from django.db import models
 from channels import Group, Channel
 from django.utils import timezone
 from datetime import datetime
+from django.contrib.auth.models import User
 
-from .groups import group_for_resource
+from .groups import group_for_resource, group_for_attempt
 from .report_outcome import report_outcome
-from .models import Exam, ScormElement, EditorLink, Resource, Attempt, ExtractPackage
+from .models import Exam, ScormElement, EditorLink, Resource, Attempt, ExtractPackage, AccessChange
 
 import os
 import shutil
@@ -45,11 +46,10 @@ def set_exam_name_from_package(sender,instance,**kwargs):
         except KeyError:
             pass
 
+
 @receiver(models.signals.post_save,sender=Resource)
 def resource_availability_changed(sender,instance,**kwargs):
-    resource = instance
-    group = group_for_resource(resource)
-    group.send({"text": json.dumps({'availability_dates': resource.availability_json()})})
+    instance.send_access_changes()
 
 """
 # Removed because it might be killing the server
