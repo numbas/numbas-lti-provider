@@ -83,20 +83,24 @@ LOGGING = {
             'formatter': 'simple'
         },
     },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
     'loggers': {
         'django': {
-            'handlers': [],
-            'level': 'WARNING',
+            'handlers': ['console'],
+            'level': 'ERROR',
             'propagate': True,
         },
         'numbas_lti': {
-            'handlers': [],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
         },
         'django_auth_lti': {
-            'handlers': [],
-            'level': 'DEBUG',
+            'handlers': ['console'],
+            'level': 'WARNING',
             'propagate': True,
         },
     }
