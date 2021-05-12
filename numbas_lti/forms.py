@@ -13,7 +13,7 @@ from django.core.files import File
 from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
-from bootstrap_datepicker_plus import DateTimePickerInput
+import bootstrap_datepicker_plus
 from django.contrib.auth.models import User
 import os
 import requests
@@ -25,6 +25,12 @@ from django.utils.formats import get_format
 import string
 
 datetime_format = get_format('DATETIME_INPUT_FORMATS')[0]
+
+class DateTimePickerInput(bootstrap_datepicker_plus.DateTimePickerInput):
+    _default_options = dict(bootstrap_datepicker_plus.DateTimePickerInput._default_options, **{
+        'sideBySide': True,
+        'useCurrent': False,
+    })
 
 def split_newlines_commas(text):
     items = [x.strip() for x in sum((l.split(',') for l in text.split('\n')),[])]
@@ -39,8 +45,9 @@ class AccessChangeForm(ModelForm):
 
     class Meta:
         model = AccessChange
-        fields = ['resource','available_from', 'available_until', 'max_attempts', 'extend_duration', 'extend_duration_units']
+        fields = ['description','resource','available_from', 'available_until', 'max_attempts', 'extend_duration', 'extend_duration_units']
         widgets = {
+            'description': forms.TextInput(),
             'available_from': DateTimePickerInput(format=datetime_format),
             'available_until': DateTimePickerInput(format=datetime_format),
             'extend_duration': forms.TextInput(attrs={'class':'form-control'}),

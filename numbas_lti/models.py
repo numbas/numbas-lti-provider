@@ -170,6 +170,12 @@ class Exam(ExtractPackage):
         except (FileNotFoundError,json.JSONDecodeError):
             return
 
+    def has_duration(self):
+        source = self.source()
+        if self.source is None:
+            return True
+        duration = source.get('duration',0)
+        return duration != 0
 
 GRADING_METHODS = [
     ('highest',_('Highest score')),
@@ -296,7 +302,7 @@ class Resource(models.Model):
                 if change.available_until is not None:
                     auntil = min(auntil, change.available_until) if auntil is not None else change.available_until
 
-        return (afrom, auntil + deadline_extension)
+        return (afrom, auntil + deadline_extension if auntil is not None else None)
 
     def duration_extension_for_user(self, user):
         for ac in self.access_changes.for_user(user):
@@ -522,6 +528,7 @@ EXTEND_DURATION_UNITS = [
 ]
 
 class AccessChange(models.Model):
+    description = models.TextField(default='', help_text=_('Who is this for and what does it change?'))
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_changes')
     available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'))
     available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'))

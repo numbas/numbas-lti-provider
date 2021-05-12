@@ -1,0 +1,70 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% load tz %}
+{% load static %}
+
+
+{% block management_content %}
+<h1>{% trans "Access changes" %}</h1>
+
+<section>
+    {% if resource.access_changes.exists %}
+        <ul class="list-unstyled" id="access-changes">
+        {% for ac in resource.access_changes.all %}
+            <li>
+                <div class="panel panel-default">
+                    <div class="panel-heading">{{ac.description}}</div>
+                    <div class="panel-body">
+                        <dl>
+                            {% if ac.available_from is not None %}
+                            <dt>{% trans "Available from" %}</dt>
+                            <dd>{{ac.available_from}}</dd>
+                            {% endif %}
+
+                            {% if ac.available_until is not None %}
+                            <dt>{% trans "Available until" %}</dt>
+                            <dd>{{ac.available_until}}</dd>
+                            {% endif %}
+
+                            {% if ac.extend_deadline is not None %}
+                            <dt>{% trans "Extend deadline by" %}</dt>
+                            <dd>{{ac.extend_deadline}}</dd>
+                            {% endif %}
+
+                            {% if ac.extend_duration is not None %}
+                            <dt>{% trans "Extend exam duration by" %}</dt>
+                            <dd>{{ac.extend_duration_string}}</dd>
+                            {% endif %}
+
+                            {% if ac.max_attempts is not None %}
+                            <dt>{% trans "Maximum number of attempts" %}</dt>
+                            <dd>{% if ac.max_attempts == 0 %}{% trans "Unlimited" %}{% else %}{{ac.max_attempts}}{% endif %}</dd>
+                            {% endif %}
+
+                            <dt>{% trans "Applies to" %}</dt>
+                            <dd>{{ac.applies_to_summary}}</dd>
+                        </dl>
+                    </div>
+                    <div class="panel-footer">
+                        <a class="btn btn-link" href="{% url 'update_access_change' ac.pk %}" ><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit" %}</a>
+                        <a class="btn btn-danger" href="{% url 'delete_access_change' ac.pk %}" ><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</a>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>{% trans "No access changes have been applied to this resource." %}</p>
+    {% endif %}
+    <p>
+        <a href="{% url 'create_access_change' resource.pk %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Add an access change</a>
+    </p>
+</section>
+
+{% endblock management_content %}
+
+{% block stylesheets %}
+{{block.super}}
+<link rel="stylesheet" href="{% static 'access_change_list.css' %}"></link>
+{% endblock %}

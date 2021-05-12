@@ -1,0 +1,27 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block title %}{% blocktrans with description=object.description %}Delete access change "{{description}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+
+{% block management_content %}
+<div class="container">
+    <header>
+        <h1>Delete an access change</h1>
+    </header>
+
+    <main>
+        <p>
+            {% blocktrans with description=object.description %}Are you sure you want to delete the access change <em>{{description}}</em>?{% endblocktrans %}
+        </p>
+        <p>{% trans "Access settings for users affected by this access change will revert to the defaults." %}</p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <p>
+                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this access change" %}</button>
+                <a class="btn btn-link" href="{% url 'resource_access_changes' object.resource.pk %}">{% trans "Cancel" %}</a>
+            </p>
+        </form>
+    </main>
+</div>
+{% endblock management_content %}

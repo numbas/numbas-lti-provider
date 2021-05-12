@@ -630,13 +630,23 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
             context['no_attempt'] = True
 
         return self.render_to_response(context)
+
+class AccessChangesView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.ListView):
+    model = AccessChange
+    template_name = 'numbas_lti/management/access_change/list.html'
+    management_tab = 'access-changes'
+    resource_pk_url_kwarg = 'resource_id'
     
 class CreateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.CreateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
-    template_name = 'numbas_lti/management/access_change/create.html'
-    management_tab = 'settings'
+    template_name = 'numbas_lti/management/access_change/edit.html'
+    management_tab = 'access-changes'
     resource_pk_url_kwarg = 'resource_id'
+
+    extra_context = {
+        'create': True,
+    }
 
     def get_initial(self):
         initial = super().get_initial()
@@ -645,19 +655,19 @@ class CreateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin,
         return initial
 
     def get_success_url(self):
-        return reverse('resource_settings',args=(self.get_resource().pk,))
+        return reverse('resource_access_changes',args=(self.get_resource().pk,))
 
 class UpdateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
-    management_tab = 'settings'
-    template_name = 'numbas_lti/management/access_change/update.html'
+    management_tab = 'access-changes'
+    template_name = 'numbas_lti/management/access_change/edit.html'
 
     def get_resource(self):
         return self.get_object().resource
 
     def get_success_url(self):
-        return reverse('resource_settings',args=(self.get_resource().pk,))
+        return reverse('resource_access_changes',args=(self.get_resource().pk,))
 
     def get_initial(self):
         initial = super().get_initial()
@@ -673,9 +683,10 @@ class UpdateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin,
 class DeleteAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.DeleteView):
     model = AccessChange
     management_tab = 'settings'
+    template_name = 'numbas_lti/management/access_change/delete.html'
 
     def get_resource(self):
         return self.get_object().resource
 
     def get_success_url(self):
-        return reverse('resource_settings',args=(self.get_resource().pk,))
+        return reverse('resource_access_changes',args=(self.get_resource().pk,))
