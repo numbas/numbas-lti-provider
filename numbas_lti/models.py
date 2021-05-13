@@ -305,10 +305,23 @@ class Resource(models.Model):
         return (afrom, auntil + deadline_extension if auntil is not None else None)
 
     def duration_extension_for_user(self, user):
-        for ac in self.access_changes.for_user(user):
-            if ac.extend_duration is not None:
-                return (ac.extend_duration, ac.extend_duration_units)
-        return (None,None)
+        duration = 0
+
+        if self.exam is not None:
+            source = self.exam.source()
+            if source is not None:
+                duration = source.get('duration',0) / 60
+
+        best_minutes = 0
+        best_extension = (None,None)
+
+        for ac in self.access_changes.for_user(user).exclude(extend_duration=None):
+            extension_minutes = ac.extend_duration_absolute(duration)
+            if extension_minutes > best_minutes:
+                best_minutes = extension_minutes
+                best_extension = (ac.extend_duration, ac.extend_duration_units)
+
+        return best_extension
 
     def availability_json(self,user=None):
         available_from, available_until = self.available_for_user(user)
@@ -574,7 +587,13 @@ class AccessChange(models.Model):
         if self.extend_duration_units == 'percent':
             return gettext('{count:g}%'.format(count=self.extend_duration))
         else:
-            return ngettext('{count:g} minute','{count:g} minutes}',self.extend_duration).format(count=self.extend_duration)
+            return ngettext('{count:g} minute','{count:g} minutes',self.extend_duration).format(count=self.extend_duration)
+
+    def extend_duration_absolute(self, initial_duration):
+        if self.extend_duration_units == 'percent':
+            return self.extend_duration * initial_duration / 100
+        else:
+            return self.extend_duration
 
 class UsernameAccessChange(models.Model):
     access_change = models.ForeignKey(AccessChange, on_delete=models.CASCADE, related_name='usernames')
