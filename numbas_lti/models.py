@@ -312,7 +312,7 @@ class Resource(models.Model):
                 if change.available_from is not None:
                     afrom = min(afrom, change.available_from) if afrom is not None else change.available_from
                 if change.available_until is not None:
-                    auntil = min(auntil, change.available_until) if auntil is not None else change.available_until
+                    auntil = max(auntil, change.available_until) if auntil is not None else change.available_until
 
         return (afrom, auntil + deadline_extension if auntil is not None else None)
 
