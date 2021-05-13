@@ -561,7 +561,7 @@ class AccessChange(models.Model):
     extend_deadline = models.DurationField(blank=True, null=True, verbose_name=_('Extend deadline by'))
     max_attempts = models.PositiveIntegerField(blank=True, null=True, verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
     extend_duration = models.FloatField(blank=True, null=True, verbose_name=_('Extend exam duration by'))
-    extend_duration_units = models.CharField(max_length=10, default='percent', choices=EXTEND_DURATION_UNITS)
+    extend_duration_units = models.CharField(max_length=10, blank=True, null=True, default='percent', choices=EXTEND_DURATION_UNITS)
 
     users = models.ManyToManyField(User, blank=True, related_name='access_changes')
 
