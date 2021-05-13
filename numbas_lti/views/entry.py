@@ -125,9 +125,9 @@ def basic_lti_launch(request):
     if user_data is None:
         user_data = LTIUserData.objects.create(**user_data_args)
 
-    user_data.lis_result_sourcedid = request.POST.get('lis_result_sourcedid')
+    user_data.lis_result_sourcedid = request.LTI.get('lis_result_sourcedid')
     user_data.lis_person_sourcedid = request.LTI.get('lis_person_sourcedid','')
-    user_data.lis_outcome_service_url = request.POST.get('lis_outcome_service_url')
+    user_data.lis_outcome_service_url = request.LTI.get('lis_outcome_service_url')
     user_data.is_instructor = is_instructor
     user_data.save()
 
