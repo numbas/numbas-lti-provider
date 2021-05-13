@@ -725,7 +725,8 @@ class Attempt(models.Model):
 
         latest_elements = {}
 
-        for e in self.scormelements.all().reverse():
+        saved_elements = resolve_diffed_scormelements(self.scormelements.all().reverse())
+        for e in saved_elements:
             latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
 
         scorm_cmi.update(latest_elements)
@@ -1279,7 +1280,7 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
                 e.save()
             last = e
             lastvalue = value
-            if hasattr(x,'diffs'):
+            if hasattr(e,'diffs'):
                 break
         attempt.diffed = True
         attempt.save()
