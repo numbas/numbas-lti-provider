@@ -856,7 +856,7 @@ class Attempt(models.Model):
         return data
 
     def completed(self):
-        if not self.resource.is_available():
+        if not self.resource.is_available(self.user):
             return True
         return self.completion_status=='completed'
 
