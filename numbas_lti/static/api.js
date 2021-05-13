@@ -122,11 +122,14 @@ SCORM_API.prototype = {
                 s.textContent = sc.available_until.toLocaleString(DateTime.DATETIME_FULL);
             });
         }
+        var deadline_change_display = document.getElementById('deadline-change-display');
         if(changed) {
             if(!first) {
-                var deadline_change_display = document.getElementById('deadline-change-display');
                 deadline_change_display.classList.add('show');
             }
+        }
+        if(!this.available_until) {
+            deadline_change_display.classList.remove('show');
         }
 
         if(data.duration_extension) {
@@ -795,7 +798,7 @@ function load_date(date) {
     }
 }
 function dates_equal(a,b) {
-    return a===null ? b===null : b!=null && a.equals(b);
+    return a==null ? b==null : b!=null && a.equals(b);
 }
 
 function redirect(url) {
