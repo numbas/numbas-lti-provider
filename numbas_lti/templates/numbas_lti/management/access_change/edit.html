@@ -88,7 +88,17 @@
     <fieldset>
         <legend>{% trans "Applies to" %}</legend>
         {{form.usernames|bootstrap}}
+        <p class="help-block">
+            {% blocktrans with username=user.username %}Your username is <code>{{username}}</code>.{% endblocktrans %}
+        </p>
         {{form.emails|bootstrap}}
+        <p class="help-block">
+            {% if user.email %}
+                {% blocktrans with email=user.email %}Your email address is <code>{{email}}</code>.{% endblocktrans %}
+            {% else %}
+                {% trans "The LTI connection doesn't seem to share email addresses. You might not be able to identify students by email address." %}
+            {% endif %}
+        </p>
     </fieldset>
     <p><button class="btn btn-lg btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url 'resource_settings' resource.pk %}">{% trans "Cancel" %}</a></p>
 </form>
