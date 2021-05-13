@@ -394,7 +394,7 @@ class Resource(models.Model):
         return max_attempts
 
     def can_start_new_attempt(self,user):
-        if not self.is_available():
+        if not self.is_available(user):
             return False
 
         max_attempts = self.max_attempts_for_user(user)
