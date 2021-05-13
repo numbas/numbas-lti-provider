@@ -177,6 +177,18 @@ class Exam(ExtractPackage):
         duration = source.get('duration',0)
         return duration != 0
 
+    @property
+    def duration(self):
+        if not hasattr(self,'_duration'):
+            source = self.source()
+            if source is not None:
+                duration = source.get('duration',0) / 60
+                self._duration = duration
+            else:
+                self._duration = 0
+
+        return self._duration
+
 GRADING_METHODS = [
     ('highest',_('Highest score')),
     ('last',_('Last attempt')),
@@ -308,9 +320,7 @@ class Resource(models.Model):
         duration = 0
 
         if self.exam is not None:
-            source = self.exam.source()
-            if source is not None:
-                duration = source.get('duration',0) / 60
+            duration = self.exam.duration
 
         best_minutes = 0
         best_extension = (None,None)
