@@ -200,6 +200,14 @@ class ShowAttemptsView(generic.list.ListView):
             messages.add_message(self.request,messages.INFO,_('The attempt was completed, but not all data had been saved. All data has now been saved, and review is not available yet.'))
 
         if not self.get_queryset().exists():
+            resource = request.resource
+            if not resource.is_available(request.user):
+                now = timezone.now()
+                available_from, available_until = resource.available_for_user(request.user)
+                if now < available_from:
+                    template = get_template('numbas_lti/not_available_yet.html')
+                    raise PermissionDenied(template.render({'available_from': available_from}))
+
             return new_attempt(request)
         else:
             return super(ShowAttemptsView,self).dispatch(request,*args,**kwargs)

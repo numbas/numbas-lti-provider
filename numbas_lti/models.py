@@ -312,7 +312,10 @@ class Resource(models.Model):
 
     def availability_json(self,user=None):
         available_from, available_until = self.available_for_user(user)
-        extension_amount, extension_units = self.duration_extension_for_user(user)
+        if user is not None:
+            extension_amount, extension_units = self.duration_extension_for_user(user)
+        else:
+            extension_amount, extension_units = None, None
         data = {
             'available_from': available_from.isoformat() if available_from else None,
             'available_until': available_until.isoformat() if available_until else None,
