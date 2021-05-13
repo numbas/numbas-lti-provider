@@ -387,6 +387,60 @@ When an attempt has been remarked, the change in total score is shown.
 If the total score is different to that stored in the database, a :guilabel:`Save` button appears.
 Clicking the button causes changed data corresponding to the attempt to be saved to the database, updating its timeline and reported score.
 
+Access changes
+--------------
+
+*Access changes* are a means of changing deadlines or allowing a different number of attempts at the resource to certain students.
+
+Each access change applies to a list of students.
+
+To create an access change, click on the :guilabel:`Access changes` tab, then :guilabel:`Add an access change`.
+
+There are several fields that you can modify.
+Leave a field entirely blank to keep the standard value from the resource's settings.
+
+In the :guilabel:`Description` field, describe what the access change is for and who it applies to, such as "25% extra time", or "Late submission for Elliot D".
+
+Access changes take effect immediately.
+Any students who are completing an attempt at the time that their access changes will receive the new details immediately.
+If the resource becomes unavailable for them, the attempt will end immediately.
+Otherwise, a message will appear on their screen describing the new deadline.
+
+Availability dates
+^^^^^^^^^^^^^^^^^^
+
+The fields in the :guilabel:`Availability dates` section change the time period in which the affected students can complete attempts at the resource.
+You can either set new fixed start and end dates, or fill in the :guilabel:`Extend the deadline by` field to extend the resource's normal :guilabel:`Available from` date.
+
+If several access changes apply to a student, the earliest :guilabel:`Available from` date and latest :guilabel:`Available until` date are used, and the longest deadline extension is applied.
+
+Exam duration
+^^^^^^^^^^^^^
+
+If the exam associated with the resource has a duration set, then you can extend it, either by an absolute length of time or by a percentage of the standard duration.
+
+If several access changes apply to a student, the longest extension is applied.
+
+Number of attempts
+^^^^^^^^^^^^^^^^^^
+
+The :guilabel:`Maximum attempts per user` field overrides the resource's :ref:`maximum-attempts` field.
+
+The student is allowed whichever is the greatest of the resource's normal maximum number of attempts and the numbers specified by any access changes affecting the student.
+
+A value of zero in this field does not mean "no change", it means that the affected students are allowed to start as many attempts as they like.
+
+Applies to
+^^^^^^^^^^
+
+Specify which students the access change applies to by giving lists of usernames or email addresses.
+These are compared with the usernames and email addresses sent by the LTI consumer. 
+
+.. warning::
+
+    Note that the LTI consumer can choose what it send for these fields, so they might not match the values you use in other systems.
+    The access change form shows the username and email address it received from the LTI consumer for your account, as a guide.
+
 Test run
 --------
 
