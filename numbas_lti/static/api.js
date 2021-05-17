@@ -150,9 +150,11 @@ SCORM_API.prototype = {
      */
     initialise_display: function() {
         var deadline_change_display = document.getElementById('deadline-change-display');
-        deadline_change_display.addEventListener('click',function() {
-            deadline_change_display.classList.remove('show');
-        });
+        if(deadline_change_display) {
+            deadline_change_display.addEventListener('click',function() {
+                deadline_change_display.classList.remove('show');
+            });
+        }
     },
 
     /** Setup the SCORM data model.
