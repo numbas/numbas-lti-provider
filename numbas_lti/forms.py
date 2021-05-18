@@ -32,6 +32,12 @@ class DateTimePickerInput(bootstrap_datepicker_plus.DateTimePickerInput):
         'useCurrent': False,
     })
 
+    def __init__(self, attrs=None, *args, **kwargs):
+        attrs = attrs if attrs else {}
+        if 'autocomplete' not in attrs:
+            attrs['autocomplete'] = 'no'
+        super().__init__(attrs, *args, **kwargs)
+
 def split_newlines_commas(text):
     items = [x.strip() for x in sum((l.split(',') for l in text.split('\n')),[])]
     return [x for x in items if x!='']
