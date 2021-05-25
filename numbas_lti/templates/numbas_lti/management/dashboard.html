@@ -113,7 +113,7 @@
                     <th>{% trans "Awarded scores" %}</th>
                     {% if exam_info.showActualMark %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
                     {% if exam_info.showActualMark or exam_info.completionShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.showActualMark or exam_info.reviewShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showActualMark or exam_info.reviewShowScore %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
                     <th>{% trans "Expected answers" %}</th>
