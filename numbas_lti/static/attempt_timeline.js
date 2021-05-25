@@ -287,7 +287,7 @@ Timeline.prototype = {
             ));
         } else if(key=='x.reason ended') {
             this.add_timeline_item(new TimelineItem(
-                interoplate(_('The session was ended automatically because: <strong>%s</strong>.'),[element.value]),
+                interpolate(_('The session was ended automatically because: <strong>%s</strong>.'),[element.value]),
                 element,
                 'scorm reason-ended',
                 'saved'
