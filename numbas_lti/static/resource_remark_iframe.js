@@ -87,6 +87,21 @@ function load_exam() {
     });
 }
 
+function reset(exam) {
+    exam.store.exam = null;
+    if(exam.store.receive_window_message) {
+        window.removeEventListener('message',exam.store.receive_window_message);
+    }
+    if(Numbas.schedule.reset) {
+        Numbas.schedule.reset();
+    } else {
+        Numbas.schedule.calls = [];
+        Numbas.schedule.lifts = [];
+        Numbas.schedule.signalboxes = [];
+        Numbas.signals = new Numbas.schedule.SignalBox();
+    }
+}
+
 function remark_session(options) {
     options = options || {};
     const promise = new Promise((resolve,reject) => {
@@ -108,6 +123,8 @@ function remark_session(options) {
                 }
             });
             exam.store.saveExam(exam);
+
+            reset(exam);
 
             resolve({success: true});
         }).catch(err=>{
