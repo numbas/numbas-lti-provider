@@ -59,6 +59,7 @@
                 <th>{% trans "User" %}</th>
                 <th>{% trans "Username" %}</th>
                 <th>{% trans "Email address" %}</th>
+                <th>{% trans "Consumer" %}</th>
                 {% endif %}
 
                 {% if model == 'contexts' %}
@@ -79,6 +80,7 @@
                 <td><a href="{% url 'global_user_info' result.pk %}">{{result.get_full_name}}</a></td>
                 <td>{{result.username}}</td>
                 <td><a href="mailto:{{result.email}}">{{result.email}}</a></td>
+                <td><code>{{result.lti_data.first.consumer.key}}</code></td>
                 {% endif %}
 
                 {% if model == 'contexts' %}
