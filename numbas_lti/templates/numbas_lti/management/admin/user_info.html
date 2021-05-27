@@ -36,7 +36,7 @@
         <tbody>
         {% for attempt in user.attempts.all|slice:":10" %}
         <tr>
-            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a></td>
+            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="text-muted">{{attempt.resource.context.name}}</span></td>
             <td>{{attempt.start_time}}</td>
             <td>
                 <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>
