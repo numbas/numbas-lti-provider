@@ -285,7 +285,8 @@ class RunAttemptView(generic.detail.DetailView):
             mode = 'normal'
 
         if attempt.user != self.request.user:
-            if request_is_instructor(self.request):
+            user_data = attempt.resource.user_data(self.request.user)
+            if (user_data is not None and user_data.is_instructor) or request_is_instructor(self.request):
                 mode = 'review'
             else:
                 raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
