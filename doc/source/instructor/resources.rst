@@ -412,14 +412,14 @@ Availability dates
 The fields in the :guilabel:`Availability dates` section change the time period in which the affected students can complete attempts at the resource.
 You can either set new fixed start and end dates, or fill in the :guilabel:`Extend the deadline by` field to extend the resource's normal :guilabel:`Available from` date.
 
-If several access changes apply to a student, the earliest :guilabel:`Available from` date and latest :guilabel:`Available until` date are used, and the longest deadline extension is applied.
+If several access changes apply to a student, the changes from the last created access change are used.
 
 Exam duration
 ^^^^^^^^^^^^^
 
 If the exam associated with the resource has a duration set, then you can extend it, either by an absolute length of time or by a percentage of the standard duration.
 
-If several access changes apply to a student, the longest extension is applied.
+If several access changes apply to a student, the change in the last created access change is used.
 
 Number of attempts
 ^^^^^^^^^^^^^^^^^^

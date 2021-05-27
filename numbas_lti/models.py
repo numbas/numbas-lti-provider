@@ -307,12 +307,12 @@ class Resource(models.Model):
             changes = self.access_changes.for_user(user)
             for change in changes:
                 if change.extend_deadline is not None:
-                    deadline_extension = max(deadline_extension, change.extend_deadline)
+                    deadline_extension = change.extend_deadline
 
                 if change.available_from is not None:
-                    afrom = min(afrom, change.available_from) if afrom is not None else change.available_from
+                    afrom = change.available_from
                 if change.available_until is not None:
-                    auntil = max(auntil, change.available_until) if auntil is not None else change.available_until
+                    auntil = change.available_until
 
         return (afrom, auntil + deadline_extension if auntil is not None else None)
 
