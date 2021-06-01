@@ -17,7 +17,7 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 def setup(app):
-    app.add_stylesheet('numbas-style.css')
+    app.add_css_file('numbas-style.css')
 
 # -- Project information -----------------------------------------------------
 
