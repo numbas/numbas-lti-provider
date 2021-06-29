@@ -38,6 +38,17 @@ class DateTimePickerInput(bootstrap_datepicker_plus.DateTimePickerInput):
             attrs['autocomplete'] = 'no'
         super().__init__(attrs, *args, **kwargs)
 
+class DatePickerInput(bootstrap_datepicker_plus.DatePickerInput):
+    _default_options = dict(bootstrap_datepicker_plus.DateTimePickerInput._default_options, **{
+        'format': 'YYYY-MM-DD',
+    })
+
+    def __init__(self, attrs=None, *args, **kwargs):
+        attrs = attrs if attrs else {}
+        if 'autocomplete' not in attrs:
+            attrs['autocomplete'] = 'no'
+        super().__init__(attrs, *args, **kwargs)
+
 def split_newlines_commas(text):
     items = [x.strip() for x in sum((l.split(',') for l in text.split('\n')),[])]
     return [x for x in items if x!='']
@@ -240,8 +251,8 @@ class ConsumerTimePeriodForm(ModelForm):
         fields = ['name','start','end']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
-            'start': forms.DateInput(attrs={'class':'form-control','type':'date'}),
-            'end': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'start': DatePickerInput(attrs={'class':'form-control','type':'date'}),
+            'end': DatePickerInput(attrs={'class':'form-control','type':'date'}),
         }
 
 ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)
