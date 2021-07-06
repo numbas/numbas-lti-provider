@@ -117,7 +117,7 @@ class ResourceSettingsForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not settings.EMAIL_COMPLETION_RECEIPTS:
+        if not getattr(settings,EMAIL_COMPLETION_RECEIPTS,False):
             del self.fields['email_receipts']
 
 class RemarkPartScoreForm(ModelForm):
