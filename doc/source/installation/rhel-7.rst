@@ -290,7 +290,7 @@ Ensure outcome reporting works
 In order to report scores back to the :term:`tool consumer <Tool consumer>`, the Numbas LTI provider must make an HTTPS request to an address provided by the consumer.
 Normally, this is on the same domain as the consumer.
 
-Ensure that the machine on which the LTI provider is running can make HTTPS requests to the consumer - if you're working in a testing environment, you may need to configure the consumer's server to allow connections on 443 from the provider's IP address.
+Ensure that the machine on which the LTI provider is running can make HTTPS requests to the consumer - if you're working in a testing environment, you may need to configure the consumer's server to allow connections on port 443 from the provider's IP address.
 
 Updating the software
 ---------------------

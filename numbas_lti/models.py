@@ -149,7 +149,7 @@ class Exam(ExtractPackage):
         root = Path(self.extracted_path)
         manifest_path = root / 'numbas-manifest.json'
         if not manifest_path.exists():
-            return False
+            return {}
 
         try:
             with open(str(manifest_path)) as f:
