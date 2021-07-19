@@ -9,6 +9,13 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v2.13
+-----
+
+There was an error in the base :file:`settings.py` file when localisation was introduced. 
+
+If you are using the English translation, in :file:`numbasltiprovider/settings.py`, change ``LOCALE = 'en-us'`` to ``LOCALE = 'en'``. 
+
 v2.11
 -----
 
