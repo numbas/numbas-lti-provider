@@ -5,20 +5,20 @@ from numbas_lti.models import Attempt, ScormElement, diff_scormelements
 from django.db.models import Count
 from datetime import datetime
 
-@task()
+@task(priority=5)
 def editorlink_update_cache(el):
     el.update_cache()
     el.save()
 
-@task()
+@task(priority=100)
 def send_attempt_completion_receipt(attempt):
     attempt.send_completion_receipt()
 
-@task()
+@task(priority=200)
 def resource_report_scores(resource):
     resource.report_scores()
 
-@task()
+@task(priority=200)
 def attempt_report_outcome(attempt):
     try:
         attempt.report_outcome()
