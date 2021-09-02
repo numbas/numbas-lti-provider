@@ -124,13 +124,6 @@ DATABASES = {
     }
 }
 
-# Huey task runner
-# https://huey.readthedocs.io/en/latest/contrib.html#setting-things-up
-
-HUEY = {
-    'huey_class': 'huey.PriorityRedisHuey',
-}
-
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 
