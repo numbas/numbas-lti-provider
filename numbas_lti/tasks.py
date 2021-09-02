@@ -4,22 +4,24 @@ from numbas_lti.report_outcome import ReportOutcomeException
 from numbas_lti.models import Attempt, ScormElement, diff_scormelements
 from django.db.models import Count
 from datetime import datetime
+import time
 
-@task(priority=5)
+@task()
 def editorlink_update_cache(el):
     el.update_cache()
     el.save()
 
-@task(priority=100)
+@task()
 def send_attempt_completion_receipt(attempt):
     attempt.send_completion_receipt()
 
-@task(priority=200)
+@task()
 def resource_report_scores(resource):
     resource.report_scores()
 
-@task(priority=200)
+@task()
 def attempt_report_outcome(attempt):
+    time.sleep(0.1)
     try:
         attempt.report_outcome()
     except ReportOutcomeException:
