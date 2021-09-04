@@ -14,7 +14,7 @@ v2.13
 
 There was an error in the base :file:`settings.py` file when localisation was introduced. 
 
-If you are using the English translation, in :file:`numbasltiprovider/settings.py`, change ``LOCALE = 'en-us'`` to ``LOCALE = 'en'``. 
+If you are using the English translation, in :file:`numbasltiprovider/settings.py`, change ``LOCALE_CODE = 'en-us'`` to ``LOCALE_CODE = 'en'``. 
 
 v2.11
 -----
