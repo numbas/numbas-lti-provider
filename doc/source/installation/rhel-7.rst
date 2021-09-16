@@ -86,7 +86,7 @@ Run the following commands as root::
     cd /srv/numbas-lti-provider
     source /opt/numbas_lti_python/bin/activate
     pip install -r requirements.txt
-    pip install asgi_redis psycopg2-binary
+    pip install asgi_redis psycopg2-binary==2.8.6
 
 Change PostgreSQL to use password authentication: edit :file:`/var/lib/psql/9.6/data/pg_hba.conf`, and change::
 
