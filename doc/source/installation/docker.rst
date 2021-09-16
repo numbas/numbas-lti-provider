@@ -19,7 +19,7 @@ Setup
 
 Obtain the Docker compose recipe and its associated files either by `downloading the latest release from GitHub <https://github.com/numbas/numbas-lti-provider-docker/releases>`_, or by cloning the git repository::
 
-    git clone https://numbas-lti-provider.readthedocs.io/en/latest/
+    git clone https://github.com/numbas/numbas-lti-provider-docker.git
 
 Copy the file :file:`settings.env.dist` to :file:`settings.env` and write your own values for each of the variables inside.
 
