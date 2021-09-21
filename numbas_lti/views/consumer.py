@@ -2,7 +2,7 @@ from .mixins import ManagementViewMixin, get_lti_entry_url, get_config_url
 from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib.auth.views import redirect_to_login
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django_auth_lti.patch_reverse import reverse

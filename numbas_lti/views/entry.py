@@ -2,7 +2,7 @@ from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_c
 from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from django.shortcuts import render, redirect
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _

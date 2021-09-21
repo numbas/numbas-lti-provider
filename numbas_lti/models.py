@@ -1,35 +1,36 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from collections import defaultdict
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
 from django.db.models import Min, Count, Q, Subquery
-from django.contrib.auth.models import User
-import requests
 from django.template.loader import get_template
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _, gettext, ngettext
 from django.core import validators
-from channels import Group, Channel
 from django.utils import timezone
 from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
+import json
+from lxml import etree
+import os
+from pathlib import Path
+import re
+import requests
+import shutil
+import time
+import uuid
+from zipfile import ZipFile
 
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
 
-import os
-import shutil
-from zipfile import ZipFile
-from lxml import etree
-import re
-import json
-from collections import defaultdict
-import time
-from pathlib import Path
-import uuid
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -370,17 +371,11 @@ class Resource(models.Model):
 
 
     def send_access_changes(self):
-        if not self.access_changes.exists():
-            data = json.dumps({'availability_dates': self.availability_json(user=None)})
-            group = group_for_resource(self)
-            group.send({"text": data})
-        else:
-            users = User.objects.filter(attempts__resource=self).distinct()
-            for user in users:
-                data = json.dumps({'availability_dates': self.availability_json(user)})
-                for attempt in self.attempts.filter(user=user):
-                    group = group_for_attempt(attempt)
-                    group.send({"text": data})
+        channel_layer = get_channel_layer()
+        group_send = async_to_sync(channel_layer.group_send)
+
+        group = group_for_resource(self)
+        group_send(group,{'type': 'availability.changed'})
 
     def max_attempts_for_user(self,user):
         max_attempts = self.max_attempts
@@ -509,12 +504,8 @@ class Resource(models.Model):
         process.save(update_fields=['status','response','dismissed'])
 
     def task_report_scores(self):
-        from .signals import USE_HUEY
-        if USE_HUEY:
-            from . import tasks
-            tasks.resource_report_scores(self)
-        else:
-            Channel("report.all_scores").send({'pk':self.pk})
+        from . import tasks
+        tasks.resource_report_scores(self)
 
 
 class ReportProcess(models.Model):
@@ -875,9 +866,12 @@ class Attempt(models.Model):
                 except OperationalError:
                     time.sleep(tries)
 
-            group_for_attempt(self).send({'text':json.dumps({
+            channel_layer = get_channel_layer()
+            group_send = async_to_sync(channel_layer.group_send)
+            group_send(group_for_attempt(self),{
+                'type': 'completion_status.changed',
                 'completion_status':'completed',
-            })})
+            })
 
     @property
     def raw_score(self):
@@ -1035,9 +1029,6 @@ class Attempt(models.Model):
     def question_max_score(self,n):
         _,_,max_score,_ = self.calculate_question_score_info(n)
         return max_score
-
-    def channels_group(self):
-        return 'attempt-{}'.format(self.pk)
 
     def resume_allowed(self):
         if self.completed():
@@ -1364,12 +1355,8 @@ class EditorLink(models.Model):
     @property
     def available_exams(self):
         if self.time_since_last_update().seconds> 30:
-            from .signals import USE_HUEY
-            if USE_HUEY:
-                from . import tasks
-                tasks.editorlink_update_cache(self)
-            else:
-                Channel("editorlink.update_cache").send({'pk':self.pk})
+            from . import tasks
+            tasks.editorlink_update_cache(self)
         if self.cached_available_exams:
             return json.loads(self.cached_available_exams)
         else:

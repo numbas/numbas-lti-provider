@@ -3,6 +3,7 @@ import datetime
 from django.db import transaction
 from django.db.utils import OperationalError
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 import logging
 import re
 
@@ -53,6 +54,7 @@ def save_scorm_data(attempt,batches):
         attempt.diffed = False
         attempt.save(update_fields=('diffed',))
 
+    # TODO - do this later
     for number in question_scores_changed:
         attempt.update_question_score_info(number)
     return done,unsaved_elements

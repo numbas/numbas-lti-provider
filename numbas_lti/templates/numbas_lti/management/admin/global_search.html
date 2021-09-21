@@ -1,6 +1,6 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
 {% load querystring %}
 
 {% block title %}{% if query %}{% blocktrans with query=query %}Searching for "{{query}}" {% endblocktrans %}{% else %}Global search{% endif %} - {{block.super}}{% endblock %}

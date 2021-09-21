@@ -1,13 +1,11 @@
-from channels import Group
-
 def group_for_user(user):
-    return Group('user-{}'.format(user.id))
+    return 'user-{}'.format(user.id)
 
 def group_for_attempt(attempt):
-    return Group('attempt-{}'.format(attempt.id))
+    return 'attempt-{}'.format(attempt.id)
 
 def group_for_resource(resource):
-    return Group('resource-{}'.format(resource.id))
+    return 'resource-{}'.format(resource.id)
 
 def group_for_resource_stats(resource):
-    return Group('resource-{}-stats'.format(resource.id))
+    return 'resource-{}-stats'.format(resource.id)

@@ -1,26 +1,24 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.dispatch import receiver
 from django.conf import settings
 from django.db import models
-from channels import Group, Channel
 from django.utils import timezone
 from datetime import datetime
 from django.contrib.auth.models import User
+import json
+from lxml import etree
+import os
+import re
+import shutil
+from zipfile import ZipFile
 
+from . import tasks
 from .groups import group_for_resource, group_for_attempt
 from .report_outcome import report_outcome
 from .models import Exam, ScormElement, EditorLink, Resource, Attempt, ExtractPackage, AccessChange
 
-import os
-import shutil
-from zipfile import ZipFile
-from lxml import etree
-import re
-import json
 
-USE_HUEY = 'huey.contrib.djhuey' in settings.INSTALLED_APPS
-
-if USE_HUEY:
-    from . import tasks
 
 @receiver(models.signals.post_save)
 def extract_package(sender,instance,**kwargs):
@@ -51,20 +49,23 @@ def set_exam_name_from_package(sender,instance,**kwargs):
 def resource_availability_changed(sender,instance,**kwargs):
     instance.send_access_changes()
 
-"""
-# Removed because it might be killing the server
-@receiver(models.signals.post_save,sender=AttemptQuestionScore)
-def question_score_live_stats(sender,instance,**kwargs):
-    resource = instance.attempt.resource
-    group = group_for_resource_stats(resource)
-    group.send({"text": json.dumps(resource.live_stats_data())})
-"""
-
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
-    Group(instance.attempt.channels_group()).send({
-        "text": json.dumps(instance.as_json())
-    })
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(group_for_attempt(instance.attempt), {'type': 'scorm.new.element','element':instance.as_json()})
+
+@receiver(models.signals.post_save,sender=Attempt)
+def send_receipt_on_completion(sender,instance, **kwargs):
+    try:
+        attempt = Attempt.objects.get(pk=instance.pk)
+    except Attempt.DoesNotExist:
+        return
+    if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
+        if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
+            tasks.send_attempt_completion_receipt(attempt)
+
+
+### Dubious signals that change cached things
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_score(sender,instance,created,**kwargs):
@@ -78,10 +79,7 @@ def scorm_set_score(sender,instance,created,**kwargs):
     instance.attempt.scaled_score_element = instance
     instance.attempt.save(update_fields=['scaled_score','scaled_score_element'])
     if instance.attempt.resource.report_mark_time == 'immediately':
-        if USE_HUEY:
-            tasks.attempt_report_outcome(instance.attempt)
-        else:
-            Channel('report.attempt').send({'pk':instance.attempt.pk})
+        tasks.attempt_report_outcome(instance.attempt)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -101,10 +99,7 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     instance.attempt.save(update_fields=update_fields)
 
     if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        if USE_HUEY:
-            tasks.attempt_report_outcome(instance.attempt)
-        else:
-            Channel('report.attempt').send({'pk':instance.attempt.pk})
+        tasks.attempt_report_outcome(instance.attempt)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_start_time(sender,instance,created,**kwargs):
@@ -114,7 +109,7 @@ def scorm_set_start_time(sender,instance,created,**kwargs):
     try:
         data = json.loads(instance.value)
         if data['start'] is not None:
-            start_time = timezone.make_aware(datetime.fromtimestamp(data['start']/1000))
+            start_time = timezone.make_aware(datetime.fromtimestamp(float(data['start'])/1000))
         else:
             return
     except (json.JSONDecodeError, KeyError):
@@ -123,20 +118,6 @@ def scorm_set_start_time(sender,instance,created,**kwargs):
     if start_time != instance.attempt.start_time:
         instance.attempt.start_time = start_time
         instance.attempt.save(update_fields=['start_time'])
-
-@receiver(models.signals.post_save,sender=Attempt)
-def send_receipt_on_completion(sender,instance, **kwargs):
-    try:
-        attempt = Attempt.objects.get(pk=instance.pk)
-    except Attempt.DoesNotExist:
-        return
-    if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
-        if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
-            if USE_HUEY:
-                tasks.send_attempt_completion_receipt(attempt)
-            else:
-                Channel('attempt.email_receipt').send({'pk': attempt.pk})
-
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_num_questions(sender,instance,created,**kwargs):
@@ -150,8 +131,3 @@ def scorm_set_num_questions(sender,instance,created,**kwargs):
     if number>resource.num_questions:
         resource.num_questions = number
         resource.save(update_fields=['num_questions'])
-
-@receiver(models.signals.pre_save,sender=EditorLink)
-def update_editor_cache_before_save(sender,instance,**kwargs):
-    exams = instance.available_exams
-

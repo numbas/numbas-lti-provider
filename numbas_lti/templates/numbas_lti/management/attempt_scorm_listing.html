@@ -1,5 +1,5 @@
 {% extends "numbas_lti/management/attempt_base.html" %}
-{% load staticfiles %}
+{% load static %}
 {% load i18n %}
 
 {% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}

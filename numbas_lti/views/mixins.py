@@ -1,9 +1,8 @@
 from django.conf import settings
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
 from django.urls import reverse_lazy
-from django.utils.decorators import available_attrs
 from django.utils.translation import ugettext_lazy as _
 from django.views import generic
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
@@ -46,7 +45,7 @@ class MustBeInstructorMixin(LTIRoleOrSuperuserMixin):
 
 def lti_role_or_superuser_required(allowed_roles, redirect_url=reverse_lazy('not_authorized'), raise_exception=False):
     def decorator(view_func):
-        @wraps(view_func, assigned=available_attrs(view_func))
+        @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
             if request.user.is_superuser or is_allowed(request, allowed_roles, raise_exception):
                 return view_func(request, *args, **kwargs)

@@ -498,7 +498,7 @@ function update() {
 
 function init_socket() {
     var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-    var ws_url = ws_scheme + '://' + window.location.host + window.location.pathname + "/websocket";
+    var ws_url = ws_scheme + '://' + window.location.host + '/websocket' + window.location.pathname;
 
     var socket = new RobustWebSocket(ws_url);
     socket.onmessage = function(e) {

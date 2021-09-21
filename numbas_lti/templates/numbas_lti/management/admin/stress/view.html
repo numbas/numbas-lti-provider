@@ -1,6 +1,6 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
 {% load statici18n %}
 
 {% block title %}{% blocktrans with time=object.resource.creation_time %}Stress test {{time}}{% endblocktrans %} - {{block.super}}{% endblock %}

@@ -9,6 +9,28 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v3.0
+----
+
+Install::
+
+    pip install channels_redis==3.3.0
+
+Changes to settings:
+
+* Change ``CHANNEL_LAYERS``::
+
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [os.environ.get('REDIS_URL','redis://localhost:6379')],
+            }
+        },
+    }
+
+Use ``utf8mb4`` database encoding.
+
 v2.13
 -----
 

@@ -318,8 +318,12 @@ Timeline.prototype = {
         var socket = this.socket = new RobustWebSocket(ws_scheme + '://' + window.location.host + url);
 
         socket.onmessage = function(e) {
-            var element = JSON.parse(e.data);
-            dm.add_element(element);
+            var data = JSON.parse(e.data);
+            switch(data.type) {
+                case 'scorm.new.element':
+                    dm.add_element(data.element);
+                    break;
+            }
         }
     },
 
