@@ -262,7 +262,7 @@ class Resource(models.Model):
 
     def __str__(self):
         if self.exam:
-            return str(self.exam)
+            return "Resource {}: {}".format(self.pk, self.exam)
         elif self.context:
             return _('Resource in "{}" - no exam uploaded').format(self.context.name)
         else:
@@ -681,7 +681,7 @@ class Attempt(models.Model):
         ordering = ['-start_time',]
 
     def __str__(self):
-        return 'Attempt by "{}" on "{}"'.format(self.user,self.resource)
+        return 'Attempt {} by "{}" on "{}"'.format(self.pk, self.user,self.resource)
 
     def user_data(self):
         return self.resource.user_data(self.user)
@@ -1238,6 +1238,8 @@ class ScormElement(models.Model):
         return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))
 
     def newer_than(self, other):
+        if other is None:
+            return True
         return self.time>other.time or (self.time==other.time and self.counter>other.counter)
 
     def as_json(self):
