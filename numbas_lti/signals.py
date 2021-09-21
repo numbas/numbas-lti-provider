@@ -3,10 +3,8 @@ from channels.layers import get_channel_layer
 from django.dispatch import receiver
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
-from datetime import datetime
 from django.contrib.auth.models import User
-import json
+import logging
 from lxml import etree
 import os
 import re
@@ -18,6 +16,8 @@ from .groups import group_for_resource, group_for_attempt
 from .report_outcome import report_outcome
 from .models import Exam, ScormElement, EditorLink, Resource, Attempt, ExtractPackage, AccessChange
 
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(models.signals.post_save)
@@ -65,59 +65,32 @@ def send_receipt_on_completion(sender,instance, **kwargs):
             tasks.send_attempt_completion_receipt(attempt)
 
 
-### Dubious signals that change cached things
-
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_score(sender,instance,created,**kwargs):
     if instance.key!='cmi.score.scaled' or not created:
         return
 
-    if not (instance.attempt.scaled_score_element is None or instance.newer_than(instance.attempt.scaled_score_element)):
+    if not instance.newer_than(instance.attempt.scaled_score_element):
         return
 
-    instance.attempt.scaled_score = float(instance.value)
-    instance.attempt.scaled_score_element = instance
-    instance.attempt.save(update_fields=['scaled_score','scaled_score_element'])
-    if instance.attempt.resource.report_mark_time == 'immediately':
-        tasks.attempt_report_outcome(instance.attempt)
+    tasks.scorm_set_score(instance.attempt)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
     if instance.key!='cmi.completion_status' or not created:
         return
 
-    if not (instance.attempt.completion_status_element is None or instance.newer_than(instance.attempt.completion_status_element)):
+    if not instance.newer_than(instance.attempt.completion_status_element):
         return
 
-
-    instance.attempt.completion_status = instance.value
-    instance.attempt.completion_status_element = instance
-    update_fields = ['completion_status','completion_status_element']
-    if instance.attempt.completion_status == 'incomplete':
-        instance.attempt.end_time = None
-        update_fields.append('end_time')
-    instance.attempt.save(update_fields=update_fields)
-
-    if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        tasks.attempt_report_outcome(instance.attempt)
+    tasks.scorm_set_completion_status(instance.attempt)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_start_time(sender,instance,created,**kwargs):
     if instance.key != 'cmi.suspend_data':
         return
 
-    try:
-        data = json.loads(instance.value)
-        if data['start'] is not None:
-            start_time = timezone.make_aware(datetime.fromtimestamp(float(data['start'])/1000))
-        else:
-            return
-    except (json.JSONDecodeError, KeyError):
-        return
-
-    if start_time != instance.attempt.start_time:
-        instance.attempt.start_time = start_time
-        instance.attempt.save(update_fields=['start_time'])
+    tasks.scorm_set_start_time(instance.attempt)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_num_questions(sender,instance,created,**kwargs):
@@ -126,8 +99,4 @@ def scorm_set_num_questions(sender,instance,created,**kwargs):
         return
 
     number = int(re.match(r'q(\d+)',instance.value).group(1))+1
-    resource = instance.attempt.resource
-    
-    if number>resource.num_questions:
-        resource.num_questions = number
-        resource.save(update_fields=['num_questions'])
+    tasks.scorm_set_num_questions(instance.attempt.resource, number)
