@@ -207,7 +207,7 @@ class ShowAttemptsView(generic.list.ListView):
             if not resource.is_available(request.user):
                 now = timezone.now()
                 available_from, available_until = resource.available_for_user(request.user)
-                if now < available_from:
+                if available_from is not None and now < available_from:
                     template = get_template('numbas_lti/not_available_yet.html')
                     raise PermissionDenied(template.render({'available_from': available_from}))
 
