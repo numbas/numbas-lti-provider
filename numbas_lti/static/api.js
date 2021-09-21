@@ -123,13 +123,15 @@ SCORM_API.prototype = {
             });
         }
         var deadline_change_display = document.getElementById('deadline-change-display');
-        if(changed) {
-            if(!first) {
-                deadline_change_display.classList.add('show');
+        if(deadline_change_display) {
+            if(changed) {
+                if(!first) {
+                    deadline_change_display.classList.add('show');
+                }
             }
-        }
-        if(!this.available_until) {
-            deadline_change_display.classList.remove('show');
+            if(!this.available_until) {
+                deadline_change_display.classList.remove('show');
+            }
         }
 
         if(data.duration_extension) {
@@ -142,8 +144,11 @@ SCORM_API.prototype = {
     },
 
     post_message: function(data) {
-        var scorm_window = document.getElementById('scorm-player').contentWindow;
-        scorm_window.postMessage(data);
+        var scorm_player = document.getElementById('scorm-player');
+        if(scorm_player) {
+            var scorm_window = scorm_player.contentWindow;
+            scorm_window.postMessage(data);
+        }
     },
 
     /** Bind events on the display
@@ -288,13 +293,13 @@ SCORM_API.prototype = {
         this.socket = new RobustWebSocket(ws_url);
 
         this.socket.onmessage = function(e) {
-            sc.callbacks.trigger('socket.onmessage',d);
             try {
                 var d = JSON.parse(e.data);
             } catch(e) {
                 console.log(_("Error reading socket message"),e.data);
                 return;
             }
+            sc.callbacks.trigger('socket.onmessage',d);
 
             if(d.availability_dates) {
                 sc.update_availability_dates(d.availability_dates);
@@ -551,7 +556,7 @@ SCORM_API.prototype = {
         }
 
         var out = this.make_batch(elements);
-        this.socket.send(JSON.stringify({id:id, data:out}));
+        this.socket.send(JSON.stringify({type:'scorm.elements', id:id, data:out}));
         this.callbacks.trigger('send_elements_socket',elements,id);
         return true;
     },
@@ -795,7 +800,7 @@ function getCookie(name) {
 }
 
 function load_date(date) {
-    if(date!==null) {
+    if(date!==null && date!==undefined) {
         return DateTime.fromISO(date);
     }
 }
