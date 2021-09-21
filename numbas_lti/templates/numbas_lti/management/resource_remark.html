@@ -126,7 +126,10 @@
                 </td>
             </tr>
             <tr v-if="attempt.status=='error'">
-                <td colspan="9" class="text-warning"><em>{% trans "There was an error remarking this attempt:" %}</em> [[attempt.remark_error]]</td>
+                <td colspan="9" class="text-warning">
+                    <p v-if="attempt.remark_error"><em>{% trans "There was an error remarking this attempt:" %}</em> [[attempt.remark_error]]</p>
+                    <p v-if="attempt.fetch_error"><em>{% trans "There was an error fetching data for this attempt:" %}</em> [[attempt.fetch_error]]</p>
+                </td>
             </tr>
             </template>
         </tbody>

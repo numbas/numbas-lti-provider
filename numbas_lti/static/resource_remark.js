@@ -45,6 +45,8 @@ class Attempt {
         this.original_raw_score = null;
         this.remarked_raw_score = null;
         this.is_changed = false;
+        this.remark_error = null;
+        this.fetch_error = null;
 
         /** possible values for status:
          * not loaded
@@ -172,7 +174,13 @@ const app = new Vue({
                     const a = this.attempts.find(a=>a.pk==cd.pk);
                     a.load_data_resolve(cd);
                 });
-            })
+            }).catch(e=>{
+                batch.forEach(a=>{
+                    a.fetch_error = e.message;
+                    a.status = 'error';
+                });
+                console.error("Error getting attempt data:",e);
+            });
         },
         remark_single_attempt: function(attempt) {
             this.remarking_all = false;
