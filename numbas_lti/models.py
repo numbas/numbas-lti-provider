@@ -36,6 +36,9 @@ class NotDeletedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(deleted=False)
 
+    def deleted(self):
+        return super().get_queryset().filter(deleted=True)
+
 IDENTIFIER_FIELDS = [
     ('username', _('Username')),
     ('email', _('Email address')),
