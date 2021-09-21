@@ -349,7 +349,10 @@ class RunAttemptView(generic.detail.DetailView):
 @require_POST
 def scorm_data_fallback(request,pk,*args,**kwargs):
     """ An AJAX fallback to save SCORM data, when the websocket fails """
-    attempt = Attempt.objects.get(pk=pk)
+    try:
+        attempt = Attempt.objects.get(pk=pk)
+    except Attempt.DoesNotExist:
+        raise http.Http404(_("There is no attempt with the ID {}.").format(pk))
     data = json.loads(request.body.decode())
     batches = data.get('batches',[])
     done, unsaved_elements = save_scorm_data(attempt,batches)
