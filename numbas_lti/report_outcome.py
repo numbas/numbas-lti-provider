@@ -21,6 +21,10 @@ class ReportOutcomeException(Exception):
         }
         self.message = _('There was an error reporting data for user {user_name} back to the LTI consumer: {error}').format(**ctx)
 
+class ReportAnonymousUserException(Exception):
+    def __init__(self):
+        self.message = _('Tried to report data for an anonymous user')
+
 class ReportOutcomeTimeoutError(ReportOutcomeException):
     message = _("The request to report data back to the LTI consumer timed out.")
     def __init__(self,timeout_error):
@@ -71,6 +75,8 @@ def report_outcome(resource,user):
     </imsx_POXEnvelopeRequest>
     """
 
+    if user.is_anonymous:
+        raise ReportOutcomeException(None,'User is anonymous')
     message_identifier = uuid.uuid4().int & (1<<64)-1
     user_data = resource.user_data(user) 
     result = resource.grade_user(user)
