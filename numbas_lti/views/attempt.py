@@ -249,6 +249,10 @@ def new_attempt(request):
     )
     return redirect(reverse('run_attempt',args=(attempt.pk,)))
 
+class BrokenAttemptException(Exception):
+    def __init__(self,attempt):
+        self.attempt = attempt
+
 class RunAttemptView(generic.detail.DetailView):
     model = Attempt
     context_object_name = 'attempt'
@@ -256,7 +260,11 @@ class RunAttemptView(generic.detail.DetailView):
     template_name = 'numbas_lti/run_attempt.html'
 
     def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
+        try:
+            response = super().get(request, *args, **kwargs)
+        except BrokenAttemptException as e:
+            response = http.HttpResponseServerError(_("This attempt is broken - there isn't enough saved SCORM data to resume it."))
+            self.mode = 'broken'
         AttemptLaunch.objects.create(
             attempt = self.object,
             mode = self.mode,
@@ -284,6 +292,9 @@ class RunAttemptView(generic.detail.DetailView):
             broken_attempt = attempt
             broken_attempt.broken = True
             broken_attempt.save()
+
+            if attempt.user != self.request.user:
+                raise BrokenAttemptException(attempt)
 
             attempt = Attempt.objects.create(
                 resource = broken_attempt.resource,
