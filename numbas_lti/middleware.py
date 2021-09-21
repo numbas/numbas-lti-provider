@@ -11,7 +11,7 @@ class NumbasLTIResourceMiddleware(object):
     def __call__(self,request):
         resource_link_id = request.LTI.get('resource_link_id')
         tool_consumer_instance_guid = request.LTI.get('tool_consumer_instance_guid')
-        logger.debug('Numbas LTI middleware processing request {}'.format(request))
+        #logger.debug('Numbas LTI middleware processing request {}'.format(request))
         if resource_link_id is not None and tool_consumer_instance_guid is not None:
             context_id = request.LTI.get('context_id')
             context_id = context_id if context_id is not None else resource_link_id
@@ -43,13 +43,13 @@ class NumbasLTIResourceMiddleware(object):
             try:
                 resource = Resource.objects.get(context=context, resource_link_id=resource_link_id)
                 resource = Resource.objects.get(context__instance_guid=tool_consumer_instance_guid, resource_link_id=resource_link_id)
-                logger.debug("Got resource: {}".format(resource))
+                #logger.debug("Got resource: {}".format(resource))
             except Resource.MultipleObjectsReturned:
                 resource = Resource.objects.filter(context__instance_guid=tool_consumer_instance_guid, resource_link_id=resource_link_id).last()
-                logger.debug("Multiple resources found; using {}".format(resource))
+                #logger.debug("Multiple resources found; using {}".format(resource))
             except Resource.DoesNotExist:
                 resource = Resource.objects.create(resource_link_id=resource_link_id, context=context, title=title, description=description)
-                logger.debug("New resource")
+                #logger.debug("New resource")
             finally:
                 if (title,description,context) != (resource.title,resource.description,resource.context):
                     resource.title = title
@@ -57,8 +57,8 @@ class NumbasLTIResourceMiddleware(object):
                     resource.context = context
                     resource.save()
                 request.resource = resource
-        else:
-            logger.debug("No resource associated with this request. resource_link_id: {resource_link_id}, tool_consumer_instance_guid: {tool_consumer_instance_guid}".format(resource_link_id=resource_link_id, tool_consumer_instance_guid=tool_consumer_instance_guid))
+        #else:
+        #    logger.debug("No resource associated with this request. resource_link_id: {resource_link_id}, tool_consumer_instance_guid: {tool_consumer_instance_guid}".format(resource_link_id=resource_link_id, tool_consumer_instance_guid=tool_consumer_instance_guid))
 
         response = self.get_response(request)
 
