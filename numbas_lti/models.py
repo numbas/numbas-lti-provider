@@ -405,6 +405,8 @@ class Resource(models.Model):
         return self.attempts.filter(user=user).exclude(broken=True).count()<max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
 
     def user_data(self,user):
+        if user.is_anonymous:
+            return None
         return LTIUserData.objects.filter(resource=self,user=user).last()
 
     def part_hierarchy(self):
