@@ -117,3 +117,8 @@ def scorm_set_num_questions(resource,number):
     if number>resource.num_questions:
         resource.num_questions = number
         resource.save(update_fields=['num_questions'])
+
+@task(priority=20)
+def attempt_update_question_score_info(attempt,question_scores_changed):
+    for number in question_scores_changed:
+        attempt.update_question_score_info(number)

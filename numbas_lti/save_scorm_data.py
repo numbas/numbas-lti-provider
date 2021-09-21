@@ -7,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 import logging
 import re
 
+from . import tasks
+
 logger = logging.getLogger(__name__)
 
 re_question_score_element = re.compile(r'cmi.objectives.(\d+).(?:score.(?:raw|scaled|max)|completion_status)')
@@ -54,7 +56,6 @@ def save_scorm_data(attempt,batches):
         attempt.diffed = False
         attempt.save(update_fields=('diffed',))
 
-    # TODO - do this later
-    for number in question_scores_changed:
-        attempt.update_question_score_info(number)
+    tasks.attempt_update_question_score_info(attempt,question_scores_changed)
+
     return done,unsaved_elements
