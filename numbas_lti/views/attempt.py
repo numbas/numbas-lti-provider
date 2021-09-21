@@ -309,7 +309,6 @@ class RunAttemptView(generic.detail.DetailView):
         context['mode'] = self.mode = mode
 
         user = attempt.user
-        user_data = attempt.resource.user_data(user)
         available_from, available_until = attempt.resource.available_for_user(user)
 
         scorm_cmi = attempt.scorm_cmi()
