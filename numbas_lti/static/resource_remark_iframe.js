@@ -25,6 +25,9 @@ function load_exam() {
     return numbas_ready.then(Numbas => {
         if(Numbas.schedule.unhalt) {
             Numbas.schedule.unhalt();
+            for(var x in Numbas.signals.callbacks) {
+                delete Numbas.signals.callbacks[x];
+            }
         } else {
             Numbas.schedule.halted = false;
             Numbas.signals.error = null;
