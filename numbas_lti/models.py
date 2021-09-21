@@ -679,8 +679,8 @@ class Attempt(models.Model):
     remark_ignore_keys = ['cmi.suspend_data','cmi.session_time']    # CMI keys not to resave when auto-remarking
 
     class Meta:
-        verbose_name = _('attempt')
-        verbose_name_plural = _('attempts')
+        verbose_name = ngettext('attempt','attempts',1)
+        verbose_name_plural = ngettext('attempt','attempts',2)
         ordering = ['-start_time',]
 
     def __str__(self):
