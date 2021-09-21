@@ -7,7 +7,6 @@ import json
 import logging
 from numbas_lti.report_outcome import ReportOutcomeException
 from numbas_lti.models import Attempt, ScormElement, diff_scormelements
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,6 @@ def resource_report_scores(resource):
 @task(priority=200)
 def attempt_report_outcome(attempt):
     logger.debug(f"Report score for attempt {attempt}")
-    time.sleep(0.1)
     try:
         attempt.report_outcome()
     except ReportOutcomeException:
@@ -70,7 +68,7 @@ def scorm_set_score(attempt):
     attempt.save(update_fields=['scaled_score', 'scaled_score_element'])
 
     if attempt.resource.report_mark_time == 'immediately':
-        attempt_report_outcome(attempt)
+        attempt_report_outcome.schedule((attempt,),delay=0.1)
 
 @task(priority=10)
 def scorm_set_completion_status(attempt):
@@ -89,7 +87,7 @@ def scorm_set_completion_status(attempt):
     attempt.save(update_fields=update_fields)
 
     if attempt.resource.report_mark_time == 'oncompletion' and attempt.completion_status=='completed':
-        tasks.attempt_report_outcome(attempt)
+        tasks.attempt_report_outcome.schedule((attempt,),delay=0.1)
 
 @task(priority=9)
 def scorm_set_start_time(attempt):
