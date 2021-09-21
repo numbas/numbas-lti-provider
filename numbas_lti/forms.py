@@ -182,7 +182,9 @@ class CreateExamForm(ModelForm):
         cleaned_data = super().clean()
         package = cleaned_data.get('package')
         retrieve_url = cleaned_data.get('retrieve_url')
-        if package is None and retrieve_url:
+        if package is None:
+            if not retrieve_url:
+                raise forms.ValidationError(_("You must upload a file."))
             scheme, netloc, path, params, qs, fragment = urlparse(retrieve_url)
             query = parse_qs(qs)
             query.setdefault('scorm','')
