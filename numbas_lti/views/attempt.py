@@ -199,6 +199,9 @@ class ShowAttemptsView(generic.list.ListView):
         if request.GET.get('back_from_unsaved_complete_attempt'):
             messages.add_message(self.request,messages.INFO,_('The attempt was completed, but not all data had been saved. All data has now been saved, and review is not available yet.'))
 
+        if not hasattr(request,'resource'):
+            raise http.Http404("There's no resource attached to this request.")
+
         if not self.get_queryset().exists():
             resource = request.resource
             if not resource.is_available(request.user):
