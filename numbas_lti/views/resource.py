@@ -281,7 +281,8 @@ class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
         for student in resource.students().all():
             user_data = resource.user_data(student)
             scaled_score = resource.grade_user(student)
-            max_score = max(a.max_score for a in resource.attempts.filter(user=student))
+            student_attempts = resource.attempts.filter(user=student)
+            max_score = max(a.max_score for a in student_attempts) if student_attempts.exists() else 0
             raw_score = scaled_score * max_score    # This might introduce a rounding error
             yield (
                 student.first_name,
