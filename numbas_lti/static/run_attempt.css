@@ -56,7 +56,9 @@ body.terminated #status-display .symbol, #status-display .symbol {
 #status-display.ended .text-ended,
 #status-display.ok .text-ok,
 #status-display.confirmation .text-confirmation,
-#status-display.terminated:not(.ok) .text-terminated {
+#status-display.terminated:not(.ok):not(.failed-final-ajax) .text-terminated,
+#status-display.failed-final-ajax .text-failed-final-ajax
+{
     display: block;
 }
 
