@@ -2,37 +2,11 @@
 {% load percentage %}
 {% load querystring %}
 {% load i18n %}
+{% load static %}
 
 {% block stylesheets %}
-{{block.super}}
-<style>
-.identifier {
-    font-family: monospace;
-}
-.score-info {
-    width: 15em;
-    margin-top: 0.5em;
-    display: flex;
-    height: 1.2em;
-    padding: 0;
-    list-style: none;
-    background: white;
-}
-.score-info .question {
-    flex-basis: 3px;
-}
-.score-info .question ~ .question {
-    margin-left: 2px;
-}
-.score-info .question.not-attempted {
-    background: #ccc;
-}
-/* generated with http://tristen.ca/hcl-picker/#/hlc/3/1.46/7E4813/4AD269 */
-.scaled_score_0 { background-color: red; color: #fff; }
-.scaled_score_1 { background-color: hsl(120, 40%, 50%); color: #fff; }
-.scaled_score_2 { background-color: lime; color: #000; }
-
-</style>
+    {{block.super}}
+    <link rel="stylesheet" href="{% static "attempts.css" %}">
 {% endblock %}
 
 {% block main_container %}container-fluid{% endblock %}
@@ -116,7 +90,7 @@
                     <ul class="score-info">
                         {% for aqs in attempt.question_scores %}
                         {% if aqs.max_score %}
-                        <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}};" title="{% blocktrans with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktrans %} {% if aqs.completion_status == 'not attempted' %}{% trans "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
+                        <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}}; height: {{aqs.scaled_score|percentage:"10"}}" title="{% blocktrans with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktrans %} {% if aqs.completion_status == 'not attempted' %}{% trans "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
                         {% endif %}
                         {% endfor %}
                     </ul>
