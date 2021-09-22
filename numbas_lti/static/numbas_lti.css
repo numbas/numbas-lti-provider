@@ -1,3 +1,7 @@
+body {
+    min-height: 100%;
+}
+
 body.dashboard ul.actions li ~ li {
     border-top: 1px solid #ccc;
 }
@@ -18,4 +22,16 @@ body.dashboard ul.actions li {
 
 .resource-management-navbar .navbar-brand .context-name {
     font-style: italic;
+}
+
+.management-footer {
+    font-style: italic;
+    text-align: center;
+    margin: 5rem 2rem 0 2rem;
+    padding: 2rem 0;
+    border-top: 1px solid hsl(0, 0%, 90.6%);
+}
+
+.management-footer a {
+    color: hsl(208.3, 56%, 31.2%);
 }

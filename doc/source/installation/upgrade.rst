@@ -29,6 +29,12 @@ Changes to settings:
         },
     }
 
+* context processors
+
+* HELP_URL
+
+* INSTANCE_NAME
+
 Use ``utf8mb4`` database encoding.
 
 v2.13
