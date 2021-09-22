@@ -18,7 +18,7 @@
 
 <p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
 
-<table class="table" id="timeline">
+<table class="table" id="timeline" data-bind="if: grouped_timeline().length">
     <colgroup>
         <col style="width: 12em;"/>
         <col style="width: 2em;"/>
@@ -57,6 +57,11 @@
         <!-- /ko -->
     </tbody>
 </table>
+<!-- ko if: !grouped_timeline().length -->
+<div class="alert alert-warning">
+    <p>{% trans "There's no data for this attempt." %}</p>
+</div>
+<!-- /ko -->
 
 {% endblock attempt_content %}
 
