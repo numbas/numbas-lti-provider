@@ -14,7 +14,7 @@ from django.views import generic
 from django.views.decorators.http import require_POST
 from itertools import groupby
 from numbas_lti.forms import RemarkPartScoreForm
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch, resolve_diffed_scormelements
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch, resolve_diffed_scormelements, RemarkedScormElement
 from numbas_lti.save_scorm_data import save_scorm_data
 from numbas_lti.util import transform_part_hierarchy
 import datetime
@@ -163,6 +163,7 @@ class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
 
         context['resource'] = self.object.resource
         context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.reverse())]
+        context['remarked_elements'] = [r.as_json() for r in RemarkedScormElement.objects.filter(element__attempt=self.object)]
         context['launches'] = [l.as_json() for l in self.object.launches.all()]
 
         return context

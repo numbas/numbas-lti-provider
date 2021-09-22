@@ -1,6 +1,6 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView, JSONView
-from numbas_lti import forms
+from numbas_lti import forms, save_scorm_data
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange
 from numbas_lti.util import transform_part_hierarchy
 from django import http
@@ -572,9 +572,13 @@ class RemarkSaveChangedDataView(MustHaveExamMixin, ResourceManagementViewMixin, 
                     except Attempt.DoesNotExist:
                         continue
 
+                    new_elements = []
                     for k,v in ad['changed_keys'].items():
                         e = ScormElement.objects.create(attempt=attempt, key=k, value=v, time=now, counter=0)
+                        new_elements.append(e)
                         RemarkedScormElement.objects.create(element=e,user=request.user)
+
+                    save_scorm_data.update_question_score_info(attempt, new_elements)
                     saved.append(ad['pk'])
             response = {'success': True, 'saved': saved}
             if len(saved)<len(data['attempts']):

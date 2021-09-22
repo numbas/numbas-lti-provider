@@ -28,7 +28,7 @@ function score_icon(score,marks) {
     return marks==0 ? '' : score<marks ? 'remove' : 'ok'
 }
 
-function Timeline(elements, launches) {
+function Timeline(elements, remarked_elements, launches) {
     var tl = this;
     this.question = ko.observable(0);
     this.raw_score = ko.observable(0);
@@ -36,6 +36,7 @@ function Timeline(elements, launches) {
     this.completion_status = ko.observable('');
 
     this.raw_elements = elements;
+    this.remarked_elements = remarked_elements;
     this.all_elements = ko.observableArray([]);
     this.timeline = ko.observableArray([]);
 
@@ -54,9 +55,11 @@ function Timeline(elements, launches) {
         var groups = [];
         var current_group = null;
         timeline.forEach(function(item) {
-            if(current_group==null || item.time.diff(current_group.time).as('seconds')>1) {
+            var remarked_by = item.element.remarked ? item.element.remarked.user : null;
+            if(current_group==null || item.time.diff(current_group.time).as('seconds')>1 || current_group.remarked_by != remarked_by) {
                 current_group = {
                     time: item.time,
+                    remarked_by: remarked_by,
                     items: []
                 }
                 groups.push(current_group);
@@ -196,6 +199,7 @@ Timeline.prototype = {
     add_element: function(element) {
         var key = element.key
         this.all_elements.push(element);
+        element.remarked = this.remarked_elements.find(function(r) { return r.element == element.pk; });
 
         var m;
 
@@ -349,16 +353,20 @@ function TimelineItem(message,element,kind,icon) {
     kind.split(' ').forEach(function(cls) {
         ti.css[cls] = true;
     });
+    this.css['remarked'] = element.remarked !== undefined;
     this.icon = icon;
 }
 
 var scorm_json = document.getElementById('scorm-elements').textContent;
 var elements = JSON.parse(scorm_json);
 
+var remarked_json = document.getElementById('remarked-elements').textContent;
+var remarked_elements = JSON.parse(remarked_json);
+
 var launches_json = document.getElementById('launches').textContent;
 var launches = JSON.parse(launches_json);
 
-var tl = new Timeline(elements, launches);
+var tl = new Timeline(elements, remarked_elements, launches);
 tl.listen_for_changes(listener_url);
 
 ko.applyBindings(tl);

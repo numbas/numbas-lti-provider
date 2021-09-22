@@ -1247,6 +1247,7 @@ class ScormElement(models.Model):
 
     def as_json(self):
         return {
+            'pk': self.pk,
             'key': self.key,
             'value': self.value,
             'time': self.time.isoformat(),
@@ -1325,6 +1326,12 @@ class RemarkedScormElement(models.Model):
     class Meta:
         verbose_name = _('remarked SCORM element')
         verbose_name_plural = _('remarked SCORM element')
+
+    def as_json(self):
+        return {
+            'element': self.element.pk,
+            'user': self.user.get_full_name(),
+        }
 
 class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name=_('Editor name'))

@@ -38,21 +38,29 @@
     <tbody>
         <!-- ko foreach: {data: grouped_timeline, afterAdd: scrollIntoView} -->
             <!-- ko foreach: items -->
-                <tr class="item" data-bind="css: css">
-                    <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: time_string"></span></td>
-                    <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
-                    <td class="message"><span data-bind="html: message"></span></td>
-                    <td class="exam-score raw" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
-                        <!-- ko if: $parent.exam_score_changed -->
-                        <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
-                        <!-- /ko -->
-                    </td>
-                    <td class="exam-score scaled" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
-                        <!-- ko if: $parent.exam_score_changed -->
-                        <span data-bind="text: $parent.exam_scaled_score"></span>
-                        <!-- /ko -->
-                    </td>
-                </tr>
+            <tr class="item" data-bind="css: css">
+                <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
+                    <p data-bind="text: time_string"></p>
+                    <!-- ko if: $parent.remarked_by -->
+                    <p class="remarked-by small">
+                        {% trans "Remarked by" %}
+                        <span data-bind="text: $parent.remarked_by"></span>
+                    </p>
+                    <!-- /ko -->
+                </td>
+                <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
+                <td class="message"><span data-bind="html: message"></span></td>
+                <td class="exam-score raw" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                    <!-- ko if: $parent.exam_score_changed -->
+                    <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
+                    <!-- /ko -->
+                </td>
+                <td class="exam-score scaled" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                    <!-- ko if: $parent.exam_score_changed -->
+                    <span data-bind="text: $parent.exam_scaled_score"></span>
+                    <!-- /ko -->
+                </td>
+            </tr>
             <!-- /ko -->
         <!-- /ko -->
     </tbody>
@@ -72,6 +80,7 @@
 {% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 {{elements|json_script:"scorm-elements"}}
+{{remarked_elements|json_script:"remarked-elements"}}
 {{launches|json_script:"launches"}}
 <script>
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';

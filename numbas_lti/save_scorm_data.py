@@ -11,12 +11,10 @@ from . import tasks
 
 logger = logging.getLogger(__name__)
 
-re_question_score_element = re.compile(r'cmi.objectives.(\d+).(?:score.(?:raw|scaled|max)|completion_status)')
-
 def save_scorm_data(attempt,batches):
     done = []
     unsaved_elements = []
-    question_scores_changed = set()
+    new_elements = []
     with transaction.atomic():
         needs_diff = False
         for id,elements in batches.items():
@@ -26,7 +24,7 @@ def save_scorm_data(attempt,batches):
                     continue    # don't save new elements after the exam has been created
 
                 try:
-                    _, created = ScormElement.objects.get_or_create(
+                    e, created = ScormElement.objects.get_or_create(
                         attempt = attempt,
                         key = element['key'],
                         value = element['value'],
@@ -34,10 +32,7 @@ def save_scorm_data(attempt,batches):
                         counter = element.get('counter',0)
                     )
                     if created:
-                        m = re_question_score_element.match(element['key'])
-                        if m:
-                            number = int(m.group(1))
-                            question_scores_changed.add(number)
+                        new_elements.append(e)
                 except ScormElement.MultipleObjectsReturned:
                     pass
                 except OperationalError as e:
@@ -56,6 +51,19 @@ def save_scorm_data(attempt,batches):
         attempt.diffed = False
         attempt.save(update_fields=('diffed',))
 
-    tasks.attempt_update_question_score_info(attempt,question_scores_changed)
+    update_question_score_info(attempt,new_elements)
 
     return done,unsaved_elements
+
+re_question_score_element = re.compile(r'cmi.objectives.(\d+).(?:score.(?:raw|scaled|max)|completion_status)')
+
+def update_question_score_info(attempt,elements):
+    question_scores_changed = set()
+    for e in elements:
+        m = re_question_score_element.match(e.key)
+        if m:
+            number = int(m.group(1))
+            question_scores_changed.add(number)
+
+    if question_scores_changed:
+        tasks.attempt_update_question_score_info(attempt,question_scores_changed)
