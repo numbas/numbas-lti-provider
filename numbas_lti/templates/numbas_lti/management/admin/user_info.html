@@ -63,7 +63,13 @@
         <tbody>
             {% for launch in user.attempt_launches.all|slice:":10" %}
             <tr>
-                <td><a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a></td>
+                <td>
+                    {% if launch.attempt.deleted %}
+                    {{launch.attempt.resource.title}} <em>(deleted)</em>
+                    {% else %}
+                    <a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a>
+                    {% endif %}
+                </td>
                 <td>{{launch.time}}</td>
                 <td>{{launch.attempt.start_time}}</td>
                 <td>{{launch.mode}}</td>
