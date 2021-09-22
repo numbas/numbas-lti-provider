@@ -149,10 +149,10 @@ def global_search(request):
         single_model = _('resource')
 
     context = {
-        'query': query,
+        'global_search_query': query,
         'num_results': num_results,
         'results': results,
-        'model': model,
+        'global_search_model': model,
         'single_model': single_model,
         'models': _(model),
         'users': users,

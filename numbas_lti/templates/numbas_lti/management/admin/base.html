@@ -1,5 +1,17 @@
 {% extends "numbas_lti/base.html" %}
+{% load static %}
 {% load i18n %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% static 'admin-dashboard.css' %}">
+{% endblock stylesheets %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script src="{% static 'bootstrap-autocomplete.js' %}"></script>
+    <script src="{% static 'admin-dashboard.js' %}"></script>
+{% endblock %}
 
 {% block content %}
 <nav class="navbar navbar-default navbar-static-top">
@@ -11,9 +23,17 @@
                 <li class="{% if management_tab == 'stress-tests' %}active{% endif %}"><a href="{% url 'list_stresstests' %}"><span class="glyphicon glyphicon-scale"></span> {% trans "Stress tests" %}</a></li>
                 <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'global_dashboard' %}"><span class="glyphicon glyphicon-globe"></span> {% trans "Dashboard" %}</a></li>
             </ul>
+            <form class="navbar-form navbar-left" method="GET" action="{% url 'global_search' %}">
+                <div class="form-group">
+                    <input class="form-control" type="text" id="search" name="query" autocomplete="off" value="{{global_search_query}}">
+                    <input type="hidden" name="model" value="{{global_search_model}}">
+                </div>
+                <button type="submit" class="btn btn-default">{% trans "Search" %}</button>
+            </form>
             <ul class="nav navbar-nav navbar-right">
                 <li class="pull-right"><a href="/admin"><span class="glyphicon glyphicon-cog"></span> {% trans "Admin site" %}</a></li>
             </ul>
+
         </div>
     </div>
 </nav>
