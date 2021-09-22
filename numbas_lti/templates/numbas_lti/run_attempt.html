@@ -4,7 +4,9 @@
 <!doctype html>
 <html>
 <head>
-	<title>{{attempt.resource.title}}</title>
+    <title>{{attempt.resource.title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0">
     <link rel="stylesheet" href="{% static "run_attempt.css" %}"></link>
 </head>
 <body>
@@ -82,7 +84,7 @@ if(!Modernizr.websockets) {
         alert("{% trans "A connection to the server could not be created. Please report this." %}");
         window.location.href = '{% url 'show_attempts' %}';
     }
-	window.addEventListener('load',function() {
+    window.addEventListener('load',function() {
         var iframe = document.createElement('iframe');
         iframe.setAttribute('id','scorm-player');
         iframe.setAttribute('width','100%');
@@ -96,26 +98,26 @@ if(!Modernizr.websockets) {
 {% endif %}
 
 <script type="text/javascript">
-	window.addEventListener('load',function() {
+    window.addEventListener('load',function() {
 
-		function resize_iframe() {
+        function resize_iframe() {
             var iframe = document.getElementById('scorm-player');
-			if(!(iframe && iframe.contentWindow)) {
-				return;
-			}
-			try {
-				var dh = document.documentElement.getBoundingClientRect().bottom;
-				var ih = iframe.clientHeight;
-				var oh = dh-ih;
-				var wh = window.innerHeight;
-				var h = wh-oh-10;
-				var height = Math.max(500,h);
-				iframe.style.height = height+'px';
-			} catch(e) {
-			}
-		}
-		setInterval(resize_iframe,500);
-	});
+            if(!(iframe && iframe.contentWindow)) {
+                return;
+            }
+            try {
+                var dh = document.documentElement.getBoundingClientRect().bottom;
+                var ih = iframe.clientHeight;
+                var oh = dh-ih;
+                var wh = window.innerHeight;
+                var h = wh-oh-10;
+                var height = Math.max(500,h);
+                iframe.style.height = height+'px';
+            } catch(e) {
+            }
+        }
+        setInterval(resize_iframe,500);
+    });
 </script>
 </body>
 </html>
