@@ -201,7 +201,7 @@ class CreateExamForm(ModelForm):
         return cleaned_data
 
 class ReplaceExamForm(CreateExamForm):
-    safe_replacement = forms.BooleanField(required=False,label=_('This is a safe replacement for the previous exam package'))
+    safe_replacement = forms.BooleanField(required=False,label=_('Make existing attempts use this version'))
 
 class RestoreExamForm(ModelForm):
     class Meta:
