@@ -1011,7 +1011,7 @@ class Attempt(models.Model):
             return self.cached_question_scores.get(number=n)
         except AttemptQuestionScore.DoesNotExist:
             scaled_score, raw_score, max_score, completion_status = self.calculate_question_score_info(n)
-            aqs = AttemptQuestionScore.objects.update_or_create(attempt = self, number = n, raw_score = raw_score, scaled_score = scaled_score, max_score = max_score, completion_status = completion_status)
+            aqs, created = AttemptQuestionScore.objects.update_or_create(attempt = self, number = n, raw_score = raw_score, scaled_score = scaled_score, max_score = max_score, completion_status = completion_status)
             return aqs
         except AttemptQuestionScore.MultipleObjectsReturned:
             aqs = self.cached_question_scores.filter(number=n)
