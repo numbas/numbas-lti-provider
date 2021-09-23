@@ -1,7 +1,7 @@
 from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView, JSONView
-from numbas_lti import forms, save_scorm_data
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange
+from numbas_lti import forms, save_scorm_data, tasks
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange, DISCOUNT_BEHAVIOURS
 from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
@@ -206,9 +206,7 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
     context_object_name = 'resource'
     management_tab = 'dashboard'
 
-    def get_context_data(self,*args,**kwargs):
-        context = super(DiscountPartsView,self).get_context_data(*args,**kwargs)
-
+    def get_parts(self):
         resource = self.get_object()
 
         def row(q,p,g,qnum,path,pletter,**kwargs):
@@ -227,39 +225,40 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
 
             return out
 
-        context['parts'] = transform_part_hierarchy(resource.part_hierarchy(),row)
+        parts = transform_part_hierarchy(resource.part_hierarchy(),row)
+
+        return parts
+
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(DiscountPartsView,self).get_context_data(*args,**kwargs)
+
+        context['discount_behaviours'] = DISCOUNT_BEHAVIOURS
+        context['parts'] = self.get_parts()
 
         return context
 
-class DiscountPartView(MustBeInstructorMixin,generic.base.View):
+    def post(self, request, *args, **kwargs):
+        resource = self.get_object()
+        parts = self.get_parts()
 
-    def post(self,request,pk,*args,**kwargs):
-        resource = Resource.objects.get(pk=pk)
-        part = request.POST['part']
-        discount,created = DiscountPart.objects.get_or_create(resource=resource,part=part)
-        template = get_template('numbas_lti/management/discount/discounted.html')
-        html = template.render({'resource':resource,'discount':discount,'form':forms.DiscountPartBehaviourForm(instance=discount),'path':part})
-        return JsonResponse({'pk':discount.pk,'created':created, 'behaviour': discount.behaviour, 'html':html})
+        for part in parts:
+            if part['p'] is None:
+                continue
+            behaviour = request.POST.get('discount-'+part['path'])
+            print(part['path'],behaviour)
+            if behaviour:
+                discount, created = DiscountPart.objects.get_or_create(resource=resource,part=part['path'])
+                discount.behaviour = behaviour
+                discount.save()
+            else:
+                DiscountPart.objects.filter(resource=resource,part=part['path']).delete()
 
-class DiscountPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
-    model = DiscountPart
+        tasks.resource_update_score_info(resource)
 
-    def delete(self,*args,**kwargs):
-        discount = self.get_object()
-        discount.delete()
+        messages.add_message(request,messages.SUCCESS,_('Part discounts have been saved. It might take a while for individual attempts\' scores to be updated.'))
 
-        resource = discount.resource
-        template = get_template('numbas_lti/management/discount/not_discounted.html')
-        html = template.render({'resource':resource,'path':discount.part})
-        return JsonResponse({'html':html})
-
-class DiscountPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
-    model = DiscountPart
-    form_class = forms.DiscountPartBehaviourForm
-
-    def form_valid(self,form,*args,**kwargs):
-        self.object = form.save()
-        return JsonResponse({})
+        return self.get(request,*args,**kwargs)
 
 class ResourceSettingsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource

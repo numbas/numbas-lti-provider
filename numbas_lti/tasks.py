@@ -7,6 +7,7 @@ import json
 import logging
 from numbas_lti.report_outcome import ReportOutcomeException
 from numbas_lti.models import Attempt, ScormElement, diff_scormelements
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +118,20 @@ def scorm_set_num_questions(resource,number):
         resource.save(update_fields=['num_questions'])
 
 @task(priority=20)
-def attempt_update_question_score_info(attempt,question_scores_changed):
+def attempt_update_score_info(attempt,question_scores_changed):
     for number in question_scores_changed:
         attempt.update_question_score_info(number)
+
+    if attempt.max_score>0:
+        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
+    else:
+        scaled_score = 0
+    if scaled_score != attempt.scaled_score:
+        attempt.scaled_score = scaled_score
+        attempt.save()
+
+@task(priority=15)
+def resource_update_score_info(resource):
+    changed_questions = list(range(resource.num_questions))
+    for attempt in resource.attempts.all():
+        attempt_update_score_info(attempt,changed_questions)

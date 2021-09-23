@@ -1,0 +1,22 @@
+table#parts {
+    width: auto;
+}
+table#parts .question-id {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+table#parts .not-first-appearance {
+    color: #ccc;
+}
+
+.control form {
+    display: inline-block;
+}
+
+.part-control:not(.fetching) > .in-progress {
+    display: none;
+}
+.part-control.fetching > .control {
+    display: none;
+}
+

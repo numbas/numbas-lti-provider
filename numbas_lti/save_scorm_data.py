@@ -66,4 +66,4 @@ def update_question_score_info(attempt,elements):
             question_scores_changed.add(number)
 
     if question_scores_changed:
-        tasks.attempt_update_question_score_info(attempt,question_scores_changed)
+        tasks.attempt_update_score_info(attempt,question_scores_changed)

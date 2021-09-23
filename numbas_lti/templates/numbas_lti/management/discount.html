@@ -6,136 +6,51 @@
 
 {% block stylesheets %}
 {{block.super}}
-<style>
-    table#parts {
-        width: auto;
-    }
-    table#parts .question-id {
-        font-size: 1.2em;
-        font-weight: bold;
-    }
-    table#parts .not-first-appearance {
-        color: #ccc;
-    }
-
-    .control form {
-        display: inline-block;
-    }
-
-    .part-control:not(.fetching) > .in-progress {
-        display: none;
-    }
-    .part-control.fetching > .control {
-        display: none;
-    }
-</style>
+<link rel="stylesheet" href="{% static "resource_discount.css" %}">
 {% endblock stylesheets %}
-
-{% block javascripts %}
-{{block.super}}
-    {% get_current_language as LANGUAGE_CODE %}
-    <script src="{% statici18n LANGUAGE_CODE %}"></script>
-    <script src="{% static 'discount_remark.js' %}"></script>
-    <script src="{% static 'zepto/zepto.js' %}"></script>
-
-    <script>
-    $(function() {
-
-        // Create discount
-        $('#parts').on('click','.control form.discount-part',function(e) {
-            e.preventDefault();
-            var form = e.currentTarget;
-            var url = form.getAttribute('action');
-            var part = form.querySelector('[name=path]').value;
-            post(url,{part:part},form).then(function(d) {
-                $(form).parents('tr').addClass('warning');
-                $(form).parents('.control').html(d.html);
-            }).catch(function(err) {
-                alert("There was an error when discounting "+describe_part_path(part));;
-                console.error(err);
-            });
-        });
-
-        // Update discount
-        $('#parts').on('change','.control form.update-part select',function(e) {
-            e.preventDefault();
-            var select = e.currentTarget;
-            var behaviour = select.value;
-            var form = $(select).parents('form')[0];
-            var url = form.getAttribute('action');
-            post(url,{behaviour:behaviour},form).then(function(d) {
-            }).catch(function(err) {
-                alert("There was an error when discounting "+describe_part_path(part));;
-                console.error(err);
-            });
-        });
-
-        // cancel discount
-        $('#parts').on('click','.control form.cancel-discount button',function(e) {
-            e.preventDefault();
-            var form = $(e.currentTarget).parents('form')[0];
-            var url = form.getAttribute('action');
-            post(url,{},form).then(function(d) {
-                $(form).parents('tr').removeClass('warning');
-                $(form).parents('.control').html(d.html);
-            }).catch(function(err) {
-                alert("There was an error when restoring "+describe_part_path(part));;
-                console.error(err);
-            });
-        });
-
-        //Prevent form submit
-        $('#parts').on('submit','form',function(e) {
-            e.preventDefault();
-            return false;
-        });
-    });
-
-    </script>
-{% endblock javascripts %}
 
 {% block management_content %}
     <h2>{% trans "Discount question parts" %}</h2>
 
-    <table id="parts" class="table table-hover table-condensed">
-        <colgroup>
-            <col class="question">
-            <col class="part">
-            <col class="gap">
-            <col class="control">
-        </colgroup>
-        <thead>
-            <tr>
-                <th>{% trans "Question" %}</th>
-                <th>{% trans "Part" %}</th>
-                <th>{% trans "Gap" %}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for part in parts %}
-            <tr class="{% if part.p == None %}info{% endif %} {% if part.discount %}warning{% endif %}">
-                <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
-                <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
-                <td>{% if part.g %}{{part.g}}{% endif %}</td>
-                <td class="part-control">
-                    {% if part.p %}
-                    <span class="control">
-                        {% if part.discount %}
-                            {% with form=part.form discount=part.discount %}
-                                {% include "numbas_lti/management/discount/discounted.html" %}
-                            {% endwith %}
-                        {% else %}
-                            {% with path=part.path %}
-                            {% include "numbas_lti/management/discount/not_discounted.html" %}
-                            {% endwith %}
+    <p>{% blocktrans %}For each part that you want to discount, select whether to remove its marks from the total, or to give everyone full marks for that part.{% endblocktrans %}</p>
+
+    <form method="POST" class="form-inline">
+        {% csrf_token %}
+        <table id="parts" class="table table-hover table-condensed">
+            <colgroup>
+                <col class="question">
+                <col class="part">
+                <col class="gap">
+                <col class="control">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>{% trans "Question" %}</th>
+                    <th>{% trans "Part" %}</th>
+                    <th>{% trans "Gap" %}</th>
+                    <th>{% trans "Discount?" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for part in parts %}
+                <tr class="{% if part.p == None %}info{% endif %} {% if part.discount %}warning{% endif %}">
+                    <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
+                    <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
+                    <td>{% if part.g %}{{part.g}}{% endif %}</td>
+                    <td class="part-control">
+                        {% if part.p %}
+                        <select class="form-control" name="discount-{{part.path}}">
+                            <option value=""></option>
+                            {% for value,label in discount_behaviours %}
+                            <option value="{{value}}" {% if part.discount and part.discount.behaviour == value %}selected="selected"{% endif %}>{{label}}</option>
+                            {% endfor %}
+                        </select>
                         {% endif %}
-                    </span>
-                    <span class="in-progress">Working...</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
-    </table>
+        <button class="btn btn-primary btn-lg" type="submit">{% trans "Save" %}</button>
+    </form>
 {% endblock management_content %}

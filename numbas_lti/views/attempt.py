@@ -1,5 +1,6 @@
 from .mixins import MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, request_is_instructor
 from .generic import JSONView
+import datetime
 from django import http
 from django.conf import settings
 from django.contrib import messages
@@ -13,12 +14,13 @@ from django.utils.text import slugify
 from django.views import generic
 from django.views.decorators.http import require_POST
 from itertools import groupby
+import json
+from numbas_lti import tasks
 from numbas_lti.forms import RemarkPartScoreForm
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch, resolve_diffed_scormelements, RemarkedScormElement
 from numbas_lti.save_scorm_data import save_scorm_data
 from numbas_lti.util import transform_part_hierarchy
-import datetime
-import json
+import re
 import simplejson
 
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
@@ -87,57 +89,10 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
             else:
                 RemarkPart.objects.filter(attempt=attempt,part=part['path']).delete()
 
+        changed_questions = set(int(re.match(r'^q(\d+)',v).group(1)) for v in attempt.remarked_parts.values_list('part',flat=True))
+        tasks.attempt_update_score_info(attempt, changed_questions)
+
         return self.get(request,*args,**kwargs)
-
-class RemarkPartView(MustBeInstructorMixin,generic.base.View):
-
-    def post(self,request,pk,*args,**kwargs):
-        attempt = Attempt.objects.get(pk=pk)
-        part = request.POST['part']
-
-        remark,created = RemarkPart.objects.get_or_create(attempt=attempt,part=part,score=attempt.part_raw_score(part))
-
-        template = get_template('numbas_lti/management/remark/remarked.html')
-        html = template.render({
-            'attempt':attempt,
-            'remark':remark,
-            'form':RemarkPartScoreForm(instance=remark),
-            'max_score': remark.attempt.part_max_score(part),
-            'path': part,
-        })
-
-        return http.JsonResponse({
-            'pk':remark.pk,
-            'created':created, 
-            'score': remark.score, 
-            'html':html
-        })
-
-class RemarkPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
-    model = RemarkPart
-
-    def delete(self,*args,**kwargs):
-        remark = self.get_object()
-        remark.delete()
-
-        attempt = remark.attempt
-        template = get_template('numbas_lti/management/remark/not_remarked.html')
-        html = template.render({
-            'attempt':attempt,
-            'score':attempt.part_raw_score(remark.part),
-            'max_score':attempt.part_max_score(remark.part),
-            'path':remark.part,
-        })
-        return http.JsonResponse({'html':html})
-
-class RemarkPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
-    model = RemarkPart
-    form_class = RemarkPartScoreForm
-
-    def form_valid(self,form,*args,**kwargs):
-        self.object = form.save()
-        return http.JsonResponse({})
-
 
 class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt

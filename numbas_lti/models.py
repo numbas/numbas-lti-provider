@@ -1164,23 +1164,9 @@ class RemarkPart(models.Model):
     def __str__(self):
         return '{} on part {} in {}'.format(self.score, self.part, self.attempt)
 
-def remark_update_scaled_score(sender,instance,**kwargs):
-    attempt = instance.attempt
-    question = int(re.match(r'^q(\d+)',instance.part).group(1))
-    attempt.update_question_score_info(question)
-    if attempt.max_score>0:
-        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
-    else:
-        scaled_score = 0
-    if scaled_score != attempt.scaled_score:
-        attempt.scaled_score = scaled_score
-        attempt.save()
-models.signals.post_save.connect(remark_update_scaled_score,sender=RemarkPart)
-models.signals.post_delete.connect(remark_update_scaled_score,sender=RemarkPart)
-
 DISCOUNT_BEHAVIOURS = [
-    ('remove','Remove from total'),
-    ('fullmarks','Award everyone full credit'),
+    ('remove',_('Remove from total')),
+    ('fullmarks',_('Award everyone full credit')),
 ]
 
 class DiscountPart(models.Model):
@@ -1191,18 +1177,6 @@ class DiscountPart(models.Model):
     class Meta:
         verbose_name = _('discounted part')
         verbose_name_plural = _('discounted parts')
-
-def discount_update_scaled_score(sender,instance,**kwargs):
-    for attempt in instance.resource.attempts.all():
-        question = int(re.match(r'^q(\d+)',instance.part).group(1))
-        attempt.update_question_score_info(question)
-
-        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
-        if scaled_score != attempt.scaled_score:
-            attempt.scaled_score = scaled_score
-            attempt.save()
-models.signals.post_save.connect(discount_update_scaled_score,sender=DiscountPart)
-models.signals.post_delete.connect(discount_update_scaled_score,sender=DiscountPart)
 
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
