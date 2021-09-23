@@ -35,3 +35,8 @@ body.dashboard ul.actions li {
 .management-footer a {
     color: hsl(208.3, 56%, 31.2%);
 }
+
+.helplink {
+    font-size: 1.1em;
+    margin: 0 1em 3em 3em;
+}

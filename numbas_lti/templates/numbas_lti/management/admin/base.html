@@ -1,6 +1,7 @@
 {% extends "numbas_lti/base.html" %}
 {% load static %}
 {% load i18n %}
+{% load helplink %}
 
 {% block stylesheets %}
     {{block.super}}
@@ -37,6 +38,9 @@
         </div>
     </div>
 </nav>
+{% if page_helplink %}
+    <p>{% helplink page_helplink %}</p>
+{% endif %}
 <main class="{% block admin_container %}container{% endblock %}">
 {% for message in messages %}
 <div class="alert alert-info">

@@ -1,4 +1,4 @@
-from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
+from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CSVView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange, DISCOUNT_BEHAVIOURS
@@ -26,11 +26,12 @@ import datetime
 import json
 import itertools
 
-class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
+class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
     management_tab = 'create_exam'
     template_name = 'numbas_lti/management/create_exam.html'
     form_class = forms.CreateExamForm
+    helplink = 'instructor/resources.html#creating-a-new-resource'
 
     def get_context_data(self,*args,**kwargs):
         context = super(CreateExamView,self).get_context_data(*args,**kwargs)
@@ -59,6 +60,7 @@ class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
     template_name = 'numbas_lti/management/replace_exam.html'
     form_class = forms.ReplaceExamForm
+    helplink = 'instructor/resources.html#replace-exam-package'
 
     def get_context_data(self,*args,**kwargs):
         resource = self.request.resource
@@ -105,10 +107,11 @@ class AttemptsUseCurrentVersionView(MustBeInstructorMixin, ResourceManagementVie
         messages.add_message(self.request,messages.INFO,_('All attempts now use the active version of this resource\'s exam.'))
         return redirect(reverse('replace_exam',args=(resource.pk,)))
 
-class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/dashboard.html'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#dashboard'
 
     def get_exam_info(self):
         content = self.get_object().exam.source()
@@ -174,10 +177,11 @@ class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstruct
 
         return context
 
-class StudentProgressView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/student_progress.html'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#student-progress'
 
     def get_context_data(self,*args,**kwargs):
         context = super().get_context_data(*args,**kwargs)
@@ -200,11 +204,12 @@ class StudentProgressView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeIn
         return context
 
 
-class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class DiscountPartsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/discount.html'
     context_object_name = 'resource'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#discount-question-parts'
 
     def get_parts(self):
         resource = self.get_object()
@@ -260,12 +265,13 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
 
         return self.get(request,*args,**kwargs)
 
-class ResourceSettingsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+class ResourceSettingsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource
     form_class = forms.ResourceSettingsForm
     template_name = 'numbas_lti/management/resource_settings.html'
     context_object_name = 'resource'
     management_tab = 'settings'
+    helplink = 'instructor/resources.html#settings'
 
     def get_success_url(self):
         return reverse('resource_dashboard',args=(self.get_object().pk,))
@@ -417,12 +423,13 @@ class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementView
         
         return context
 
-class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.ListView):
+class AllAttemptsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.ListView):
     model = Attempt
     template_name = 'numbas_lti/management/attempts.html'
     management_tab = 'attempts'
     paginate_by = 20
     context_object_name = 'attempts'
+    helplink = 'instructor/resources.html#attempts'
 
     def get_queryset(self, *args, **kwargs):
         self.query = ''
@@ -452,10 +459,11 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
         return context
 
-class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+class StatsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/resource_stats.html'
     management_tab = 'stats'
+    helplink = 'instructor/resources.html#statistics'
 
     def get_context_data(self, *args, **kwargs):
         context = super(StatsView,self).get_context_data(*args, **kwargs)
@@ -472,10 +480,11 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
 
         return context
 
-class RemarkView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/resource_remark.html'
     management_tab = 'remark'
+    helplink = 'instructor/resources.html#remark'
 
     def get(self, request, *args, **kwargs):
         resource = self.object = self.get_object()
@@ -598,11 +607,12 @@ class RemarkIframeView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstr
         context['scripts_url'] = resource.exam.extracted_url +'/scripts.js'
         return context
 
-class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
+class ValidateReceiptView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
     model = Resource
     form_class = forms.ValidateReceiptForm
     template_name = 'numbas_lti/management/validate_receipt.html'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#validate-a-receipt-code'
     
     def dispatch(self,request,*args,**kwargs):
         self.object = self.get_object()
@@ -635,18 +645,20 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
 
         return self.render_to_response(context)
 
-class AccessChangesView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.ListView):
+class AccessChangesView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.ListView):
     model = AccessChange
     template_name = 'numbas_lti/management/access_change/list.html'
     management_tab = 'access-changes'
     resource_pk_url_kwarg = 'resource_id'
+    helplink = 'instructor/resources.html#access-changes'
     
-class CreateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.CreateView):
+class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.CreateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     template_name = 'numbas_lti/management/access_change/edit.html'
     management_tab = 'access-changes'
     resource_pk_url_kwarg = 'resource_id'
+    helplink = 'instructor/resources.html#access-changes'
 
     extra_context = {
         'create': True,
@@ -661,11 +673,12 @@ class CreateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin,
     def get_success_url(self):
         return reverse('resource_access_changes',args=(self.get_resource().pk,))
 
-class UpdateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     management_tab = 'access-changes'
     template_name = 'numbas_lti/management/access_change/edit.html'
+    helplink = 'instructor/resources.html#access-changes'
 
     def get_resource(self):
         return self.get_object().resource
@@ -684,10 +697,11 @@ class UpdateAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin,
             initial['extend_deadline_minutes'] = ac.extend_deadline.seconds // 60
         return initial
 
-class DeleteAccessChangeView(ResourceManagementViewMixin, MustBeInstructorMixin, generic.DeleteView):
+class DeleteAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.DeleteView):
     model = AccessChange
     management_tab = 'settings'
     template_name = 'numbas_lti/management/access_change/delete.html'
+    helplink = 'instructor/resources.html#access-changes'
 
     def get_resource(self):
         return self.get_object().resource

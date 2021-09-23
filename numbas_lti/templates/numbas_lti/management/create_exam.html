@@ -1,6 +1,7 @@
 {% extends "numbas_lti/base.html" %}
 {% load bootstrap %}
 {% load i18n %}
+{% load helplink %}
 
 {% block stylesheets %}
 {{block.super}}
@@ -59,6 +60,7 @@
             {% else %}
                 <p>{% trans "Please upload one now." %}
             {% endif %}
+            {% helplink page_helplink %}
         </div>
 
         <div class="row">
