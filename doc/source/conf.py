@@ -22,13 +22,13 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'Numbas LTI provider'
-copyright = '2018, Numbas'
+copyright = '2018-2021, Newcastle University'
 author = 'Numbas'
 
 # The short X.Y version
-version = ''
+version = 'v3.0'
 # The full version, including alpha/beta/rc tags
-release = '2.1'
+release = 'v3.0-development'
 
 
 # -- General configuration ---------------------------------------------------
@@ -81,6 +81,8 @@ pygments_style = 'sphinx'
 #
 html_theme = 'sphinx_rtd_theme'
 
+html_logo = '_static/images/numbas-logo-large.png'
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -91,6 +93,13 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_context = {
+  'display_github': True,
+  'github_user': 'numbas',
+  'github_repo': 'numbas-lti-provider',
+  'github_version': 'master/doc/source/',
+}
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

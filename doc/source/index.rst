@@ -1,3 +1,7 @@
+.. raw:: html
+
+    <img src="_static/images/numbas-logo-large.png" style="border: none; margin-bottom:2em;"/>
+
 Numbas LTI provider
 ===================
 
@@ -9,12 +13,23 @@ Contents
 ########
 
 .. toctree::
+    :caption: Introduction
     :maxdepth: 2
 
     how-it-works
     data-handling
     getting-started
+
+.. toctree::
+    :caption: Installation
+    :maxdepth: 2
+
     installation/index
+
+.. toctree::
+    :caption: User guides
+    :maxdepth: 2
+
     admin/index
     instructor/index
     student/index

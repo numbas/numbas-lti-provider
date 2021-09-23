@@ -20,7 +20,7 @@ Creating a new resource
 
 Either upload an exam package that you have downloaded from the Numbas editor or, if any :term:`editor links <Editor link>` have been created, select an exam from the list.
 
-When you :numbas:ref:`download an exam package <exam-admin-controls>` from the Numbas editor, you must use the :guilabel:`SCORM package` option.
+When you :ref:`download an exam package <numbas:exam-admin-controls>` from the Numbas editor, you must use the :guilabel:`SCORM package` option.
 
 Once you've selected an exam, you will be shown the dashboard for the resource.
 
