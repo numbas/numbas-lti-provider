@@ -1,0 +1,69 @@
+{% extends "numbas_lti/management/attempt_base.html" %}
+{% load percentage %}
+{% load i18n %}
+{% load static %}
+{% load statici18n %}
+
+{% block stylesheets %}
+{{block.super}}
+<link rel="stylesheet" href="{% static 'attempt_remark.css' %}">
+{% endblock stylesheets %}
+
+{% block javascripts %}
+{{block.super}}
+<script src="{% static 'attempt_remark.js' %}"></script>
+{% endblock %}
+
+{% block attempt_content %}
+    <h3>{% trans "Remark question parts" %}</h3>
+
+    <p>{% blocktrans %}To change the score for a part, tick the corresponding checkbox, write the new score, and then click <i>Save these scores</i>.{% endblocktrans %}</p>
+
+    <form id="parts-form" method="POST" class="form-inline">
+        {% csrf_token %}
+        <table id="parts" class="table table-hover table-condensed">
+            <colgroup>
+                <col class="question">
+                <col class="part">
+                <col class="gap">
+                <col class="control">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>{% trans "Question" %}</th>
+                    <th>{% trans "Part" %}</th>
+                    <th>{% trans "Gap" %}</th>
+                    <th>{% trans "Score" %}</th>
+                    <th>{% trans "Original score" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for part in parts %}
+                <tr class="part {% if part.p == None %}info{% endif %} {% if part.discount %}discounted{% endif %}{% if part.remark %}remarked{% endif %}{% if part.p and not part.has_gaps %}remarkable{% endif %}">
+                    <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
+                    <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
+                    <td>{% if part.g %}{{part.g}}{% endif %}</td>
+                    <td class="score">
+                        {% if part.discount %}
+                            Discounted
+                        {% else %}
+                            {% if part.p and not part.has_gaps %}
+                            <input title="{% blocktrans with path=part.path %}Remark part {{path}}?{% endblocktrans %}" type="checkbox" class="remark" name="remark-{{part.path}}" {% if part.remark %}checked{% endif %}>
+                            <span class="control monospace">
+                                <input title="{% blocktrans with path=part.path %}Score for part {{path}}{% endblocktrans %}" class="form-control score" type="number" name="score-{{part.path}}" data-original-score="{{part.original_score}}" value="{{part.score}}" min="0" max="{{part.max_score}}" step="0.1" {% if not part.remark %}disabled{% endif %}>
+                            </span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td class="original-score">
+                        {% if part.p and not part.has_gaps %}
+                        <span class="monospace">{{part.original_score}} / {{part.max_score}}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </table>
+        <button type="submit" class="btn btn-primary btn-lg">{% trans "Save these scores" %}</button>
+    </form>
+{% endblock attempt_content %}

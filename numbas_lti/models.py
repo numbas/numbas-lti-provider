@@ -940,18 +940,18 @@ class Attempt(models.Model):
         n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
         return n
 
-    def part_raw_score(self,part):
+    def part_raw_score(self,part,include_remark=True):
         discounted = self.part_discount(part)
         if discounted:
             return self.part_max_score(part)
 
         remarked = self.remarked_parts.filter(part=part)
-        if remarked.exists():
+        if include_remark and remarked.exists():
             return remarked.get().score
 
-        if self.remarked_parts.filter(part__startswith=part+'g').exists() or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
+        if (include_remark and self.remarked_parts.filter(part__startswith=part+'g').exists()) or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
-            return sum(self.part_raw_score(g) for g in gaps)
+            return sum(self.part_raw_score(g,include_remark) for g in gaps)
 
         id = self.part_interaction_id(part)
         if id is None:
@@ -1155,7 +1155,7 @@ class AttemptQuestionScore(models.Model):
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
-    score = models.FloatField()
+    score = models.FloatField(default=0)
 
     class Meta:
         verbose_name = _('remarked part')

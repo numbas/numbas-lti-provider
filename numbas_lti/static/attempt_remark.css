@@ -1,0 +1,42 @@
+.remark-part {
+    cursor: pointer;
+}
+.part input.score {
+    width: 6em;
+}
+table#parts {
+    width: auto;
+}
+table#parts .question-id {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+table#parts .not-first-appearance {
+    color: #ccc;
+}
+table#parts th {
+    text-align: center;
+}
+table#parts td {
+  border-left: 1px dashed #ccc;
+  vertical-align: middle;
+}
+
+.part.discounted td, .part.remarked td {
+    background-color: hsl(50.4, 80.6%, 93.9%);
+}
+
+.part .original-score {
+    text-align: right;
+}
+
+.control form {
+    display: inline-block;
+}
+.monospace {
+    font-family: monospace;
+}
+
+.part.changed input {
+    background: hsl(0, 50%, 95%);
+}

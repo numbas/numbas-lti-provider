@@ -23,16 +23,14 @@ import simplejson
 
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
-    template_name = 'numbas_lti/management/remark.html'
+    template_name = 'numbas_lti/management/attempt_remark.html'
     context_object_name = 'attempt'
     management_tab = 'attempts'
 
     def get_resource(self):
         return self.get_object().resource
 
-    def get_context_data(self,*args,**kwargs):
-        context = super(RemarkPartsView,self).get_context_data(*args,**kwargs)
-
+    def get_parts(self):
         attempt = self.get_object()
 
         def row(qnum,q,p,g,parent,has_gaps,path,pletter,**kwargs):
@@ -52,6 +50,7 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
             if p is not None:
                 out.update({
                     'score': attempt.part_raw_score(path),
+                    'original_score': attempt.part_raw_score(path,include_remark=False),
                     'max_score': attempt.part_max_score(path),
                     'discount': discount,
                     'remark': remark,
@@ -62,9 +61,33 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
             return out
 
-        context['parts'] = transform_part_hierarchy(attempt.part_hierarchy(), row)
+        parts = transform_part_hierarchy(attempt.part_hierarchy(), row)
+
+        return parts
+
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        context['parts'] = self.get_parts()
 
         return context
+
+    def post(self, request, *args, **kwargs):
+        attempt = self.get_object()
+        parts = self.get_parts()
+        for part in parts:
+            if part['p'] is None:
+                continue
+            remark = request.POST.get('remark-'+part['path'])
+            score = request.POST.get('score-'+part['path'])
+            if remark:
+                remark, created = RemarkPart.objects.get_or_create(attempt=attempt, part=part['path'])
+                remark.score = score
+                remark.save()
+            else:
+                RemarkPart.objects.filter(attempt=attempt,part=part['path']).delete()
+
+        return self.get(request,*args,**kwargs)
 
 class RemarkPartView(MustBeInstructorMixin,generic.base.View):
 
