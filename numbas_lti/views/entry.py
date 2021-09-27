@@ -1,18 +1,18 @@
 from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
 from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
+from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.middleware.csrf import rotate_token
 from django.templatetags.static import static
 from django.shortcuts import render, redirect
-from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from importlib import import_module
+from ipware import get_client_ip
 import json
 import logging
-from ipware import get_client_ip
-from urllib.parse import urlparse, urlunparse, parse_qs
-from urllib.parse import urlencode
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +95,7 @@ def set_cookie_entry(request):
     engine = import_module(settings.SESSION_ENGINE)
     request.session = engine.SessionStore(session_key)
     request.session.modified = True
+    rotate_token(request)
     return redirect(add_query_param(reverse('check_cookie_entry'),{'session_key':session_key, 'resource_link_id': resource_link_id}))
     
 def not_post(request):
