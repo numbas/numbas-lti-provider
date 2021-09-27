@@ -57,10 +57,11 @@ class DashboardView(HelpLinkMixin, ManagementViewMixin, generic.TemplateView):
 
         return context
 
-class GlobalUserInfoView(ManagementViewMixin, generic.DetailView):
+class GlobalUserInfoView(HelpLinkMixin, ManagementViewMixin, generic.DetailView):
     model = User
     management_tab = ''
     template_name = 'numbas_lti/management/admin/user_info.html'
+    helplink = 'admin/search.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

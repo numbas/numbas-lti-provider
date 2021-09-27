@@ -9,3 +9,4 @@ For administrators
     editorlink
     stress-tests
     dashboard
+    search

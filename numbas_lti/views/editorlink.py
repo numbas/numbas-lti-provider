@@ -1,4 +1,4 @@
-from .mixins import ManagementViewMixin
+from .mixins import ManagementViewMixin, HelpLinkMixin
 from django import http
 from django.conf import settings
 from django.contrib import messages
@@ -20,9 +20,10 @@ class EditorLinkManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Manag
     management_tab = 'editor-links'
     login_url = reverse_lazy('login')
 
-class ListEditorLinksView(EditorLinkManagementMixin,generic.list.ListView):
+class ListEditorLinksView(HelpLinkMixin, EditorLinkManagementMixin,generic.list.ListView):
     model = EditorLink
     template_name = 'numbas_lti/management/admin/editorlink/list.html'
+    helplink = 'admin/editorlink.html'
 
 class GettingProjectDataException(Exception):
     pass
@@ -111,10 +112,11 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
     def form_invalid(self,form,project_form):
         return self.render_to_response(self.get_context_data(form=form,project_form=project_form))
 
-class CreateEditorLinkView(EditorLinkManagementMixin,generic.edit.CreateView):
+class CreateEditorLinkView(HelpLinkMixin, EditorLinkManagementMixin,generic.edit.CreateView):
     model = EditorLink
     form_class = forms.CreateEditorLinkForm
     template_name = 'numbas_lti/management/admin/editorlink/create.html'
+    helplink = 'admin/editorlink.html#creating-an-editor-link'
 
     def form_valid(self,form):
         editorlink = self.object = form.save()
