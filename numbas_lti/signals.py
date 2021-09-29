@@ -73,7 +73,7 @@ def scorm_set_score(sender,instance,created,**kwargs):
     if not instance.newer_than(instance.attempt.scaled_score_element):
         return
 
-    tasks.scorm_set_score(instance.attempt)
+    tasks.scorm_set_score(instance)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -83,14 +83,14 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     if not instance.newer_than(instance.attempt.completion_status_element):
         return
 
-    tasks.scorm_set_completion_status(instance.attempt)
+    tasks.scorm_set_completion_status(instance)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_start_time(sender,instance,created,**kwargs):
     if instance.key != 'cmi.suspend_data':
         return
 
-    tasks.scorm_set_start_time(instance.attempt)
+    tasks.scorm_set_start_time(instance)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_num_questions(sender,instance,created,**kwargs):
