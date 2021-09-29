@@ -860,14 +860,7 @@ class Attempt(models.Model):
         if self.end_time is None:
             self.end_time = timezone.now()
 
-            tries = 0
-            while tries<3:
-                tries += 1
-                try:
-                    self.save(update_fields=['end_time'])
-                    break
-                except OperationalError:
-                    time.sleep(tries)
+            self.save(update_fields=['end_time'])
 
             channel_layer = get_channel_layer()
             group_send = async_to_sync(channel_layer.group_send)
