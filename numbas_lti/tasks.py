@@ -54,12 +54,13 @@ def diff_suspend_data():
 @task(priority=10)
 def scorm_set_score(attempt):
     logger.debug(f"Set score for attempt {attempt}")
-    e = attempt.scormelements.current('cmi.score.scaled')
-
     try:
+        e = attempt.scormelements.current('cmi.score.scaled')
         score = float(e.value)
     except ValueError:
         return
+    except ScormElement.DoesNotExist:
+        score = 0
 
     if score == attempt.scaled_score:
         return
@@ -74,7 +75,10 @@ def scorm_set_score(attempt):
 @task(priority=10)
 def scorm_set_completion_status(attempt):
     logger.debug(f"Set completion status for attempt {attempt}")
-    e = attempt.scormelements.current('cmi.completion_status')
+    try:
+        e = attempt.scormelements.current('cmi.completion_status')
+    except ScormElement.DoesNotExist:
+        return
 
     if e.value == attempt.completion_status:
         return
@@ -93,15 +97,15 @@ def scorm_set_completion_status(attempt):
 @task(priority=9)
 def scorm_set_start_time(attempt):
     logger.debug(f"Set start time for attempt {attempt}")
-    e = attempt.scormelements.current('cmi.suspend_data')
 
     try:
+        e = attempt.scormelements.current('cmi.suspend_data')
         data = json.loads(e.value)
         if data['start'] is not None:
             start_time = timezone.make_aware(datetime.fromtimestamp(float(data['start'])/1000))
         else:
             return
-    except (json.JSONDecodeError, KeyError):
+    except (json.JSONDecodeError, KeyError, ScormElement.DoesNotExist):
         return
 
     if start_time == attempt.start_time:

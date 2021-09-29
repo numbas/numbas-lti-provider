@@ -35,7 +35,13 @@ Changes to settings:
 
 * INSTANCE_NAME
 
+* DEFAULT_AUTO_FIELD
+
 Use ``utf8mb4`` database encoding.
+
+HUEY PriorityRedisHuey
+
+Change supervisord config - remove workers, change asgi application
 
 v2.13
 -----
