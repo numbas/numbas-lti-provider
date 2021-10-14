@@ -35,7 +35,7 @@ class CreateFileReportView(object):
         self.object = self.get_object()
         fr = FileReport(name=self.get_name(), created_by=self.request.user, resource=self.get_resource())
         filename = Path(self.get_filename())
-        filename = filename.with_stem(filename.stem+'-'+datetime.now().strftime('%Y-%d-%m-%H_%M_%S'))
+        filename = filename.stem+'-'+datetime.now().strftime('%Y-%d-%m-%H_%M_%S')+filename.suffix
         fr.outfile.save(filename, ContentFile(''))
         self.report_task(fr, **self.get_task_kwargs())
         template = get_template('numbas_lti/management/file_report_created.html')
