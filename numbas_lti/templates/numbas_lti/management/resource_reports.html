@@ -23,7 +23,7 @@
     <tbody>
         {% for report in resource.file_reports.all %}
         <tr>
-            <td>{% if report.status == 'complete' %}<a href="{{ report.outfile.url }}">{{report.name}}</a>{% else %}{{report.name}}{% endif %}</td>
+            <td>{% if report.status == 'complete' %}<a download href="{{ report.outfile.url }}">{{report.name}}</a>{% else %}{{report.name}}{% endif %}</td>
             <td>{{report.get_status_display}}</td>
             <td>{{report.creation_time}}</td>
             <td>{{report.expiry_date}}</td>
