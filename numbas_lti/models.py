@@ -292,7 +292,8 @@ class Resource(models.Model):
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():
             return 0
-        return methods[self.grading_method](user,attempts)
+        score = methods[self.grading_method](user,attempts)
+        return min(1,max(score,0))
 
     def grade_highest(self,user,attempts):
         return attempts.aggregate(highest_score=models.Max('scaled_score'))['highest_score']
