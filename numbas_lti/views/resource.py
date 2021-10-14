@@ -369,7 +369,11 @@ class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementView
     context_object_name = 'exam'
 
     def get_resource(self):
-        return Resource.objects.filter(exam=self.get_object()).first()
+        exam = self.get_object()
+        if exam.resource:
+            return exam.resource
+        else:
+            return Resource.objects.filter(exam=exam).first()
 
     def get_context_data(self,*args,**kwargs):
         context = super(RunExamView,self).get_context_data(*args,**kwargs)
