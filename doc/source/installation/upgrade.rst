@@ -37,6 +37,8 @@ Changes to settings:
 
 * DEFAULT_AUTO_FIELD
 
+* REPORT_FILE_EXPIRY_DAYS
+
 Use ``utf8mb4`` database encoding.
 
 HUEY PriorityRedisHuey

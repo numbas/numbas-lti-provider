@@ -1,0 +1,36 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load bootstrap %}
+{% load i18n %}
+{% load static %}
+{% load statici18n %}
+
+{% block management_content %}
+<h2>
+    {% blocktrans with resource_name=resource.title %}Reports for <strong>{{resource_name}}</strong>{% endblocktrans %}
+    <br>
+    <small>{{resource.context.name}}</small>
+</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>{% translate "File" %}</th>
+            <th>{% translate "Status" %}</th>
+            <th>{% translate "Date created" %}</th>
+            <th>{% translate "Expiry date" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for report in resource.file_reports.all %}
+        <tr>
+            <td>{% if report.status == 'complete' %}<a href="{{ report.outfile.url }}">{{report.name}}</a>{% else %}{{report.name}}{% endif %}</td>
+            <td>{{report.get_status_display}}</td>
+            <td>{{report.creation_time}}</td>
+            <td>{{report.expiry_date}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

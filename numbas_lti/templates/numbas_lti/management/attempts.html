@@ -15,8 +15,8 @@
     {% if resource.attempts.count %}
     <h2>{% trans "Attempts" %}</h2>
 
-    <p><a class="btn btn-info" href="{% url 'attempts_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</a></p>
-    <p><a class="btn btn-info" href="{% url 'resource_json_dump' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</a></p>
+    <p><form method="POST" action="{% url 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</button></form></p>
+    <p><form method="POST" action="{% url 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</button></form></p>
 
     <form method="GET" class="form-inline">
         <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">

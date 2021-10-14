@@ -1,5 +1,5 @@
 from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
-from .generic import CSVView, JSONView
+from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange, DISCOUNT_BEHAVIOURS
 from numbas_lti.util import transform_part_hierarchy
@@ -276,78 +276,49 @@ class ResourceSettingsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementVie
     def get_success_url(self):
         return reverse('resource_dashboard',args=(self.get_object().pk,))
 
-class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
+class CreateResourceFileReportView(MustBeInstructorMixin,CreateFileReportView,generic.detail.DetailView):
     model = Resource
-    def get_rows(self):
-        headers = [_(x) for x in ['First name','Last name','Email','Username','Percentage','Raw score', 'Max score']]
-        yield headers
 
-        resource = self.object
-        for student in resource.students().all():
-            user_data = resource.user_data(student)
-            scaled_score = resource.grade_user(student)
-            student_attempts = resource.attempts.filter(user=student)
-            max_score = max(a.max_score for a in student_attempts) if student_attempts.exists() else 0
-            raw_score = scaled_score * max_score    # This might introduce a rounding error
-            yield (
-                student.first_name,
-                student.last_name,
-                student.email,
-                user_data.get_source_id(),
-                scaled_score*100,
-                raw_score,
-                max_score
-            )
+    def get_resource(self):
+        return self.object
+
+    def get_success_url(self):
+        return reverse('resource_dashboard',args=(self.object.pk,))
+
+class FileReportsListView(HelpLinkMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
+    template_name = 'numbas_lti/management/resource_reports.html'
+    model = Resource
+    context_object_name = 'resource'
+    management_tab = 'reports'
+    helplink = ''
+
+class ScoresCSV(CreateResourceFileReportView):
+    report_task = tasks.resource_scores_csv_report
+
+    def get_name(self):
+        return 'Scores CSV'
 
     def get_filename(self):
         return _("{slug}-scores.csv").format(slug=self.object.slug)
 
-class JSONDumpView(MustBeInstructorMixin,generic.detail.DetailView):
-    model = Resource
+class JSONDumpView(CreateResourceFileReportView):
+    report_task = tasks.resource_json_dump_report
 
-    def render_to_response(self,context,**kwargs):
-        full = 'full' in self.request.GET
+    def get_name(self):
+        return 'JSON dump'
 
-        resource = self.get_object()
-        head = '''{{
-    "resource": {{
-        "pk": {pk},
-        "title": {title}
-    }},
-    "attempts": ['''.format(pk=resource.pk,title=json.dumps(resource.title))
-        footer = '    ]\n}'
+    def get_task_kwargs(self):
+        return {'full': 'full' in self.request.POST}
 
-        response = http.StreamingHttpResponse(
-            itertools.chain([head],((',' if i>0 else '')+json.dumps(a.data_dump(include_all_scorm=full)) for i,a in enumerate(resource.attempts.all())),[footer]),
-            content_type='application/json'
-        )
-        response['Content-Disposition'] = 'attachment; filename="{context}--{resource}.json"'.format(context=slugify(resource.context.name), resource=resource.slug)
-        return response
-
-
-class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
-    model = Resource
-    def get_rows(self):
+    def get_filename(self):
         resource = self.object
-        num_questions = resource.num_questions
+        return _("{context}--{resource}.json").format(context=slugify(resource.context.name), resource=resource.slug)
 
-        headers = [_(x) for x in ['First name','Last name','Email','Username','Start time','End time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
-        yield headers
+class AttemptsCSV(CreateResourceFileReportView):
+    report_task = tasks.resource_attempts_csv_report
 
-        for attempt in resource.attempts.all():
-            user_data = resource.user_data(attempt.user)
-            row = [
-                attempt.user.first_name,
-                attempt.user.last_name,
-                attempt.user.email,
-                user_data.get_source_id(),
-                attempt.start_time,
-                attempt.end_time,
-                attempt.completion_status,
-                attempt.raw_score,
-                attempt.scaled_score*100,
-            ]+[attempt.question_raw_score(n) for n in range(num_questions)]
-            yield row
+    def get_name(self):
+        return 'Attempts CSV'
 
     def get_filename(self):
         return _("{slug}-attempts.csv").format(slug=self.object.slug)

@@ -26,6 +26,7 @@ urlpatterns = [
     path('resource/<int:pk>/discount_parts', views.resource.DiscountPartsView.as_view(), name='discount_parts'),
     path('resource/<int:pk>/validate_receipt', views.resource.ValidateReceiptView.as_view(), name='validate_receipt'),
     path('resource/<int:pk>/attempts', views.resource.AllAttemptsView.as_view(), name='manage_attempts'),
+    path('resource/<int:pk>/reports', views.resource.FileReportsListView.as_view(), name='resource_reports'),
     path('resource/<int:pk>/stats', views.resource.StatsView.as_view(), name='resource_stats'),
     path('resource/<int:pk>/remark', views.resource.RemarkView.as_view(), name='resource_remark'),
     path('resource/<int:pk>/remark/iframe', views.resource.RemarkIframeView.as_view(), name='resource_remark_iframe'),

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
@@ -699,13 +700,14 @@ class Attempt(models.Model):
 
     def scorm_cmi(self):
         user_data = self.resource.user_data(self.user)
+        learner_id = '' if user_data is None else user_data.consumer_user_id
 
         scorm_cmi = {
             'cmi.suspend_data': '',
             'cmi.objectives._count': 0,
             'cmi.interactions._count': 0,
             'cmi.learner_name': self.user.get_full_name(),
-            'cmi.learner_id': user_data.consumer_user_id,
+            'cmi.learner_id': learner_id,
             'cmi.location': '',
             'cmi.score.raw': 0,
             'cmi.score.scaled': 0,
@@ -1379,3 +1381,34 @@ class StressTestNote(models.Model):
     class Meta:
         verbose_name = _('stress test note')
         verbose_name_plural = _('stress test notes')
+
+FILE_REPORT_STATUSES = [
+    ('inprogress', _('In progress')),
+    ('complete', _('Complete')),
+    ('error', _('Error')),
+]
+
+class FileReport(models.Model):
+    name = models.CharField(max_length=300)
+    resource = models.ForeignKey(Resource, null=True, on_delete=models.CASCADE, related_name='file_reports')
+    outfile = models.FileField(upload_to='reports/', verbose_name='Output file')
+    status = models.CharField(max_length=10, default='inprogress', choices=FILE_REPORT_STATUSES)
+    creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this report was created'))
+    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='file_reports')
+
+    class Meta:
+        verbose_name = _('Report file')
+        verbose_name_plural = _('Report files')
+        ordering = ('-creation_time',)
+
+    @classmethod
+    def start_job(cls, resource, created_by, filename):
+        filename = Path(filename)
+        now = datetime
+        filename = filename.with_stem(filename+'-'+datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+        fr = cls(resource = resource, created_by = created_by)
+        fr.outfile.save(filename, ContentFile(''))
+        return fr
+
+    def expiry_date(self):
+        return self.creation_time + timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)

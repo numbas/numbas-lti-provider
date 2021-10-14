@@ -16,6 +16,7 @@
             <li class="{% if management_tab == 'remark' %}active{% endif %}"><a href="{% url 'resource_remark' request.resource.pk %}"><span class="glyphicon glyphicon-pencil"></span> {% trans "Remark" %}</a></li>
             <li class="{% if management_tab == 'settings' %}active{% endif %}"><a href="{% url 'resource_settings' request.resource.pk %}"><span class="glyphicon glyphicon-cog"></span> {% trans "Settings" %}</a></li>
             <li class="{% if management_tab == 'access-changes' %}active{% endif %}"><a href="{% url 'resource_access_changes' request.resource.pk %}"><span class="glyphicon glyphicon-time"></span> {% trans "Access changes" %}</a></li>
+            <li class="{% if management_tab == 'reports' %}active{% endif %}"><a href="{% url 'resource_reports' request.resource.pk %}"><span class="glyphicon glyphicon-save-file"></span> {% trans "Reports" %}</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
             <li class="{% if management_tab == 'test_run' %}active{% endif %}"><a href="{% url 'run_exam' request.resource.exam.pk %}"><span class="glyphicon glyphicon-play"></span> {% trans "Test run" %}</a></li>

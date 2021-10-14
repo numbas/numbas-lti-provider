@@ -14,7 +14,7 @@ from zipfile import ZipFile
 from . import tasks
 from .groups import group_for_resource, group_for_attempt
 from .report_outcome import report_outcome
-from .models import Exam, ScormElement, EditorLink, Resource, Attempt, ExtractPackage, AccessChange, RemarkPart, DiscountPart
+from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileReport
 
 
 logger = logging.getLogger(__name__)
@@ -100,3 +100,7 @@ def scorm_set_num_questions(sender,instance,created,**kwargs):
 
     number = int(re.match(r'q(\d+)',instance.value).group(1))+1
     tasks.scorm_set_num_questions(instance.attempt.resource, number)
+
+@receiver(models.signals.pre_delete, sender=FileReport)
+def delete_file_report(sender,instance,**kwargs):
+    instance.outfile.delete()

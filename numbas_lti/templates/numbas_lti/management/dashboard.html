@@ -44,7 +44,7 @@
 
     <section>
         <ul class="list-unstyled actions">
-            <li><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></li>
+            <li><form method="POST" action="{% url 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</button></form></li>
             {% if not last_report_process %}
             <li>
                 <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>

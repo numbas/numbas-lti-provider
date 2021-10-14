@@ -1,6 +1,11 @@
-from datetime import datetime
+import csv
+from datetime import datetime, timedelta
+from django.conf import settings
+from django.contrib import messages
 from django.db.models import Count
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
+from functools import wraps
 from huey import crontab
 from huey.contrib.djhuey import periodic_task, task, db_periodic_task, db_task
 import json
@@ -35,7 +40,7 @@ def attempt_report_outcome(attempt):
     except ReportOutcomeException:
         pass
 
-@periodic_task(crontab(minute='*'),priority=0)
+@db_periodic_task(crontab(minute='*'),priority=0)
 def diff_suspend_data():
     logger.debug("Diff suspend data")
     attempts = Attempt.objects.filter(diffed=False)
@@ -137,3 +142,111 @@ def resource_update_score_info(resource):
     changed_questions = list(range(resource.num_questions))
     for attempt in resource.attempts.all():
         attempt_update_score_info(attempt,changed_questions)
+
+def report_task(writer):
+    """ 
+    Make a task which completes a report file.
+    """
+    @db_task(priority=50)
+    @wraps(writer)
+    def file_report(fr,**kwargs):
+        try:
+            with open(fr.outfile.path,'w') as f:
+                writer(fr,f,**kwargs)
+            fr.status = 'complete'
+            fr.save()
+        except Exception:
+            fr.status = 'error'
+            fr.save()
+
+    return file_report
+
+def fixtime(cell):
+    if isinstance(cell,datetime):
+        return cell.astimezone(timezone.get_current_timezone()).isoformat()
+    else:
+        return cell
+
+def fixrow(row):
+    return [fixtime(c) for c in row]
+
+def csv_report_task(row_iterator):
+    @report_task
+    @wraps(row_iterator)
+    def write_csv(fr,f):
+        csv_writer = csv.writer(f)
+        for row in row_iterator(fr):
+            csv_writer.writerow(fixrow(row))
+ 
+    return write_csv
+
+@csv_report_task
+def resource_scores_csv_report(fr):
+    resource = fr.resource
+
+    headers = [_(x) for x in ['First name','Last name','Email','Username','Percentage','Raw score', 'Max score']]
+    yield headers
+
+    for student in resource.students().all():
+        user_data = resource.user_data(student)
+        username = '' if user_data is None else user_data.get_source_id()
+        scaled_score = resource.grade_user(student)
+        student_attempts = resource.attempts.filter(user=student)
+        max_score = max(a.max_score for a in student_attempts) if student_attempts.exists() else 0
+        raw_score = scaled_score * max_score    # This might introduce a rounding error
+        yield (
+            student.first_name,
+            student.last_name,
+            student.email,
+            username,
+            scaled_score*100,
+            raw_score,
+            max_score
+        )
+
+@csv_report_task
+def resource_attempts_csv_report(fr):
+    resource = fr.resource
+    num_questions = resource.num_questions
+
+    headers = [_(x) for x in ['First name','Last name','Email','Username','Start time','End time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
+    yield headers
+
+    for attempt in resource.attempts.all():
+        user_data = resource.user_data(attempt.user)
+        username = '' if user_data is None else user_data.get_source_id()
+        row = [
+            attempt.user.first_name,
+            attempt.user.last_name,
+            attempt.user.email,
+            username,
+            attempt.start_time,
+            attempt.end_time,
+            attempt.completion_status,
+            attempt.raw_score,
+            attempt.scaled_score*100,
+        ]+[attempt.question_raw_score(n) for n in range(num_questions)]
+        yield row
+
+@report_task
+def resource_json_dump_report(fr,f,full=False):
+    resource = fr.resource
+    
+    f.write('''{{
+    "resource": {{
+        "pk": {pk},
+        "title": {title}
+    }},
+    "attempts": ['''.format(pk=resource.pk,title=json.dumps(resource.title)))
+
+    for i,a in enumerate(resource.attempts.all()):
+        if i>0:
+            f.write(',')
+        f.write(json.dumps(a.data_dump(include_all_scorm=full)))
+
+    f.write(']\n}')
+
+@db_periodic_task(crontab(hour='*'),priority=0)
+def delete_old_reports():
+    expiry_date = datetime.now() - timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)
+    FileReport.objects.filter(creation_time__lt=expiry_date).delete()
