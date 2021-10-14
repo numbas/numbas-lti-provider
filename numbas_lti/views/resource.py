@@ -290,7 +290,7 @@ class FileReportsListView(HelpLinkMixin,MustBeInstructorMixin,ResourceManagement
     model = Resource
     context_object_name = 'resource'
     management_tab = 'reports'
-    helplink = ''
+    helplink = 'instructor/resources.html#reports'
 
 class ScoresCSV(CreateResourceFileReportView):
     report_task = tasks.resource_scores_csv_report

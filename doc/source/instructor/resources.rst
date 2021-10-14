@@ -89,6 +89,8 @@ The columns of the file are:
 The values in the name, email address and username fields come from the VLE.
 The username field might not correspond exactly to the student's username on the VLE; in particular, Blackboard preprends usernames with ``cuid:``.
 
+The file might take a while to produce; it'll be available in the :ref:`resource-reports` tab once it's ready.
+
 Student progress
 ^^^^^^^^^^^^^^^^
 
@@ -162,10 +164,14 @@ The columns of the file are:
 * Percentage (total score as a percentage of marks available)
 * One column giving the total score for each question
 
+The file might take a while to produce; it'll be available in the :ref:`resource-reports` tab once it's ready.
+
 Download all attempt data as JSON
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Click the :guilabel:`Download all attempt data as JSON` button to obtain a ``.json`` file containing all data to do with attempts on this resource, including part and question scores, all SCORM data, completion status, and the values of question variables.
+
+The file might take a while to produce; it'll be available in the :ref:`resource-reports` tab once it's ready.
 
 .. _review-attempt:
 
@@ -441,6 +447,16 @@ These are compared with the usernames and email addresses sent by the LTI consum
 
     Note that the LTI consumer can choose what it send for these fields, so they might not match the values you use in other systems.
     The access change form shows the username and email address it received from the LTI consumer for your account, as a guide.
+
+.. _resource-reports:
+
+Reports
+-------
+
+When you ask to download one of the resource-level reports, it's compiled in the background.
+Once it's ready, you can download it from the :guilabel:`Reports` tab.
+
+Reports are automatically deleted after a fixed period of time set by the administrator; the default is 30 days.
 
 Test run
 --------
