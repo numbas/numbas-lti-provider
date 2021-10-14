@@ -239,6 +239,42 @@ The next time that they launch the activity, they will be able to resume the att
 Beware that the standard Numbas settings allow a student to see the correct answers to every question once they have finished their attempt.
 If you're concerned about this, it's often better to make the student start a new attempt, rather than reopen the previous one.
 
+Statistics
+----------
+
+The :guilabel:`Statistics` page shows some statistics derived from attempts at this resource.
+
+Attempt completion
+^^^^^^^^^^^^^^^^^^
+
+The :guilabel:`Attempt completion` table shows the completion status of attempts.
+Don't worry if some attempts are still marked as "incomplete" after the deadline has passed - scores for incomplete attempts are still counted.
+
+An attempt will have the status "Not attempted" if the student opened the resource, but did not click the "Start exam" button.
+This can happen if the student's device has a problem which causes the exam not to load, or if it does load but they just don't start!
+
+Summary statistics
+^^^^^^^^^^^^^^^^^^
+
+The :guilabel:`Summary statistics` table shows the mean, median and quartiles for some statistics about the resource.
+The :guilabel:`Time taken` row is computed using the difference between the recorded start and end times of attempts.
+Be careful when using this measurement: if a student completes their attempt in several sittings, the whole intervening time will be included, and even when a student has an attempt open, they might not be giving it their attention for the whole time.
+
+Next is a breakdown of scores at each question, as a bar chart.
+The attempts at each question are classified as "not attempted", "incorrect" (score 0), "partially correct", or "correct" (the maximum score for the question).
+
+Score distribution
+^^^^^^^^^^^^^^^^^^
+
+The distribution of scores for the whole exam and for each question are shown as decreasing plots. 
+The horizontal axis represents percentage score, and the vertical axis represents the proportion of attempts achieving at least that score.
+
+Attempt times
+^^^^^^^^^^^^^^
+
+Each attempt at the resource is shown as a span of time, with a dot at the recorded start time and another at the recorded end time.
+
+
 Settings
 -----------------
 
