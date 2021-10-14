@@ -43,21 +43,6 @@ class CreateFileReportView(object):
         messages.add_message(self.request, messages.INFO, message)
 
         return HttpResponseRedirect(self.get_success_url())
-        
-
-class CSVView(object):
-    def get_rows(self):
-        raise NotImplementedError()
-    def get_filename(self):
-        raise NotImplementedError()
-
-    def render_to_response(self,context):
-        buffer = EchoFile()
-        writer = csv.writer(buffer)
-        rows = self.get_rows()
-        response = StreamingHttpResponse((writer.writerow(fixrow(row)) for row in rows),content_type="text/csv")
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(self.get_filename())
-        return response
 
 class JSONView(object):
     def get_data(self):
