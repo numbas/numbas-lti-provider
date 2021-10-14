@@ -312,7 +312,7 @@ class JSONDumpView(CreateResourceFileReportView):
 
     def get_filename(self):
         resource = self.object
-        return _("{context}--{resource}.json").format(context=slugify(resource.context.name), resource=resource.slug)
+        return _("{slug}-attempts_data.json").format(slug=resource.slug)
 
 class AttemptsCSV(CreateResourceFileReportView):
     report_task = tasks.resource_attempts_csv_report
