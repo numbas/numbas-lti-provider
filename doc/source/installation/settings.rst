@@ -63,3 +63,10 @@ The following actions involve making HTTP requests to other services:
 ---------------------------
 
 The number of days after which :ref:`report files <resource-reports>` should be deleted.
+
+``HELP_URL``
+------------
+
+The address of the documentation for the LTI tool.
+
+If this is not set, then the default of ``https://docs.numbas.org.uk/lti/en/<version>`` is used.

@@ -12,38 +12,67 @@ For such releases, this page lists the changes that must be made.
 v3.0
 ----
 
-Install::
+This version updates many of the packages that the LTI tool relies on, and so introduces quite a few changes to the way that the tool is configured.
+
+Packages to install
+********************
+
+There are changes to the required versions of packages specified in :file:`requirements.txt`.
+In addition, if you are using Redis as the Channels backend, you will need to install ``channels_redis``::
 
     pip install channels_redis==3.3.1
 
-Changes to settings:
-
-* Change ``CHANNEL_LAYERS``::
-
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [os.environ.get('REDIS_URL','redis://localhost:6379')],
-            }
-        },
-    }
-
-* context processors
-
-* HELP_URL
-
-* INSTANCE_NAME
-
-* DEFAULT_AUTO_FIELD
-
-* REPORT_FILE_EXPIRY_DAYS
-
-Use ``utf8mb4`` database encoding.
-
-HUEY PriorityRedisHuey
+Supervisor configuration
+************************
 
 Change supervisord config - remove workers, change asgi application
+
+Changes to settings
+*******************
+
+There are several changes to make in the file :file:`numbasltiprovider/settings.py`.
+
+* The way that Channels is configured has changed.
+  To use Redis as the backend, replace the ``CHANNEL_LAYERS`` setting with the following::
+
+      CHANNEL_LAYERS = {
+          "default": {
+              "BACKEND": "channels_redis.core.RedisChannelLayer",
+              "CONFIG": {
+                  "hosts": [os.environ.get('REDIS_URL','redis://localhost:6379')],
+              }
+          },
+      }
+
+  For other backends, see the `Channels documentation <https://channels.readthedocs.io/en/stable/topics/channel_layers.html>`__.
+
+* Django now requires the ``DEFAULT_AUTO_FIELD`` setting to be set as follows::
+
+      DEFAULT_AUTO_FIELD='django.db.models.AutoField'
+
+* If you are using MySQL for your database, add the following underneath inside the ``'default'`` entry in the ``DATABASES`` setting, in order to improve handling of Unicode characters::
+
+      'OPTIONS': {
+          'charset': 'utf8mb4',
+          'use_unicode': True,
+      },
+
+  You might need to convert the tables within MySQL to use the ``utf8mb4`` character set and ``utf8mb4_unicode_ci`` collation rules.
+  See `this post by Mathias Bynens <https://mathiasbynens.be/notes/mysql-utf8mb4>`__ for instructions on how to do that.
+
+* The Huey task runner now prioritises tasks. 
+  Change the ``HUEY`` setting to the following::
+
+      HUEY = {
+          'huey_class': 'huey.PriorityRedisHuey',
+      }
+
+* Add ``'numbas_lti.context_processors.global_settings'`` to the ``TEMPLATES['OPTIONS']['context_processors']`` setting.
+
+* There is a new setting ``INSTANCE_NAME``, which should contain the name of the server, to display to users.
+  If the server is run by the University of Somewhere, you might set ``INSTANCE_NAME = 'University of Somewhere'``.
+
+* There is a new setting ``REPORT_FILE_EXPIRY_DAYS``, specifying the number of days that report files should remain available, before being deleted.
 
 v2.13
 -----

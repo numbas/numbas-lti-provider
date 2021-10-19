@@ -67,6 +67,7 @@ class Command(object):
         'USER': '{DB_USER}',
         'PASSWORD': '{DB_PASSWORD}',
         'HOST': '{DB_HOST}',
+        'OPTIONS': {options},
     }}
 }}"""
 
@@ -178,6 +179,15 @@ class Command(object):
     def write_files(self):
 
         def set_database(m, rvalues):
+            rvalues = rvalues.copy()
+            options = {}
+            if 'mysql' in rvalues['DB_ENGINE']:
+                options = {
+                    'charset': 'utf8mb4',
+                    'use_unicode': True,
+                }
+            rvalues['options'] = repr(options)
+
             template = self.sqlite_template if 'sqlite' in rvalues['DB_ENGINE'] else self.other_db_template
             return template.format(**rvalues)
 
