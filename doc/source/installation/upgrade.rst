@@ -14,7 +14,7 @@ v3.0
 
 Install::
 
-    pip install channels_redis==3.3.0
+    pip install channels_redis==3.3.1
 
 Changes to settings:
 
