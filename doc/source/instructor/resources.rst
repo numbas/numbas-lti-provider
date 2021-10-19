@@ -111,7 +111,7 @@ When the number of attempts students are allowed to make is limited, circumstanc
 
 To do this, click the plus symbol in the :guilabel:`Access tokens` column next to the student's name in the :guilabel:`Student progress` table.
 
-To revoke an access token, click the minus symbol next to the student's name in the :guilabel:`Access tokens` column. 
+To revoke an access token, click the minus symbol next to the student's name in the :guilabel:`Access tokens` column.
 Attempts started with an access token that is subsequently removed will not be deleted.
 
 When the student launches the activity, they will be offered the opportunity to start a new attempt.
@@ -266,7 +266,7 @@ The attempts at each question are classified as "not attempted", "incorrect" (sc
 Score distribution
 ^^^^^^^^^^^^^^^^^^
 
-The distribution of scores for the whole exam and for each question are shown as decreasing plots. 
+The distribution of scores for the whole exam and for each question are shown as decreasing plots.
 The horizontal axis represents percentage score, and the vertical axis represents the proportion of attempts achieving at least that score.
 
 Attempt times
@@ -388,7 +388,8 @@ Email attempt receipts to students on completion?
 
 If ticked, then when a student completes an attempt at this resource they will be emailed a receipt summarising their attempt.
 
-The receipt contains a code which instructors can use to confirm the receipt's contents. See :ref:`validate-receipt`.
+The receipt contains a code which instructors can use to confirm the receipt's contents.
+See :ref:`validate-receipt`.
 
 .. _auto-remark:
 
@@ -426,7 +427,7 @@ After clicking this button, any changed data corresponding to the shown attempts
 This data will appear in the :ref:`timeline for the attempt <attempt-timeline>` and will affect the reported scores for the attempt.
 
 Each attempt has its own :guilabel:`Remark` button, which will remark only that attempt.
-When an attempt has been remarked, the change in total score is shown. 
+When an attempt has been remarked, the change in total score is shown.
 If the total score is different to that stored in the database, a :guilabel:`Save` button appears.
 Clicking the button causes changed data corresponding to the attempt to be saved to the database, updating its timeline and reported score.
 
@@ -477,7 +478,7 @@ Applies to
 ^^^^^^^^^^
 
 Specify which students the access change applies to by giving lists of usernames or email addresses.
-These are compared with the usernames and email addresses sent by the LTI consumer. 
+These are compared with the usernames and email addresses sent by the LTI consumer.
 
 .. warning::
 
