@@ -20,3 +20,4 @@ If you're installing on a platform not listed below, follow the :ref:`Ubuntu ins
    heroku
    troubleshooting/index
    upgrade
+   settings
