@@ -23,24 +23,27 @@ function update_completion_table() {
     }
 }
 
+function format_duration(d) {
+    d = luxon.Duration.fromMillis(d);
+    if(d.as('minutes')<120) {
+        return interpolate(ngettext('%s minute','%s minutes',d.toFormat('m')),[d.toFormat('m')]);
+    } else if(d.as('hours')<48) {
+        return interpolate(ngettext('%s hour','%s hours',d.toFormat('h')),[d.toFormat('h')]);
+    } else {
+        return interpolate(ngettext('%s day','%s days',d.toFormat('d')),[d.toFormat('d')]);
+    }
+}
+function format_duration_short(d) {
+    d = luxon.Duration.fromMillis(d);
+    return d.toFormat('hh:mm:ss');
+}
+function timeFormat(t) {
+    return t!==undefined ? DateTime.fromMillis(t).toLocaleString(DateTime.DATETIME_SHORT) : '';
+}
+function percentFormat(s) {
+    return s!==undefined ? d3.format('.0%')(s) : '';
+}
 function update_summary_stats_table() {
-    function format_duration(d) {
-        d = luxon.Duration.fromMillis(d);
-        if(d.as('minutes')<120) {
-            return interpolate(ngettext('%s minute','%s minutes',d.toFormat('m')),[d.toFormat('m')]);
-        } else if(d.as('hours')<48) {
-            return interpolate(ngettext('%s hour','%s hours',d.toFormat('h')),[d.toFormat('h')]);
-        } else {
-            return interpolate(ngettext('%s day','%s days',d.toFormat('d')),[d.toFormat('d')]);
-        }
-    }
-    function timeFormat(t) {
-        console.log(t);
-        return t!==undefined ? DateTime.fromMillis(t).toLocaleString(DateTime.DATETIME_SHORT) : '';
-    }
-    function percentFormat(s) {
-        return s!==undefined ? d3.format('.0%')(s) : '';
-    }
     var attempts = data.attempts;
     if(only_completed) {
         attempts = attempts.filter(a=>a.completion_status=='completed');
@@ -49,7 +52,7 @@ function update_summary_stats_table() {
         {label: _('Total score'), values: attempts.map(a=>a.scaled_score).sort(d3.ascending), format: percentFormat},
         {label: _('Start time'), values: attempts.map(a=>a.start_time).sort(d3.ascending), format: timeFormat},
         {label: _('End time'), values: attempts.filter(a=>a.end_time).map(a=>a.end_time).sort(d3.ascending), format: timeFormat},
-        {label: _('Time taken'), values: attempts.filter(a=>a.end_time).map(a=>a.end_time-a.start_time).sort(d3.ascending), format: format_duration}
+        {label: _('Time taken'), values: attempts.map(a=>a.time_spent).sort(d3.ascending), format: format_duration}
     ];
     var table = d3.select('#summary-stats-table')
     var rows = table.select('tbody').selectAll('tr').data(stats)
@@ -210,8 +213,6 @@ function update_question_scores_chart() {
     var areas = question_scores_g.selectAll(".question-curve")
         .data(allDensity)
     ;
-    window.y = y;
-    window.yName = yName;
 
     areas.enter()
         .append("path")
@@ -482,6 +483,127 @@ function update_time_chart() {
     });
 }
 
+var time_spent_svg = d3.select("#time_spent_chart .chart").append('svg');
+var time_spent_g = time_spent_svg.append('g');
+time_spent_g.append('g').attr('class','x-axis');
+time_spent_g.append('g').attr('class','x-axis-top');
+time_spent_g.append('g').attr('class','y-axis');
+
+function update_time_spent_chart() {
+    var attempts = data.attempts;
+    if(only_completed) {
+        attempts = attempts.filter(a=>a.completion_status=='completed');
+    }
+
+    var svg_el = document.querySelector('#time_spent_chart .chart');
+
+    var height = 240;
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 40, right: 30, bottom: 20, left: 30};
+    var width = svg_el.getBoundingClientRect().width - margin.left - margin.right;
+
+    time_spent_svg
+        .attr('width',width+margin.left+margin.right)
+        .attr('height',height+margin.top+margin.right)
+       
+    time_spent_g
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")")
+    ;
+
+    var times = attempts.map(function(a) { return a.time_spent; }).sort();
+
+    var x = d3.scaleLinear()
+        .domain(d3.extent(times)).nice()
+        .range([ 30, width ]);
+
+    var y = d3.scaleLinear()
+        .domain([1, 0])
+        .range([height*0.05,height*0.75]);
+
+    time_spent_g.select('.x-axis')
+        .attr("transform", 'translate(0,0)')
+        .call(d3.axisTop(x)
+            .ticks(15)
+            .tickSize(-height)
+            .tickFormat(format_duration_short)
+        )
+        .select('.domain').remove()
+    ;
+
+    time_spent_g.select('.y-axis')
+        .attr("transform", 'translate(30,0)')
+        .call(d3.axisLeft(y).tickValues([0,0.25,0.5,0.75,1]).tickFormat(d3.format('.0%')))
+        .select('.domain').remove()
+    ;
+
+    function cumulative_path(scores) {
+        scores = scores.slice().sort(cmp).reverse();
+        var density = [[1,0]];
+        var os = 1;
+        var ot = 0;
+        scores.forEach(function(s,t) {
+            if(s!=os) {
+                density.splice(0,0,[s,t/attempts.length],[os,t/attempts.length]);
+                os = s;
+            }
+        });
+        density.splice(0,0,[0,0],[0,1]);
+        return density;
+    }
+
+    var allDensity = [];
+    var density = cumulative_path(times);
+
+    var question_colour = '#eee';
+    var circle_colour = '#555';
+
+    var bg = time_spent_g
+        .append('rect')
+        .attr('class','question-bg')
+        .attr('x',x(0))
+        .attr('y',y(1))
+        .attr('width',x(1)-x(0))
+        .attr('height',-y(1))
+    ;
+
+    // Add areas
+    var areas = time_spent_g.select(".question-curve")
+        .data(density)
+    ;
+
+    var curve = time_spent_g
+        .append("path")
+        .attr('class','question-curve')
+        .attr("fill", question_colour)
+        .attr("stroke", "#000")
+        .attr("stroke-width", 2)
+    ;
+
+    curve
+        .datum(density)
+        .attr("d",  d3.line()
+            .x(function(d) { return x(d[0]); })
+            .y(function(d) { return y(d[1]); })
+        )
+    ;
+
+    var dotYNoise = d3.randomUniform(height*0.1,height*0.2);
+
+    var circles = time_spent_g.selectAll('.question-dot')
+        .data(times)
+    ;
+    circles
+        .enter()
+        .append('circle')
+        .attr('class','question-dot')
+        .attr('cx', x)
+        .attr('cy',function(d) { return dotYNoise()+y(0); })
+        .attr('fill',circle_colour)
+        .attr('r',1.5)
+    ;
+}
 
 function update() {
     only_completed = completed_toggle.checked;
@@ -494,6 +616,7 @@ function update() {
     update_question_scores_chart();
     update_status_chart();
     update_time_chart();
+    update_time_spent_chart();
 }
 
 function init_socket() {

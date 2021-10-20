@@ -1,4 +1,6 @@
 import string
+import re
+from datetime import timedelta
 
 def letter_ordinal(n):
     if n==0:
@@ -57,3 +59,17 @@ def transform_part_hierarchy(hierarchy,transform,hierarchy_key=hierarchy_key):
             for g in p['gaps']:
                 out.append(row(i, j, g, prow))
     return out
+
+re_timeinterval = re.compile(r'P(?:(?P<years>\d+)Y)?(?:(?P<months>\d+)M)?(?:(?P<days>\d+)D)?(?:T(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+(?:\.\d+)?)S)?)?')
+
+def parse_scorm_timeinterval(s):
+    m = re_timeinterval.match(s)
+
+    if not m:
+        return 0
+
+    lengths = {k: float(v) if v is not None else 0 for k,v in m.groupdict().items()}
+    days = lengths['years']*365 + lengths['months']*30 + lengths['days']
+    seconds = (lengths['hours']*60 + lengths['minutes'])*60 + lengths['seconds']
+
+    return timedelta(days=days, seconds=seconds)

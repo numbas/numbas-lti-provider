@@ -31,7 +31,7 @@ from zipfile import ZipFile
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
-
+from .util import parse_scorm_timeinterval
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -472,6 +472,7 @@ class Resource(models.Model):
                 'completion_status': a.completion_status,
                 'start_time': a.start_time.isoformat(),
                 'end_time': a.end_time.isoformat() if a.end_time is not None else None,
+                'time_spent': a.time_spent().total_seconds()*1000
             }
             for a in self.attempts.all()
         ]
@@ -1028,6 +1029,13 @@ class Attempt(models.Model):
     def question_max_score(self,n):
         _,_,max_score,_ = self.calculate_question_score_info(n)
         return max_score
+
+    def time_spent(self):
+        try:
+            e = self.scormelements.current('cmi.session_time')
+            return parse_scorm_timeinterval(e.value)
+        except ScormElement.DoesNotExist:
+            return timedelta(0)
 
     def resume_allowed(self):
         if self.completed():

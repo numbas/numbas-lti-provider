@@ -76,7 +76,7 @@
 
 <section id="question_scores_chart">
     <h3>{% trans "Score distribution" %}</h3>
-    <p>{% blocktrans %}In the following charts, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+    <p>{% blocktrans %}In the following charts, the horizontal axis represents scaled score, and the vertical axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
     <div class="chart"></div>
 </section>
 
@@ -85,6 +85,13 @@
 	<p>{% blocktrans %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktrans %}</p>
     <div class="chart">
         <svg class="diagram"></svg>
+    </div>
+</section>
+
+<section id="time_spent_chart">
+    <h3>{% trans "Time spent" %}</h3>
+	<p>{% blocktrans %}In the following chart, the horizontal axis represents the time spent on an attempt, and the vertical axis represents the number of attempts lasting that long.{% endblocktrans %}</p>
+    <div class="chart">
     </div>
 </section>
 
