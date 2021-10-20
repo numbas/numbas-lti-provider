@@ -1,24 +1,31 @@
+#######################################################################
+# Settings for the Numbas LTI provider
+# For help with this file, see
+#   https://docs.numbas.org.uk/lti/en/latest/installation/settings.html
+#######################################################################
+
 import os
 import random
 import string
 import dj_database_url
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+
+# Show debug information when there are errors?
+# Set this to False when running in production!
+DEBUG = False
+
+##########################
+# Settings that shouldn't change.
+# You can ignore these, but they must be present.
+##########################
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "".join(random.choice(string.printable) for i in range(40)))
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
 SESSION_COOKIE_NAME = 'numbas_lti_provider'
 
-ALLOWED_HOSTS = ['*']
-
-# Application definition
+LOGIN_URL = '/login'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -28,6 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
+    'statici18n',
+    'huey.contrib.djhuey',
     'numbas_lti',
     'bootstrapform',
     'bootstrap_datepicker_plus',
@@ -47,8 +56,6 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend','django.contrib.auth.backends.ModelBackend']
 
-LTI_INSTRUCTOR_ROLES = ['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant']
-
 ROOT_URLCONF = 'numbasltiprovider.urls'
 
 TEMPLATES = [
@@ -62,25 +69,68 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
+                'numbas_lti.context_processors.global_settings',
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'numbasltiprovider.wsgi.application'
+ASGI_APPLICATION = 'numbasltiprovider.asgi.application'
 
+# A secret key used for cryptography - this is set by the setup script.
+SECRET_KEY = os.environ.get("SECRET_KEY", "".join(random.choice(string.printable) for i in range(40)))
 
-# Update database configuration with $DATABASE_URL.
-
-DATABASES = {
-    'default': {}
+LOGGING = {
+    'version': 1,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(asctime)s %(levelname)s %(pathname)s: %(message)s\n'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'numbas_lti': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'django_auth_lti': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    }
 }
-db_from_env = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(db_from_env)
+
+if DEBUG:
+    # make all loggers use the console.
+    for logger in LOGGING['loggers']:
+        LOGGING['loggers'][logger]['handlers'] = ['console']
+
+HUEY = {
+	'huey_class': 'huey.PriorityRedisHuey',
+}
 
 # Password validation
-# https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -96,14 +146,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/1.9/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
 LOCALE_PATHS = (os.path.join(BASE_DIR,'locale'),)
-
-TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -111,36 +154,90 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.9/howto/static-files/
-
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Channels
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
+SECURE_SSL_REDIRECT = True
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+##############################
+# Settings you can change.
+##############################
+
+# The name of this instance.
+# Shown in the footer of most pages.
+INSTANCE_NAME = ''
+
+# Which domain names can this server be accessed through?
+ALLOWED_HOSTS = ['*']
+
+# Which roles should be interpreted as conferring instructor privileges?
+LTI_INSTRUCTOR_ROLES = ['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant']
+
+# Database connection details
+# See https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+DATABASES = {
+    'default': {}
+}
+# Update database configuration with $DATABASE_URL.
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
+
+
+# Channels communication layers.
+# This is normally set by the setup script.
+# See https://channels.readthedocs.io/en/stable/topics/channel_layers.html
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "BACKEND": "channels_redis.RedisChannelLayer",
         "CONFIG": {
             "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-        },
-        "ROUTING": "numbasltiprovider.routing.channel_routing",
+        }
     },
 }
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# The language to use for the interface.
+# Available languages: 'en' (English), 'de' (German/Deutsch)
+LANGUAGE_CODE = 'en'
 
-SUPPORT_NAME = 'the Numbas team' # the name of your support contact
-SUPPORT_URL = None  # set to "mailto:your_email_address", or the URL of a page containing contact info
+# The time zone that the server should use to display dates and times.
+# See https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-TIME_ZONE
+TIME_ZONE = 'UTC'
 
-SESSION_COOKIE_SAMESITE = None  # Allow cookies to be set through cross-origin POST requests, such as when a resource is embedded in an iframe
-CSRF_COOKIE_SAMESITE = None  
+# The filesystem path where media files are stored.
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+
+# The filesystem path where static files are stored.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# The name of your support contact.
+SUPPORT_NAME = 'the Numbas team'
+
+# An address to get support. When there's an error, students will be shown a link to this address.
+# Set to "mailto:your_email_address", or the URL of a page containing contact info.
+# Or set to None if you don't want to show a link.
+SUPPORT_URL = None
+
+# Enable sending attempt completion receipts by email?
+EMAIL_COMPLETION_RECEIPTS = False
+
+# The email address to send emails from.
+DEFAULT_FROM_EMAIL = ''
+
+# The number of seconds to wait for requests to timeout, such as outcome reports or fetching SCORM packages.
+REQUEST_TIMEOUT = 60
+
+# The number of days after creation to keep report files before deleting them.
+REPORT_FILE_EXPIRY_DAYS = 30
