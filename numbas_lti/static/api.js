@@ -607,7 +607,7 @@ SCORM_API.prototype = {
             return Promise.resolve('no stuff to send');
         }
 
-        var csrftoken = getCookie('csrftoken');
+        var csrftoken = getCSRFToken();
 
         this.pending_ajax = true;
 
@@ -785,20 +785,8 @@ SCORMData.prototype = {
     }
 }
 
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
+function getCSRFToken() {
+    return document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 }
 
 function load_date(date) {

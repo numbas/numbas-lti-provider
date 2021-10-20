@@ -96,7 +96,7 @@ Attempt.prototype = {
 var app = new Vue({
     el: '#app',
     data: {
-        csrftoken: getCookie('csrftoken'),
+        csrftoken: getCSRFToken(),
         num_attempts_to_start: 50,
         time_to_start: '',
         start_attempts_timeout: null,

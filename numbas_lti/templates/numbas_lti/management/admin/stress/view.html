@@ -49,6 +49,8 @@
     <h1>Stress test {{object.resource.creation_time}}</h1>
 </header>
 
+{% include "numbas_lti/csrf_token_form.html" %}
+
 <div id="app">
     {% verbatim %}
     <p><button class="btn btn-danger" @click="wipe">Wipe all data</button></p>

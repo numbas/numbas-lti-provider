@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{% static "run_attempt.css" %}"></link>
 </head>
 <body>
+    {% include "numbas_lti/csrf_token_form.html" %}
 <div id="status-display" tabindex="1" class="ok">
     <span class="symbol">!</span>
     <span class="status-message text-ended">

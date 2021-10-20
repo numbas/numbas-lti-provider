@@ -218,7 +218,7 @@ const app = new Vue({
         },
 
         save_attempts: function(attempts) {
-            var csrftoken = getCookie('csrftoken');
+            var csrftoken = getCSRFToken();
             this.saving = true;
 
             const data = attempts.map(a=>{
