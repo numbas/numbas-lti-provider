@@ -257,7 +257,7 @@ Summary statistics
 ^^^^^^^^^^^^^^^^^^
 
 The :guilabel:`Summary statistics` table shows the mean, median and quartiles for some statistics about the resource.
-The :guilabel:`Time taken` row is computed using the difference between the recorded start and end times of attempts.
+The :guilabel:`Time taken` row is a rough measure of how long the student spent in their attempt; see :ref:`stat-time-spent` for more information.
 Be careful when using this measurement: if a student completes their attempt in several sittings, the whole intervening time will be included, and even when a student has an attempt open, they might not be giving it their attention for the whole time.
 
 Next is a breakdown of scores at each question, as a bar chart.
@@ -274,6 +274,19 @@ Attempt times
 
 Each attempt at the resource is shown as a span of time, with a dot at the recorded start time and another at the recorded end time.
 
+.. _stat-time-spent:
+
+Time spent
+^^^^^^^^^^
+
+The distribution of time spent at attempts is shown as a decreasing plot.
+The horizontal axis represents lengths of time, and the vertical axis represents the proportion of attempts at least that long.
+
+The 'time spent' is a rough measure of how long the student spent in their attempt.
+This time is increased each time attempt data is saved, based on the time since their current session started.
+It is not simply the difference between the start and end times: if the student closes their attempt for a long time and then resumes it later, the time that it was closed is not counted.
+
+Be careful when interpreting this measurement: students might leave an attempt open while they do something else, so there are often large outliers.
 
 Settings
 -----------------
