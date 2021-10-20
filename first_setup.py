@@ -39,7 +39,9 @@ class Command(object):
 
     questions = [
         Question('DEBUG', 'Is this installation for development?', False),
+        Question('INSTANCE_NAME', 'What should this installation be called?', 'University of Somewhere'),
         Question('ALLOWED_HOSTS', 'Domain names that the site will be served from', 'numbas-lti.youruni.edu'),
+        Question('SECURE_SSL_REDIRECT', 'Should this server only be accessed through HTTPS?', True),
         Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgresql, mysql, sqlite3)', 'mysql'),
         Question('STATIC_ROOT', 'Where are static files stored?', '/srv/numbas-lti-static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?', '/srv/numbas-lti-media/', validation=path_exists),
@@ -73,11 +75,10 @@ class Command(object):
 
     redis_template = """CHANNEL_LAYERS = {{
     "default": {{
-        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "BACKEND": "channels_redis.RedisChannelLayer",
         "CONFIG": {{
             "hosts": [os.environ.get('REDIS_URL','redis://localhost:6379')],
         }},
-        "ROUTING": "numbasltiprovider.routing.channel_routing",
     }},
 }}"""
 
@@ -208,8 +209,8 @@ class Command(object):
 
         settings_subs = [
             (r"^DEBUG = (.*?)$", 'DEBUG'),
-            (r"^SESSION_COOKIE_SECURE = (.*?)$", sub_not('DEBUG')),
-            (r"^CSRF_COOKIE_SECURE = (.*?)$", sub_not('DEBUG')),
+            (r"^SECURE_SSL_REDIRECT = '(.*?)'", 'SECURE_SSL_REDIRECT'),
+            (r"^INSTANCE_NAME = '(.*?)'", 'INSTANCE_NAME'),
             (r"^STATIC_ROOT = '(.*?)'", 'STATIC_ROOT'),
             (r"^MEDIA_ROOT = '(.*?)'", 'MEDIA_ROOT'),
             (r"^DATABASES = {.*?^}", set_database),
