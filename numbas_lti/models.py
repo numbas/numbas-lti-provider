@@ -1,33 +1,44 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from collections import defaultdict
 from django.conf import settings
-from django.core import signing
-from django.core.mail import send_mail
-from django.db import models
-from django.db.models import Min, Count
-from django.dispatch import receiver
 from django.contrib.auth.models import User
-import requests
+from django.core import signing
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.base import ContentFile
+from django.core.mail import send_mail
+from django.db import models, transaction
+from django.db.utils import OperationalError
+from django.db.models import Min, Count, Q, Subquery
 from django.template.loader import get_template
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import gettext_lazy as _, gettext, ngettext
 from django.core import validators
-from channels import Group, Channel
 from django.utils import timezone
 from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
-
-from .groups import group_for_attempt, group_for_resource_stats
-
-import os
-import shutil
-from zipfile import ZipFile
-from lxml import etree
-import re
 import json
-from collections import defaultdict
+from lxml import etree
+import os
+from pathlib import Path
+import re
+import requests
+import shutil
+import time
+import uuid
+from zipfile import ZipFile
+
+from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
+from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
+from .diff import make_diff, apply_diff
+from .util import parse_scorm_timeinterval
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(deleted=False)
+
+    def deleted(self):
+        return super().get_queryset().filter(deleted=True)
 
 IDENTIFIER_FIELDS = [
     ('username', _('Username')),
@@ -36,13 +47,17 @@ IDENTIFIER_FIELDS = [
 ]
 
 class LTIConsumer(models.Model):
-    url = models.URLField(blank=True,default='',verbose_name='Home URL of consumer')
+    url = models.URLField(blank=True,default='',verbose_name=_('Home URL of consumer'))
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
     secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
-    identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name='Field used to identify students')
+    identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name=_('Field used to identify students'))
 
     objects = NotDeletedManager()
+
+    class Meta:
+        verbose_name = _('LTI consumer')
+        verbose_name_plural = _('LTI consumers')
 
     def __str__(self):
         return self.key
@@ -96,48 +111,88 @@ class ConsumerTimePeriod(models.Model):
     name = models.CharField(max_length=300)
 
     class Meta:
+        verbose_name = _('time period')
+        verbose_name_plural = _('time periods')
         ordering = ['-end','-start']
 
-class ExtractPackageMixin(object):
+class ExtractPackage(models.Model):
     extract_folder = 'extracted_zips'
+    static_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name=_('UUID of exam package on disk'))
+
+    class Meta:
+        abstract = True
 
     @property
     def extracted_path(self):
-        return os.path.join(settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.pk))
+        return os.path.join(os.getcwd(), settings.MEDIA_ROOT,self.extract_folder,self.__class__.__name__,str(self.static_uuid))
 
     @property
     def extracted_url(self):
-        return '{}{}/{}/{}'.format(settings.MEDIA_URL,self.extract_folder,self.__class__.__name__,str(self.pk))
-
-@receiver(models.signals.post_save)
-def extract_package(sender,instance,**kwargs):
-    if not issubclass(sender,ExtractPackageMixin):
-        return
-    if os.path.exists(instance.extracted_path):
-        shutil.rmtree(instance.extracted_path)
-    os.makedirs(instance.extracted_path)
-    z = ZipFile(instance.package.file,'r')
-    z.extractall(instance.extracted_path)
-
+        return '{}{}/{}/{}'.format(settings.MEDIA_URL,self.extract_folder,self.__class__.__name__,str(self.static_uuid))
 
 # Create your models here.
-class Exam(ExtractPackageMixin,models.Model):
+class Exam(ExtractPackage):
     title = models.CharField(max_length=300)
-    package = models.FileField(upload_to='exams/',verbose_name='Package file')
-    retrieve_url = models.URLField(blank=True,default='',verbose_name='URL used to retrieve the exam package')
-    rest_url = models.URLField(blank=True,default='',verbose_name='URL of the exam on the editor\'s REST API')
+    package = models.FileField(upload_to='exams/',verbose_name=_('Package file'))
+    retrieve_url = models.URLField(blank=True,default='',verbose_name=_('URL used to retrieve the exam package'))
+    rest_url = models.URLField(blank=True,default='',verbose_name=_('URL of the exam on the editor\'s REST API'))
     creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this exam was created'))
+    resource = models.ForeignKey('Resource',null=True,blank=True,on_delete=models.SET_NULL,related_name='exams')
+
+    class Meta:
+        verbose_name = _('exam')
+        verbose_name_plural = _('exams')
+        ordering = ['-creation_time','title']
 
     def __str__(self):
         return self.title
 
-@receiver(models.signals.pre_save, sender=Exam)
-def set_exam_name_from_package(sender,instance,**kwargs):
-    z = ZipFile(instance.package.file,'r')
-    with z.open('imsmanifest.xml','r') as manifest_file:
-        manifest = etree.parse(manifest_file)
-    instance.title = manifest.find('.//ims:title',namespaces={'ims':'http://www.imsglobal.org/xsd/imscp_v1p1'}).text
+    def is_active(self):
+        return self.resource is not None and self==self.resource.exam
 
+    def manifest(self):
+        root = Path(self.extracted_path)
+        manifest_path = root / 'numbas-manifest.json'
+        if not manifest_path.exists():
+            return {}
+
+        try:
+            with open(str(manifest_path)) as f:
+                manifest = json.loads(f.read())
+                return manifest
+        except Exception as e:
+            return {}
+
+    def supports_feature(self, feature):
+        features = self.manifest().get('features',{})
+        return features.get(feature)
+
+    def source(self):
+        try:
+            with open(str(Path(self.extracted_path) / 'source.exam')) as f:
+                content = json.loads(re.sub(r'^// Numbas version: .*\n','',f.read()))
+                return content
+        except (FileNotFoundError,json.JSONDecodeError):
+            return
+
+    def has_duration(self):
+        source = self.source()
+        if self.source is None:
+            return True
+        duration = source.get('duration',0)
+        return duration != 0
+
+    @property
+    def duration(self):
+        if not hasattr(self,'_duration'):
+            source = self.source()
+            if source is not None:
+                duration = source.get('duration',0) / 60
+                self._duration = duration
+            else:
+                self._duration = 0
+
+        return self._duration
 
 GRADING_METHODS = [
     ('highest',_('Highest score')),
@@ -169,15 +224,22 @@ class LTIContext(models.Model):
     label = models.CharField(max_length=300)
     instance_guid = models.CharField(max_length=300)
 
+    class Meta:
+        verbose_name = _('LTI context')
+        verbose_name_plural = _('LTI contexts')
+
     def __str__(self):
         if self.name == self.label:
             return self.name
         else:
             return '{} ({})'.format(self.name, self.label)
 
+    def get_absolute_url(self):
+        return reverse('view_context', args=(self.pk,))
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
-    exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL)
+    exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL,related_name='main_exam_of')
     context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='resources')
     title = models.CharField(max_length=300,default='')
     description = models.TextField(default='')
@@ -193,20 +255,22 @@ class Resource(models.Model):
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
     email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
-    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'))
+    max_attempts = models.PositiveIntegerField(default=0,verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
 
     num_questions = models.PositiveIntegerField(default=0)
 
     class Meta:
+        verbose_name = _('resource')
+        verbose_name_plural = _('resources')
         ordering = ['-creation_time','title']
 
     def __str__(self):
         if self.exam:
-            return str(self.exam)
+            return "Resource {}: {}".format(self.pk, self.exam)
         elif self.context:
             return _('Resource in "{}" - no exam uploaded').format(self.context.name)
         else:
-            return ugettext('Resource with no context')
+            return gettext('Resource with no context')
 
     @property
     def slug(self):
@@ -214,6 +278,9 @@ class Resource(models.Model):
             return slugify(self.exam.title)
         else:
             return 'resource'
+
+    def unbroken_attempts(self):
+        return self.attempts.filter(broken=False)
 
     def grade_user(self,user):
         methods = {
@@ -225,7 +292,8 @@ class Resource(models.Model):
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():
             return 0
-        return methods[self.grading_method](user,attempts)
+        score = methods[self.grading_method](user,attempts)
+        return min(1,max(score,0))
 
     def grade_highest(self,user,attempts):
         return attempts.aggregate(highest_score=models.Max('scaled_score'))['highest_score']
@@ -236,18 +304,109 @@ class Resource(models.Model):
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
 
-    def is_available(self):
+    def available_for_user(self,user=None):
+        afrom = self.available_from
+        auntil = self.available_until
+
+        deadline_extension = timedelta(0)
+        if user is not None:
+            changes = self.access_changes.for_user(user)
+            for change in changes:
+                if change.extend_deadline is not None:
+                    deadline_extension = change.extend_deadline
+
+                if change.available_from is not None:
+                    afrom = change.available_from
+                if change.available_until is not None:
+                    auntil = change.available_until
+
+        return (afrom, auntil + deadline_extension if auntil is not None else None)
+
+    def duration_extension_for_user(self, user):
+        duration = 0
+
+        if self.exam is not None:
+            duration = self.exam.duration
+
+        best_minutes = 0
+        best_extension = (None,None)
+
+        for ac in self.access_changes.for_user(user).exclude(extend_duration=None):
+            extension_minutes = ac.extend_duration_absolute(duration)
+            if extension_minutes > best_minutes:
+                best_minutes = extension_minutes
+                best_extension = (ac.extend_duration, ac.extend_duration_units)
+
+        return best_extension
+
+    def availability_json(self,user=None):
+        available_from, available_until = self.available_for_user(user)
+        if user is not None:
+            extension_amount, extension_units = self.duration_extension_for_user(user)
+        else:
+            extension_amount, extension_units = None, None
+        data = {
+            'available_from': available_from.isoformat() if available_from else None,
+            'available_until': available_until.isoformat() if available_until else None,
+            'allow_review_from': self.allow_review_from.isoformat() if self.allow_review_from else None,
+            'duration_extension': {
+                'amount': extension_amount,
+                'units': extension_units,
+            }
+        }
+        return data
+
+    def is_available(self,user=None):
+        available_from, available_until = self.available_for_user(user)
+
+        if available_from is None and available_until is None:
+            return True
+
         now = timezone.now()
-        return (self.available_from is None or now >= self.available_from) and (self.available_until is None or now<=self.available_until)
+
+        available = False
+        if available_from is None or available_until is None:
+            available = (available_from is None or now >= available_from) and (available_until is None or now<=available_until)
+        elif available_from < available_until:
+            available = available_from <= now <= available_until
+        else:
+            available = now <= available_until or now >= available_from
+
+        return available
+
+
+    def send_access_changes(self):
+        channel_layer = get_channel_layer()
+        group_send = async_to_sync(channel_layer.group_send)
+
+        group = group_for_resource(self)
+        group_send(group,{'type': 'availability.changed'})
+
+    def max_attempts_for_user(self,user):
+        max_attempts = self.max_attempts
+        if max_attempts>0:
+            for ac in self.access_changes.for_user(user).exclude(max_attempts=None):
+                if ac.max_attempts == 0:
+                    max_attempts = 0
+                    break
+                else:
+                    max_attempts = max(max_attempts,ac.max_attempts)
+        return max_attempts
 
     def can_start_new_attempt(self,user):
-        if not self.is_available():
+        if not self.is_available(user):
             return False
-        if self.max_attempts==0:
+
+        max_attempts = self.max_attempts_for_user(user)
+
+        if max_attempts==0:
             return True
-        return self.attempts.filter(user=user).count()<self.max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
+
+        return self.attempts.filter(user=user).exclude(broken=True).count()<max_attempts or AccessToken.objects.filter(resource=self,user=user).exists()
 
     def user_data(self,user):
+        if user.is_anonymous:
+            return None
         return LTIUserData.objects.filter(resource=self,user=user).last()
 
     def part_hierarchy(self):
@@ -313,6 +472,7 @@ class Resource(models.Model):
                 'completion_status': a.completion_status,
                 'start_time': a.start_time.isoformat(),
                 'end_time': a.end_time.isoformat() if a.end_time is not None else None,
+                'time_spent': a.time_spent().total_seconds()*1000
             }
             for a in self.attempts.all()
         ]
@@ -323,7 +483,36 @@ class Resource(models.Model):
         return data
 
     def receipt_salt(self):
-        return 'numbas_lti:consumer:'+self.context.consumer.key
+        if self.context and self.context.consumer:
+            return 'numbas_lti:consumer:'+self.context.consumer.key
+        else:
+            return 'numbas_lti:resource:'+str(self.pk)
+
+    def report_scores(self):
+        if ReportProcess.objects.filter(resource=self,status='reporting').exists():
+            return
+
+        process = ReportProcess.objects.create(resource=self)
+
+        errors = []
+        for user in User.objects.filter(attempts__resource=self).distinct():
+            try:
+                request = report_outcome(self,user)
+            except ReportOutcomeException as e:
+                errors.append(e)
+
+        if len(errors):
+            process.status = 'error'
+            process.response = '\n'.join(e.message for e in errors)
+        else:
+            process.status = 'complete'
+        process.dismissed = False
+        process.save(update_fields=['status','response','dismissed'])
+
+    def task_report_scores(self):
+        from . import tasks
+        tasks.resource_report_scores(self)
+
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -333,6 +522,8 @@ class ReportProcess(models.Model):
     dismissed = models.BooleanField(default=False,verbose_name=_('Has the result of this process been dismissed by the instructor?'))
 
     class Meta:
+        verbose_name = _('report process')
+        verbose_name_plural = _('report processes')
         ordering = ['-time',]
 
 COMPLETION_STATUSES = [
@@ -345,6 +536,82 @@ class AccessToken(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='access_tokens')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_tokens')
 
+    class Meta:
+        verbose_name = _('access token')
+        verbose_name_plural = _('access tokens')
+
+class AccessChangeManager(models.Manager):
+    use_for_related_fields = True
+
+    def for_user(self,user):
+        query = Q(users=user) | Q(usernames__username=user.username) | Q(emails__email__iexact=user.email)
+        return self.get_queryset().filter(query).distinct()
+
+EXTEND_DURATION_UNITS = [
+    ('percent', _('percent')),
+    ('minutes', _('minutes')),
+]
+
+class AccessChange(models.Model):
+    description = models.TextField(default='', help_text=_('Who is this for and what does it change?'))
+    resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_changes')
+    available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'))
+    available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'))
+    extend_deadline = models.DurationField(blank=True, null=True, verbose_name=_('Extend deadline by'))
+    max_attempts = models.PositiveIntegerField(blank=True, null=True, verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
+    extend_duration = models.FloatField(blank=True, null=True, verbose_name=_('Extend exam duration by'))
+    extend_duration_units = models.CharField(max_length=10, blank=True, null=True, default='percent', choices=EXTEND_DURATION_UNITS)
+
+    users = models.ManyToManyField(User, blank=True, related_name='access_changes')
+
+    objects = AccessChangeManager()
+
+    class Meta:
+        verbose_name = _('access change')
+        verbose_name_plural = _('access changes')
+
+    def applies_to_summary(self):
+        num_users = self.users.count()
+        num_usernames = self.usernames.count()
+        num_emails = self.emails.count()
+
+        o = []
+
+        if num_users>0:
+            o.append(ngettext('{count} user', '{count} users',num_users).format(count=num_users))
+        if num_usernames:
+            o.append(ngettext('{count} username', '{count} usernames',num_usernames).format(count=num_usernames))
+        if num_emails>0:
+            o.append(ngettext('{count} email address', '{count} email addresses',num_emails).format(count=num_emails))
+
+        if len(o)>0:
+            return ', '.join(o)
+        else:
+            return _('Nobody')
+
+    def affected_users(self):
+        return User.objects.filter(Q(pk__in=self.users.all()) | Q(username__in=Subquery(self.usernames.values('username'))) | Q(email__in=Subquery(self.emails.values('email'))))
+
+    def extend_duration_string(self):
+        if self.extend_duration_units == 'percent':
+            return gettext('{count:g}%'.format(count=self.extend_duration))
+        else:
+            return ngettext('{count:g} minute','{count:g} minutes',self.extend_duration).format(count=self.extend_duration)
+
+    def extend_duration_absolute(self, initial_duration):
+        if self.extend_duration_units == 'percent':
+            return self.extend_duration * initial_duration / 100
+        else:
+            return self.extend_duration
+
+class UsernameAccessChange(models.Model):
+    access_change = models.ForeignKey(AccessChange, on_delete=models.CASCADE, related_name='usernames')
+    username = models.CharField(max_length=200)
+
+class EmailAccessChange(models.Model):
+    access_change = models.ForeignKey(AccessChange, on_delete=models.CASCADE, related_name='emails')
+    email = models.EmailField()
+
 class LTIUserData(models.Model):
     consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
@@ -355,6 +622,10 @@ class LTIUserData(models.Model):
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _('LTI user data')
+        verbose_name_plural = _('LTI user data')
 
     def get_source_id(self):
         if self.lis_person_sourcedid:
@@ -382,7 +653,9 @@ class LTILaunch(models.Model):
         return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)
 
     class Meta:
-        ordering = ('time',)
+        verbose_name = _('LTI launch')
+        verbose_name_plural = _('LTI launches')
+        ordering = ('-time',)
 
 class Attempt(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='attempts')
@@ -395,21 +668,26 @@ class Attempt(models.Model):
     completion_status_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_completion_status_of", null=True)
     scaled_score = models.FloatField(default=0)
     scaled_score_element = models.ForeignKey("ScormElement", on_delete=models.SET_NULL, related_name="current_scaled_score_of", null=True)
-    sent_receipt = models.BooleanField(default=False,verbose_name='Has a completion receipt been sent?')
-    receipt_time = models.DateTimeField(blank=True,null=True,verbose_name='Time the completion receipt was sent')
+    sent_receipt = models.BooleanField(default=False,verbose_name=_('Has a completion receipt been sent?'))
+    receipt_time = models.DateTimeField(blank=True,null=True,verbose_name=_('Time the completion receipt was sent'))
 
     deleted = models.BooleanField(default=False)
     broken = models.BooleanField(default=False)
+    diffed = models.BooleanField(default=False)
 
     all_data_received = models.BooleanField(default=False)
 
     objects = NotDeletedManager()
 
+    remark_ignore_keys = ['cmi.suspend_data','cmi.session_time']    # CMI keys not to resave when auto-remarking
+
     class Meta:
+        verbose_name = ngettext('attempt','attempts',1)
+        verbose_name_plural = ngettext('attempt','attempts',2)
         ordering = ['-start_time',]
 
     def __str__(self):
-        return 'Attempt by "{}" on "{}"'.format(self.user,self.resource)
+        return 'Attempt {} by "{}" on "{}"'.format(self.pk, self.user,self.resource)
 
     def user_data(self):
         return self.resource.user_data(self.user)
@@ -424,13 +702,14 @@ class Attempt(models.Model):
 
     def scorm_cmi(self):
         user_data = self.resource.user_data(self.user)
+        learner_id = '' if user_data is None else user_data.consumer_user_id
 
         scorm_cmi = {
             'cmi.suspend_data': '',
             'cmi.objectives._count': 0,
             'cmi.interactions._count': 0,
             'cmi.learner_name': self.user.get_full_name(),
-            'cmi.learner_id': user_data.consumer_user_id,
+            'cmi.learner_id': learner_id,
             'cmi.location': '',
             'cmi.score.raw': 0,
             'cmi.score.scaled': 0,
@@ -446,7 +725,8 @@ class Attempt(models.Model):
 
         latest_elements = {}
 
-        for e in self.scormelements.all().order_by('time','counter'):
+        saved_elements = resolve_diffed_scormelements(self.scormelements.all().reverse())
+        for e in saved_elements:
             latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
 
         scorm_cmi.update(latest_elements)
@@ -485,7 +765,7 @@ class Attempt(models.Model):
             'current': scorm_cmi,
         }
         if include_all_scorm:
-            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().order_by('time','counter')]
+            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().reverse()]
 
         re_interaction_id = re.compile(r'^cmi\.interactions\.(\d+)\.id$')
         part_ids = {}
@@ -576,17 +856,22 @@ class Attempt(models.Model):
         return data
 
     def completed(self):
-        if not self.resource.is_available():
+        if not self.resource.is_available(self.user):
             return True
         return self.completion_status=='completed'
 
     def finalise(self):
         if self.end_time is None:
             self.end_time = timezone.now()
+
             self.save(update_fields=['end_time'])
-            group_for_attempt(self).send({'text':json.dumps({
+
+            channel_layer = get_channel_layer()
+            group_send = async_to_sync(channel_layer.group_send)
+            group_send(group_for_attempt(self),{
+                'type': 'completion_status.changed',
                 'completion_status':'completed',
-            })})
+            })
 
     @property
     def raw_score(self):
@@ -647,25 +932,26 @@ class Attempt(models.Model):
 
     def part_interaction_id(self,part):
         id_element = self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id',value=part).first()
+        if id_element is None:
+            return None
         n = re.match(r'cmi.interactions.(\d+).id',id_element.key).group(1)
         return n
 
-    def part_raw_score(self,part):
+    def part_raw_score(self,part,include_remark=True):
         discounted = self.part_discount(part)
         if discounted:
             return self.part_max_score(part)
 
         remarked = self.remarked_parts.filter(part=part)
-        if remarked.exists():
+        if include_remark and remarked.exists():
             return remarked.get().score
 
-        if self.remarked_parts.filter(part__startswith=part+'g').exists() or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
+        if (include_remark and self.remarked_parts.filter(part__startswith=part+'g').exists()) or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
-            return sum(self.part_raw_score(g) for g in gaps)
+            return sum(self.part_raw_score(g,include_remark) for g in gaps)
 
-        try:
-            id = self.part_interaction_id(part)
-        except ScormElement.DoesNotExist:
+        id = self.part_interaction_id(part)
+        if id is None:
             return 0
 
         score = self.get_element_default('cmi.interactions.{}.result'.format(id),0)
@@ -677,13 +963,12 @@ class Attempt(models.Model):
             if discounted.behaviour == 'remove':
                 return 0
 
-        if DiscountPart.objects.filter(part__startswith=part+'g').exists():
+        if self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
             return sum(self.part_max_score(g) for g in gaps)
 
-        try:
-            id = self.part_interaction_id(part)
-        except ScormElement.DoesNotExist:
+        id = self.part_interaction_id(part)
+        if id is None:
             return 0
 
         return float(self.get_element_default('cmi.interactions.{}.weighting'.format(id),0))
@@ -723,7 +1008,7 @@ class Attempt(models.Model):
             return self.cached_question_scores.get(number=n)
         except AttemptQuestionScore.DoesNotExist:
             scaled_score, raw_score, max_score, completion_status = self.calculate_question_score_info(n)
-            aqs = AttemptQuestionScore.objects.create(attempt = self, number = n, raw_score = raw_score, scaled_score = scaled_score, max_score = max_score, completion_status = completion_status)
+            aqs, created = AttemptQuestionScore.objects.update_or_create(attempt = self, number = n, raw_score = raw_score, scaled_score = scaled_score, max_score = max_score, completion_status = completion_status)
             return aqs
         except AttemptQuestionScore.MultipleObjectsReturned:
             aqs = self.cached_question_scores.filter(number=n)
@@ -745,8 +1030,12 @@ class Attempt(models.Model):
         _,_,max_score,_ = self.calculate_question_score_info(n)
         return max_score
 
-    def channels_group(self):
-        return 'attempt-{}'.format(self.pk)
+    def time_spent(self):
+        try:
+            e = self.scormelements.current('cmi.session_time')
+            return parse_scorm_timeinterval(e.value)
+        except ScormElement.DoesNotExist:
+            return timedelta(0)
 
     def resume_allowed(self):
         if self.completed():
@@ -809,7 +1098,7 @@ class Attempt(models.Model):
     def send_completion_receipt(self):
         message = self.completion_receipt()
         send_mail(
-            ugettext('Numbas: Receipt for {resource_name}').format(resource_name=self.resource.title),
+            gettext('Numbas: Receipt for {resource_name}').format(resource_name=self.resource.title),
             message,
             settings.DEFAULT_FROM_EMAIL,
             [self.user.email],
@@ -817,7 +1106,10 @@ class Attempt(models.Model):
         )
         self.sent_receipt = True
         self.save(update_fields=['sent_receipt'])
-            
+ 
+    def report_outcome(self):
+        report_outcome(self.resource,self.user)
+
 
 class AttemptLaunch(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='launches', on_delete=models.CASCADE)
@@ -837,7 +1129,9 @@ class AttemptLaunch(models.Model):
         }
 
     class Meta:
-        ordering = ('time',)
+        verbose_name = _('attempt launch')
+        verbose_name_plural = _('attempt launches')
+        ordering = ('-time',)
 
 
 class AttemptNotDeletedManager(models.Manager):
@@ -855,45 +1149,28 @@ class AttemptQuestionScore(models.Model):
     objects = AttemptNotDeletedManager()
 
     class Meta:
+        verbose_name = _('question score')
+        verbose_name_plural = _('question scores')
         unique_together = (('attempt','number'),)
 
     def __str__(self):
         return '{}/{} on question {} of {}'.format(self.raw_score,self.max_score,self.number,self.attempt)
 
-"""
-# Removed because it might be killing the server
-@receiver(models.signals.post_save,sender=AttemptQuestionScore)
-def question_score_live_stats(sender,instance,**kwargs):
-    resource = instance.attempt.resource
-    group = group_for_resource_stats(resource)
-    group.send({"text": json.dumps(resource.live_stats_data())})
-"""
-
 class RemarkPart(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='remarked_parts', on_delete=models.CASCADE)
     part = models.CharField(max_length=20)
-    score = models.FloatField()
+    score = models.FloatField(default=0)
+
+    class Meta:
+        verbose_name = _('remarked part')
+        verbose_name_plural = _('remarked parts')
     
     def __str__(self):
         return '{} on part {} in {}'.format(self.score, self.part, self.attempt)
 
-def remark_update_scaled_score(sender,instance,**kwargs):
-    attempt = instance.attempt
-    question = int(re.match(r'^q(\d+)',instance.part).group(1))
-    attempt.update_question_score_info(question)
-    if attempt.max_score>0:
-        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
-    else:
-        scaled_score = 0
-    if scaled_score != attempt.scaled_score:
-        attempt.scaled_score = scaled_score
-        attempt.save()
-models.signals.post_save.connect(remark_update_scaled_score,sender=RemarkPart)
-models.signals.post_delete.connect(remark_update_scaled_score,sender=RemarkPart)
-
 DISCOUNT_BEHAVIOURS = [
-    ('remove','Remove from total'),
-    ('fullmarks','Award everyone full credit'),
+    ('remove',_('Remove from total')),
+    ('fullmarks',_('Award everyone full credit')),
 ]
 
 class DiscountPart(models.Model):
@@ -901,22 +1178,14 @@ class DiscountPart(models.Model):
     part = models.CharField(max_length=20)
     behaviour = models.CharField(max_length=10,choices=DISCOUNT_BEHAVIOURS,default='remove')
 
-def discount_update_scaled_score(sender,instance,**kwargs):
-    for attempt in instance.resource.attempts.all():
-        question = int(re.match(r'^q(\d+)',instance.part).group(1))
-        attempt.update_question_score_info(question)
-
-        scaled_score = attempt.raw_score/attempt.max_score if attempt.max_score != 0 else 0
-        if scaled_score != attempt.scaled_score:
-            attempt.scaled_score = scaled_score
-            attempt.save()
-models.signals.post_save.connect(discount_update_scaled_score,sender=DiscountPart)
-models.signals.post_delete.connect(discount_update_scaled_score,sender=DiscountPart)
+    class Meta:
+        verbose_name = _('discounted part')
+        verbose_name_plural = _('discounted parts')
 
 class ScormElementQuerySet(models.QuerySet):
     def current(self,key):
         """ Return the last value of this field """
-        elements = self.filter(key=key).order_by('-time','-counter')
+        elements = self.filter(key=key)
         if not elements.exists():
             raise ScormElement.DoesNotExist()
         else:
@@ -938,92 +1207,119 @@ class ScormElement(models.Model):
     key = models.CharField(max_length=200)
     value = models.TextField()
     time = models.DateTimeField()
-    counter = models.IntegerField(default=0,verbose_name='Element counter to disambiguate elements with the same timestamp')
+    counter = models.IntegerField(default=0,verbose_name=_('Element counter to disambiguate elements with the same timestamp'))
     current = models.BooleanField(default=True) # is this the latest version?
 
     class Meta:
-        ordering = ['-time','-counter']
+        verbose_name = _('SCORM element')
+        verbose_name_plural = _('SCORM elements')
+        ordering = ['-time','-counter','-pk',]
 
     def __str__(self):
         return '{}: {}'.format(self.key,self.value[:50]+(self.value[50:] and '...'))
 
     def newer_than(self, other):
+        if other is None:
+            return True
         return self.time>other.time or (self.time==other.time and self.counter>other.counter)
 
     def as_json(self):
         return {
+            'pk': self.pk,
             'key': self.key,
             'value': self.value,
             'time': self.time.isoformat(),
             'counter': self.counter,
         }
 
-@receiver(models.signals.post_save,sender=ScormElement)
-def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
-    Group(instance.attempt.channels_group()).send({
-        "text": json.dumps(instance.as_json())
-    })
+class ScormElementDiff(models.Model):
+    element = models.OneToOneField('ScormElement', on_delete=models.CASCADE, related_name='diff')
+    diff_of = models.OneToOneField('ScormElement', on_delete=models.PROTECT, related_name='diffs')
 
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_score(sender,instance,created,**kwargs):
-    if instance.key!='cmi.score.scaled' or not created:
-        return
+    class Meta:
+        verbose_name = _('SCORM element diff')
+        verbose_name_plural = _('SCORM element diffs')
 
-    if not (instance.attempt.scaled_score_element is None or instance.newer_than(instance.attempt.scaled_score_element)):
-        return
+def diff_scormelements(attempt, key='cmi.suspend_data'):
+    """
+        For SCORM elements for the given attempt with the given key, replace the full value with a diff, relative to the most recent value.
+        The most recent ScormElement object has the full value saved, so it can be read off easily, but the earlier values are stored as diffs to save on space.
+    """
+    elements = attempt.scormelements.filter(key='cmi.suspend_data',diff=None)
+    last = None
+    with transaction.atomic():
+        for e in sorted(elements, key=lambda x: hasattr(x,'diffs')):
+            value = e.value
+            if last is not None:
+                d = make_diff(lastvalue,e.value)
+                e.value = d
+                ScormElementDiff.objects.get_or_create(element=e,diff_of=last)
+                e.save()
+            last = e
+            lastvalue = value
+            if hasattr(e,'diffs'):
+                break
+        attempt.diffed = True
+        attempt.save()
 
-    instance.attempt.scaled_score = float(instance.value)
-    instance.attempt.scaled_score_element = instance
-    instance.attempt.save(update_fields=['scaled_score','scaled_score_element'])
-    if instance.attempt.resource.report_mark_time == 'immediately':
-        Channel('report.attempt').send({'pk':instance.attempt.pk})
+def resolve_dependency_order(deps):
+    order = list(deps.keys())
+    i = 0
+    while i<len(order):
+        a = order[i]
+        if a in deps:
+            b = deps[a]
+            if b in order:
+                j = order.index(b)
+                if j<i:
+                    order.pop(j)
+                    order.append(b)
+                    i -= 1
+        i += 1
+    return list(reversed(order))
 
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_completion_status(sender,instance,created,**kwargs):
-    if instance.key!='cmi.completion_status' or not created:
-        return
+def resolve_diffed_scormelements(elements):
+    if isinstance(elements,models.QuerySet):
+        elements = elements.select_related('diff')
+    elements = list(elements)
+    emap = {e.pk: e for e in elements}
+    diffmap = {}
+    for e in elements:
+        try:
+            diffmap[e.pk] = e.diff.diff_of.pk
+        except ObjectDoesNotExist:
+            pass
+    order = resolve_dependency_order(diffmap)
+    for p in order:
+        e1 = emap[p]
+        e2 = emap[e1.diff.diff_of.pk]
+        e1.value = apply_diff(e1.value, e2.value)
+        
+    return elements
 
-    if not (instance.attempt.completion_status_element is None or instance.newer_than(instance.attempt.completion_status_element)):
-        return
+class RemarkedScormElement(models.Model):
+    element = models.OneToOneField(ScormElement,on_delete=models.CASCADE,related_name='remarked')
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,related_name='remarked_elements')
 
+    class Meta:
+        verbose_name = _('remarked SCORM element')
+        verbose_name_plural = _('remarked SCORM element')
 
-    instance.attempt.completion_status = instance.value
-    instance.attempt.completion_status_element = instance
-    update_fields = ['completion_status','completion_status_element']
-    if instance.attempt.completion_status == 'incomplete':
-        instance.attempt.end_time = None
-        update_fields.append('end_time')
-    instance.attempt.save(update_fields=update_fields)
-
-    if instance.attempt.resource.report_mark_time == 'oncompletion' and instance.value=='completed':
-        Channel('report.attempt').send({'pk':instance.attempt.pk})
-
-@receiver(models.signals.post_save,sender=Attempt)
-def send_receipt_on_completion(sender,instance, **kwargs):
-    attempt = Attempt.objects.get(pk=instance.pk)
-    if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
-        if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
-            Channel('attempt.email_receipt').send({'pk': attempt.pk})
-
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_num_questions(sender,instance,created,**kwargs):
-    """ Set the number of questions for this resource - can only work this out once the exam has been run! """
-    if not re.match(r'^cmi.objectives.([0-9]+).id$',instance.key) or not created:
-        return
-
-    number = int(re.match(r'q(\d+)',instance.value).group(1))+1
-    resource = instance.attempt.resource
-    
-    if number>resource.num_questions:
-        resource.num_questions = number
-        resource.save(update_fields=['num_questions'])
+    def as_json(self):
+        return {
+            'element': self.element.pk,
+            'user': self.user.get_full_name(),
+        }
 
 class EditorLink(models.Model):
-    name = models.CharField(max_length=200,verbose_name='Editor name')
-    url = models.URLField(verbose_name='Base URL of the editor',unique=True)
-    cached_available_exams = models.TextField(blank=True,editable=False,verbose_name='Cached JSON list of available exams from this editor')
-    last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name='Time of last cache update')
+    name = models.CharField(max_length=200,verbose_name=_('Editor name'))
+    url = models.URLField(verbose_name=_('Base URL of the editor'),unique=True)
+    cached_available_exams = models.TextField(blank=True,editable=False,verbose_name=_('Cached JSON list of available exams from this editor'))
+    last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name=_('Time of last cache update'))
+
+    class Meta:
+        verbose_name = _('editor link')
+        verbose_name_plural = _('editor links')
 
     def __str__(self):
         return self.name
@@ -1049,34 +1345,35 @@ class EditorLink(models.Model):
     @property
     def available_exams(self):
         if self.time_since_last_update().seconds> 30:
-            Channel("editorlink.update_cache").send({'pk':self.pk})
+            from . import tasks
+            tasks.editorlink_update_cache(self)
         if self.cached_available_exams:
             return json.loads(self.cached_available_exams)
         else:
             return []
 
 class EditorLinkProject(models.Model):
-    editor = models.ForeignKey(EditorLink,on_delete=models.CASCADE,related_name='projects',verbose_name='Editor that this project belongs to')
-    name = models.CharField(max_length=200,verbose_name='Name of the project')
-    description = models.TextField(blank=True,verbose_name='Description of the project')
-    remote_id = models.IntegerField(verbose_name='ID of the project on the editor')
-    homepage = models.URLField(verbose_name='URL of the project\'s homepage on the editor')
-    rest_url = models.URLField(verbose_name='URL of the project on the editor\'s REST API')
+    editor = models.ForeignKey(EditorLink,on_delete=models.CASCADE,related_name='projects',verbose_name=_('Editor that this project belongs to'))
+    name = models.CharField(max_length=200,verbose_name=_('Name of the project'))
+    description = models.TextField(blank=True,verbose_name=_('Description of the project'))
+    remote_id = models.IntegerField(verbose_name=_('ID of the project on the editor'))
+    homepage = models.URLField(verbose_name=_('URL of the project\'s homepage on the editor'))
+    rest_url = models.URLField(verbose_name=_('URL of the project on the editor\'s REST API'))
 
     class Meta:
+        verbose_name = _('linked editor project')
+        verbose_name_plural = _('linked editor project')
         ordering = ['name']
 
     def __str__(self):
         return self.name
 
-@receiver(models.signals.pre_save,sender=EditorLink)
-def update_editor_cache_before_save(sender,instance,**kwargs):
-    instance.update_cache()
-
 class StressTest(models.Model):
     resource = models.OneToOneField(Resource,on_delete=models.CASCADE,primary_key=True)
 
     class Meta:
+        verbose_name = _('stress test')
+        verbose_name_plural = _('stress tests')
         ordering = ['-resource__creation_time']
 
     def __str__(self):
@@ -1089,3 +1386,38 @@ class StressTestNote(models.Model):
     stresstest = models.ForeignKey(StressTest,on_delete=models.CASCADE,related_name='notes')
     text = models.TextField()
     time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('stress test note')
+        verbose_name_plural = _('stress test notes')
+
+FILE_REPORT_STATUSES = [
+    ('inprogress', _('In progress')),
+    ('complete', _('Complete')),
+    ('error', _('Error')),
+]
+
+class FileReport(models.Model):
+    name = models.CharField(max_length=300)
+    resource = models.ForeignKey(Resource, null=True, on_delete=models.CASCADE, related_name='file_reports')
+    outfile = models.FileField(upload_to='reports/', verbose_name='Output file')
+    status = models.CharField(max_length=10, default='inprogress', choices=FILE_REPORT_STATUSES)
+    creation_time = models.DateTimeField(auto_now_add=True, verbose_name=_('Time this report was created'))
+    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='file_reports')
+
+    class Meta:
+        verbose_name = _('Report file')
+        verbose_name_plural = _('Report files')
+        ordering = ('-creation_time',)
+
+    @classmethod
+    def start_job(cls, resource, created_by, filename):
+        filename = Path(filename)
+        now = datetime
+        filename = filename.with_stem(filename+'-'+datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+        fr = cls(resource = resource, created_by = created_by)
+        fr.outfile.save(filename, ContentFile(''))
+        return fr
+
+    def expiry_date(self):
+        return self.creation_time + timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)

@@ -1,5 +1,6 @@
 {% extends "numbas_lti/management/attempt_base.html" %}
-{% load staticfiles %}
+{% load static %}
+{% load statici18n %}
 {% load i18n %}
 
 {% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}
@@ -11,11 +12,13 @@
 
 {% block attempt_content %}
 
+<p><a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review this attempt" %}</span></a></p>
+
 <p><a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View raw SCORM data for this attempt" %}</a></p>
 
 <p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
 
-<table class="table" id="timeline">
+<table class="table" id="timeline" data-bind="if: grouped_timeline().length">
     <colgroup>
         <col style="width: 12em;"/>
         <col style="width: 2em;"/>
@@ -35,27 +38,49 @@
     <tbody>
         <!-- ko foreach: {data: grouped_timeline, afterAdd: scrollIntoView} -->
             <!-- ko foreach: items -->
-                <tr class="item" data-bind="css: css">
-                    <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: time_string"></span></td>
-                    <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
-                    <td class="message"><span data-bind="html: message"></span></td>
-                    <td class="exam-raw-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
-                        <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
-                    </td>
-                    <td class="exam-scaled-score" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}"><span data-bind="text: $parent.exam_scaled_score"></span></td>
-                </tr>
+            <tr class="item" data-bind="css: css">
+                <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
+                    <p data-bind="text: time_string"></p>
+                    <!-- ko if: $parent.remarked_by -->
+                    <p class="remarked-by small">
+                        {% trans "Remarked by" %}
+                        <span data-bind="text: $parent.remarked_by"></span>
+                    </p>
+                    <!-- /ko -->
+                </td>
+                <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
+                <td class="message"><span data-bind="html: message"></span></td>
+                <td class="exam-score raw" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                    <!-- ko if: $parent.exam_score_changed -->
+                    <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
+                    <!-- /ko -->
+                </td>
+                <td class="exam-score scaled" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                    <!-- ko if: $parent.exam_score_changed -->
+                    <span data-bind="text: $parent.exam_scaled_score"></span>
+                    <!-- /ko -->
+                </td>
+            </tr>
             <!-- /ko -->
         <!-- /ko -->
     </tbody>
 </table>
+<!-- ko if: !grouped_timeline().length -->
+<div class="alert alert-warning">
+    <p>{% trans "There's no data for this attempt." %}</p>
+</div>
+<!-- /ko -->
 
 {% endblock attempt_content %}
 
 {% block javascripts %}
 <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+{% get_current_language as LANGUAGE_CODE %}
+<script src="{% statici18n LANGUAGE_CODE %}"></script>
 {% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 {{elements|json_script:"scorm-elements"}}
+{{remarked_elements|json_script:"remarked-elements"}}
 {{launches|json_script:"launches"}}
 <script>
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';

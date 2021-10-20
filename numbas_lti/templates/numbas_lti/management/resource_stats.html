@@ -1,7 +1,8 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load bootstrap %}
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
+{% load statici18n %}
 
 {% block management_content %}
 <h2>
@@ -52,19 +53,19 @@
     <div class="legend">
         <span class="num_not_attempted">
             <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            Not attempted
+            {% trans "Not attempted" %}
         </span>
         <span class="num_incorrect">
             <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            Incorrect
+            {% trans "Incorrect" %}
         </span>
         <span class="num_partial">
             <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            Partially correct
+            {% trans "Partially correct" %}
         </span>
         <span class="num_correct">
             <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            Correct
+            {% trans "Correct" %}
         </span>
     </div>
     <div class="chart">
@@ -75,7 +76,7 @@
 
 <section id="question_scores_chart">
     <h3>{% trans "Score distribution" %}</h3>
-    <p>{% blocktrans %}In the following charts, the <i>x</i>-axis represents scaled score, and the <i>y</i>-axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
+    <p>{% blocktrans %}In the following charts, the horizontal axis represents scaled score, and the vertical axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
     <div class="chart"></div>
 </section>
 
@@ -84,6 +85,13 @@
 	<p>{% blocktrans %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktrans %}</p>
     <div class="chart">
         <svg class="diagram"></svg>
+    </div>
+</section>
+
+<section id="time_spent_chart">
+    <h3>{% trans "Time spent" %}</h3>
+	<p>{% blocktrans %}In the following chart, the horizontal axis represents the time spent on an attempt, and the vertical axis represents the number of attempts lasting that long.{% endblocktrans %}</p>
+    <div class="chart">
     </div>
 </section>
 
@@ -102,6 +110,8 @@
 
     {% include "numbas_lti/scripts/luxon.html" %}
     <script src="{% static 'd3/d3.min.js' %}"></script>
+    {% get_current_language as LANGUAGE_CODE %}
+    <script src="{% statici18n LANGUAGE_CODE %}"></script>
 
     {{data|json_script:"data-json"}}
 

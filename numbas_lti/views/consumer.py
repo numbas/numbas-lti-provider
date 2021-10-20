@@ -1,8 +1,8 @@
-from .mixins import ManagementViewMixin, get_lti_entry_url, get_config_url
+from .mixins import HelpLinkMixin, ManagementViewMixin, get_lti_entry_url, get_config_url
 from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib.auth.views import redirect_to_login
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django_auth_lti.patch_reverse import reverse
@@ -19,9 +19,10 @@ class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Managem
     def handle_no_permission(self):
         return redirect_to_login(self.request.get_full_path(), self.get_login_url(), self.get_redirect_field_name())
 
-class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
+class ListConsumersView(HelpLinkMixin, ConsumerManagementMixin, generic.list.ListView):
     model = LTIConsumer
     template_name = 'numbas_lti/management/admin/consumer/list.html'
+    helplink = 'admin/consumers.html'
 
     def get_context_data(self,*args,**kwargs):
         context = super(ListConsumersView,self).get_context_data(*args,**kwargs)
@@ -31,11 +32,12 @@ class ListConsumersView(ConsumerManagementMixin,generic.list.ListView):
 
         return context
 
-class CreateConsumerView(ConsumerManagementMixin,generic.edit.CreateView):
+class CreateConsumerView(HelpLinkMixin, ConsumerManagementMixin, generic.edit.CreateView):
     model = LTIConsumer
     template_name = 'numbas_lti/management/admin/consumer/create.html'
     form_class = forms.CreateConsumerForm
     success_url = reverse_lazy('list_consumers')
+    helplink = 'admin/consumers.html#adding-a-consumer'
 
 class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
     model = LTIConsumer
@@ -50,10 +52,11 @@ class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
 
         return redirect(self.get_success_url())
 
-class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
+class ManageConsumerView(HelpLinkMixin, ConsumerManagementMixin,generic.detail.DetailView):
     model = LTIConsumer
     context_object_name = 'consumer'
     template_name = 'numbas_lti/management/admin/consumer/view.html'
+    helplink = 'admin/consumers.html#managing-a-consumer'
 
     def get_context_data(self, *args, **kwargs):
         context = super(ManageConsumerView,self).get_context_data(*args,**kwargs)
@@ -65,11 +68,13 @@ class ManageConsumerView(ConsumerManagementMixin,generic.detail.DetailView):
 
         return context
 
-class ManageTimePeriodsView(ConsumerManagementMixin,generic.edit.UpdateView):
+class ManageTimePeriodsView(HelpLinkMixin, ConsumerManagementMixin,generic.edit.UpdateView):
     model = LTIConsumer
     context_object_name = 'consumer'
     template_name = 'numbas_lti/management/admin/consumer/manage_time_periods.html'
     form_class = forms.ConsumerTimePeriodFormSet
+    helplink = 'admin/consumers.html#time-periods'
+    
     def get_success_url(self):
         return reverse('view_consumer',args=(self.get_object().pk,))
 

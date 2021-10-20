@@ -1,0 +1,7 @@
+{% load i18n %}
+<p class="help-block helplink {% if float %}pull-right{% endif %}">
+<a target="numbasquickhelp" href="{{HELP_URL}}{{url}}">
+    <small class="glyphicon glyphicon-question-sign"></small>
+    {% if subject %}{% blocktranslate with subject=subject %}Help with {{subject}}{% endblocktranslate %}{% else %}{% translate "Help with this page" %}{% endif %}
+</a>
+</p>

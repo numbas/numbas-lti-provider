@@ -1,5 +1,6 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
+{% load helplink %}
 
 {% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
 
@@ -9,6 +10,10 @@
     <header>
         {% block management_header %}{% endblock %}
     </header>
+    {% if page_helplink %}
+        <p>{% helplink page_helplink %}</p>
+    {% endif %}
+
     <main>
         {% for message in messages %}
         <div class="alert alert-info">
@@ -18,5 +23,6 @@
 
         {% block management_content %}{% endblock %}
     </main>
+    {% include "numbas_lti/management/footer.html" %}
 </div>
 {% endblock content %}

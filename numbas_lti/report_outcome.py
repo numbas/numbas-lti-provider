@@ -2,6 +2,7 @@ from requests_oauthlib import OAuth1
 import requests
 import uuid
 from django.utils.translation import ugettext as _
+from django.conf import settings
 
 from hashlib import sha1
 from base64 import b64encode
@@ -12,10 +13,25 @@ from oauthlib.common import to_unicode
 from lxml import etree
 
 class ReportOutcomeException(Exception):
-    pass
+    def __init__(self,user_data,error):
+        self.error = error
+        ctx = {
+            'user_name': user_data.user.get_full_name(), 
+            'error': self.error,
+        }
+        self.message = _('There was an error reporting data for user {user_name} back to the LTI consumer: {error}').format(**ctx)
+
+class ReportAnonymousUserException(Exception):
+    def __init__(self):
+        self.message = _('Tried to report data for an anonymous user')
+
+class ReportOutcomeTimeoutError(ReportOutcomeException):
+    message = _("The request to report data back to the LTI consumer timed out.")
+    def __init__(self,timeout_error):
+        self.error = timeout_error
 
 class ReportOutcomeConnectionError(ReportOutcomeException):
-    message = _("Error making connection to LTI consumer")
+    message = _("There was an error making a connection to the LTI consumer.")
     def __init__(self,connection_error):
         self.error = connection_error
 
@@ -59,6 +75,8 @@ def report_outcome(resource,user):
     </imsx_POXEnvelopeRequest>
     """
 
+    if user.is_anonymous:
+        raise ReportOutcomeException(None,'User is anonymous')
     message_identifier = uuid.uuid4().int & (1<<64)-1
     user_data = resource.user_data(user) 
     result = resource.grade_user(user)
@@ -69,7 +87,8 @@ def report_outcome(resource,user):
                     user_data.lis_outcome_service_url,
                     data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
                     auth=OAuth1(user_data.consumer.key,user_data.consumer.secret,signature_type='auth_header',client_class=Client, force_include_body=True),
-                    headers={'Content-Type': 'application/xml'}
+                    headers={'Content-Type': 'application/xml'},
+                    timeout = getattr(settings,'REQUEST_TIMEOUT',60)
                 )
 
             if r.status_code!=200:
@@ -93,3 +112,7 @@ def report_outcome(resource,user):
                 raise ReportOutcomeFailure(user_data,description)
         except requests.exceptions.ConnectionError as e:
             raise ReportOutcomeConnectionError(e)
+        except requests.exceptions.Timeout as e:
+            raise ReportOutcomeTimeoutError(e)
+        except Exception as e:
+            raise ReportOutcomeException(user_data,e)

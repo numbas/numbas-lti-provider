@@ -9,6 +9,7 @@ from django.utils.timezone import now
 from django.views import generic
 from numbas_lti.models import LTIConsumer, Resource
 from numbas_lti.forms import CreateSuperuserForm
+from .mixins import ManagementViewMixin, HelpLinkMixin
 
 class CreateSuperuserView(generic.edit.CreateView):
     model = User
@@ -33,9 +34,10 @@ class CreateSuperuserView(generic.edit.CreateView):
         else:
             return reverse('create_consumer')
 
-class DashboardView(generic.TemplateView):
+class DashboardView(HelpLinkMixin, ManagementViewMixin, generic.TemplateView):
     template_name = 'numbas_lti/management/admin/dashboard.html'
     management_tab = 'dashboard'
+    helplink = 'admin/dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -53,4 +55,20 @@ class DashboardView(generic.TemplateView):
 
         context['active_resources'] = active_resources
 
+        return context
+
+class GlobalUserInfoView(HelpLinkMixin, ManagementViewMixin, generic.DetailView):
+    model = User
+    management_tab = ''
+    template_name = 'numbas_lti/management/admin/user_info.html'
+    helplink = 'admin/search.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        user = self.get_object()
+
+        consumers = LTIConsumer.objects.filter(contexts__resources__launches__user=user).distinct()
+        context['consumers'] = consumers
+        
         return context

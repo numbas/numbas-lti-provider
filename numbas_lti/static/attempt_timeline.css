@@ -8,7 +8,16 @@
   background: #eee;
 }
 
-.item .exam-raw-score, .item .exam-scaled-score {
+.item .exam-score {
     text-align: right;
 }
 
+.exam-score.changed {
+    position: sticky;
+    top: 4em;
+    background: white;
+}
+
+#timeline .glyphicon {
+    position: static;
+}

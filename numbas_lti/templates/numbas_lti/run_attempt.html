@@ -1,17 +1,21 @@
-{% load staticfiles %}
+{% load static %}
 {% load i18n %}
+{% load statici18n %}
 <!doctype html>
 <html>
 <head>
-	<title>{{attempt.resource.title}}</title>
+    <title>{{attempt.resource.title}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0">
     <link rel="stylesheet" href="{% static "run_attempt.css" %}"></link>
 </head>
 <body>
+    {% include "numbas_lti/csrf_token_form.html" %}
 <div id="status-display" tabindex="1" class="ok">
     <span class="symbol">!</span>
     <span class="status-message text-ended">
         <div class="text">
-            <p>{% blocktrans with available_until=available_until|date:"r" %}This resource automatically closed at {{available_until}}{% endblocktrans %}</p>
+            <p>{% blocktrans with available_until=available_until|date:"r" %}This resource automatically closed at <span class="available-until">{{available_until}}</span>{% endblocktrans %}</p>
         </div>
     </span>
     <span class="status-message text-terminated">
@@ -38,6 +42,15 @@
             <pre id="receipt-code"></pre>
         </div>
     </span>
+    <span class="status-message text-failed-final-ajax">
+        <div class="text">
+            <p>{% trans "There was an error closing this attempt. Please ask your instructor to check that your data has been saved correctly." %}</p>
+        </div>
+    </span>
+</div>
+<div id="deadline-change-display" tabindex="1">
+    <p>{% blocktrans %}The availability dates for this attempt have changed. The attempt is available until <span class="available-until"></span>.{% endblocktrans %}</p>
+    <p>{% trans "Click this message to dismiss it." %}</p>
 </div>
 <div id="scorm-player-container">
     <h1 style="text-align: center">Loading "{{attempt.resource.title}}"</h1>
@@ -53,6 +66,8 @@ if(!Modernizr.websockets) {
     window.location = '/no-websockets';
 }
 </script>
+{% get_current_language as LANGUAGE_CODE %}
+<script src="{% statici18n LANGUAGE_CODE %}"></script>
 <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
 <script type="text/javascript" src="{% static 'promise.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'fetch.js' %}"></script>
@@ -66,11 +81,11 @@ if(!Modernizr.websockets) {
         var sc = new SCORM_API(js_vars);
         window.API_1484_11 = sc.API_1484_11;
     } catch(e) {
+        console.error(e);
         alert("{% trans "A connection to the server could not be created. Please report this." %}");
-        console.error(e.stack);
         window.location.href = '{% url 'show_attempts' %}';
     }
-	window.addEventListener('load',function() {
+    window.addEventListener('load',function() {
         var iframe = document.createElement('iframe');
         iframe.setAttribute('id','scorm-player');
         iframe.setAttribute('width','100%');
@@ -84,26 +99,26 @@ if(!Modernizr.websockets) {
 {% endif %}
 
 <script type="text/javascript">
-	window.addEventListener('load',function() {
+    window.addEventListener('load',function() {
 
-		function resize_iframe() {
+        function resize_iframe() {
             var iframe = document.getElementById('scorm-player');
-			if(!(iframe && iframe.contentWindow)) {
-				return;
-			}
-			try {
-				var dh = document.documentElement.getBoundingClientRect().bottom;
-				var ih = iframe.clientHeight;
-				var oh = dh-ih;
-				var wh = window.innerHeight;
-				var h = wh-oh-10;
-				var height = Math.max(500,h);
-				iframe.style.height = height+'px';
-			} catch(e) {
-			}
-		}
-		setInterval(resize_iframe,500);
-	});
+            if(!(iframe && iframe.contentWindow)) {
+                return;
+            }
+            try {
+                var dh = document.documentElement.getBoundingClientRect().bottom;
+                var ih = iframe.clientHeight;
+                var oh = dh-ih;
+                var wh = window.innerHeight;
+                var h = wh-oh-10;
+                var height = Math.max(500,h);
+                iframe.style.height = height+'px';
+            } catch(e) {
+            }
+        }
+        setInterval(resize_iframe,500);
+    });
 </script>
 </body>
 </html>

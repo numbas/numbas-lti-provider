@@ -2,37 +2,11 @@
 {% load percentage %}
 {% load querystring %}
 {% load i18n %}
+{% load static %}
 
 {% block stylesheets %}
-{{block.super}}
-<style>
-.identifier {
-    font-family: monospace;
-}
-.score-info {
-    width: 15em;
-    margin-top: 0.5em;
-    display: flex;
-    height: 1.2em;
-    padding: 0;
-    list-style: none;
-    background: white;
-}
-.score-info .question {
-    flex-basis: 3px;
-}
-.score-info .question ~ .question {
-    margin-left: 2px;
-}
-.score-info .question.not-attempted {
-    background: #ccc;
-}
-/* generated with http://tristen.ca/hcl-picker/#/hlc/3/1.46/7E4813/4AD269 */
-.scaled_score_0 { background-color: #7E4813; color: #fff; }
-.scaled_score_1 { background-color: #878B10; color: #fff; }
-.scaled_score_2 { background-color: #4AD269; color: #000; }
-
-</style>
+    {{block.super}}
+    <link rel="stylesheet" href="{% static "attempts.css" %}">
 {% endblock %}
 
 {% block main_container %}container-fluid{% endblock %}
@@ -41,8 +15,8 @@
     {% if resource.attempts.count %}
     <h2>{% trans "Attempts" %}</h2>
 
-    <p><a class="btn btn-info" href="{% url 'attempts_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</a></p>
-    <p><a class="btn btn-info" href="{% url 'resource_json_dump' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</a></p>
+    <p><form method="POST" action="{% url 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</button></form></p>
+    <p><form method="POST" action="{% url 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</button></form></p>
 
     <form method="GET" class="form-inline">
         <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
@@ -54,10 +28,10 @@
             <input type="hidden" name="userid" value="">
             <input id="query" name="query" type="search" class="form-control" value="{{query}}">
             {% if query %}
-                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">Clear query</span></a>
+            <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">{% trans "Clear query" %}</span></a>
             {% endif %}
             <div class="input-group-btn">
-                <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">Search</span></button>
+                <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">{% trans "Search" %}</span></button>
             </div>
         </div>
     </form>
@@ -107,7 +81,7 @@
                     <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
                 </td>
                 <td>
-                    {% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.completion_status}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url 'reopen_attempt' attempt.pk %}">{% trans "(reopen)" %}</a>{% endif %}{% endif %}
+                    {% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url 'reopen_attempt' attempt.pk %}">{% trans "(reopen)" %}</a>{% endif %}{% endif %}
                 </td>
                 <td>
                     <div class="attempt-score">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% trans "(remarked)" %}{% endif %}</div>
@@ -116,7 +90,7 @@
                     <ul class="score-info">
                         {% for aqs in attempt.question_scores %}
                         {% if aqs.max_score %}
-                        <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}};" title="{% blocktrans with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktrans %} {% if aqs.completion_status == 'not attempted' %}{% trans "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
+                        <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}}; height: {{aqs.scaled_score|percentage:"10"}}" title="{% blocktrans with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktrans %} {% if aqs.completion_status == 'not attempted' %}{% trans "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
                         {% endif %}
                         {% endfor %}
                     </ul>

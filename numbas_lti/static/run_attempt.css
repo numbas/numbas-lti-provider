@@ -22,7 +22,7 @@ body.ended #scorm-player {
 #status-display a {
     color: white;
 }
-#status-display.ok:not(.ended):not(.confirmation) {
+#status-display.ok:not(.ended):not(.confirmation):not(.deadline-changed) {
     display: none;
 }
 #status-display .status-message {
@@ -56,7 +56,9 @@ body.terminated #status-display .symbol, #status-display .symbol {
 #status-display.ended .text-ended,
 #status-display.ok .text-ok,
 #status-display.confirmation .text-confirmation,
-#status-display.terminated:not(.ok) .text-terminated {
+#status-display.terminated:not(.ok):not(.failed-final-ajax) .text-terminated,
+#status-display.failed-final-ajax .text-failed-final-ajax
+{
     display: block;
 }
 
@@ -86,4 +88,19 @@ body.terminated #status-display {
 }
 body.terminated .text-localstorage-used {
     display: none;
+}
+
+#deadline-change-display {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.4em 1em;
+    border-radius: 0 0 0 4px;
+    background: hsl(0,0%,0%);
+    color: white;
+    font-family: sans-serif;
+    display: none;
+}
+#deadline-change-display.show {
+  display: block;
 }

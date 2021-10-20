@@ -1,5 +1,6 @@
 from .mixins import MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, request_is_instructor
 from .generic import JSONView
+import datetime
 from django import http
 from django.conf import settings
 from django.contrib import messages
@@ -13,47 +14,28 @@ from django.utils.text import slugify
 from django.views import generic
 from django.views.decorators.http import require_POST
 from itertools import groupby
-from numbas_lti.forms import RemarkPartScoreForm
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch
-from numbas_lti.save_scorm_data import save_scorm_data
-import datetime
 import json
+from numbas_lti import tasks
+from numbas_lti.forms import RemarkPartScoreForm
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch, resolve_diffed_scormelements, RemarkedScormElement
+from numbas_lti.save_scorm_data import save_scorm_data
+from numbas_lti.util import transform_part_hierarchy
+import re
 import simplejson
-import string
-
-def hierarchy_key(x):
-    key = x[0]
-    try:
-        return int(key)
-    except ValueError:
-        return key
 
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
-    template_name = 'numbas_lti/management/remark.html'
+    template_name = 'numbas_lti/management/attempt_remark.html'
     context_object_name = 'attempt'
     management_tab = 'attempts'
 
     def get_resource(self):
         return self.get_object().resource
 
-    def get_context_data(self,*args,**kwargs):
-        context = super(RemarkPartsView,self).get_context_data(*args,**kwargs)
-
+    def get_parts(self):
         attempt = self.get_object()
-        hierarchy = attempt.part_hierarchy()
-        out = []
 
-        def row(q,p=None,g=None,parent=None,has_gaps=False):
-            qnum = int(q)+1
-            path = 'q{}'.format(q)
-            if p is not None:
-                pletter = string.ascii_lowercase[int(p)]
-                path += 'p{}'.format(p)
-                if g is not None:
-                    path += 'g{}'.format(g)
-            else:
-                pletter = None
+        def row(qnum,q,p,g,parent,has_gaps,path,pletter,**kwargs):
 
             remark = RemarkPart.objects.filter(attempt=attempt,part=path).first()
             out = {
@@ -70,6 +52,7 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
             if p is not None:
                 out.update({
                     'score': attempt.part_raw_score(path),
+                    'original_score': attempt.part_raw_score(path,include_remark=False),
                     'max_score': attempt.part_max_score(path),
                     'discount': discount,
                     'remark': remark,
@@ -80,71 +63,36 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
-            qnum = int(i)+1
-            out.append(row(i))
+        parts = transform_part_hierarchy(attempt.part_hierarchy(), row)
 
-            for j,p in sorted(q.items(),key=hierarchy_key):
-                has_gaps = len(p['gaps'])>0
-                prow = row(i,j,has_gaps=has_gaps)
-                out.append(prow)
+        return parts
 
-                for g in p['gaps']:
-                    out.append(row(i,j,g,prow))
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
 
-        context['parts'] = out
+        context['parts'] = self.get_parts()
 
         return context
 
-class RemarkPartView(MustBeInstructorMixin,generic.base.View):
+    def post(self, request, *args, **kwargs):
+        attempt = self.get_object()
+        parts = self.get_parts()
+        for part in parts:
+            if part['p'] is None:
+                continue
+            remark = request.POST.get('remark-'+part['path'])
+            score = request.POST.get('score-'+part['path'])
+            if remark:
+                remark, created = RemarkPart.objects.get_or_create(attempt=attempt, part=part['path'])
+                remark.score = score
+                remark.save()
+            else:
+                RemarkPart.objects.filter(attempt=attempt,part=part['path']).delete()
 
-    def post(self,request,pk,*args,**kwargs):
-        attempt = Attempt.objects.get(pk=pk)
-        part = request.POST['part']
+        changed_questions = set(int(re.match(r'^q(\d+)',v).group(1)) for v in attempt.remarked_parts.values_list('part',flat=True))
+        tasks.attempt_update_score_info(attempt, changed_questions)
 
-        remark,created = RemarkPart.objects.get_or_create(attempt=attempt,part=part,score=attempt.part_raw_score(part))
-
-        template = get_template('numbas_lti/management/remark/remarked.html')
-        html = template.render({
-            'attempt':attempt,
-            'remark':remark,
-            'form':RemarkPartScoreForm(instance=remark),
-            'max_score': remark.attempt.part_max_score(part),
-            'path': part,
-        })
-
-        return http.JsonResponse({
-            'pk':remark.pk,
-            'created':created, 
-            'score': remark.score, 
-            'html':html
-        })
-
-class RemarkPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
-    model = RemarkPart
-
-    def delete(self,*args,**kwargs):
-        remark = self.get_object()
-        remark.delete()
-
-        attempt = remark.attempt
-        template = get_template('numbas_lti/management/remark/not_remarked.html')
-        html = template.render({
-            'attempt':attempt,
-            'score':attempt.part_raw_score(remark.part),
-            'max_score':attempt.part_max_score(remark.part),
-            'path':remark.part,
-        })
-        return http.JsonResponse({'html':html})
-
-class RemarkPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
-    model = RemarkPart
-    form_class = RemarkPartScoreForm
-
-    def form_valid(self,form,*args,**kwargs):
-        self.object = form.save()
-        return http.JsonResponse({})
-
+        return self.get(request,*args,**kwargs)
 
 class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
@@ -173,7 +121,7 @@ class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     def get_context_data(self,*args,**kwargs):
         context = super(AttemptSCORMListing,self).get_context_data(*args,**kwargs)
 
-        context['elements'] = [e.as_json() for e in self.object.scormelements.all()]
+        context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.all())]
         context['show_stale_elements'] = True
         context['resource'] = self.object.resource
 
@@ -192,7 +140,8 @@ class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
         context = super().get_context_data(*args,**kwargs)
 
         context['resource'] = self.object.resource
-        context['elements'] = [e.as_json() for e in self.object.scormelements.order_by('time','counter')]
+        context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.reverse())]
+        context['remarked_elements'] = [r.as_json() for r in RemarkedScormElement.objects.filter(element__attempt=self.object)]
         context['launches'] = [l.as_json() for l in self.object.launches.all()]
 
         return context
@@ -229,7 +178,18 @@ class ShowAttemptsView(generic.list.ListView):
         if request.GET.get('back_from_unsaved_complete_attempt'):
             messages.add_message(self.request,messages.INFO,_('The attempt was completed, but not all data had been saved. All data has now been saved, and review is not available yet.'))
 
+        if not hasattr(request,'resource'):
+            raise http.Http404("There's no resource attached to this request.")
+
         if not self.get_queryset().exists():
+            resource = request.resource
+            if not resource.is_available(request.user):
+                now = timezone.now()
+                available_from, available_until = resource.available_for_user(request.user)
+                if available_from is not None and now < available_from:
+                    template = get_template('numbas_lti/not_available_yet.html')
+                    raise PermissionDenied(template.render({'available_from': available_from}))
+
             return new_attempt(request)
         else:
             return super(ShowAttemptsView,self).dispatch(request,*args,**kwargs)
@@ -246,8 +206,20 @@ def new_attempt(request):
     if not request.resource.can_start_new_attempt(request.user):
         raise PermissionDenied(ugettext("You can't start a new attempt at this exam."))
 
-    if Attempt.objects.filter(resource=request.resource,user=request.user).count() == request.resource.max_attempts > 0:
-        AccessToken.objects.filter(resource=request.resource,user=request.user).first().delete()
+    resource = request.resource
+    user = request.user
+
+    max_attempts = resource.max_attempts_for_user(user)
+
+    num_attempts = Attempt.objects.filter(resource=request.resource,user=request.user).count()
+
+    if num_attempts >= max_attempts:
+        tokens = AccessToken.objects.filter(resource=request.resource,user=request.user)
+        if tokens.exists():
+            tokens.first().delete()
+        else:
+            if not request.resource.can_start_new_attempt(request.user):
+                raise PermissionDenied(ugettext("You can't start a new attempt at this exam."))
 
     attempt = Attempt.objects.create(
         resource = request.resource,
@@ -256,6 +228,10 @@ def new_attempt(request):
     )
     return redirect(reverse('run_attempt',args=(attempt.pk,)))
 
+class BrokenAttemptException(Exception):
+    def __init__(self,attempt):
+        self.attempt = attempt
+
 class RunAttemptView(generic.detail.DetailView):
     model = Attempt
     context_object_name = 'attempt'
@@ -263,7 +239,11 @@ class RunAttemptView(generic.detail.DetailView):
     template_name = 'numbas_lti/run_attempt.html'
 
     def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
+        try:
+            response = super().get(request, *args, **kwargs)
+        except BrokenAttemptException as e:
+            response = http.HttpResponseServerError(_("This attempt is broken - there isn't enough saved SCORM data to resume it."))
+            self.mode = 'broken'
         AttemptLaunch.objects.create(
             attempt = self.object,
             mode = self.mode,
@@ -276,7 +256,12 @@ class RunAttemptView(generic.detail.DetailView):
 
         attempt = self.get_object()
 
-        if attempt.completion_status=='not attempted':
+        try:
+            completion_status = attempt.scormelements.current('cmi.completion_status')
+        except ScormElement.DoesNotExist:
+            completion_status = 'not attempted'
+
+        if completion_status=='not attempted':
             entry = 'ab-initio'
         elif attempt.scormelements.filter(key='cmi.suspend_data').exists():
             entry = 'resume'
@@ -286,6 +271,9 @@ class RunAttemptView(generic.detail.DetailView):
             broken_attempt = attempt
             broken_attempt.broken = True
             broken_attempt.save()
+
+            if attempt.user != self.request.user:
+                raise BrokenAttemptException(attempt)
 
             attempt = Attempt.objects.create(
                 resource = broken_attempt.resource,
@@ -302,7 +290,8 @@ class RunAttemptView(generic.detail.DetailView):
             mode = 'normal'
 
         if attempt.user != self.request.user:
-            if request_is_instructor(self.request):
+            user_data = attempt.resource.user_data(self.request.user)
+            if (user_data is not None and user_data.is_instructor) or request_is_instructor(self.request):
                 mode = 'review'
             else:
                 raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
@@ -310,15 +299,20 @@ class RunAttemptView(generic.detail.DetailView):
         context['mode'] = self.mode = mode
 
         user = attempt.user
-        user_data = attempt.resource.user_data(user)
+        available_from, available_until = attempt.resource.available_for_user(user)
 
         scorm_cmi = attempt.scorm_cmi()
 
+
+        duration_extension_amount, duration_extension_units = attempt.resource.duration_extension_for_user(user)
         dynamic_cmi = {
             'cmi.mode': mode,
             'cmi.entry': entry,
             'numbas.user_role': 'instructor' if request_is_instructor(self.request) else 'student',
+            'numbas.duration_extension.amount': duration_extension_amount,
+            'numbas.duration_extension.units': duration_extension_units,
         }
+
         now = datetime.datetime.now().timestamp()
         dynamic_cmi = {k: {'value':v,'time':now} for k,v in dynamic_cmi.items()}
         scorm_cmi.update(dynamic_cmi)
@@ -327,7 +321,7 @@ class RunAttemptView(generic.detail.DetailView):
         context['support_url'] = getattr(settings,'SUPPORT_URL',None)
         
         context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
-        context['available_until'] = attempt.resource.available_until
+        context['available_until'] = available_until
 
         context['js_vars'] = {
             'exam_url': attempt.exam.extracted_url+'/index.html',
@@ -335,8 +329,9 @@ class RunAttemptView(generic.detail.DetailView):
             'attempt_pk': attempt.pk,
             'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
             'show_attempts_url': reverse('show_attempts'),
-            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else str(None),
-            'available_until': attempt.resource.available_until.isoformat() if attempt.resource.available_until else str(None),
+            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
+            'available_from': available_from.isoformat() if available_from else None,
+            'available_until': available_until.isoformat() if available_until else None,
         }
 
         return context
@@ -344,7 +339,10 @@ class RunAttemptView(generic.detail.DetailView):
 @require_POST
 def scorm_data_fallback(request,pk,*args,**kwargs):
     """ An AJAX fallback to save SCORM data, when the websocket fails """
-    attempt = Attempt.objects.get(pk=pk)
+    try:
+        attempt = Attempt.objects.get(pk=pk)
+    except Attempt.DoesNotExist:
+        raise http.Http404(_("There is no attempt with the ID {}.").format(pk))
     data = json.loads(request.body.decode())
     batches = data.get('batches',[])
     done, unsaved_elements = save_scorm_data(attempt,batches)

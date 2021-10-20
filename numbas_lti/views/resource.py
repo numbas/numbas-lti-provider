@@ -1,33 +1,37 @@
-from .mixins import ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
-from .generic import CSVView, JSONView
-from numbas_lti import forms
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData
-from channels import Channel
+from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
+from .generic import CreateFileReportView, JSONView
+from numbas_lti import forms, save_scorm_data, tasks
+from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange, DISCOUNT_BEHAVIOURS
+from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core import signing
 from django.db.models import Q,Count
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
+from django.template.response import TemplateResponse
 from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone, dateparse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required
+from pathlib import Path
 import csv
+import datetime
 import json
 import itertools
-import string
 
-class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
+class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
     model = Exam
     management_tab = 'create_exam'
     template_name = 'numbas_lti/management/create_exam.html'
     form_class = forms.CreateExamForm
+    helplink = 'instructor/resources.html#creating-a-new-resource'
 
     def get_context_data(self,*args,**kwargs):
         context = super(CreateExamView,self).get_context_data(*args,**kwargs)
@@ -41,64 +45,143 @@ class CreateExamView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.e
         return context
 
     def form_valid(self,form):
-        self.object = form.save()
-        self.request.resource.exam = self.object
-        self.request.resource.save()
+        resource = self.request.resource
+        exam = self.object = form.save(commit=False)
+        exam.resource = resource
+        exam.save()
+        resource.exam = exam
+        resource.save()
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('resource_dashboard',args=(self.request.resource.pk,))
+        return reverse('resource_settings',args=(self.request.resource.pk,))
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
     template_name = 'numbas_lti/management/replace_exam.html'
     form_class = forms.ReplaceExamForm
+    helplink = 'instructor/resources.html#replace-exam-package'
 
     def get_context_data(self,*args,**kwargs):
+        resource = self.request.resource
         context = super(ReplaceExamView,self).get_context_data(*args,**kwargs)
-        context['current_exam'] = self.request.resource.exam
+        context['current_exam'] = resource.exam
+        exams = []
+        for exam in resource.exams.all():
+            exams.append((exam,exam.attempts.count()))
+        context['exams'] = exams
+        context['num_attempts_other_versions'] = Attempt.objects.filter(resource=resource).exclude(exam=resource.exam).count()
 
         return context
 
     def form_valid(self,form):
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa\n\n\n\n\AAAAAAA")
         resource = self.request.resource
         old_exam = resource.exam
         response = super().form_valid(form)
 
         new_exam = self.object
-        print(old_exam.pk,new_exam.pk)
         if form.cleaned_data['safe_replacement']:
             resource.attempts.filter(exam=old_exam).update(exam=new_exam)
-            print("replaced")
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
         return response
 
-class DashboardView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class RestoreExamView(MustBeInstructorMixin, ResourceManagementViewMixin,generic.edit.UpdateView):
+    model = Resource
+    form_class = forms.RestoreExamForm
+
+    def get_success_url(self):
+        return reverse('replace_exam',args=(self.request.resource.pk,))
+
+class AttemptsUseCurrentVersionView(MustBeInstructorMixin, ResourceManagementViewMixin, generic.UpdateView):
+    model = Resource
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        resource = self.request.resource
+        with transaction.atomic():
+            for a in Attempt.objects.filter(resource=resource).exclude(exam=resource.exam):
+                a.exam = resource.exam
+                a.save()
+        messages.add_message(self.request,messages.INFO,_('All attempts now use the active version of this resource\'s exam.'))
+        return redirect(reverse('replace_exam',args=(resource.pk,)))
+
+class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/dashboard.html'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#dashboard'
+
+    def get_exam_info(self):
+        content = self.get_object().exam.source()
+        if content is None:
+            return
+        nav = content.get('navigation',{})
+        timing = content.get('timing',{})
+        feedback = content.get('feedback',{})
+
+        showResultsPage =nav.get('showresultspage')
+        duration = content.get('duration')
+        percentPass = content.get('percentPass')
+        info = {
+            'hasPercentPass': percentPass and percentPass != '0',
+            'percentPass':  percentPass,
+            'hasTimeLimit': duration and duration != '0',
+            'duration':  int(duration)/60 if duration else None,
+            'allowPrinting':  content.get('allowPrinting'),
+
+            'allowRegen':  nav.get('allowregen'),
+            'allowReverse':  nav.get('reverse'),
+            'allowBrowse':  nav.get('browse'),
+            'allowSteps':  nav.get('allowsteps'),
+
+            'completionShowResultsPage': showResultsPage == 'oncompletion',
+            'reviewShowResultsPage': showResultsPage == 'oncompletion' or showResultsPage == 'review',
+
+            'leaveUnattempted': nav.get('onleave',{}).get('action') != 'preventifunattempted',
+            
+            'navigateMode':  nav.get('navigatemode'),
+            'startPassword':  nav.get('startpassword'),
+
+            'allowPause':  timing.get('allowPause'),
+
+            'showActualMark':  feedback.get('showactualmark'),
+            'showTotalMark':  feedback.get('showTotalMark'),
+            'showAnswerState':  feedback.get('showanswerstate'),
+            'allowRevealAnswer':  feedback.get('allowrevealanswer'),
+            'reviewShowScore':  feedback.get('reviewshowscore'),
+            'reviewShowFeedback':  feedback.get('reviewshowfeedback'),
+            'reviewShowAdvice':  feedback.get('reviewshowadvice'),
+            'reviewShowExpectedAnswer': feedback.get('reviewshowexpectedanswer'),
+        }
+        return info
 
     def get_context_data(self,*args,**kwargs):
         context = super(DashboardView,self).get_context_data(*args,**kwargs)
 
         resource = self.get_object()
 
+        context['exam_info'] = self.get_exam_info()
+
         context['instructors'] = User.objects.filter(lti_data__in=LTIUserData.objects.filter(resource=resource,is_instructor=True)).distinct()
+
+        context['num_unbroken_attempts'] = resource.attempts.exclude(broken=True).count()
 
         context['students'] = User.objects.filter(attempts__resource=resource).distinct()
         last_report_process = resource.report_processes.first()
+        if last_report_process and last_report_process.dismissed and last_report_process.status == 'reporting':
+            context['dismissed_report_process'] = last_report_process
         if last_report_process and (not last_report_process.dismissed):
             context['last_report_process'] = last_report_process
 
         return context
 
-class StudentProgressView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/student_progress.html'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#student-progress'
 
     def get_context_data(self,*args,**kwargs):
         context = super().get_context_data(*args,**kwargs)
@@ -121,37 +204,17 @@ class StudentProgressView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeIn
         return context
 
 
-def hierarchy_key(x):
-    key = x[0]
-    try:
-        return int(key)
-    except ValueError:
-        return key
-
-class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
+class DiscountPartsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/discount.html'
     context_object_name = 'resource'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#discount-question-parts'
 
-    def get_context_data(self,*args,**kwargs):
-        context = super(DiscountPartsView,self).get_context_data(*args,**kwargs)
-
+    def get_parts(self):
         resource = self.get_object()
-        hierarchy = resource.part_hierarchy()
-        out = []
 
-        def row(q,p=None,g=None):
-            qnum = int(q)+1
-            path = 'q{}'.format(q)
-            if p is not None:
-                pletter = string.ascii_lowercase[int(p)]
-                path += 'p{}'.format(p)
-                if g is not None:
-                    path += 'g{}'.format(g)
-            else:
-                pletter = None
-
+        def row(q,p,g,qnum,path,pletter,**kwargs):
             out = {
                 'q': qnum,
                 'p': pletter,
@@ -167,126 +230,95 @@ class DiscountPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInst
 
             return out
 
-        for i,q in sorted(hierarchy.items(),key=hierarchy_key):
-            qnum = int(i)+1
-            out.append(row(i))
+        parts = transform_part_hierarchy(resource.part_hierarchy(),row)
 
-            for j,p in sorted(q.items(),key=hierarchy_key):
-                out.append(row(i,j))
+        return parts
 
-                for g in p['gaps']:
-                    out.append(row(i,j,g))
-        
-        context['parts'] = out
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(DiscountPartsView,self).get_context_data(*args,**kwargs)
+
+        context['discount_behaviours'] = DISCOUNT_BEHAVIOURS
+        context['parts'] = self.get_parts()
 
         return context
 
-class DiscountPartView(MustBeInstructorMixin,generic.base.View):
+    def post(self, request, *args, **kwargs):
+        resource = self.get_object()
+        parts = self.get_parts()
 
-    def post(self,request,pk,*args,**kwargs):
-        resource = Resource.objects.get(pk=pk)
-        part = request.POST['part']
-        discount,created = DiscountPart.objects.get_or_create(resource=resource,part=part)
-        template = get_template('numbas_lti/management/discount/discounted.html')
-        html = template.render({'resource':resource,'discount':discount,'form':forms.DiscountPartBehaviourForm(instance=discount),'path':part})
-        return JsonResponse({'pk':discount.pk,'created':created, 'behaviour': discount.behaviour, 'html':html})
+        for part in parts:
+            if part['p'] is None:
+                continue
+            behaviour = request.POST.get('discount-'+part['path'])
+            print(part['path'],behaviour)
+            if behaviour:
+                discount, created = DiscountPart.objects.get_or_create(resource=resource,part=part['path'])
+                discount.behaviour = behaviour
+                discount.save()
+            else:
+                DiscountPart.objects.filter(resource=resource,part=part['path']).delete()
 
-class DiscountPartDeleteView(MustBeInstructorMixin,generic.edit.DeleteView):
-    model = DiscountPart
+        tasks.resource_update_score_info(resource)
 
-    def delete(self,*args,**kwargs):
-        discount = self.get_object()
-        discount.delete()
+        messages.add_message(request,messages.SUCCESS,_('Part discounts have been saved. It might take a while for individual attempts\' scores to be updated.'))
 
-        resource = discount.resource
-        template = get_template('numbas_lti/management/discount/not_discounted.html')
-        html = template.render({'resource':resource,'path':discount.part})
-        return JsonResponse({'html':html})
+        return self.get(request,*args,**kwargs)
 
-class DiscountPartUpdateView(MustBeInstructorMixin,generic.edit.UpdateView):
-    model = DiscountPart
-    form_class = forms.DiscountPartBehaviourForm
-
-    def form_valid(self,form,*args,**kwargs):
-        self.object = form.save()
-        return JsonResponse({})
-
-class ResourceSettingsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+class ResourceSettingsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource
     form_class = forms.ResourceSettingsForm
     template_name = 'numbas_lti/management/resource_settings.html'
     context_object_name = 'resource'
     management_tab = 'settings'
+    helplink = 'instructor/resources.html#settings'
 
     def get_success_url(self):
         return reverse('resource_dashboard',args=(self.get_object().pk,))
 
-class ScoresCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
+class CreateResourceFileReportView(MustBeInstructorMixin,CreateFileReportView,generic.detail.DetailView):
     model = Resource
-    def get_rows(self):
-        headers = [_(x) for x in ['First name','Last name','Email','Username','Percentage']]
-        yield headers
 
-        resource = self.object
-        for student in resource.students().all():
-            user_data = resource.user_data(student)
-            yield (
-                student.first_name,
-                student.last_name,
-                student.email,
-                user_data.get_source_id(),
-                resource.grade_user(student)*100
-            )
+    def get_resource(self):
+        return self.object
+
+    def get_success_url(self):
+        return reverse('resource_dashboard',args=(self.object.pk,))
+
+class FileReportsListView(HelpLinkMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
+    template_name = 'numbas_lti/management/resource_reports.html'
+    model = Resource
+    context_object_name = 'resource'
+    management_tab = 'reports'
+    helplink = 'instructor/resources.html#reports'
+
+class ScoresCSV(CreateResourceFileReportView):
+    report_task = tasks.resource_scores_csv_report
+
+    def get_name(self):
+        return 'Scores CSV'
 
     def get_filename(self):
         return _("{slug}-scores.csv").format(slug=self.object.slug)
 
-class JSONDumpView(MustBeInstructorMixin,generic.detail.DetailView):
-    model = Resource
+class JSONDumpView(CreateResourceFileReportView):
+    report_task = tasks.resource_json_dump_report
 
-    def render_to_response(self,context,**kwargs):
-        full = 'full' in self.request.GET
+    def get_name(self):
+        return 'JSON dump'
 
-        resource = self.get_object()
-        head = '''{{
-    "resource": {{
-        "pk": {pk},
-        "title": {title}
-    }},
-    "attempts": ['''.format(pk=resource.pk,title=json.dumps(resource.title))
-        footer = '    ]\n}'
+    def get_task_kwargs(self):
+        return {'full': 'full' in self.request.POST}
 
-        response = http.StreamingHttpResponse(
-            itertools.chain([head],((',' if i>0 else '')+json.dumps(a.data_dump(include_all_scorm=full)) for i,a in enumerate(resource.attempts.all())),[footer]),
-            content_type='application/json'
-        )
-        response['Content-Disposition'] = 'attachment; filename="{context}--{resource}.json"'.format(context=slugify(resource.context.name), resource=resource.slug)
-        return response
-
-
-class AttemptsCSV(MustBeInstructorMixin,CSVView,generic.detail.DetailView):
-    model = Resource
-    def get_rows(self):
+    def get_filename(self):
         resource = self.object
-        num_questions = resource.num_questions
+        return _("{slug}-attempts_data.json").format(slug=resource.slug)
 
-        headers = [_(x) for x in ['First name','Last name','Email','Username','Start time','End time','Completed?','Total score','Percentage']]+[_('Question {n}').format(n=i+1) for i in range(num_questions)]
-        yield headers
+class AttemptsCSV(CreateResourceFileReportView):
+    report_task = tasks.resource_attempts_csv_report
 
-        for attempt in resource.attempts.all():
-            user_data = resource.user_data(attempt.user)
-            row = [
-                attempt.user.first_name,
-                attempt.user.last_name,
-                attempt.user.email,
-                user_data.get_source_id(),
-                attempt.start_time,
-                attempt.end_time,
-                attempt.completion_status,
-                attempt.raw_score,
-                attempt.scaled_score*100,
-            ]+[attempt.question_raw_score(n) for n in range(num_questions)]
-            yield row
+    def get_name(self):
+        return 'Attempts CSV'
 
     def get_filename(self):
         return _("{slug}-attempts.csv").format(slug=self.object.slug)
@@ -298,7 +330,8 @@ class ReportAllScoresView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
     context_object_name = 'resource'
 
     def get(self,*args,**kwargs):
-        Channel("report.all_scores").send({'pk':self.get_object().pk})
+        resource = self.get_object()
+        resource.task_report_scores()
         return super(ReportAllScoresView,self).get(*args,**kwargs)
 
 @lti_role_or_superuser_required(INSTRUCTOR_ROLES)
@@ -336,7 +369,11 @@ class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementView
     context_object_name = 'exam'
 
     def get_resource(self):
-        return Resource.objects.filter(exam=self.get_object()).first()
+        exam = self.get_object()
+        if exam.resource:
+            return exam.resource
+        else:
+            return Resource.objects.filter(exam=exam).first()
 
     def get_context_data(self,*args,**kwargs):
         context = super(RunExamView,self).get_context_data(*args,**kwargs)
@@ -361,12 +398,13 @@ class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementView
         
         return context
 
-class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.ListView):
+class AllAttemptsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.ListView):
     model = Attempt
     template_name = 'numbas_lti/management/attempts.html'
     management_tab = 'attempts'
     paginate_by = 20
     context_object_name = 'attempts'
+    helplink = 'instructor/resources.html#attempts'
 
     def get_queryset(self, *args, **kwargs):
         self.query = ''
@@ -396,10 +434,11 @@ class AllAttemptsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
         return context
 
-class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+class StatsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
     model = Resource
     template_name = 'numbas_lti/management/resource_stats.html'
     management_tab = 'stats'
+    helplink = 'instructor/resources.html#statistics'
 
     def get_context_data(self, *args, **kwargs):
         context = super(StatsView,self).get_context_data(*args, **kwargs)
@@ -416,18 +455,145 @@ class StatsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMi
 
         return context
 
-class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
+class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_remark.html'
+    management_tab = 'remark'
+    helplink = 'instructor/resources.html#remark'
+
+    def get(self, request, *args, **kwargs):
+        resource = self.object = self.get_object()
+        if not resource.exam.supports_feature('run_headless'):
+            return TemplateResponse(
+                request=self.request,
+                template=['numbas_lti/management/resource_remark_not_supported.html'],
+                context=super().get_context_data(object=self.object),
+                using=self.template_engine
+            )
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        resource = self.object
+        attempts = resource.unbroken_attempts()
+
+        context['attempts'] = [
+            {
+                'pk': a.pk,
+                'completion_status': a.completion_status,
+                'user': { 
+                    'full_name': a.user.get_full_name(),
+                    'identifier': a.user_data().identifier(),
+                },
+            }
+            for a in attempts
+        ]
+
+        context['parameters'] = {
+            'save_url': reverse('resource_remark_save_data',args=(resource.pk,)),
+        }
+
+        source_path = Path(resource.exam.extracted_path) / 'source.exam'
+        if source_path.exists():
+            with open(str(source_path)) as f:
+                text = f.read()
+                i = text.find('\n')
+                data = json.loads(text[i+1:])
+                context['exam_source'] = data
+
+        return context
+
+class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    """ 
+        Get the SCORM CMI for the given attempts 
+    """
+    model = Resource
+
+    def get(self,request,*args,**kwargs):
+        pks = request.GET.get('attempt_pks','')
+        if pks:
+            pks = [int(x) for x in pks.split(',')]
+        else:
+            pks = []
+        attempts = self.resource.attempts.filter(pk__in=pks)
+
+        cmis = []
+        for a in attempts:
+            cmi = a.scorm_cmi()
+
+            dynamic_cmi = {
+                'cmi.mode': 'review',
+                'cmi.entry': 'resume',
+                'numbas.user_role': 'student',
+            }
+            etime = datetime.datetime.now().timestamp()
+            dynamic_cmi = {k: {'value':v,'time':etime} for k,v in dynamic_cmi.items()}
+            cmi.update(dynamic_cmi)
+            cmis.append({
+                'pk': a.pk, 
+                'cmi': cmi
+                })
+
+        return JsonResponse({'cmis': cmis})
+
+class RemarkSaveChangedDataView(MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+    """
+        Save changed SCORM elements after remarking
+    """
+    model = Resource
+
+    def post(self, request, *args, **kwargs):
+        saved = []
+        try:
+            data = json.loads(request.body.decode())
+            now = timezone.make_aware(datetime.datetime.now())
+            with transaction.atomic():
+                for ad in data['attempts']:
+                    try:
+                        attempt = Attempt.objects.get(pk=ad['pk'])
+                    except Attempt.DoesNotExist:
+                        continue
+
+                    new_elements = []
+                    for k,v in ad['changed_keys'].items():
+                        e = ScormElement.objects.create(attempt=attempt, key=k, value=v, time=now, counter=0)
+                        new_elements.append(e)
+                        RemarkedScormElement.objects.create(element=e,user=request.user)
+
+                    save_scorm_data.update_question_score_info(attempt, new_elements)
+                    saved.append(ad['pk'])
+            response = {'success': True, 'saved': saved}
+            if len(saved)<len(data['attempts']):
+                response['success'] = False
+                response['message'] = _("There was an error while saving some data.")
+            return JsonResponse(response, status=200 if response['success'] else 500)
+        except Exception as err:
+            return JsonResponse({'success': False, 'message': str(err), 'saved': saved},status=500)
+
+class RemarkIframeView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_remark_iframe.html'
+    management_tab = 'remark'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args,**kwargs)
+        resource = self.object
+        context['scripts_url'] = resource.exam.extracted_url +'/scripts.js'
+        return context
+
+class ValidateReceiptView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
     model = Resource
     form_class = forms.ValidateReceiptForm
     template_name = 'numbas_lti/management/validate_receipt.html'
     management_tab = 'dashboard'
+    helplink = 'instructor/resources.html#validate-a-receipt-code'
     
     def dispatch(self,request,*args,**kwargs):
         self.object = self.get_object()
         return super().dispatch(request,*args,**kwargs)
 
     def get(self,request,*args,**kwargs):
-        print(type(self.get_context_data()))
         return super().get(request,*args,**kwargs)
 
     def form_valid(self, form):
@@ -453,4 +619,67 @@ class ValidateReceiptView(ResourceManagementViewMixin,MustBeInstructorMixin,gene
             context['no_attempt'] = True
 
         return self.render_to_response(context)
+
+class AccessChangesView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.ListView):
+    model = AccessChange
+    template_name = 'numbas_lti/management/access_change/list.html'
+    management_tab = 'access-changes'
+    resource_pk_url_kwarg = 'resource_id'
+    helplink = 'instructor/resources.html#access-changes'
     
+class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.CreateView):
+    model = AccessChange
+    form_class = forms.AccessChangeForm
+    template_name = 'numbas_lti/management/access_change/edit.html'
+    management_tab = 'access-changes'
+    resource_pk_url_kwarg = 'resource_id'
+    helplink = 'instructor/resources.html#access-changes'
+
+    extra_context = {
+        'create': True,
+    }
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['resource'] = self.get_resource()
+
+        return initial
+
+    def get_success_url(self):
+        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+
+class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+    model = AccessChange
+    form_class = forms.AccessChangeForm
+    management_tab = 'access-changes'
+    template_name = 'numbas_lti/management/access_change/edit.html'
+    helplink = 'instructor/resources.html#access-changes'
+
+    def get_resource(self):
+        return self.get_object().resource
+
+    def get_success_url(self):
+        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+
+    def get_initial(self):
+        initial = super().get_initial()
+        ac = self.get_object()
+        initial['resource'] = ac.resource
+        initial['usernames'] = '\n'.join(u.username for u in ac.usernames.all())
+        initial['emails'] = '\n'.join(e.email for e in ac.emails.all())
+        if ac.extend_deadline is not None:
+            initial['extend_deadline_days'] = ac.extend_deadline.days
+            initial['extend_deadline_minutes'] = ac.extend_deadline.seconds // 60
+        return initial
+
+class DeleteAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.DeleteView):
+    model = AccessChange
+    management_tab = 'settings'
+    template_name = 'numbas_lti/management/access_change/delete.html'
+    helplink = 'instructor/resources.html#access-changes'
+
+    def get_resource(self):
+        return self.get_object().resource
+
+    def get_success_url(self):
+        return reverse('resource_access_changes',args=(self.get_resource().pk,))

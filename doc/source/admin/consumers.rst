@@ -35,8 +35,8 @@ These are the pieces of information that the consumer will use to establish a se
 You must now set up the connection from the consumer's end.
 There are instructions for some of the most popular VLEs below.
 
-Blackboard
-**********
+Blackboard Learn
+****************
 
 Follow `Blackboard's instructions <https://en-us.help.blackboard.com/Learn/Administrator/SaaS/Integrations/Learning_Tools_Interoperability>`_ - you'll need to add Numbas as a new LTI Tool provider, and then add a placement for it. 
 
@@ -104,7 +104,6 @@ Now you can add a Numbas exam in your :guilabel:`Modules` page:
 
 * Click the button to add an item.
 * Select :guilabel:`External tool` and click on :guilabel:`Numbas`.
-* Tick :guilabel:`Load in a new tab`.
 * Click :guilabel:`Add item`.
 
 Managing a consumer

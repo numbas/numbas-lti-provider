@@ -78,7 +78,7 @@ Run the following commands as root::
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
     # create the virtualenv for the python modules
-    virtualenv-3 /opt/numbas_lti_python
+    virtualenv -p python3 /opt/numbas_lti_python
     chown -R numbas_lti:numbas_lti /opt/numbas_lti_python
     chmod -R 770 /opt/numbas_lti_python
 
@@ -86,7 +86,7 @@ Run the following commands as root::
     cd /srv/numbas-lti-provider
     source /opt/numbas_lti_python/bin/activate
     pip install -r requirements.txt
-    pip install asgi_redis psycopg2-binary
+    pip install asgi_redis psycopg2-binary==2.8.6
 
 Change PostgreSQL to use password authentication: edit :file:`/var/lib/psql/9.6/data/pg_hba.conf`, and change::
 
@@ -114,18 +114,20 @@ Run::
 This script will ask a few questions, and configure the Numbas LTI provider accordingly.
 It will set up the database, and create an admin user account which you will use to manage the LTI provider through its web interface.
 
+.. note::
+
+   The first question that the setup script asks is "Is this installation for development?".
+   The settings for development mode are not compatible with serving the LTI provider to external clients.
+
+   Only answer 'yes' to this question if the installation is for the purpose of making changes to the LTI provider's code.
+   For all other purposes, answer 'no'.
+
 Once you've run this script, the last remaining steps are to start the app, and then set up a webserver to expose it to the outside world.
-
-At this point, you can try running a development server to check that the Django part of the LTI provider is set up properly::
-
-    python manage.py runserver
-
-Access the development server at `http://localhost:8000`_.
 
 Configure supervisord
 ---------------------
 
-Supervisord ensures that the Numbas LTI provider app is always running.
+`Supervisord <http://supervisord.org/>`_ ensures that the Numbas LTI provider app is always running.
 
 Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
 
@@ -156,9 +158,30 @@ Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
     stderr_logfile=/var/log/supervisor/numbas_lti_workers_stderr.log
     stdout_logfile=/var/log/supervisor/numbas_lti_workers_stdout.log
 
+    [program:numbas_lti_huey]
+    command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py run_huey -w 8
+    directory=/srv/numbas-lti-provider/
+    user=numbas_lti
+    autostart=true
+    autorestart=true
+    redirect_stderr=True
+    stopasgroup=true
+    environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings"
+    numprocs=1
+    process_name=%(program_name)s_%(process_num)02d
+    stderr_logfile=/var/log/supervisor/numbas_lti_huey_stderr.log
+    stdout_logfile=/var/log/supervisor/numbas_lti_huey_stdout.log
+
     [group:numbas_lti]
-    programs=numbas_lti_daphne,numbas_lti_workers
+    programs=numbas_lti_daphne,numbas_lti_workers,numbas_lti_huey
     priority=999
+
+.. note::
+
+    If your server must use a proxy to make HTTP or HTTPS requests, you should set environment variables ``HTTP_PROXY`` and ``HTTPS_PROXY`` in the supervisor configuration.
+    Add them to the lines starting ``environment=``, for example::
+
+        environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings",HTTP_PROXY=http://web.proxy:4321,HTTPS_PROXY=http://web.proxy:4321
 
 Once you've set this up, run::
 
@@ -260,6 +283,14 @@ Make sure that :file:`/etc/cron.daily/renew-certbot` is executable by the root u
     chmod +x /etc/cron.daily/renew-certbot
 
 If you have no other way of obtaining a certificate, you can `create a self-signed certificate <https://help.ubuntu.com/lts/serverguide/certificates-and-security.html.en#creating-a-self-signed-certificate>`_ which will produce a security warning in web browsers.
+
+Ensure outcome reporting works
+------------------------------
+
+In order to report scores back to the :term:`tool consumer <Tool consumer>`, the Numbas LTI provider must make an HTTPS request to an address provided by the consumer.
+Normally, this is on the same domain as the consumer.
+
+Ensure that the machine on which the LTI provider is running can make HTTPS requests to the consumer - if you're working in a testing environment, you may need to configure the consumer's server to allow connections on port 443 from the provider's IP address.
 
 Updating the software
 ---------------------

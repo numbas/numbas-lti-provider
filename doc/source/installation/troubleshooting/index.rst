@@ -53,4 +53,21 @@ You should see something like the following::
     numbas_lti:numbas_lti_workers_00   RUNNING   pid 2001, uptime 0:37:48
     numbas_lti:numbas_lti_workers_01   RUNNING   pid 2002, uptime 0:37:48
 
+Reporting scores back to the VLE fails
+--------------------------------------
 
+Check that the server running the LTI provider can make HTTPS requests to the address your VLE is accessed through.
+
+If the connection always times out or there's an error making a connection, it may be the case that HTTPS connections are blocked.
+
+If you get any other error, check that the Numbas LTI provider is reporting back to the right address. 
+You can find the address used for a particular resource using the Django shell. First, find the ID of the :term:`resource <Resource>` you're interested in - it's the numerical part of the address when you're looking at a resource's dashboard.
+
+In a terminal, navigate to the Numbas LTI provider's directory and run the following (commands after ``>>>`` are Python code)::
+
+    python manage.py shell
+    >>> from numbas_lti.models import LTIUserData
+    >>> resource_pk = 1 # Replace this with the ID of the resource you're interested in.
+    >>> print(LTIUserData.objects.filter(resource__pk=resource_pk).first().lis_outcome_service_url)
+
+Check with your VLE's documentation that this is the right address.

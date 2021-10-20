@@ -40,7 +40,7 @@ class Command(object):
     questions = [
         Question('DEBUG', 'Is this installation for development?', False),
         Question('ALLOWED_HOSTS', 'Domain names that the site will be served from', 'numbas-lti.youruni.edu'),
-        Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgres, mysql, sqlite3)', 'mysql'),
+        Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgresql, mysql, sqlite3)', 'mysql'),
         Question('STATIC_ROOT', 'Where are static files stored?', '/srv/numbas-lti-static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?', '/srv/numbas-lti-media/', validation=path_exists),
         Question('EMAIL_COMPLETION_RECEIPTS', 'Email students a receipt on completion of attempts?', True),
@@ -67,6 +67,7 @@ class Command(object):
         'USER': '{DB_USER}',
         'PASSWORD': '{DB_PASSWORD}',
         'HOST': '{DB_HOST}',
+        'OPTIONS': {options},
     }}
 }}"""
 
@@ -178,6 +179,15 @@ class Command(object):
     def write_files(self):
 
         def set_database(m, rvalues):
+            rvalues = rvalues.copy()
+            options = {}
+            if 'mysql' in rvalues['DB_ENGINE']:
+                options = {
+                    'charset': 'utf8mb4',
+                    'use_unicode': True,
+                }
+            rvalues['options'] = repr(options)
+
             template = self.sqlite_template if 'sqlite' in rvalues['DB_ENGINE'] else self.other_db_template
             return template.format(**rvalues)
 

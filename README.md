@@ -30,4 +30,4 @@ The set-up process looks like this:
 
 ## Documentation
 
-See [full documentation at numbas-lti-provider.readthedocs.io](https://numbas-lti-provider.readthedocs.io).
+See [full documentation at docs.numbas.org.uk/lti](https://docs.numbas.org.uk/lti).

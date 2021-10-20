@@ -4,8 +4,9 @@ from math import floor,isclose
 register = template.Library()
 
 @register.filter
-def percentage(value):
-    percent = 100*value
+def percentage(value,minimum="0"):
+    minimum = float(minimum)/100
+    percent = ((1-minimum)*value + minimum)*100
     percent = round(percent) if isclose(percent,round(percent)) else floor(percent)
     return "{0:.0%}".format(percent/100)
 

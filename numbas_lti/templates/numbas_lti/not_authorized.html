@@ -11,7 +11,13 @@
     <main>
         <p>{% trans "You're not authorized to view this page." %}</p>
         <p>{% trans "It's possible your authorization expired - leave this activity and re-enter." %}</p>
-        <p>{% trans "If this page has loaded inside a frame in your VLE, try setting the activity to launch in a new tab instead." %}</p>
+        <p>{% trans "If this page has loaded inside a frame, try opening the activity in a new tab instead." %}</p>
+        <p>
+            <a class="btn btn-primary" href="{{request.GET.originalurl}}" target="_blank">
+                <span class="glyphicon glyphicon-new-window"></span>
+                Open in a new tab
+            </a>
+        </p>
     </main>
     </div>
 </div>

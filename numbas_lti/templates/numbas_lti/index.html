@@ -18,5 +18,7 @@
 
         <p class="pull-right"><a href="{% url 'list_consumers' %}"><span class="glyphicon glyphicon-list"></span> {% trans "Administration (login required)" %}</a></p>
     </main>
+
+    {% include "numbas_lti/management/footer.html" %}
 </div>
 {% endblock content %}

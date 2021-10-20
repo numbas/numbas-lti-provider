@@ -1,0 +1,2358 @@
+# Numbas LTI provider server-side strings
+# Copyright (C) 2021 Newcastle University
+# This file is distributed under the Apache 2.0 licence.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: v2.10\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-03-08 08:45+0000\n"
+"PO-Revision-Date: 2021-03-02 11:49+0000\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: numbas_lti/apps.py:6
+msgid "Numbas LTI"
+msgstr ""
+
+#: numbas_lti/forms.py:95
+msgid "The uploaded file is not a .zip file"
+msgstr ""
+
+#: numbas_lti/forms.py:97
+msgid ""
+"The uploaded .zip file does not contain an imsmanifest.xml file - make sure "
+"you download a SCORM package from the editor."
+msgstr ""
+
+#: numbas_lti/forms.py:117
+msgid "There was an error while testing this exam package:"
+msgstr ""
+
+#: numbas_lti/forms.py:122
+msgid "This is a safe replacement for the previous exam package"
+msgstr ""
+
+#: numbas_lti/forms.py:152
+msgid "Request returned HTTP status code"
+msgstr ""
+
+#: numbas_lti/forms.py:155
+msgid "This doesn't seem to be a Numbas editor instance."
+msgstr ""
+
+#: numbas_lti/forms.py:158
+msgid "There was an error connecting to this URL:"
+msgstr ""
+
+#: numbas_lti/models.py:39
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:60
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:12
+msgid "Username"
+msgstr ""
+
+#: numbas_lti/models.py:40
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:61
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:14
+msgid "Email address"
+msgstr ""
+
+#: numbas_lti/models.py:41
+msgid "None"
+msgstr ""
+
+#: numbas_lti/models.py:45
+msgid "Home URL of consumer"
+msgstr ""
+
+#: numbas_lti/models.py:46
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:25
+msgid "Consumer key"
+msgstr ""
+
+#: numbas_lti/models.py:46
+msgid "The key should be human-readable, and uniquely identify this consumer."
+msgstr ""
+
+#: numbas_lti/models.py:47
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:26
+msgid "Shared secret"
+msgstr ""
+
+#: numbas_lti/models.py:49
+msgid "Field used to identify students"
+msgstr ""
+
+#: numbas_lti/models.py:54
+msgid "LTI consumer"
+msgstr ""
+
+#: numbas_lti/models.py:55
+msgid "LTI consumers"
+msgstr ""
+
+#: numbas_lti/models.py:109
+msgid "time period"
+msgstr ""
+
+#: numbas_lti/models.py:110
+msgid "time periods"
+msgstr ""
+
+#: numbas_lti/models.py:115
+msgid "UUID of exam package on disk"
+msgstr ""
+
+#: numbas_lti/models.py:131
+msgid "Package file"
+msgstr ""
+
+#: numbas_lti/models.py:132
+msgid "URL used to retrieve the exam package"
+msgstr ""
+
+#: numbas_lti/models.py:133
+msgid "URL of the exam on the editor's REST API"
+msgstr ""
+
+#: numbas_lti/models.py:134
+msgid "Time this exam was created"
+msgstr ""
+
+#: numbas_lti/models.py:138
+msgid "exam"
+msgstr ""
+
+#: numbas_lti/models.py:139
+msgid "exams"
+msgstr ""
+
+#: numbas_lti/models.py:173
+msgid "Highest score"
+msgstr ""
+
+#: numbas_lti/models.py:174
+msgid "Last attempt"
+msgstr ""
+
+#: numbas_lti/models.py:178
+msgid "Immediately"
+msgstr ""
+
+#: numbas_lti/models.py:179
+msgid "On completion"
+msgstr ""
+
+#: numbas_lti/models.py:180
+msgid "Manually, by instructor"
+msgstr ""
+
+#: numbas_lti/models.py:183
+msgid "Reporting scores"
+msgstr ""
+
+#: numbas_lti/models.py:184
+msgid "Error encountered"
+msgstr ""
+
+#: numbas_lti/models.py:185
+msgid "All scores reported"
+msgstr ""
+
+#: numbas_lti/models.py:189
+msgid "Always"
+msgstr ""
+
+#: numbas_lti/models.py:190
+msgid "When attempt is complete"
+msgstr ""
+
+#: numbas_lti/models.py:191
+msgid "When review is allowed"
+msgstr ""
+
+#: numbas_lti/models.py:192
+msgid "Never"
+msgstr ""
+
+#: numbas_lti/models.py:203
+msgid "LTI context"
+msgstr ""
+
+#: numbas_lti/models.py:204
+msgid "LTI contexts"
+msgstr ""
+
+#: numbas_lti/models.py:222
+msgid "Time this resource was created"
+msgstr ""
+
+#: numbas_lti/models.py:224
+msgid "Grading method"
+msgstr ""
+
+#: numbas_lti/models.py:225
+msgid "Include incomplete attempts in grading?"
+msgstr ""
+
+#: numbas_lti/models.py:226
+msgid "When to show scores to students"
+msgstr ""
+
+#: numbas_lti/models.py:227
+msgid "Available from"
+msgstr ""
+
+#: numbas_lti/models.py:228
+msgid "Available until"
+msgstr ""
+
+#: numbas_lti/models.py:229
+msgid "Allow students to review attempts from"
+msgstr ""
+
+#: numbas_lti/models.py:230
+msgid "When to report scores back"
+msgstr ""
+
+#: numbas_lti/models.py:231
+msgid "Email attempt receipts to students on completion?"
+msgstr ""
+
+#: numbas_lti/models.py:233
+msgid "Maximum attempts per user"
+msgstr ""
+
+#: numbas_lti/models.py:233
+msgid "Zero means unlimited attempts."
+msgstr ""
+
+#: numbas_lti/models.py:238 numbas_lti/views/search.py:149
+msgid "resource"
+msgstr ""
+
+#: numbas_lti/models.py:239
+msgid "resources"
+msgstr ""
+
+#: numbas_lti/models.py:246
+msgid "Resource in \"{}\" - no exam uploaded"
+msgstr ""
+
+#: numbas_lti/models.py:248
+msgid "Resource with no context"
+msgstr ""
+
+#: numbas_lti/models.py:417
+msgid "Current status of the process"
+msgstr ""
+
+#: numbas_lti/models.py:418
+msgid "Time the reporting process started"
+msgstr ""
+
+#: numbas_lti/models.py:419
+msgid "Description of any error"
+msgstr ""
+
+#: numbas_lti/models.py:420
+msgid "Has the result of this process been dismissed by the instructor?"
+msgstr ""
+
+#: numbas_lti/models.py:423
+msgid "report process"
+msgstr ""
+
+#: numbas_lti/models.py:424
+msgid "report processes"
+msgstr ""
+
+#: numbas_lti/models.py:428
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:56
+msgid "Not attempted"
+msgstr ""
+
+#: numbas_lti/models.py:429
+msgid "Incomplete"
+msgstr ""
+
+#: numbas_lti/models.py:430
+msgid "Complete"
+msgstr ""
+
+#: numbas_lti/models.py:438
+msgid "access token"
+msgstr ""
+
+#: numbas_lti/models.py:439
+msgid "access tokens"
+msgstr ""
+
+#: numbas_lti/models.py:454 numbas_lti/models.py:455
+msgid "LTI user data"
+msgstr ""
+
+#: numbas_lti/models.py:483
+msgid "LTI launch"
+msgstr ""
+
+#: numbas_lti/models.py:484
+msgid "LTI launches"
+msgstr ""
+
+#: numbas_lti/models.py:498
+msgid "Has a completion receipt been sent?"
+msgstr ""
+
+#: numbas_lti/models.py:499
+msgid "Time the completion receipt was sent"
+msgstr ""
+
+#: numbas_lti/models.py:511
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:21
+msgid "attempt"
+msgid_plural "attempts"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/models.py:512
+msgid "attempts"
+msgstr ""
+
+#: numbas_lti/models.py:925
+#, python-brace-format
+msgid "Numbas: Receipt for {resource_name}"
+msgstr ""
+
+#: numbas_lti/models.py:956
+msgid "attempt launch"
+msgstr ""
+
+#: numbas_lti/models.py:957
+msgid "attempt launches"
+msgstr ""
+
+#: numbas_lti/models.py:976
+msgid "question score"
+msgstr ""
+
+#: numbas_lti/models.py:977
+msgid "question scores"
+msgstr ""
+
+#: numbas_lti/models.py:989
+msgid "remarked part"
+msgstr ""
+
+#: numbas_lti/models.py:990
+msgid "remarked parts"
+msgstr ""
+
+#: numbas_lti/models.py:1020
+msgid "discounted part"
+msgstr ""
+
+#: numbas_lti/models.py:1021
+msgid "discounted parts"
+msgstr ""
+
+#: numbas_lti/models.py:1060
+msgid "Element counter to disambiguate elements with the same timestamp"
+msgstr ""
+
+#: numbas_lti/models.py:1064
+msgid "SCORM element"
+msgstr ""
+
+#: numbas_lti/models.py:1065
+msgid "SCORM elements"
+msgstr ""
+
+#: numbas_lti/models.py:1087
+msgid "SCORM element diff"
+msgstr ""
+
+#: numbas_lti/models.py:1088
+msgid "SCORM element diffs"
+msgstr ""
+
+#: numbas_lti/models.py:1149 numbas_lti/models.py:1150
+msgid "remarked SCORM element"
+msgstr ""
+
+#: numbas_lti/models.py:1153
+msgid "Editor name"
+msgstr ""
+
+#: numbas_lti/models.py:1154
+msgid "Base URL of the editor"
+msgstr ""
+
+#: numbas_lti/models.py:1155
+msgid "Cached JSON list of available exams from this editor"
+msgstr ""
+
+#: numbas_lti/models.py:1156
+msgid "Time of last cache update"
+msgstr ""
+
+#: numbas_lti/models.py:1159
+msgid "editor link"
+msgstr ""
+
+#: numbas_lti/models.py:1160
+msgid "editor links"
+msgstr ""
+
+#: numbas_lti/models.py:1198
+msgid "Editor that this project belongs to"
+msgstr ""
+
+#: numbas_lti/models.py:1199
+msgid "Name of the project"
+msgstr ""
+
+#: numbas_lti/models.py:1200
+msgid "Description of the project"
+msgstr ""
+
+#: numbas_lti/models.py:1201
+msgid "ID of the project on the editor"
+msgstr ""
+
+#: numbas_lti/models.py:1202
+msgid "URL of the project's homepage on the editor"
+msgstr ""
+
+#: numbas_lti/models.py:1203
+msgid "URL of the project on the editor's REST API"
+msgstr ""
+
+#: numbas_lti/models.py:1206 numbas_lti/models.py:1207
+msgid "linked editor project"
+msgstr ""
+
+#: numbas_lti/models.py:1217
+msgid "stress test"
+msgstr ""
+
+#: numbas_lti/models.py:1218
+msgid "stress tests"
+msgstr ""
+
+#: numbas_lti/models.py:1233
+msgid "stress test note"
+msgstr ""
+
+#: numbas_lti/models.py:1234
+msgid "stress test notes"
+msgstr ""
+
+#: numbas_lti/report_outcome.py:22
+#, python-brace-format
+msgid ""
+"There was an error reporting data for user {user_name} back to the LTI "
+"consumer: {error}"
+msgstr ""
+
+#: numbas_lti/report_outcome.py:25
+msgid "The request to report data back to the LTI consumer timed out."
+msgstr ""
+
+#: numbas_lti/report_outcome.py:30
+msgid "There was an error making a connection to the LTI consumer."
+msgstr ""
+
+#: numbas_lti/report_outcome.py:41
+#, python-brace-format
+msgid ""
+"Outcome report for user {user_name} failed; the LTI consumer said: "
+"{consumer_message}"
+msgstr ""
+
+#: numbas_lti/save_scorm_data.py:43
+msgid ""
+"Error saving SCORM data for attempt {}:\n"
+"{}"
+msgstr ""
+
+#: numbas_lti/templates/403.html:8
+msgid "Permission denied"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/attempt_completion_receipt.txt:2
+#, python-format
+msgid ""
+"%(user_name)s,\n"
+"This is a receipt confirming the completion of your attempt at "
+"%(resource_name)s."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/attempt_completion_receipt.txt:5
+#, python-format
+msgid ""
+"Receipt generated at: %(receipt_time)s\n"
+"Start time: %(start_time)s\n"
+"End time: %(end_time)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/attempt_completion_receipt.txt:7
+#, python-format
+msgid ""
+"\n"
+"Score: %(raw_score)s/%(max_score)s (%(percentage)s)"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/attempt_completion_receipt.txt:10
+#, python-format
+msgid ""
+"The following code can be used by your instructor to verify the information "
+"in this receipt:\n"
+"\n"
+"%(signed_summary)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/base.html:6
+msgid "Numbas LTI Provider"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/check_cookie_entry.html:7
+msgid "This resource needs to open in a new tab."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/check_cookie_entry.html:8
+msgid "Click to open this resource in a new tab"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/consumer_registration.html:7
+msgid "Consumer registration not currently supported"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/consumer_registration.html:10
+msgid ""
+"Sorry, automatic registration requests aren't currently supported. Instead, "
+"use the IMS cartridge URL:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/exam_not_set_up.html:8
+msgid "Activity not yet set up"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/exam_not_set_up.html:12
+msgid "The instructor hasn't set up this activity yet."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/exam_not_set_up.html:13
+msgid "Please come back later."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/index.html:7
+msgid "Numbas LTI provider"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/index.html:11
+msgid ""
+"\n"
+"            Welcome to the Numbas LTI tool provider. To use this tool, you "
+"need a <strong>consumer key</strong> and <strong>consumer secret</strong>.\n"
+"            The site administrator can create these for you.\n"
+"            "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/index.html:16
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:67
+msgid "Here is this tool's Launch URL:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/index.html:19
+msgid "Administration (login required)"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/no_resource.html:7
+msgid "Authentication failed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/no_resource.html:10
+msgid "The most likely cause is a misconfiguration of your LTI tool."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/no_resource.html:16
+#: numbas_lti/templates/numbas_lti/launch_errors/not_an_lti_launch.html:18
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:26
+msgid "Key"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/no_resource.html:16
+#: numbas_lti/templates/numbas_lti/launch_errors/not_an_lti_launch.html:18
+msgid "Value"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/not_an_lti_launch.html:7
+msgid "Not an LTI launch"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/not_an_lti_launch.html:10
+msgid "This URL is supposed to be used to launch an LTI activity."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/not_an_lti_launch.html:14
+msgid ""
+"You should see some LTI-related items in the table below, such as "
+"<code>lti_message_type</code> and <code>lti_version</code>.\" "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/not_an_lti_launch.html:15
+msgid ""
+"If those aren't present, it's likely that you haven't arrived via an LTI "
+"launch."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/not_post.html:7
+msgid "Incorrect access"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/unrecognised_lti_message_type.html:7
+msgid "Unrecognised LTI launch type"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/unrecognised_lti_message_type.html:10
+#, python-format
+msgid ""
+"The launch message type <code>%(lti_message_type)s</code> was not recognised."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/launch_errors/unrecognised_lti_message_type.html:11
+msgid ""
+"It's possible you're trying to do something using a version of LTI that this "
+"tool was not designed for."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/base.html:9
+msgid "LTI Consumers"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/base.html:10
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:5
+msgid "Editor links"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/base.html:11
+#: numbas_lti/templates/numbas_lti/management/admin/stress/index.html:4
+#: numbas_lti/templates/numbas_lti/management/admin/stress/index.html:8
+msgid "Stress tests"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/base.html:12
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:5
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:19
+#: numbas_lti/templates/numbas_lti/management/nav.html:13
+msgid "Dashboard"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/base.html:15
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:83
+msgid "Admin site"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/confirm_delete.html:5
+#, python-format
+msgid "Delete \"%(key)s\""
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/confirm_delete.html:15
+#, python-format
+msgid "Are you sure you want to delete the LTI consumer <code>%(key)s</code>?"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/confirm_delete.html:17
+msgid "All attempt data accessed through this consumer will be deleted."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/confirm_delete.html:21
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:45
+msgid "Delete this consumer"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/create.html:5
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/create.html:10
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:52
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:78
+msgid "Add a new LTI consumer"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/create.html:14
+msgid ""
+"Instructors will use the consumer key you enter below, and the automatically-"
+"generated consumer secret, to add the Numbas LTI tool to their course."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/create.html:18
+msgid "Add consumer"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:5
+msgid "Consumers"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:20
+msgid ""
+"The configured LTI consumers are listed below. To access this tool, use the "
+"configuration URL below, and the corresponding consumer key and consumer "
+"secret."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:37
+#, python-format
+msgid ""
+"\n"
+"                        1 resource.\n"
+"                        "
+msgid_plural ""
+"\n"
+"                        %(num_resources)s resources.\n"
+"                        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:44
+msgid "Manage"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:46
+msgid "Visit"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:56
+msgid "Configuration information"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:58
+msgid "Configuration by URL"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:59
+msgid "Manual configuration"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:63
+msgid "Here's the automatic configuration URL:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:69
+msgid "And here's the icon URL:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/list.html:77
+msgid "No LTI consumers have been set up yet."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:6
+#, python-format
+msgid "Manage time periods for \"%(key)s\""
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:15
+#, python-format
+msgid "Manage time periods for <code>%(key)s</code>"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:18
+msgid ""
+"\n"
+"        <p>Use time periods to group contexts belonging to this consumer by "
+"the time in which they were active.</p>\n"
+"        "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:29
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:15
+msgid "Name"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:30
+msgid "Start"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:31
+msgid "End"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:56
+msgid "Delete this period"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:64
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:77
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:119
+#: numbas_lti/templates/numbas_lti/management/resource_settings.html:19
+msgid "Save"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:65
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/create.html:18
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:28
+#: numbas_lti/templates/numbas_lti/management/delete_attempt.html:8
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:111
+#: numbas_lti/templates/numbas_lti/management/resource_settings.html:19
+msgid "Cancel"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:16
+#, python-format
+msgid "Manage <code>%(key)s</code>"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:21
+msgid "Visit this consumer's homepage"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:28
+msgid "Secret"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:33
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:33
+msgid "Contexts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:36
+msgid "This consumer has not created any resources yet."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:47
+msgid "Time period"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:48
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:65
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:71
+msgid "Context"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:49
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:34
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:74
+msgid "Resources"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:50
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:53
+#: numbas_lti/templates/numbas_lti/management/attempts.html:42
+#: numbas_lti/templates/numbas_lti/management/nav.html:14
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:17
+msgid "Attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/consumer/view.html:56
+msgid "Not in a defined time period"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/context/confirm_delete.html:5
+#, python-format
+msgid "Delete \"%(name)s\""
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/context/confirm_delete.html:15
+#, python-format
+msgid "Are you sure you want to delete the context <em>%(name)s</em>?"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/context/confirm_delete.html:17
+msgid "All attempt data accessed through this context will be deleted."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/context/confirm_delete.html:21
+#: numbas_lti/templates/numbas_lti/management/admin/context/view.html:14
+msgid "Delete this context"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/context/view.html:23
+msgid "Created"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/context/view.html:25
+#, python-format
+msgid ""
+"\n"
+"                1 attempt.\n"
+"                "
+msgid_plural ""
+"\n"
+"                %(num_attempts)s attempts.\n"
+"                "
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:22
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:23
+msgid "Search for users, contexts or resources:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:24
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:20
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:26
+#: numbas_lti/templates/numbas_lti/management/attempts.html:60
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:92
+msgid "Search"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:27
+msgid "Today"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:31
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:70
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:31
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:78
+msgid "Resource"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:32
+msgid "Launches today"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:33
+msgid "Attempts completed today"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/dashboard.html:47
+#: numbas_lti/templates/numbas_lti/management/nav.html:15
+msgid "Statistics"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/confirm_delete.html:5
+#, python-format
+msgid "Delete link to editor \"%(name)s\""
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/confirm_delete.html:15
+#, python-format
+msgid "Are you sure you want to delete the connection to %(name)s?"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/confirm_delete.html:20
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:43
+msgid "Delete this connection"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/create.html:5
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/create.html:10
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:49
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:54
+msgid "Connect to a Numbas editor"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/create.html:17
+msgid "Connect"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:5
+#, python-format
+msgid "Edit link to \"%(name)s\""
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:25
+msgid "Select projects to make available"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:26
+msgid ""
+"To appear in this list, a project must be marked \"Visible to non-members\" "
+"in the editor."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:27
+msgid ""
+"Exams from selected projects will be made available to instructors when they "
+"create an activity."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:29
+msgid "Select the projects you'd like to make available below."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:31
+msgid ""
+"No projects have been made visible - go to the editor and mark a project "
+"\"Visible to non-members\" before proceeding."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:44
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:21
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:65
+msgid "by"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:54
+#, python-format
+msgid ""
+"\n"
+"                        1 question\n"
+"                        "
+msgid_plural ""
+"\n"
+"                        %(counter)s questions\n"
+"                        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:60
+#, python-format
+msgid ""
+"\n"
+"                        1 exam\n"
+"                        "
+msgid_plural ""
+"\n"
+"                        %(counter)s exams\n"
+"                        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:10
+msgid "The configured Numbas editor connections are listed below."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:15
+msgid "Editor"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:16
+msgid "Projects"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:38
+msgid "No projects linked yet."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:42
+msgid "Edit"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/editorlink/list.html:53
+msgid "No links to Numbas editors have been set up yet."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:6
+#, python-format
+msgid "Searching for \"%(query)s\" "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:31
+msgid "Search for:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:32
+msgid "Users"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:40
+#: numbas_lti/templates/numbas_lti/management/attempts.html:68
+msgid "Previous page"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:44
+#, python-format
+msgid "Showing the only %(model)s"
+msgid_plural "Showing %(models)s %(start)s - %(end)s of %(count)s"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:48
+#: numbas_lti/templates/numbas_lti/management/attempts.html:72
+msgid "Next page"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:53
+#, python-format
+msgid "There were no %(models)s matching this query."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:59
+msgid "User"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:66
+#: numbas_lti/templates/numbas_lti/management/admin/global_search.html:72
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:16
+msgid "Consumer"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/stress/index.html:11
+msgid ""
+"Use the stress test feature to see how the LTI provider copes with high "
+"demand."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/stress/index.html:18
+#, python-format
+msgid "1 attempt"
+msgid_plural "%(num_attempts)s attempts"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/stress/index.html:22
+#: numbas_lti/templates/numbas_lti/management/attempts.html:107
+msgid "Delete"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/stress/index.html:29
+msgid "Start a stress test"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/stress/view.html:6
+#, python-format
+msgid "Stress test %(time)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:32
+#: numbas_lti/templates/numbas_lti/management/attempts.html:85
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:86
+#: numbas_lti/templates/numbas_lti/show_attempts.html:24
+msgid "Start time"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:42
+#: numbas_lti/templates/numbas_lti/management/attempts.html:104
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:124
+msgid "Review"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:52
+msgid "Recent launches"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:57
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:62
+msgid "Attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:58
+msgid "Launch time"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:59
+msgid "Attempt start time"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:60
+msgid "Mode"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:79
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:31
+msgid "Time"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:80
+msgid "IP address"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/admin/user_info.html:81
+msgid "Browser user agent"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_base.html:5
+msgid "Back to attempts listing"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_base.html:8
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:5
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:6
+#, python-format
+msgid "Attempt by %(name)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_base.html:11
+#, python-format
+msgid "Started %(time)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:14
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:15
+#: numbas_lti/templates/numbas_lti/show_attempts.html:48
+msgid "Review this attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:16
+msgid "View activity timeline for this attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:18
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:19
+msgid "Download attempt data in JSON format"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:21
+msgid "Search for an element:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:22
+msgid "Answers"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:23
+msgid "Part scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:24
+msgid "Question scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:17
+msgid "View raw SCORM data for this attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:33
+msgid "Action"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:34
+msgid "Total Score"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:35
+msgid "Scaled Score"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:44
+msgid "Download attempts summary as CSV"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:45
+msgid "Download all attempt data as JSON"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:51
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:10
+msgid "Search for a student:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:57
+msgid "Clear query"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:68
+msgid "Later"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:70
+#, python-format
+msgid "Showing the only attempt"
+msgid_plural "Showing attempts %(start)s - %(end)s of %(count)s"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:72
+msgid "Earlier"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:81
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:80
+msgid "Student"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:87
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:82
+msgid "Completion status"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:88
+#: numbas_lti/templates/numbas_lti/management/remark.html:138
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:16
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:115
+#: numbas_lti/templates/numbas_lti/show_attempts.html:25
+msgid "Score"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:104
+msgid "(old exam)"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:105
+#: numbas_lti/templates/numbas_lti/management/nav.html:16
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:116
+msgid "Remark"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:106
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:125
+msgid "Data"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:110
+msgid "Broken"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:110
+msgid "(reopen)"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:113
+msgid "(remarked)"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:119
+#, python-format
+msgid "Question %(number)s:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:119
+msgid "not attempted"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempts.html:130
+msgid ""
+"No students have attempted this exam yet. Information about students' "
+"attempts will appear here once a student has attempted this exam."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:55
+msgid "New Numbas activity"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:56
+msgid ""
+"This resource doesn't have a Numbas exam package associated with it yet."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:58
+msgid "Please upload one now or select from the list of ready-to-use exams."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:60
+msgid "Please upload one now."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:68
+msgid "Upload an exam package"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:72
+msgid ""
+"To obtain an exam package, find your exam in the Numbas editor and click <em>"
+"\"Download SCORM package\"</em>."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:74
+msgid "Click here to open the Numbas editor."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:78
+msgid "Submit"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:87
+msgid "Select a ready-made exam"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:95
+msgid "in"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:97
+msgid "All projects"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:118
+msgid "Preview"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_exam.html:119
+msgid "Use this"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_superuser.html:8
+msgid "Initial set-up"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_superuser.html:12
+msgid ""
+"Welcome to the Numbas LTI provider! First, you need to create an admin "
+"account."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/create_superuser.html:17
+msgid "Create admin account"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:11
+msgid "This resource is currently available to students."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:15
+msgid "This resource is not currently available to students."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:21
+msgid "student"
+msgid_plural "students"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:27
+msgid "Scores are currently being reported back to the grade book"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:32
+msgid "Scores were successfully reported back to the grade book."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:33
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:40
+msgid "Dismiss this message"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:37
+msgid "An error was encountered while reporting scores back to the grade book:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:39
+msgid "Report this error to your VLE's administrator."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:48
+msgid "Download scores as CSV"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:51
+msgid "Report scores back to VLE"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:53
+msgid ""
+"A report process is being cancelled. Consider waiting until it has finished."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:57
+msgid "View individual student progress and grant access tokens"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:59
+#: numbas_lti/templates/numbas_lti/management/discount.html:98
+msgid "Discount question parts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:60
+msgid "You can remark individual attempts on the attempts page."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:63
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:9
+msgid "Validate a receipt code"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:69
+msgid ""
+"No students have attempted this exam yet. Information about scores will "
+"appear here once a student attempts this exam."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:76
+msgid ""
+"This exam is in <strong>sequential mode</strong>, best for summative "
+"assessments."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:79
+msgid ""
+"This exam is in <strong>choose from a menu mode</strong>, best for formative "
+"material."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:83
+msgid "Students are allowed to start as many attempts as they like."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:85
+#, python-format
+msgid "Students may make <strong>one</strong> attempt."
+msgid_plural "Students may start <strong>%(max_attempts)s</strong> attempts."
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:88
+msgid "Students will be shown the following information:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:94
+msgid "During an attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:95
+msgid "Immediately after finishing an attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:96
+msgid "When viewing an attempt in review mode"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:101
+msgid "Total awarded scores for each attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:102
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:103
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:104
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:108
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:109
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:110
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:114
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:115
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:116
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:121
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:122
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:127
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:128
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:132
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:133
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:134
+msgid "Shown"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:102
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:103
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:104
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:108
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:109
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:110
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:114
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:115
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:116
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:120
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:121
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:122
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:126
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:127
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:128
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:132
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:133
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:134
+msgid "Not shown"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:107
+msgid "Part and question maximum scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:113
+msgid "Awarded scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:119
+msgid "Expected answers"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:120
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:126
+msgid "Available"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:125
+msgid "Question advice"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:131
+msgid "Part feedback"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:137
+msgid "Print a transcript"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:138
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:139
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:140
+msgid "Allowed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:138
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:139
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:140
+msgid "Not allowed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:146
+msgid "Students <strong>must</strong> enter a password to begin this exam."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:148
+msgid ""
+"Students <strong>do not</strong> need to enter a password to begin this exam."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:152
+#, python-format
+msgid "There is a pass threshold of <strong>%(threshold)s%%</strong>."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:156
+#, python-format
+msgid "There is a time limit of <strong>%(duration)s minutes</strong>."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:158
+msgid "This exam has no time limit."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:161
+msgid "During an attempt, students:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:163
+msgid "<strong>may</strong> regenerate questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:163
+msgid "<strong>may not</strong> regenerate questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:164
+msgid "may move freely between questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:164
+msgid "may move to the next question or previous questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:164
+msgid "<strong>may not</strong> return to questions."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:166
+msgid "<strong>may</strong> pause the timer."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:166
+msgid "<strong>may not</strong> pause the timer."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:168
+msgid "<strong>may</strong> leave the attempt and resume later."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:174
+msgid "This will happen"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:175
+msgid "When"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:180
+msgid "Students may attempt the exam"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:183
+msgid "any time"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:183
+#, python-format
+msgid "until %(available_until)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:186
+#, python-format
+msgid "from %(available_from)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:189
+#, python-format
+msgid "between %(available_from)s and %(available_until)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:191
+#, python-format
+msgid "before %(available_from)s, or after %(available_until)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:198
+msgid "Students may review their attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:199
+msgid "immediately after finishing an attempt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:199
+#, python-format
+msgid "from %(allow_review_from)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:202
+msgid "Each student's score will be reported back to the consumer"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:203
+msgid "as soon as it changes"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:203
+msgid "immediately after each attempt is completed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/dashboard.html:203
+msgid "when the instructor requests it"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/delete_attempt.html:5
+msgid "Are you sure you want to delete this attempt?"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/delete_attempt.html:8
+msgid "Delete it"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/discount.html:109
+#: numbas_lti/templates/numbas_lti/management/remark.html:135
+msgid "Question"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/discount.html:110
+#: numbas_lti/templates/numbas_lti/management/remark.html:136
+msgid "Part"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/discount.html:111
+#: numbas_lti/templates/numbas_lti/management/remark.html:137
+msgid "Gap"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/discount/discounted.html:6
+#: numbas_lti/templates/numbas_lti/management/discount/discounted.html:8
+msgid "Cancel this discount"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/discount/not_discounted.html:4
+#: numbas_lti/templates/numbas_lti/management/discount/not_discounted.html:6
+msgid "Discount this part"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/nav.html:17
+#: numbas_lti/templates/numbas_lti/management/resource_settings.html:8
+msgid "Settings"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/nav.html:20
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:89
+msgid "Test run"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/receipt_matches.html:3
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:78
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:92
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:106
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:121
+msgid "Matches"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/receipt_matches.html:6
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:81
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:95
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:109
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:124
+msgid "Doesn't match"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/remark.html:124
+msgid "Remark question parts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/remark/not_remarked.html:3
+msgid "Discounted"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/remark/not_remarked.html:8
+#: numbas_lti/templates/numbas_lti/management/remark/not_remarked.html:10
+msgid "Remark this part"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/remark/not_remarked.html:15
+msgid "Parent part remarked"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/remark/remarked.html:5
+#: numbas_lti/templates/numbas_lti/management/remark/remarked.html:7
+msgid "Restore the original mark"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:6
+msgid "Replace the exam package"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:9
+msgid ""
+"\n"
+"    <p>This exam was imported from the Numbas editor. Click the button below "
+"to fetch the latest version of the exam from the editor.</p>\n"
+"    "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:22
+msgid "Update from editor"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:24
+msgid ""
+"\n"
+"    <p>Alternately, you can upload a new exam package below.</p>\n"
+"    <hr>\n"
+"    "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:49
+msgid "Replace"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:54
+msgid "All versions of this exam"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:58
+#, python-format
+msgid ""
+"\n"
+"<p>There are %(n)s attempts set to use exam package(s) other than the active "
+"one.</p>\n"
+"<p><strong>If it is safe to do so</strong>, you can set these attempts to "
+"use the active version instead.</p>\n"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:62
+msgid "This can not be undone."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:65
+msgid "Set all attempts to use the current version."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:71
+msgid ""
+"All exam packages that have been associated with this resource are listed "
+"below."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:72
+msgid ""
+"The currently active version is highlighted. This version is used for new "
+"attempts, and for automatic remarking."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:79
+msgid "Title"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:80
+msgid "Uploaded"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:81
+msgid "Attempts using this version"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:99
+msgid "Use this version"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/replace_exam.html:102
+msgid "This version is in use now."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/report_all_scores.html:5
+msgid ""
+"Scores are now being reported back to the LTI consumer. If there are lots of "
+"students, this might take a minute or two."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/report_all_scores.html:6
+msgid "Back to dashboard"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:9
+#: numbas_lti/templates/numbas_lti/management/resource_remark_not_supported.html:8
+#, python-format
+msgid "Remark <strong>%(resource_name)s</strong>"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:16
+msgid ""
+"\n"
+"        On this page you can automatically remark attempts at this resource, "
+"using the latest version of the exam package.\n"
+"        Changed scores are not automatically saved.\n"
+"    "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:22
+msgid ""
+"\n"
+"        Remarking is computationally intensive. Your browser may become "
+"unresponsive while remarking all attempts.\n"
+"    "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:30
+msgid "Use unsubmitted answers"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:33
+msgid "Remark all attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:34
+msgid "Stop marking"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:35
+msgid "Save all changed attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:44
+msgid "Time taken:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:45
+msgid "Estimated end:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:49
+msgid "There was an error saving changed data:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:54
+msgid "of"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:54
+msgid "attempts shown."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:55
+msgid " changed attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:56
+msgid "Show:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:58
+msgid "All attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:59
+msgid "Only completed attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:60
+msgid "Only changed scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:61
+msgid "Only increased scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:62
+msgid "Only decreased scores"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:83
+msgid "Current score"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:84
+msgid "Remarked score"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:85
+msgid "Status"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:92
+msgid "Number of hidden attempts:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:105
+msgid "Error"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:109
+msgid "Decreased"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:110
+msgid "Increased"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:111
+msgid "Unchanged"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:120
+msgid "Saved"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:121
+msgid "Saving error"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:129
+msgid "There was an error remarking this attempt:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark_not_supported.html:13
+msgid ""
+"This resource's exam package does not support automatic remarking. If you "
+"can, please update it with a newer version."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_settings.html:10
+msgid "Replace exam package"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_settings.html:11
+msgid "Download exam package"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_settings.html:17
+#, python-format
+msgid "All times are in the timezone %(TIME_ZONE)s."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:9
+#, python-format
+msgid "Statistics for <strong>%(resource_name)s</strong>"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:16
+msgid "Print this page"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:20
+msgid "Attempt completion"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:33
+msgid "Only count completed attempts"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:36
+msgid "Summary statistics"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:41
+msgid "Mean"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:42
+msgid "Lower quartile"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:43
+msgid "Median"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:44
+msgid "Upper quartile"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:60
+msgid "Incorrect"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:64
+msgid "Partially correct"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:68
+msgid "Correct"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:78
+msgid "Score distribution"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:79
+msgid ""
+"In the following charts, the <i>x</i>-axis represents scaled score, and the "
+"<i>y</i>-axis represents the number of attempts achieving that score."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:84
+msgid "Attempt times"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_stats.html:85
+msgid ""
+"The following chart shows start and end times of all attempts. Note that "
+"students may not be active for the whole of the shown time."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:7
+msgid "Student progress"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:19
+msgid "Access tokens"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:30
+msgid "This score has not been reported to the grade book yet."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:37
+msgid "Grant an access token"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/student_progress.html:38
+msgid "Remove an access token"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:11
+msgid ""
+"Enter a code from a student's attempt completion receipt to validate it."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:20
+msgid "Validate this code"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:29
+msgid "Valid code"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:32
+msgid "Invalid code"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:38
+msgid "The code you entered is not valid."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:44
+msgid ""
+"The code you entered does not correspond to an attempt at this resource."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:49
+msgid "The code you entered corresponds to the following information:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:55
+msgid "In receipt"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:56
+msgid "In database"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:67
+msgid "Attempt not found"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:72
+msgid "View attempt data"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/validate_receipt.html:100
+msgid "End time"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/no_websockets.html:9
+msgid "Incompatible browser"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/no_websockets.html:13
+msgid ""
+"Your browser does not support WebSockets, which are required. Please try a "
+"different browser - Google Chrome or Mozilla Firefox will work."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/not_authorized.html:8
+msgid "Not authorized"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/not_authorized.html:12
+msgid "You're not authorized to view this page."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/not_authorized.html:13
+msgid ""
+"It's possible your authorization expired - leave this activity and re-enter."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/not_authorized.html:14
+msgid ""
+"If this page has loaded inside a frame, try opening the activity in a new "
+"tab instead."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:15
+#, python-format
+msgid ""
+"This resource automatically closed at <span class=\"available-until\">"
+"%(available_until)s</span>"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:20
+msgid "Attempt data is being saved to the database. Please wait."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:25
+msgid ""
+"All attempt data has been saved to the database. You may now close this "
+"window."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:30
+msgid ""
+"There is currently no connection to the server - your attempt data can not "
+"be saved to the database."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:31
+msgid "When the connection is restored, data will be saved to the database."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:32
+msgid ""
+"Data is being saved locally, so you'll be able to resume this attempt "
+"<strong>from this device</strong> when the connection is restored."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:33
+msgid "If this warning remains visible for a long time, please contact "
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:39
+msgid ""
+"The following code can be used by your instructor to verify the information "
+"in this receipt:"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:74
+msgid "A connection to the server could not be created. Please report this."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:9
+#, python-format
+msgid " Hi %(name)s."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:10
+msgid "You have already attempted this activity."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:12
+msgid "You can resume or review your previous attempt"
+msgid_plural "You can resume or review your previous attempts"
+msgstr[0] ""
+msgstr[1] ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:12
+msgid ", or start a new one"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:38
+msgid "Completed"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:40
+msgid "In progress"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:52
+#, python-format
+msgid "Review will be available from %(time)s"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:58
+msgid "Continue"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/show_attempts.html:67
+msgid "Start a new attempt"
+msgstr ""
+
+#: numbas_lti/templates/registration/login.html:15
+msgid "Log in"
+msgstr ""
+
+#: numbas_lti/views/attempt.py:131
+msgid "{}'s attempt has been reopened."
+msgstr ""
+
+#: numbas_lti/views/attempt.py:200
+msgid ""
+"The attempt was completed, but not all data had been saved. All data has now "
+"been saved, and review is not available yet."
+msgstr ""
+
+#: numbas_lti/views/attempt.py:217
+msgid "You can't start a new attempt at this exam."
+msgstr ""
+
+#: numbas_lti/views/attempt.py:278
+msgid "You're not allowed to review this attempt."
+msgstr ""
+
+#: numbas_lti/views/editorlink.py:62
+msgid "Error obtaining the list of projects to edit: {}"
+msgstr ""
+
+#: numbas_lti/views/editorlink.py:121
+msgid "Connected to {} at {}."
+msgstr ""
+
+#: numbas_lti/views/editorlink.py:145
+msgid "The connection to {} has been deleted."
+msgstr ""
+
+#: numbas_lti/views/entry.py:156
+msgid "No resource found for an LTI entry:\n"
+msgstr ""
+
+#: numbas_lti/views/entry.py:163
+msgid ""
+"Unrecognised LTI launch type: {}\n"
+"{}"
+msgstr ""
+
+#: numbas_lti/views/resource.py:84
+msgid "The exam package has been updated."
+msgstr ""
+
+#: numbas_lti/views/resource.py:105
+msgid "All attempts now use the active version of this resource's exam."
+msgstr ""
+
+#: numbas_lti/views/resource.py:297
+#, python-brace-format
+msgid "{slug}-scores.csv"
+msgstr ""
+
+#: numbas_lti/views/resource.py:328
+#, python-brace-format
+msgid "Question {n}"
+msgstr ""
+
+#: numbas_lti/views/resource.py:347
+#, python-brace-format
+msgid "{slug}-attempts.csv"
+msgstr ""
+
+#: numbas_lti/views/resource.py:581
+msgid "There was an error while saving some data."
+msgstr ""
+
+#: numbas_lti/views/search.py:145
+msgid "user"
+msgstr ""
+
+#: numbas_lti/views/search.py:147
+msgid "context"
+msgstr ""

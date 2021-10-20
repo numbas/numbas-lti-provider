@@ -1,6 +1,6 @@
-from .mixins import ManagementViewMixin
-from channels import Channel
+from .mixins import ManagementViewMixin, HelpLinkMixin
 from django import http
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
@@ -20,9 +20,10 @@ class EditorLinkManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Manag
     management_tab = 'editor-links'
     login_url = reverse_lazy('login')
 
-class ListEditorLinksView(EditorLinkManagementMixin,generic.list.ListView):
+class ListEditorLinksView(HelpLinkMixin, EditorLinkManagementMixin,generic.list.ListView):
     model = EditorLink
     template_name = 'numbas_lti/management/admin/editorlink/list.html'
+    helplink = 'admin/editorlink.html'
 
 class GettingProjectDataException(Exception):
     pass
@@ -50,9 +51,9 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
     def get_projects_data(self):
         try:
             link = self.get_object()
-            projects_data = requests.get('{}/api/projects'.format(link.url)).json()
+            projects_data = requests.get('{}/api/projects'.format(link.url), timeout=getattr(settings,'REQUEST_TIMEOUT',60)).json()
             return projects_data
-        except (json.JSONDecodeError, requests.ConnectionError) as e:
+        except (json.JSONDecodeError, requests.exceptions.RequestException) as e:
             raise GettingProjectDataException(str(e))
 
     def get(self, request, *args, **kwargs):
@@ -104,17 +105,18 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
             if pform.cleaned_data['use']:
                 pform.instance.editor = self.object
                 link = pform.save()
-        Channel("editorlink.update_cache").send({'pk':self.object.pk,'bounce':False})
+        exams = self.object.available_exams
 
         return http.HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self,form,project_form):
         return self.render_to_response(self.get_context_data(form=form,project_form=project_form))
 
-class CreateEditorLinkView(EditorLinkManagementMixin,generic.edit.CreateView):
+class CreateEditorLinkView(HelpLinkMixin, EditorLinkManagementMixin,generic.edit.CreateView):
     model = EditorLink
     form_class = forms.CreateEditorLinkForm
     template_name = 'numbas_lti/management/admin/editorlink/create.html'
+    helplink = 'admin/editorlink.html#creating-an-editor-link'
 
     def form_valid(self,form):
         editorlink = self.object = form.save()

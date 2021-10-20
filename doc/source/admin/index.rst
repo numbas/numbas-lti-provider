@@ -8,3 +8,5 @@ For administrators
     consumers
     editorlink
     stress-tests
+    dashboard
+    search

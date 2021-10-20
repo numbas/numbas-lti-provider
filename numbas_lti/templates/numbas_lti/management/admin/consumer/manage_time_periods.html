@@ -1,7 +1,7 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
 {% load bootstrap %}
-{% load staticfiles %}
+{% load static %}
 
 {% block title %}{% blocktrans with key=consumer.key %}Manage time periods for "{{key}}"{% endblocktrans %} - {{block.super}}{% endblock %}
 

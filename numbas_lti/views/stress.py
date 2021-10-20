@@ -1,4 +1,4 @@
-from .mixins import ManagementViewMixin
+from .mixins import ManagementViewMixin, HelpLinkMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.http import JsonResponse
 from django.views.generic import CreateView, DetailView, FormView, View, ListView, DeleteView
@@ -8,11 +8,12 @@ from django.urls import reverse, reverse_lazy
 from numbas_lti.models import StressTest, Resource, Attempt
 
 
-class StressTestManagementMixin(PermissionRequiredMixin,ManagementViewMixin):
+class StressTestManagementMixin(HelpLinkMixin, PermissionRequiredMixin,ManagementViewMixin):
     permission_required = ('numbas_lti.add_stresstest',)
     model = StressTest
     login_url = reverse_lazy('login')
     management_tab = 'stress-tests'
+    helplink = 'admin/stress-tests.html'
 
 def create_stress_test(request):
     resource = Resource.objects.create(resource_link_id='',title='Stress test')

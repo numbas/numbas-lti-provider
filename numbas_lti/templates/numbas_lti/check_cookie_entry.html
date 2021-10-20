@@ -1,0 +1,36 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <main>
+        <p>{% blocktrans %}This resource needs to open in a new tab.{% endblocktrans %}</p>
+        <p><a class="btn btn-primary" target="_blank" href="{{url}}">{% trans "Click to open this resource in a new tab" %}</a></p>
+        
+    </main>
+</div>
+{% endblock content %}
+
+{% block javascripts %} 
+{{block.super}}
+<script>
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+    var sessioncookie = getCookie('sessionkey');
+    console.log(sessioncookie);
+    
+</script>
+{% endblock %} 

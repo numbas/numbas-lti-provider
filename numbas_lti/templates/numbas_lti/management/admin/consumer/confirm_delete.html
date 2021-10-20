@@ -19,7 +19,7 @@
             {% csrf_token %}
             <p>
                 <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this consumer" %}</button>
-                <a class="btn btn-link" href="{% url 'list_consumers' %}">Cancel</a>
+                <a class="btn btn-link" href="{% url 'list_consumers' %}">{% trans "Cancel" %}</a>
             </p>
         </form>
     </main>

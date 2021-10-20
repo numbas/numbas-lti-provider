@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
+{% load statici18n %}
 
 {% block title %}{% blocktrans with time=object.resource.creation_time %}Stress test {{time}}{% endblocktrans %} - {{block.super}}{% endblock %}
 
@@ -15,6 +16,8 @@
 <script type="text/javascript" src="{% static 'fetch.js' %}"></script>
 <script type="text/javascript" src="{% static 'polyfills.js' %}"></script>
 {% include 'numbas_lti/scripts/luxon.html' %}
+{% get_current_language as LANGUAGE_CODE %}
+<script src="{% statici18n LANGUAGE_CODE %}"></script>
 <script src="{% static 'api.js' %}"></script>
 <script src="{% static 'vue.js' %}"></script>
 <script src="{% static 'stresstest.js' %}"></script>
@@ -45,6 +48,8 @@
 <header>
     <h1>Stress test {{object.resource.creation_time}}</h1>
 </header>
+
+{% include "numbas_lti/csrf_token_form.html" %}
 
 <div id="app">
     {% verbatim %}

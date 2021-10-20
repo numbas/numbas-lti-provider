@@ -20,9 +20,15 @@
             <td>
                 <a href="{% url 'resource_dashboard' resource.pk %}" target="_blank">{{resource.title|default:"Unnamed resource"}} {% if resource.exam.title and resource.title != resource.exam.title %}<small class="text-muted">({{resource.exam.title}})</small>{% endif %}</a>
             </td>
+            <td>
+                {% if resource.is_available %}
+                <span class="text-success"><span class="glyphicon glyphicon-eye-open"></span> {% trans "Open" %}</span>
+                {% else %}
+                <span class="text-muted"><span class="glyphicon glyphicon-eye-close"></span> {% trans "Closed" %}</span>
+                {% endif %}</td>
             <td>{% trans "Created" %} {{resource.creation_time}}</td>
             <td>
-                {% blocktrans count num_attempts=resource.attempts.count %}
+                {% blocktrans count num_attempts=resource.unbroken_attempts.count %}
                 1 attempt.
                 {% plural %}
                 {{num_attempts}} attempts.

@@ -1,0 +1,9 @@
+#access-changes {
+    display: flex;
+    flex-wrap: wrap;
+    grid-gap: 1em;
+}
+
+#access-changes li {
+  flex-basis: 30em;
+}

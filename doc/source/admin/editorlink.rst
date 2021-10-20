@@ -21,9 +21,9 @@ The address of the public editor hosted by mathcentre is::
 
     https://numbas.mathcentre.ac.uk
 
-Once you've created an editor link, you can select the :numbas:ref:`projects <projects>` from the editor that you want to use.
+Once you've created an editor link, you can select the :ref:`projects <numbas:projects>` from the editor that you want to use.
 
-Only projects which are :numbas:ref:`marked visible to non-members <public-project>` are available.
+Only projects which are :ref:`marked visible to non-members <numbas:public-project>` are available.
 This is because the editor link has no authentication mechanism, and linked projects are available to all :ref:`consumers <consumer>`.
 
 Once you have selected some projects, published exams from those projects will be available for instructors to pick on the :ref:`new Numbas activity <create-resource>` screen.

@@ -5,9 +5,19 @@
 {% block body_class %}dashboard{% endblock %}
 
 {% block management_content %}
+    {% if resource.is_available %}
+    <div class="text-info">
+        <p>{% trans "This resource is currently available to students." %}</p>
+    </div>
+    {% else %}
+    <div class="text-warning">
+        <p>{% trans "This resource is not currently available to students." %}</p>
+    </div>
+    {% endif %}
+
     {% if resource.attempts.count %}
 
-    <p><strong>{{resource.attempts.count}}</strong> {% blocktrans count counter=resource.attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
+    <p><strong>{{resource.unbroken_attempts.count}}</strong> {% blocktrans count counter=resource.unbroken_attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
 
     {% if last_report_process %}
     <section>
@@ -34,9 +44,14 @@
 
     <section>
         <ul class="list-unstyled actions">
-            <li><a class="btn btn-info" href="{% url 'scores_csv' resource.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</a></li>
+            <li><form method="POST" action="{% url 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</button></form></li>
             {% if not last_report_process %}
-            <li><a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a></li>
+            <li>
+                <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>
+                {% if dismissed_report_process %}
+                <span class="text-warning">{% trans "A report process is being cancelled. Consider waiting until it has finished." %}</span>
+                {% endif %}
+            </li>
             {% endif %}
             <li><a href="{% url 'student_progress' resource.pk %}"><span class="glyphicon glyphicon-user"></span> {% trans "View individual student progress and grant access tokens" %}</a></li>
             <li>
@@ -51,6 +66,144 @@
 
     {% else %}
         <p>{% trans "No students have attempted this exam yet. Information about scores will appear here once a student attempts this exam." %}</p>
+    {% endif %}
+
+    {% if exam_info %}
+    <hr>
+    <section>
+        {% if exam_info.navigateMode == 'sequence' %}
+        <p>{% blocktrans %}This exam is in <strong>sequential mode</strong>, best for summative assessments.{% endblocktrans %}</p>
+        {% endif %}
+        {% if exam_info.navigateMode == 'menu' %}
+        <p>{% blocktrans %}This exam is in <strong>choose from a menu mode</strong>, best for formative material.{% endblocktrans %}</p>
+        {% endif %}
+
+        {% if resource.max_attempts == 0 %}
+        <p>{% blocktrans %}Students are allowed to start as many attempts as they like.{% endblocktrans %}</p>
+        {% else %}
+        <p>{% blocktrans count counter=resource.max_attempts with max_attempts=resource.max_attempts %}Students may make <strong>one</strong> attempt.{% plural %}Students may start <strong>{{max_attempts}}</strong> attempts.{% endblocktrans %}</p>
+        {% endif %}
+
+        <p>{% blocktrans %}Students will be shown the following information:{% endblocktrans %}</p>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <td></td>
+                    <th>{% trans "During an attempt" %}</th>
+                    <th>{% trans "Immediately after finishing an attempt" %}</th>
+                    <th>{% trans "When viewing an attempt in review mode" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>{% trans "Total awarded scores for each attempt" %}</th>
+                    {% if resource.show_marks_when == 'always' %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if resource.show_marks_when == 'always' or resource.show_marks_when == 'complete' %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if resource.show_marks_when != 'never' %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                </tr>
+                <tr>
+                    <th>{% trans "Part and question maximum scores" %}</th>
+                    {% if exam_info.showTotalMark %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showTotalMark or exam_info.completionShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showTotalMark or exam_info.reviewShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                </tr>
+                <tr>
+                    <th>{% trans "Awarded scores" %}</th>
+                    {% if exam_info.showActualMark %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showActualMark or exam_info.completionShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showActualMark or exam_info.reviewShowScore %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                </tr>
+                <tr>
+                    <th>{% trans "Expected answers" %}</th>
+                    {% if exam_info.allowRevealAnswer %}<td class="success">{% trans "Available" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.completionShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.reviewShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                </tr>
+                <tr>
+                    <th>{% trans "Question advice" %}</th>
+                    {% if exam_info.allowRevealAnswer %}<td class="success">{% trans "Available" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.completionShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.reviewShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                </tr>
+                <tr>
+                    <th>{% trans "Part feedback" %}</th>
+                    {% if exam_info.showAnswerState %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showAnswerState or exam_info.completionShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showAnswerState or exam_info.reviewShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                </tr>
+                <tr>
+                    <th>{% trans "Print a transcript" %}</th>
+                    {% if exam_info.allowPrinting %}<td class="success">{% trans "Allowed" %}</td>{% else %}<td class="danger">{% trans "Not allowed" %}</td>{% endif %}
+                    {% if exam_info.allowPrinting %}<td class="success">{% trans "Allowed" %}</td>{% else %}<td class="danger">{% trans "Not allowed" %}</td>{% endif %}
+                    {% if exam_info.allowPrinting %}<td class="success">{% trans "Allowed" %}</td>{% else %}<td class="danger">{% trans "Not allowed" %}</td>{% endif %}
+                </tr>
+            </tbody>
+        </table>
+
+        {% if exam_info.startPassword %}
+        <p>{% blocktrans %}Students <strong>must</strong> enter a password to begin this exam.{% endblocktrans %}</p>
+        {% else %}
+        <p>{% blocktrans %}Students <strong>do not</strong> need to enter a password to begin this exam.{% endblocktrans %}</p>
+        {% endif %}
+
+        {% if exam_info.hasPercentPass %}
+        <p>{% blocktrans with threshold=exam_info.percentPass%}There is a pass threshold of <strong>{{threshold}}%</strong>.{% endblocktrans %}</p>
+        {% endif %}
+
+        {% if exam_info.hasTimeLimit %}
+        <p>{% blocktrans with duration=exam_info.duration|floatformat %}There is a time limit of <strong>{{duration}} minutes</strong>.{% endblocktrans %}</p>
+        {% else %}
+        <p>{% blocktrans %}This exam has no time limit.{% endblocktrans %}</p>
+        {% endif %}
+
+        <p>{% blocktrans %}During an attempt, students:{% endblocktrans %}</p>
+        <ul>
+            <li>{% if exam_info.allowRegen %}{% blocktrans %}<strong>may</strong> regenerate questions.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> regenerate questions.{% endblocktrans %}{% endif %}</li>
+            <li>{% if exam_info.allowBrowse %}{% blocktrans %}may move freely between questions.{% endblocktrans %}{% else %}{% if exam_info.allowReverse %}{% blocktrans %}may move to the next question or previous questions.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> return to questions.{% endblocktrans %}{% endif %}{% endif %}</li>
+            {% if exam_info.hasTimeLimit %}
+            <li>{% if exam_info.allowPause %}{% blocktrans %}<strong>may</strong> pause the timer.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> pause the timer.{% endblocktrans %}{% endif %}</li>
+            {% endif %}
+            <li>{% blocktrans %}<strong>may</strong> leave the attempt and resume later.{% endblocktrans %}</li>
+        </ul>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>{% trans "This will happen" %}</th>
+                    <th>{% trans "When" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{% blocktrans %}Students may attempt the exam{% endblocktrans %}</td>
+                    <td>
+                        {% if resource.available_from == None %}
+                            {% if resource.available_until == None %}{% trans "any time" %}{% else %}{% blocktrans with available_until=resource.available_until %}until {{available_until}}{% endblocktrans %}{% endif %}
+                        {% else %}
+                            {% if resource.available_until == None %}
+                                {% blocktrans with available_from=resource.available_from %}from {{available_from}}{% endblocktrans %}
+                            {% else %}
+                                {% if resource.available_from < resource.available_until %}
+                                    {% blocktrans with available_from=resource.available_from available_until=resource.available_until %}between {{available_from}} and {{available_until}}{% endblocktrans %}
+                                {% else %}
+                                    {% blocktrans with available_from=resource.available_from available_until=resource.available_until %}before {{available_from}}, or after {{available_until}}{% endblocktrans %}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>{% trans "Students may review their attempts" %}</td>
+                    <td>{% if resource.allow_review_from == None %}{% trans "immediately after finishing an attempt" %}{% else %}{% blocktrans with allow_review_from=resource.allow_review_from %}from {{allow_review_from}}{% endblocktrans %}{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>{% blocktrans %}Each student's score will be reported back to the consumer{% endblocktrans %}</td>
+                    <td>{% if resource.report_mark_time == 'immediately' %}{% trans "as soon as it changes" %}{% elif resource.report_mark_time == 'oncompletion' %}{% trans "immediately after each attempt is completed" %}{% else %}{% trans "when the instructor requests it" %}{% endif %}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
     {% endif %}
 
 {% endblock management_content %}

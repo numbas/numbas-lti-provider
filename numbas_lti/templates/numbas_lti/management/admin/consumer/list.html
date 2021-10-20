@@ -1,6 +1,6 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
 
 {% block title %}{% trans "Consumers" %} - {{block.super}}{% endblock %}
 
@@ -55,8 +55,8 @@
         <section>
             <h2>{% trans "Configuration information" %}</h2>
             <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active"><a href="#config-xml" aria-controls="config-xml" role="tab" data-toggle="tab">Configuration by URL</a></li>
-                <li role="presentation"><a href="#config-manual" aria-controls="config-manual" role="tab" data-toggle="tab">Manual configuration</a></li>
+                <li role="presentation" class="active"><a href="#config-xml" aria-controls="config-xml" role="tab" data-toggle="tab">{% trans "Configuration by URL" %}</a></li>
+                <li role="presentation"><a href="#config-manual" aria-controls="config-manual" role="tab" data-toggle="tab">{% trans "Manual configuration" %}</a></li>
             </ul>
             <div class="tab-content">
                 <div role="tabpanel" class="tab-pane active" id="config-xml">
@@ -78,7 +78,4 @@
             <p><a href="{% url 'create_consumer' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add a new LTI consumer" %}</a></p>
         </div>
     {% endif %}
-
-
-    <div class="pull-right"><a href="/admin"><span class="glyphicon glyphicon-cog"></span> {% trans "Admin site" %}</a></div>
 {% endblock management_content %}

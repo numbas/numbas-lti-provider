@@ -12,7 +12,7 @@ You will need:
 * An SSL certificate: LTI content must be served over HTTPS. 
   These can be obtained easily and for free from `Let's Encrypt <https://letsencrypt.org/>`_.
 
-These instructions will take a fresh machine running Ubuntu 16.04 and set up the Numbas LTI tool provider to run through NGINX or Apache.
+These instructions will take a fresh machine running Ubuntu 16.04 or newer and set up the Numbas LTI tool provider to run through NGINX or Apache.
 On different operating systems or with different web servers, the process will be different. 
 There are alternate instructions for :ref:`installation on RedHat Enterprise Linux 7 <installation-rhel-7>`.
 
@@ -65,7 +65,7 @@ First, install packages, set up users, and create the required paths (you can sa
     cd /srv/numbas-lti-provider
     source /opt/numbas_lti_python/bin/activate
     pip install -r requirements.txt
-    pip install asgi_redis psycopg2
+    pip install channels_redis==3.3.0 psycopg2==2.8.6
 
 Next, create a database and set a password to access it (replace ``$password`` with your chosen password in the following script)::
 
@@ -84,18 +84,20 @@ Run::
 This script will ask a few questions, and configure the Numbas LTI provider accordingly.
 It will set up the database, and create an admin user account which you will use to manage the LTI provider through its web interface.
 
+.. note::
+
+   The first question that the setup script asks is "Is this installation for development?".
+   The settings for development mode are not compatible with serving the LTI provider to external clients.
+
+   Only answer 'yes' to this question if the installation is for the purpose of making changes to the LTI provider's code.
+   For all other purposes, answer 'no'.
+
 Once you've run this script, the last remaining steps are to start the app, and then set up a webserver to expose it to the outside world.
-
-At this point, you can try running a development server to check that the Django part of the LTI provider is set up properly::
-
-    python manage.py runserver
-
-Access the development server at `http://localhost:8000`_.
 
 Configure supervisord
 ---------------------
 
-Supervisord ensures that the Numbas LTI provider app is always running.
+`Supervisord <http://supervisord.org/>`_ ensures that the Numbas LTI provider app is always running.
 
 Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
 
@@ -106,7 +108,7 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     autostart=true
     autorestart=true
     stopasgroup=true
-    environment=DJANGO_SETTINGS_MODULE=numbasltiprovider.settings
+    environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings"
     numprocs=4
     process_name=%(program_name)s_%(process_num)02d
     stderr_logfile=/var/log/supervisor/numbas_lti_daphne_stderr.log
@@ -126,9 +128,30 @@ Save the following as :file:`/etc/supervisor/conf.d/numbas_lti.conf`::
     stderr_logfile=/var/log/supervisor/numbas_lti_workers_stderr.log
     stdout_logfile=/var/log/supervisor/numbas_lti_workers_stdout.log
 
+    [program:numbas_lti_huey]
+    command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py run_huey -w 8
+    directory=/srv/numbas-lti-provider/
+    user=numbas_lti
+    autostart=true
+    autorestart=true
+    redirect_stderr=True
+    stopasgroup=true
+    environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings"
+    numprocs=1
+    process_name=%(program_name)s_%(process_num)02d
+    stderr_logfile=/var/log/supervisor/numbas_lti_huey_stderr.log
+    stdout_logfile=/var/log/supervisor/numbas_lti_huey_stdout.log
+
     [group:numbas_lti]
-    programs=numbas_lti_daphne,numbas_lti_workers
+    programs=numbas_lti_daphne,numbas_lti_workers,numbas_lti_huey
     priority=999
+
+.. note::
+
+    If your server must use a proxy to make HTTP or HTTPS requests, you should set environment variables ``HTTP_PROXY`` and ``HTTPS_PROXY`` in the supervisor configuration.
+    Add them to the lines starting ``environment=``, for example::
+
+        environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings",HTTP_PROXY=http://web.proxy:4321,HTTPS_PROXY=http://web.proxy:4321
 
 Once you've set this up, run::
 
@@ -213,8 +236,12 @@ With Apache
 ***********
 
 `Apache <https://httpd.apache.org/>`_ is a very commonly-used webserver.
-While it can be used as a reverse proxy for the Numbas LTI provider, it's not great at dealing with the many simultaneous connections that the LTI provider requires.
-In some circumstances, Apache might be your only option, so the instructions are provided as a reference.
+
+.. warning::
+
+    While it can be used as a reverse proxy for the Numbas LTI provider, it's not great at dealing with the many simultaneous connections that the LTI provider requires.
+    Apache will start having trouble at around 100 simultaneous connections.
+    In some circumstances, Apache might be your only option, so the instructions are provided as a reference.
 
 Install required packages::
 
@@ -233,15 +260,23 @@ Overwrite :file:`/etc/apache2/sites-available/000-default.conf` with the followi
       ProxyRequests Off
       ProxyPass /static !
       Alias "/static" "/srv/numbas-lti-static"
-      ProxyPass "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPassReverse "/websocket" "ws://0.0.0.0:8707/websocket"
-      ProxyPass / http://0.0.0.0:8707/
-      ProxyPassReverse / http://0.0.0.0:8707/
+      ProxyPass /media !
+      Alias "/media" "/srv/numbas-lti-media"
+      ProxyPass "/websocket" "ws://0.0.0.0:8700/websocket"
+      ProxyPassReverse "/websocket" "ws://0.0.0.0:8700/websocket"
+      ProxyPass / http://0.0.0.0:8700/
+      ProxyPassReverse / http://0.0.0.0:8700/
 
       RequestHeader set X-Scheme "https"
       RequestHeader set X-Forwarded-Proto "https"
 
       <Directory "/srv/numbas-lti-static">
+        AllowOverride None
+        Options FollowSymLinks
+        Require all granted
+      </Directory>
+
+      <Directory "/srv/numbas-lti-media">
         AllowOverride None
         Options FollowSymLinks
         Require all granted
@@ -274,6 +309,14 @@ Make sure that :file:`/etc/cron.daily/renew-certbot` is executable by the root u
     chmod +x /etc/cron.daily/renew-certbot
 
 If you have no other way of obtaining a certificate, you can `create a self-signed certificate <https://help.ubuntu.com/lts/serverguide/certificates-and-security.html.en#creating-a-self-signed-certificate>`_ which will produce a security warning in web browsers.
+
+Ensure outcome reporting works
+------------------------------
+
+In order to report scores back to the :term:`tool consumer <Tool consumer>`, the Numbas LTI provider must make an HTTPS request to an address provided by the consumer.
+Normally, this is on the same domain as the consumer.
+
+Ensure that the machine on which the LTI provider is running can make HTTPS requests to the consumer - if you're working in a testing environment, you may need to configure the consumer's server to allow connections on port 443 from the provider's IP address.
 
 Updating the software
 ---------------------

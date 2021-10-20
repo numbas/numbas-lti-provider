@@ -1,6 +1,42 @@
+body {
+    min-height: 100%;
+}
+
 body.dashboard ul.actions li ~ li {
     border-top: 1px solid #ccc;
 }
 body.dashboard ul.actions li {
     padding: 1em 0;
+}
+.navbar-default .navbar-brand {
+    color: #333;
+}
+.navbar-default .navbar-nav > li > a {
+    color: #555;
+}
+
+.navbar-default.resource-management-navbar .navbar-brand {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.resource-management-navbar .navbar-brand .context-name {
+    font-style: italic;
+}
+
+.management-footer {
+    font-style: italic;
+    text-align: center;
+    margin: 5rem 2rem 0 2rem;
+    padding: 2rem 0;
+    border-top: 1px solid hsl(0, 0%, 90.6%);
+}
+
+.management-footer a {
+    color: hsl(208.3, 56%, 31.2%);
+}
+
+.helplink {
+    font-size: 1.1em;
+    margin: 0 1em 3em 3em;
 }

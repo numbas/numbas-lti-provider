@@ -20,7 +20,7 @@ Creating a new resource
 
 Either upload an exam package that you have downloaded from the Numbas editor or, if any :term:`editor links <Editor link>` have been created, select an exam from the list.
 
-When you :numbas:ref:`download an exam package <exam-admin-controls>` from the Numbas editor, you must use the :guilabel:`SCORM package` option.
+When you :ref:`download an exam package <numbas:exam-admin-controls>` from the Numbas editor, you must use the :guilabel:`SCORM package` option.
 
 Once you've selected an exam, you will be shown the dashboard for the resource.
 
@@ -89,6 +89,8 @@ The columns of the file are:
 The values in the name, email address and username fields come from the VLE.
 The username field might not correspond exactly to the student's username on the VLE; in particular, Blackboard preprends usernames with ``cuid:``.
 
+The file might take a while to produce; it'll be available in the :ref:`resource-reports` tab once it's ready.
+
 Student progress
 ^^^^^^^^^^^^^^^^
 
@@ -109,7 +111,7 @@ When the number of attempts students are allowed to make is limited, circumstanc
 
 To do this, click the plus symbol in the :guilabel:`Access tokens` column next to the student's name in the :guilabel:`Student progress` table.
 
-To revoke an access token, click the minus symbol next to the student's name in the :guilabel:`Access tokens` column. 
+To revoke an access token, click the minus symbol next to the student's name in the :guilabel:`Access tokens` column.
 Attempts started with an access token that is subsequently removed will not be deleted.
 
 When the student launches the activity, they will be offered the opportunity to start a new attempt.
@@ -162,10 +164,14 @@ The columns of the file are:
 * Percentage (total score as a percentage of marks available)
 * One column giving the total score for each question
 
+The file might take a while to produce; it'll be available in the :ref:`resource-reports` tab once it's ready.
+
 Download all attempt data as JSON
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Click the :guilabel:`Download all attempt data as JSON` button to obtain a ``.json`` file containing all data to do with attempts on this resource, including part and question scores, all SCORM data, completion status, and the values of question variables.
+
+The file might take a while to produce; it'll be available in the :ref:`resource-reports` tab once it's ready.
 
 .. _review-attempt:
 
@@ -191,6 +197,11 @@ The new score is saved as you type, and the totals for the question and the whol
     :alt: List of question parts. Part a gap 0 of question 1 has been discounted, and question 2 part a gap 0 has had its score manually set to 3.
 
     Remarking an attempt.
+
+.. note::
+   After updating the exam package associated with a resource, you can :ref:`automatically remark all attempts <auto-remark>` using the :guilabel:`Remark` tab.
+
+.. _attempt-timeline:
 
 Data
 ^^^^
@@ -228,6 +239,55 @@ The next time that they launch the activity, they will be able to resume the att
 Beware that the standard Numbas settings allow a student to see the correct answers to every question once they have finished their attempt.
 If you're concerned about this, it's often better to make the student start a new attempt, rather than reopen the previous one.
 
+Statistics
+----------
+
+The :guilabel:`Statistics` page shows some statistics derived from attempts at this resource.
+
+Attempt completion
+^^^^^^^^^^^^^^^^^^
+
+The :guilabel:`Attempt completion` table shows the completion status of attempts.
+Don't worry if some attempts are still marked as "incomplete" after the deadline has passed - scores for incomplete attempts are still counted.
+
+An attempt will have the status "Not attempted" if the student opened the resource, but did not click the "Start exam" button.
+This can happen if the student's device has a problem which causes the exam not to load, or if it does load but they just don't start!
+
+Summary statistics
+^^^^^^^^^^^^^^^^^^
+
+The :guilabel:`Summary statistics` table shows the mean, median and quartiles for some statistics about the resource.
+The :guilabel:`Time taken` row is a rough measure of how long the student spent in their attempt; see :ref:`stat-time-spent` for more information.
+Be careful when using this measurement: if a student completes their attempt in several sittings, the whole intervening time will be included, and even when a student has an attempt open, they might not be giving it their attention for the whole time.
+
+Next is a breakdown of scores at each question, as a bar chart.
+The attempts at each question are classified as "not attempted", "incorrect" (score 0), "partially correct", or "correct" (the maximum score for the question).
+
+Score distribution
+^^^^^^^^^^^^^^^^^^
+
+The distribution of scores for the whole exam and for each question are shown as decreasing plots.
+The horizontal axis represents percentage score, and the vertical axis represents the proportion of attempts achieving at least that score.
+
+Attempt times
+^^^^^^^^^^^^^^
+
+Each attempt at the resource is shown as a span of time, with a dot at the recorded start time and another at the recorded end time.
+
+.. _stat-time-spent:
+
+Time spent
+^^^^^^^^^^
+
+The distribution of time spent at attempts is shown as a decreasing plot.
+The horizontal axis represents lengths of time, and the vertical axis represents the proportion of attempts at least that long.
+
+The 'time spent' is a rough measure of how long the student spent in their attempt.
+This time is increased each time attempt data is saved, based on the time since their current session started.
+It is not simply the difference between the start and end times: if the student closes their attempt for a long time and then resumes it later, the time that it was closed is not counted.
+
+Be careful when interpreting this measurement: students might leave an attempt open while they do something else, so there are often large outliers.
+
 Settings
 -----------------
 
@@ -242,7 +302,10 @@ If you discover an error in your exam, you can update it by downloading it again
 
 Any new attempts will use the latest version of the exam package.
 Because the new version might have changed in a way that is incompatible with existing attempts, for example by removing or rearranging question parts, any attempts started with the old package will by default continue to use the old package.
-If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`This is a safe replacement for the previous exam package`. All attempts using the old package will be updated to use the new one.
+If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`Make existing attempts use this version`.
+All attempts using the old package will be updated to use the new one.
+
+If the new version of the exam fixes problems with marking, you can try :ref:`automatically remarking existing attempts <auto-remark>`.
 
 .. _grading-method:
 
@@ -314,6 +377,23 @@ If a date and time are set, students may only review their attempts after that t
 
 Instructors may always review students' attempts, from the :guilabel:`Attempts` tab.
 
+.. _availability:
+
+Available from and available until
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify when students are allowed to access the resource.
+
+You can set none, one or both of the options :guilabel:`Available from` and :guilabel:`Available until`.
+
+If :guilabel:`Available from` is before :guilabel:`Available until`, the resource will be available only between those two times.
+Use this for a resource which should only be available for a certain period, such as an exam.
+
+If :guilabel:`Available from` is after :guilabel:`Available until`, the resource will be *unavailable* between those two times, but available any time before :guilabel:`Available until` and any time after :guilabel:`Available from`.
+Use this for a resource which should be made unavailable for a certain period, such as a bank of practice material which students should not have access to during a summative assessment period.
+
+Any students who have the resource open when it becomes unavailable will be forced to quit.
+
 .. _email-receipts-option:
 
 Email attempt receipts to students on completion?
@@ -321,8 +401,112 @@ Email attempt receipts to students on completion?
 
 If ticked, then when a student completes an attempt at this resource they will be emailed a receipt summarising their attempt.
 
-The receipt contains a code which instructors can use to confirm the receipt's contents. See :ref:`validate-receipt`.
+The receipt contains a code which instructors can use to confirm the receipt's contents.
+See :ref:`validate-receipt`.
 
+.. _auto-remark:
+
+Remark
+------
+
+.. figure:: _static/remark-attempts.png
+    :alt: The remark resource view.
+    
+    Remarking a resource.
+
+The :guilabel:`Remark` tab provides an interface for automatically re-running attempts at the resource using the latest version of the exam package.
+If the total score awarded for an attempt is different to the saved score, you can overwrite it.
+
+When the page loads, you are shown all attempts at the resource.
+You can remark individual attempts, or remark all the attempts automatically.
+
+.. note::
+
+    Remarking an exam is computationally intensive, so your browser may appear unresponsive.
+
+If :guilabel:`Use unsubmitted answers` is ticked, then any answers entered by the student but not submitted will be considered to be submitted.
+You can use this in cases where a student forgot to submit their answers and you want to have them marked anyway.
+
+After you click :guilabel:`Remark all attempts`, each attempt will be remarked in turn.
+A progress bar shows the proportion of attempts that have been remarked, and an estimated time until completion.
+
+To stop the process of remarking all attempts, click :guilabel:`Stop marking`.
+If an attempt is currently being remarked, it can't be interrupted - the process will stop after that attempt is finished.
+
+You can choose to :guilabel:`Show` all attempts, only attempts with changed scores, or only attempts with either increased or decreased scores.
+
+When one or more attempts have been remarked and produced different scores, the :guilabel:`Save all changed attempts` button becomes available.
+After clicking this button, any changed data corresponding to the shown attempts is saved to the database.
+This data will appear in the :ref:`timeline for the attempt <attempt-timeline>` and will affect the reported scores for the attempt.
+
+Each attempt has its own :guilabel:`Remark` button, which will remark only that attempt.
+When an attempt has been remarked, the change in total score is shown.
+If the total score is different to that stored in the database, a :guilabel:`Save` button appears.
+Clicking the button causes changed data corresponding to the attempt to be saved to the database, updating its timeline and reported score.
+
+Access changes
+--------------
+
+*Access changes* are a means of changing deadlines or allowing a different number of attempts at the resource to certain students.
+
+Each access change applies to a list of students.
+
+To create an access change, click on the :guilabel:`Access changes` tab, then :guilabel:`Add an access change`.
+
+There are several fields that you can modify.
+Leave a field entirely blank to keep the standard value from the resource's settings.
+
+In the :guilabel:`Description` field, describe what the access change is for and who it applies to, such as "25% extra time", or "Late submission for Elliot D".
+
+Access changes take effect immediately.
+Any students who are completing an attempt at the time that their access changes will receive the new details immediately.
+If the resource becomes unavailable for them, the attempt will end immediately.
+Otherwise, a message will appear on their screen describing the new deadline.
+
+Availability dates
+^^^^^^^^^^^^^^^^^^
+
+The fields in the :guilabel:`Availability dates` section change the time period in which the affected students can complete attempts at the resource.
+You can either set new fixed start and end dates, or fill in the :guilabel:`Extend the deadline by` field to extend the resource's normal :guilabel:`Available from` date.
+
+If several access changes apply to a student, the changes from the last created access change are used.
+
+Exam duration
+^^^^^^^^^^^^^
+
+If the exam associated with the resource has a duration set, then you can extend it, either by an absolute length of time or by a percentage of the standard duration.
+
+If several access changes apply to a student, the change in the last created access change is used.
+
+Number of attempts
+^^^^^^^^^^^^^^^^^^
+
+The :guilabel:`Maximum attempts per user` field overrides the resource's :ref:`maximum-attempts` field.
+
+The student is allowed whichever is the greatest of the resource's normal maximum number of attempts and the numbers specified by any access changes affecting the student.
+
+A value of zero in this field does not mean "no change", it means that the affected students are allowed to start as many attempts as they like.
+
+Applies to
+^^^^^^^^^^
+
+Specify which students the access change applies to by giving lists of usernames or email addresses.
+These are compared with the usernames and email addresses sent by the LTI consumer.
+
+.. warning::
+
+    Note that the LTI consumer can choose what it send for these fields, so they might not match the values you use in other systems.
+    The access change form shows the username and email address it received from the LTI consumer for your account, as a guide.
+
+.. _resource-reports:
+
+Reports
+-------
+
+When you ask to download one of the resource-level reports, it's compiled in the background.
+Once it's ready, you can download it from the :guilabel:`Reports` tab.
+
+Reports are automatically deleted after a fixed period of time set by the administrator; the default is 30 days.
 
 Test run
 --------
