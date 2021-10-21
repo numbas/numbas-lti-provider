@@ -132,9 +132,9 @@ Configure supervisord
 Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
 
     [program:numbas_lti_daphne]
-    command=/opt/numbas_lti_python/bin/daphne numbasltiprovider.asgi:channel_layer --port 87%(process_num)02d --bind 0.0.0.0 -v 2
+    command=/opt/numbas_lti_python/bin/daphne numbasltiprovider.asgi:application --port 87%(process_num)02d --bind 0.0.0.0 -v 2
     directory=/srv/numbas-lti-provider/
-    user=numbas_lti
+    user=www-data
     autostart=true
     autorestart=true
     stopasgroup=true
@@ -144,24 +144,10 @@ Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
     stderr_logfile=/var/log/supervisor/numbas_lti_daphne_stderr.log
     stdout_logfile=/var/log/supervisor/numbas_lti_daphne_stdout.log
 
-    [program:numbas_lti_workers]
-    command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py runworker
-    directory=/srv/numbas-lti-provider/
-    user=numbas_lti
-    autostart=true
-    autorestart=true
-    redirect_stderr=True
-    stopasgroup=true
-    environment=DJANGO_SETTINGS_MODULE="numbasltiprovider.settings"
-    numprocs=10
-    process_name=%(program_name)s_%(process_num)02d
-    stderr_logfile=/var/log/supervisor/numbas_lti_workers_stderr.log
-    stdout_logfile=/var/log/supervisor/numbas_lti_workers_stdout.log
-
     [program:numbas_lti_huey]
     command=/opt/numbas_lti_python/bin/python /srv/numbas-lti-provider/manage.py run_huey -w 8
     directory=/srv/numbas-lti-provider/
-    user=numbas_lti
+    user=www-data
     autostart=true
     autorestart=true
     redirect_stderr=True
@@ -173,7 +159,7 @@ Save the following as :file:`/etc/supervisord.d/numbas_lti.ini`::
     stdout_logfile=/var/log/supervisor/numbas_lti_huey_stdout.log
 
     [group:numbas_lti]
-    programs=numbas_lti_daphne,numbas_lti_workers,numbas_lti_huey
+    programs=numbas_lti_daphne,numbas_lti_huey
     priority=999
 
 .. note::

@@ -12,6 +12,22 @@ For such releases, this page lists the changes that must be made.
 v3.0
 ----
 
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
+There are a few new settings which must be present in :file:`settings.env`.
+See :ref:`server-settings` for information on the values these settings should take.
+
+* ``INSTANCE_NAME``
+* ``TIME_ZONE``
+* ``DEFAULT_FROM_EMAIL``
+* ``SUPPORT_NAME``
+* ``SUPPORT_URL``
+* ``EMAIL_COMPLETION_RECEIPTS``
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
 This version updates many of the packages that the LTI tool relies on, and so introduces quite a few changes to the way that the tool is configured.
 
 Packages to install
