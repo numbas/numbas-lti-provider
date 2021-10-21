@@ -1,4 +1,4 @@
-Django==3.2.7
+Django==3.2.8
 oauthlib==3.0.1
 lxml==4.6.3
 channels==3.0.4
