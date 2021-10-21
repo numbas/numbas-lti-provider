@@ -249,5 +249,5 @@ def resource_json_dump_report(fr,f,full=False):
 
 @db_periodic_task(crontab(hour='*'),priority=0)
 def delete_old_reports():
-    expiry_date = datetime.now() - timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)
+    expiry_date = timezone.make_aware(datetime.now() - timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS))
     FileReport.objects.filter(creation_time__lt=expiry_date).delete()
