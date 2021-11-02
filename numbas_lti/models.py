@@ -1245,12 +1245,12 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
         For SCORM elements for the given attempt with the given key, replace the full value with a diff, relative to the most recent value.
         The most recent ScormElement object has the full value saved, so it can be read off easily, but the earlier values are stored as diffs to save on space.
     """
-    elements = attempt.scormelements.filter(key='cmi.suspend_data',diff=None)
+    elements = attempt.scormelements.filter(key=key,diff=None)
     last = None
     with transaction.atomic():
         for e in sorted(elements, key=lambda x: hasattr(x,'diffs')):
             value = e.value
-            if last is not None:
+            if last is not None and not e.newer_than(last):
                 d = make_diff(lastvalue,e.value)
                 e.value = d
                 ScormElementDiff.objects.get_or_create(element=e,diff_of=last)
