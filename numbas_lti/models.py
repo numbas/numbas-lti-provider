@@ -1265,7 +1265,12 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
 def resolve_dependency_order(deps):
     order = list(deps.keys())
     i = 0
-    while i<len(order):
+    step = 0
+    l = len(order)
+    while i<l:
+        step += 1
+        if step>l*l:
+            raise Exception("There's a loop in the dependency chain of diffed SCORM elements")
         a = order[i]
         if a in deps:
             b = deps[a]
