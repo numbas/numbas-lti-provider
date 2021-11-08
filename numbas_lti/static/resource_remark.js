@@ -76,11 +76,11 @@ class Attempt {
     }
 
     get review_url() {
-        return '/run_attempt/'+this.pk+'?'+resource_link_id;
+        return '/run_attempt/'+this.pk+resource_link_id_query;
     }
 
     get timeline_url() {
-        return '/attempt/'+this.pk+'/timeline?'+resource_link_id;
+        return '/attempt/'+this.pk+'/timeline'+resource_link_id_query;
     }
 
     get score_change_classes() {
@@ -125,6 +125,7 @@ if(location.search) {
         }
     });
 }
+const resource_link_id_query = resource_link_id ? '?'+resource_link_id : '';
 
 const app = new Vue({
     delimiters: ['[[',']]'],
