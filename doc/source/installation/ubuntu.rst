@@ -48,6 +48,7 @@ First, install packages, set up users, and create the required paths (you can sa
 
     # get the numbas-lti-provider code
     git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
+    cd /srv/numbas-lti-provider
     git checkout v2_STABLE
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
@@ -328,7 +329,7 @@ You should keep the software up-to-date with any bugfixes or new features.
 Run the following::
 
     cd /srv/numbas-lti-provider
-    git pull origin master
+    git pull origin
     source /opt/numbas_lti_python/bin/activate
     pip install -r requirements.txt
     python manage.py migrate
