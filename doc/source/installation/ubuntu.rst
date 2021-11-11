@@ -22,7 +22,8 @@ See `the Django documentation <https://docs.djangoproject.com/en/2.2/ref/setting
 We will set up:
 
 * The Numbas LTI provider Django app running inside a virtual Python environment, isolated from the system's Python environment.
-* A PostgreSQL database for the LTI provider to use. You can use any database supported by Django; see the `list of supported databases in the Django documentation <https://docs.djangoproject.com/en/2.2/ref/databases/>`_.
+* A PostgreSQL database for the LTI provider to use. 
+  You can use any database supported by Django; see the `list of supported databases in the Django documentation <https://docs.djangoproject.com/en/2.2/ref/databases/>`_.
 * `Supervisord <http://supervisord.org/>`_ will ensure the app is always running.
 * The `NGINX webserver <https://nginx.org/>`_ as a reverse proxy to serve the LTI provider to the outside world. 
   If necessary, you can use Apache as a reverse proxy (see the `guide in the Apache documentation <https://httpd.apache.org/docs/2.4/howto/reverse_proxy.html>`_), but it can not handle as many simultaneous connections.
@@ -47,6 +48,7 @@ First, install packages, set up users, and create the required paths (you can sa
 
     # get the numbas-lti-provider code
     git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
+    git checkout v2_STABLE
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
     # create media and static file directories

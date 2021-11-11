@@ -22,13 +22,13 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'Numbas LTI provider'
-copyright = '2018, Numbas'
+copyright = '2018-2021, Numbas'
 author = 'Numbas'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '2.1'
+release = 'v2.13.4'
 
 
 # -- General configuration ---------------------------------------------------
