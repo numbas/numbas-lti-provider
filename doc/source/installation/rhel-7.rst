@@ -75,6 +75,8 @@ Run the following commands as root::
 
     # get the numbas-lti-provider code
     git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
+    cd /srv/numbas-lti-provider
+    git checkout v3_STABLE
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
     # create the virtualenv for the python modules
@@ -286,7 +288,7 @@ You should keep the software up-to-date with any bugfixes or new features.
 Run the following::
 
     cd /srv/numbas-lti-provider
-    git pull origin master
+    git pull origin 
     source /opt/numbas_lti_python/bin/activate
     pip install -r requirements.txt
     python manage.py migrate

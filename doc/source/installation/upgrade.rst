@@ -30,6 +30,19 @@ Non-Docker installation
 
 This version updates many of the packages that the LTI tool relies on, and so introduces quite a few changes to the way that the tool is configured.
 
+Git branch
+**********
+
+There are now stable git branches for each major version of the LTI provider.
+When upgrading to v3.0, switch to the ``v3_STABLE`` branch::
+
+    cd /srv/numbas-lti-provider
+    git fetch origin
+    git checkout v3_STABLE
+
+After this, you can proceed with the rest of the update steps for your system.
+For Ubuntu, the next command will be ``source /opt/numbas_lti_python/bin/activate``.
+
 Packages to install
 ********************
 
