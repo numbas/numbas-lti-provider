@@ -1415,14 +1415,5 @@ class FileReport(models.Model):
         verbose_name_plural = _('Report files')
         ordering = ('-creation_time',)
 
-    @classmethod
-    def start_job(cls, resource, created_by, filename):
-        filename = Path(filename)
-        now = datetime
-        filename = filename.with_stem(filename+'-'+datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
-        fr = cls(resource = resource, created_by = created_by)
-        fr.outfile.save(filename, ContentFile(''))
-        return fr
-
     def expiry_date(self):
         return self.creation_time + timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)

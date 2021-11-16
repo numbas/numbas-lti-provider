@@ -9,6 +9,7 @@ from datetime import datetime
 from django.utils import timezone
 from numbas_lti.models import FileReport
 from pathlib import Path
+import uuid
 
 class EchoFile(object):
     def write(self,value):
@@ -35,7 +36,12 @@ class CreateFileReportView(object):
         self.object = self.get_object()
         fr = FileReport(name=self.get_name(), created_by=self.request.user, resource=self.get_resource())
         filename = Path(self.get_filename())
-        filename = filename.stem+'-'+datetime.now().strftime('%Y-%d-%m-%H_%M_%S')+filename.suffix
+        filename = '{stem}-{date}-{uuid}{suffix}'.format(
+                stem = filename.stem,
+                date = datetime.now().strftime('%Y-%d-%m-%H_%M_%S'),
+                uuid = str(uuid.uuid4())[:8],
+                suffix = filename.suffix
+        )
         fr.outfile.save(filename, ContentFile(''))
         self.report_task(fr, **self.get_task_kwargs())
         template = get_template('numbas_lti/management/file_report_created.html')
