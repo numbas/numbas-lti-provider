@@ -30,6 +30,11 @@ Non-Docker installation
 
 This version updates many of the packages that the LTI tool relies on, and so introduces quite a few changes to the way that the tool is configured.
 
+The minimum required versions of some software have increased:
+
+* Python 3.8 or newer
+* Redis 5 or newer
+
 Git branch
 **********
 
