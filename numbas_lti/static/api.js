@@ -166,6 +166,7 @@ SCORM_API.prototype = {
      *  Merge in elements loaded from the page with elements saved to localStorage, taking the most recent value when there's a clash.
      */
     initialise_data: function(data) {
+        var sc = this;
         var stored_data = this.get_localstorage();
 
         this.sent = {};
@@ -215,7 +216,7 @@ SCORM_API.prototype = {
                 }
                 this.ajax_period = 0;
                 this.send_ajax().then(function(m) {
-                    redirect(this.show_attempts_url+'&back_from_unsaved_complete_attempt=1');
+                    redirect(sc.show_attempts_url+'&back_from_unsaved_complete_attempt=1');
                 });
             }
             this.data['cmi.mode'] = this.mode = 'review';
