@@ -1,25 +1,25 @@
 from huey import crontab
-from huey.contrib.djhuey import periodic_task, task
+from huey.contrib.djhuey import periodic_task, task, db_task, db_periodic_task
 from numbas_lti.report_outcome import ReportOutcomeException
 from numbas_lti.models import Attempt, ScormElement, diff_scormelements
 from django.db.models import Count
 from datetime import datetime
 import time
 
-@task()
+@db_task()
 def editorlink_update_cache(el):
     el.update_cache()
     el.save()
 
-@task()
+@db_task()
 def send_attempt_completion_receipt(attempt):
     attempt.send_completion_receipt()
 
-@task()
+@db_task()
 def resource_report_scores(resource):
     resource.report_scores()
 
-@task()
+@db_task()
 def attempt_report_outcome(attempt):
     time.sleep(0.1)
     try:
@@ -27,7 +27,7 @@ def attempt_report_outcome(attempt):
     except ReportOutcomeException:
         pass
 
-@periodic_task(crontab(minute='*'))
+@db_periodic_task(crontab(minute='*'))
 def diff_suspend_data():
     attempts = Attempt.objects.filter(diffed=False)
     MAX_TIME = 10
