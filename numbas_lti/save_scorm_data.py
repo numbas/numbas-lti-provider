@@ -56,14 +56,18 @@ def save_scorm_data(attempt,batches):
     return done,unsaved_elements
 
 re_question_score_element = re.compile(r'cmi.objectives.(\d+).(?:score.(?:raw|scaled|max)|completion_status)')
+re_exam_score_element = re.compile(r'cmi.score.(raw|scaled)')
 
 def update_question_score_info(attempt,elements):
     question_scores_changed = set()
+    exam_score_changed = False
     for e in elements:
         m = re_question_score_element.match(e.key)
         if m:
             number = int(m.group(1))
             question_scores_changed.add(number)
+        elif re_exam_score_element.match(e.key):
+            exam_score_changed = True
 
-    if question_scores_changed:
+    if question_scores_changed or exam_score_changed:
         tasks.attempt_update_score_info(attempt,question_scores_changed)

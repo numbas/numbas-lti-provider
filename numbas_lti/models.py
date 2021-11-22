@@ -866,6 +866,8 @@ class Attempt(models.Model):
 
             self.save(update_fields=['end_time'])
 
+            tasks.attempt_update_score_info(self,set())
+
             channel_layer = get_channel_layer()
             group_send = async_to_sync(channel_layer.group_send)
             group_send(group_for_attempt(self),{

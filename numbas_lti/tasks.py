@@ -135,7 +135,7 @@ def attempt_update_score_info(attempt,question_scores_changed):
         scaled_score = 0
     if scaled_score != attempt.scaled_score:
         attempt.scaled_score = scaled_score
-        attempt.save()
+        attempt.save(update_fields=['scaled_score'])
 
 @db_task(priority=15)
 def resource_update_score_info(resource):
