@@ -866,6 +866,8 @@ class Attempt(models.Model):
 
             self.save(update_fields=['end_time'])
 
+            from . import tasks
+
             tasks.attempt_update_score_info(self,set())
 
             channel_layer = get_channel_layer()
