@@ -104,9 +104,14 @@ There are several changes to make in the file :file:`numbasltiprovider/settings.
 * Add ``'numbas_lti.context_processors.global_settings'`` to the ``TEMPLATES['OPTIONS']['context_processors']`` setting.
 
 * There is a new setting ``INSTANCE_NAME``, which should contain the name of the server, to display to users.
-  If the server is run by the University of Somewhere, you might set ``INSTANCE_NAME = 'University of Somewhere'``.
+  If the server is run by the University of Somewhere, you might set::
+
+    INSTANCE_NAME = 'University of Somewhere'
 
 * There is a new setting ``REPORT_FILE_EXPIRY_DAYS``, specifying the number of days that report files should remain available, before being deleted.
+  The recommended length of time to keep reports is 30 days::
+
+      REPORT_FILE_EXPIRY_DAYS = 30
 
 v2.13
 -----
