@@ -96,6 +96,8 @@ It will set up the database, and create an admin user account which you will use
 
 Once you've run this script, the last remaining steps are to start the app, and then set up a webserver to expose it to the outside world.
 
+.. _ubuntu-configure-supervisord:
+
 Configure supervisord
 ---------------------
 

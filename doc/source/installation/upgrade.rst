@@ -59,12 +59,17 @@ In addition, if you are using Redis as the Channels backend, you will need to in
 Supervisor configuration
 ************************
 
-Change supervisord config - remove workers, change asgi application
+Overwrite the configuration for ``supervisord`` with the new one given in the installation instructions for your system: :ref:`Ubuntu <ubuntu-configure-supervisord>`, :ref:`RHEL 7 <rhel-7-configure-supervisord>`.
+
+The ``numbas_lti_worker`` processes are no longer needed, and the command to launch the ``numbas_lti_daphne`` processes has changed.
 
 Changes to settings
 *******************
 
 There are several changes to make in the file :file:`numbasltiprovider/settings.py`.
+
+The template file, :file:`numbasltiprovider/settings.py.dist`, has been rearranged and lots of comments added to better explain what the settings do.
+You might like to use that file as a base, and insert your existing settings, rather than just changing your existing file.
 
 * The way that Channels is configured has changed.
   To use Redis as the backend, replace the ``CHANNEL_LAYERS`` setting with the following::
@@ -112,6 +117,8 @@ There are several changes to make in the file :file:`numbasltiprovider/settings.
   The recommended length of time to keep reports is 30 days::
 
       REPORT_FILE_EXPIRY_DAYS = 30
+
+* Remove ``'django_cookies_samesite.middleware.CookiesSameSite'`` from ``MIDDLEWARE``.
 
 v2.13
 -----
