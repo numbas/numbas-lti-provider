@@ -13,7 +13,7 @@
       "quantity": 1
     },
     {
-      "process": "worker",
+      "process": "huey",
       "quantity": 1
     }
   ],
