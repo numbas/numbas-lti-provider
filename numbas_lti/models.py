@@ -866,6 +866,10 @@ class Attempt(models.Model):
 
             self.save(update_fields=['end_time'])
 
+            from . import tasks
+
+            tasks.attempt_update_score_info(self,set())
+
             channel_layer = get_channel_layer()
             group_send = async_to_sync(channel_layer.group_send)
             group_send(group_for_attempt(self),{
@@ -1245,12 +1249,12 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
         For SCORM elements for the given attempt with the given key, replace the full value with a diff, relative to the most recent value.
         The most recent ScormElement object has the full value saved, so it can be read off easily, but the earlier values are stored as diffs to save on space.
     """
-    elements = attempt.scormelements.filter(key='cmi.suspend_data',diff=None)
+    elements = attempt.scormelements.filter(key=key,diff=None)
     last = None
     with transaction.atomic():
         for e in sorted(elements, key=lambda x: hasattr(x,'diffs')):
             value = e.value
-            if last is not None:
+            if last is not None and not e.newer_than(last):
                 d = make_diff(lastvalue,e.value)
                 e.value = d
                 ScormElementDiff.objects.get_or_create(element=e,diff_of=last)
@@ -1265,7 +1269,12 @@ def diff_scormelements(attempt, key='cmi.suspend_data'):
 def resolve_dependency_order(deps):
     order = list(deps.keys())
     i = 0
-    while i<len(order):
+    step = 0
+    l = len(order)
+    while i<l:
+        step += 1
+        if step>l*l:
+            raise Exception("There's a loop in the dependency chain of diffed SCORM elements")
         a = order[i]
         if a in deps:
             b = deps[a]
@@ -1409,15 +1418,6 @@ class FileReport(models.Model):
         verbose_name = _('Report file')
         verbose_name_plural = _('Report files')
         ordering = ('-creation_time',)
-
-    @classmethod
-    def start_job(cls, resource, created_by, filename):
-        filename = Path(filename)
-        now = datetime
-        filename = filename.with_stem(filename+'-'+datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
-        fr = cls(resource = resource, created_by = created_by)
-        fr.outfile.save(filename, ContentFile(''))
-        return fr
 
     def expiry_date(self):
         return self.creation_time + timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)

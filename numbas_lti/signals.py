@@ -51,8 +51,17 @@ def resource_availability_changed(sender,instance,**kwargs):
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
+    if not created:
+        return
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(group_for_attempt(instance.attempt), {'type': 'scorm.new.element','element':instance.as_json()})
+
+@receiver(models.signals.post_save,sender=Attempt)
+def send_score_on_attempt_creation(sender, instance, created, **kwargs):
+    if not created:
+        return
+    if instance.resource.report_mark_time == 'immediately':
+        tasks.attempt_report_outcome(instance)
 
 @receiver(models.signals.post_save,sender=Attempt)
 def send_receipt_on_completion(sender,instance, **kwargs):
@@ -87,7 +96,7 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_start_time(sender,instance,created,**kwargs):
-    if instance.key != 'cmi.suspend_data':
+    if instance.key != 'cmi.suspend_data' or not created:
         return
 
     tasks.scorm_set_start_time(instance)

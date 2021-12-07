@@ -84,8 +84,7 @@ class Command(object):
 
     inmemory_template = """CHANNEL_LAYERS = {{
     "default": {{
-        "BACKEND": "asgiref.inmemory.ChannelLayer",
-        "ROUTING": "numbasltiprovider.routing.channel_routing",
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
     }},
 }}"""
 

@@ -11,7 +11,7 @@ from huey.contrib.djhuey import periodic_task, task, db_periodic_task, db_task
 import json
 import logging
 from numbas_lti.report_outcome import ReportOutcomeException
-from numbas_lti.models import Attempt, ScormElement, diff_scormelements
+from numbas_lti.models import Attempt, ScormElement, diff_scormelements, FileReport
 import re
 
 logger = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ def attempt_update_score_info(attempt,question_scores_changed):
         scaled_score = 0
     if scaled_score != attempt.scaled_score:
         attempt.scaled_score = scaled_score
-        attempt.save()
+        attempt.save(update_fields=['scaled_score'])
 
 @db_task(priority=15)
 def resource_update_score_info(resource):
@@ -249,5 +249,5 @@ def resource_json_dump_report(fr,f,full=False):
 
 @db_periodic_task(crontab(hour='*'),priority=0)
 def delete_old_reports():
-    expiry_date = datetime.now() - timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)
+    expiry_date = timezone.make_aware(datetime.now() - timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS))
     FileReport.objects.filter(creation_time__lt=expiry_date).delete()

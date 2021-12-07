@@ -1,13 +1,14 @@
 
 
-(function(globals) {
-
-  var django = globals.django || (globals.django = {});
+'use strict';
+{
+  const globals = this;
+  const django = globals.django || (globals.django = {});
 
   
   django.pluralidx = function(n) {
-    var v=(n != 1);
-    if (typeof(v) == 'boolean') {
+    const v = (n != 1);
+    if (typeof v === 'boolean') {
       return v ? 1 : 0;
     } else {
       return v;
@@ -19,20 +20,68 @@
 
   django.catalog = django.catalog || {};
   
+  const newcatalog = {
+    " gap %s": " L\u00fccke %s",
+    " step %s": " Schritt %s",
+    "%s day": [
+      "%s Tag",
+      "%s Tage"
+    ],
+    "%s hour": [
+      "%s Stunde",
+      "%s Stunden"
+    ],
+    "%s minute": [
+      "%s Minute",
+      "%s Minuten"
+    ],
+    "End time": "Endzeit",
+    "Ended the attempt.": "Versuch abgeschlossen",
+    "Entered but did not submit answer <code>%s</code> for <em class=\"part\">%s</em>.": "Antwort <code>%s</code> f\u00fcr <em class=\"part\">%s</em> eingegeben, aber nicht eingereicht.",
+    "Error reading socket message": "Fehler beim Lesen der Socket-Nachricht",
+    "Error starting attempt: %s": "Fehler beim Starten des Versuchs: %s",
+    "Failed to send SCORM data over HTTP": "Fehler beim Senden der SCORM-Daten \u00fcber HTTP",
+    "Launched in %s mode by %s.": "Gestartet im %s-Modus von %s.",
+    "Launched in %s mode.": "Gestartet im %s-Modus.",
+    "Moved to <em class=\"question\">Question %s</em>.": "Zu <em class=\"question\">Frage %s</em> gegangen.",
+    "Received <strong>%s/%s</strong> mark for <em class=\"part\">%s</em>.": [
+      "<strong>%s/%s</strong> Punkte f\u00fcr <em class=\"part\">%s</em> erhalten.",
+      "<strong>%s/%s</strong> Punkte f\u00fcr <em class=\"part\">%s</em> erhalten."
+    ],
+    "SCORM HTTP fallback error message: %s": "SCORM-HTTP-Fallback Fehlermeldung: %s",
+    "Start time": "Anfangszeit",
+    "Started the attempt.": "Versuch gestartet",
+    "Submitted answer <code>%s</code> for <em class=\"part\">%s</em>.": "Antwort <code>%s</code> f\u00fcr <em class=\"part\">%s</em> eingereicht.",
+    "The session was ended automatically because: <strong>%s</strong>.": "Die Sitzung wurde automatisch beendet, Grund: <strong>%s</strong>.",
+    "There's been an error: %s": "Es ist ein Fehler aufgetreten: %s",
+    "This attempt has been ended in another window. You may not enter any more answers here. Click OK to leave this attempt.": "Dieser Versuch ist in einem anderen Fenster abgeschlossen worden. Sie k\u00f6nnen hier keine weiteren Antworten eingeben. Klicken Sie OK, um diesen Versuch zu verlassen.",
+    "This attempt has been opened in another window. You may not enter any more answers here. You may continue in the other window. Click OK to leave this attempt.": "Dieser Versuch ist in einem anderen Fenster ge\u00f6ffnet worden. Sie k\u00f6nnen hier keine Antworten mehr eingeben. Sie k\u00f6nnen in dem anderen Fenster weiterarbeiten. Klicken Sie OK, um diesen Versuch zu verlassen.",
+    "Time taken": "Verbrauchte Zeit",
+    "Total": "Insgesamt",
+    "Total score": "Gesamtpunktzahl",
+    "Total score for <em class=\"question\">Question %s</em> is <strong>%s</strong>.": "Gesamtpunktzahl f\u00fcr <em class=\"question\">Frage %s</em> ist <strong>%s</strong>.",
+    "Total score for exam is <strong>%s</strong>.": "Gesamtpunktzahl f\u00fcr den Test ist <strong>%s</strong>.",
+    "question %s part %s": "Frage %s Abschnitt %s",
+    "question label\u0004Q%s": "F%s"
+  };
+  for (const key in newcatalog) {
+    django.catalog[key] = newcatalog[key];
+  }
+  
 
   if (!django.jsi18n_initialized) {
     django.gettext = function(msgid) {
-      var value = django.catalog[msgid];
-      if (typeof(value) == 'undefined') {
+      const value = django.catalog[msgid];
+      if (typeof value === 'undefined') {
         return msgid;
       } else {
-        return (typeof(value) == 'string') ? value : value[0];
+        return (typeof value === 'string') ? value : value[0];
       }
     };
 
     django.ngettext = function(singular, plural, count) {
-      var value = django.catalog[singular];
-      if (typeof(value) == 'undefined') {
+      const value = django.catalog[singular];
+      if (typeof value === 'undefined') {
         return (count == 1) ? singular : plural;
       } else {
         return value.constructor === Array ? value[django.pluralidx(count)] : value;
@@ -42,16 +91,16 @@
     django.gettext_noop = function(msgid) { return msgid; };
 
     django.pgettext = function(context, msgid) {
-      var value = django.gettext(context + '\x04' + msgid);
-      if (value.indexOf('\x04') != -1) {
+      let value = django.gettext(context + '\x04' + msgid);
+      if (value.includes('\x04')) {
         value = msgid;
       }
       return value;
     };
 
     django.npgettext = function(context, singular, plural, count) {
-      var value = django.ngettext(context + '\x04' + singular, context + '\x04' + plural, count);
-      if (value.indexOf('\x04') != -1) {
+      let value = django.ngettext(context + '\x04' + singular, context + '\x04' + plural, count);
+      if (value.includes('\x04')) {
         value = django.ngettext(singular, plural, count);
       }
       return value;
@@ -74,7 +123,6 @@
       "%d.%m.%Y %H:%M:%S",
       "%d.%m.%Y %H:%M:%S.%f",
       "%d.%m.%Y %H:%M",
-      "%d.%m.%Y",
       "%Y-%m-%d %H:%M:%S",
       "%Y-%m-%d %H:%M:%S.%f",
       "%Y-%m-%d %H:%M",
@@ -103,8 +151,8 @@
   };
 
     django.get_format = function(format_type) {
-      var value = django.formats[format_type];
-      if (typeof(value) == 'undefined') {
+      const value = django.formats[format_type];
+      if (typeof value === 'undefined') {
         return format_type;
       } else {
         return value;
@@ -123,6 +171,5 @@
 
     django.jsi18n_initialized = true;
   }
-
-}(this));
+};
 

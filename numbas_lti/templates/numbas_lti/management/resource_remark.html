@@ -5,6 +5,7 @@
 {% load statici18n %}
 
 {% block management_content %}
+    {% include "numbas_lti/csrf_token_form.html" %}
 <h2>
     {% blocktrans with resource_name=resource.title %}Remark <strong>{{resource_name}}</strong>{% endblocktrans %}
     <br>

@@ -41,13 +41,12 @@ Starting
 
 Run the following command::
 
-    docker-compose up --scale daphne=4 --scale workers=4 --scale huey=2
+    docker-compose up --scale daphne=4 --scale huey=2
 
-You can customise the number of workers, daphne processes and huey processes by changing the numbers in the `--scale` arguments.
+You can customise the number of each of the kinds of process by changing the numbers in the `--scale` arguments.
 You'll have to establish how many of each you need by experimentation.
-Normally, most of the work is done by workers, and so try increasing those first.
-Daphne processes interface between the web server and the workers.
-The huey processes perform background tasks, so you shouldn't need many.
+The `daphne` process handles web requests; you will need more if you have lots of simultaneous connections.
+The `huey` process runs asynchronous tasks; you will need more if you find that tasks such as reporting scores or generating report files take a very long time.
 
 Stopping
 --------
@@ -61,9 +60,17 @@ This does not delete any permanent data such as the database, settings file or u
 Upgrading
 ---------
 
+First, update the files in the Docker repository.
+If you used git, run::
+
+    git pull
+
 Upgrade to a new version of the Numbas LTI provider with the following commands::
 
-    docker-compose build
+    docker-compose build --no-cache numbas-setup
+    docker-compose build --no-cache daphne
+    docker-compose build --no-cache huey
+    docker-compose run --rm numbas-setup python ./install
     docker-compose restart
 
 Occasionally there are other changes that must be made; check the :ref:`upgrade instructions <upgrading-installation>` for the version you are upgrading to.
@@ -71,7 +78,8 @@ Occasionally there are other changes that must be made; check the :ref:`upgrade 
 Running in the cloud
 --------------------
 
-Docker Compose files can also be used to deploy to the cloud. See the following documents for more information about deploying Docker to the cloud:
+Docker Compose files can also be used to deploy to the cloud.
+See the following documents for more information about deploying Docker to the cloud:
 
 * `Compose for Amazon ECS <https://docs.docker.com/engine/context/ecs-integration/>`_
 * `Compose for Microsoft ACI <https://docs.docker.com/engine/context/aci-integration/)>`_
