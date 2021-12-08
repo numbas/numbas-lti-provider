@@ -201,9 +201,9 @@ DATABASES['default'].update(db_from_env)
 # See https://channels.readthedocs.io/en/stable/topics/channel_layers.html
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.RedisChannelLayer",
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+            "hosts": [os.environ.get('REDIS_URL')],
         }
     },
 }
