@@ -208,7 +208,7 @@ class Command(object):
 
         settings_subs = [
             (r"^DEBUG = (.*?)$", 'DEBUG'),
-            (r"^SECURE_SSL_REDIRECT = '(.*?)'", 'SECURE_SSL_REDIRECT'),
+            (r"^SECURE_SSL_REDIRECT = (.*?)$", 'SECURE_SSL_REDIRECT'),
             (r"^INSTANCE_NAME = '(.*?)'", 'INSTANCE_NAME'),
             (r"^STATIC_ROOT = '(.*?)'", 'STATIC_ROOT'),
             (r"^MEDIA_ROOT = '(.*?)'", 'MEDIA_ROOT'),
