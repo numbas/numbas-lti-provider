@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.db.models import Count
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from functools import wraps
 from huey import crontab
 from huey.contrib.djhuey import periodic_task, task, db_periodic_task, db_task

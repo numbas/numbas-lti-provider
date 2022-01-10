@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import gettext_lazy as _, gettext
 from django.utils.text import slugify
 from django.views import generic
 from django.views.decorators.http import require_POST
@@ -204,7 +204,7 @@ class ShowAttemptsView(generic.list.ListView):
 
 def new_attempt(request):
     if not request.resource.can_start_new_attempt(request.user):
-        raise PermissionDenied(ugettext("You can't start a new attempt at this exam."))
+        raise PermissionDenied(gettext("You can't start a new attempt at this exam."))
 
     resource = request.resource
     user = request.user
@@ -219,7 +219,7 @@ def new_attempt(request):
             tokens.first().delete()
         else:
             if not request.resource.can_start_new_attempt(request.user):
-                raise PermissionDenied(ugettext("You can't start a new attempt at this exam."))
+                raise PermissionDenied(gettext("You can't start a new attempt at this exam."))
 
     attempt = Attempt.objects.create(
         resource = request.resource,
@@ -294,7 +294,7 @@ class RunAttemptView(generic.detail.DetailView):
             if (user_data is not None and user_data.is_instructor) or request_is_instructor(self.request):
                 mode = 'review'
             else:
-                raise PermissionDenied(ugettext("You're not allowed to review this attempt."))
+                raise PermissionDenied(gettext("You're not allowed to review this attempt."))
 
         context['mode'] = self.mode = mode
 

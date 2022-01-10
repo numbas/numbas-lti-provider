@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from datetime import datetime
 from django.utils import timezone
 from numbas_lti.models import FileReport

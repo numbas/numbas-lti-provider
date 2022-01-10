@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from django.conf import settings
 from django.forms import ModelForm, Form
 from django import forms, utils
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange
 from .test_exam import test_zipfile, ExamTestException

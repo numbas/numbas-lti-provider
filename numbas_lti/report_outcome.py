@@ -1,7 +1,7 @@
 from requests_oauthlib import OAuth1
 import requests
 import uuid
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.conf import settings
 
 from hashlib import sha1

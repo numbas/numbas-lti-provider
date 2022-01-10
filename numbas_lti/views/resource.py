@@ -16,7 +16,7 @@ from django.template.loader import get_template
 from django.template.response import TemplateResponse
 from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone, dateparse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required

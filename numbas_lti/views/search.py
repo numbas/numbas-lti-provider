@@ -7,7 +7,7 @@ from django.template.loader import get_template
 from django.template.response import TemplateResponse
 from django_auth_lti.patch_reverse import reverse
 from numbas_lti.models import LTIConsumer, LTIContext, Resource
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import gettext_lazy as _, gettext
 
 def user_json(user):
     consumers = LTIConsumer.objects.filter(contexts__resources__launches__user=user).distinct()

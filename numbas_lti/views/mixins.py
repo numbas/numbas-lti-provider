@@ -3,7 +3,7 @@ from django.templatetags.static import static
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django_auth_lti.verification import is_allowed

@@ -5,7 +5,7 @@ from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 import json
 from urllib.parse import parse_qs
 
