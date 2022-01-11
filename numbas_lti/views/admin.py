@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
 from django.views import generic
 from numbas_lti.models import LTIConsumer, Resource

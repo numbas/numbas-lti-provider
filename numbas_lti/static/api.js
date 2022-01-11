@@ -117,9 +117,11 @@ SCORM_API.prototype = {
         var changed = !(dates_equal(available_from, this.available_from) && dates_equal(available_until, this.available_until));
         this.available_from = available_from;
         this.available_until = available_until;
-        if(this.available_until) {
+
+        var unavailable_time = this.unavailable_time();
+        if(unavailable_time) {
             Array.from(document.querySelectorAll('.available-until')).forEach(function(s) {
-                s.textContent = sc.available_until.toLocaleString(DateTime.DATETIME_FULL);
+                s.textContent = unavailable_time.toLocaleString(DateTime.DATETIME_FULL);
             });
         }
         var deadline_change_display = document.getElementById('deadline-change-display');
@@ -158,6 +160,15 @@ SCORM_API.prototype = {
         if(deadline_change_display) {
             deadline_change_display.addEventListener('click',function() {
                 deadline_change_display.classList.remove('show');
+            });
+        }
+        var try_final_ajax_again_button = document.getElementById('try-final-ajax-again');
+        if(try_final_ajax_again_button) {
+            try_final_ajax_again_button.addEventListener('click', function() {
+                try_final_ajax_again_button.disabled = true;
+                sc.send_ajax(true).finally(function() {
+                    try_final_ajax_again_button.disabled = false;
+                });
             });
         }
     },
@@ -346,6 +357,20 @@ SCORM_API.prototype = {
     /** Update the connection display, and check for passing the end date
      */
     update: function() {
+        this.update_status_display();
+
+        this.callbacks.trigger('update_interval');
+
+        if(this.mode=='normal') {
+            if(!this.is_available()) {
+                this.end('not available');
+            }
+        }
+    },
+    
+    /** Update the status display - show a message depending on the state of the API.
+     */
+    update_status_display: function() {
         var unreceived = false;
         for(var x in this.sent) {
             unreceived = true;
@@ -354,7 +379,10 @@ SCORM_API.prototype = {
         var queued = this.queue.length>0;
         var disconnected = !(this.socket_is_open() || this.ajax_is_working());
 
-        var ok = !((unreceived || queued || !this.signed_receipt) && (disconnected || this.terminated)) && !this.failed_final_ajax;
+        var unavailable_time = this.unavailable_time();
+        var show_unavailable_at = this.mode!='review' && !this.terminated && unavailable_time !== undefined;
+
+        var ok = !((unreceived || queued || !this.signed_receipt) && (disconnected || this.terminated)) && !this.failed_final_ajax && !show_unavailable_at;
 
         if(!ok) {
             this.last_show_warning = DateTime.local();
@@ -388,14 +416,20 @@ SCORM_API.prototype = {
             toggle(status_display,'localstorage-used',this.localstorage_used||false);
             toggle(status_display,'confirmation', confirmation);
             toggle(status_display,'failed-final-ajax', this.failed_final_ajax);
+            toggle(status_display,'unavailable-at', show_unavailable_at);
         }
+    },
 
-        this.callbacks.trigger('update_interval');
-
-        if(this.mode=='normal') {
-            if(!this.is_available()) {
-                this.end('not available');
-            }
+    /** The time that the attempt becomes unavailable.
+     */
+    unavailable_time: function() {
+        if(this.offline || this.available_until === undefined) {
+            return;
+        }
+        if(this.available_from===undefined || this.available_from < this.available_until) {
+            return this.available_until;
+        } else {
+            return;
         }
     },
 
@@ -655,6 +689,15 @@ SCORM_API.prototype = {
             }
         );
         this.callbacks.trigger('send_ajax');
+
+        if(force) {
+            request.then(function() {
+                sc.failed_final_ajax = false;
+            }).catch(function(e) {
+                sc.failed_final_ajax = true;
+            });
+        }
+
         return request;
     },
 
@@ -694,9 +737,7 @@ SCORM_API.prototype = {
         /** Do one last send over HTTP, to make sure any remaining data is saved straight away.
          */
         this.send_queue_socket();
-        this.send_ajax(true).catch(function(e) {
-            sc.failed_final_ajax = true;
-        });
+        this.send_ajax(true);
 
 		return true;
 	},

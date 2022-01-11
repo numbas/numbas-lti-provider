@@ -22,7 +22,7 @@ body.ended #scorm-player {
 #status-display a {
     color: white;
 }
-#status-display.ok:not(.ended):not(.confirmation):not(.deadline-changed) {
+#status-display.ok:not(.ended):not(.confirmation):not(.deadline-changed):not(.unavailable-at) {
     display: none;
 }
 #status-display .status-message {
@@ -31,24 +31,6 @@ body.ended #scorm-player {
 #status-display:not(.localstorage-used) .text-localstorage-used {
     display: none;
 }
-body:not(.terminated) #status-display:hover:not(:focus) .symbol {
-    animation: wobble 0.3s infinite linear;
-    display: block;
-}
-@keyframes wobble {
-    0% {
-        transform: rotate(0deg);
-    }
-    25% {
-        transform: rotate(20deg);
-    }
-    75% {
-        transform: rotate(-20deg);
-    }
-    100% {
-        transform: rotate(0deg);
-    }
-}
 body.terminated #status-display .symbol, #status-display .symbol {
     display: none;
 }
@@ -56,6 +38,7 @@ body.terminated #status-display .symbol, #status-display .symbol {
 #status-display.ended .text-ended,
 #status-display.ok .text-ok,
 #status-display.confirmation .text-confirmation,
+#status-display.unavailable-at .text-unavailable-at,
 #status-display.terminated:not(.ok):not(.failed-final-ajax) .text-terminated,
 #status-display.failed-final-ajax .text-failed-final-ajax
 {
@@ -90,6 +73,18 @@ body.terminated .text-localstorage-used {
     display: none;
 }
 
+body:not(.terminated) #status-display.unavailable-at {
+    background: hsl(240, 50%, 25%);
+    position: static;
+    padding: 0.5em;
+    border-radius: 0;
+}
+
+
+body:not(.terminated) #status-display.disconnected {
+    background: hsl(0,90%,50%);
+}
+
 #deadline-change-display {
     position: absolute;
     top: 0;
@@ -102,5 +97,21 @@ body.terminated .text-localstorage-used {
     display: none;
 }
 #deadline-change-display.show {
-  display: block;
+    display: block;
+}
+
+#try-final-ajax-again {
+    font-size: 1em;
+    border: 0.1em solid hsl(0,0%,50%);
+    background: hsl(120,0%,95%);
+    border-radius: 0.1em;
+    padding: 0.2em 0.5em;
+}
+#try-final-ajax-again:hover,
+#try-final-ajax-again:focus {
+    background: hsl(120,95%,90%);
+}
+
+#try-final-ajax-again:disabled {
+    background: hsl(120,0%,70%);
 }

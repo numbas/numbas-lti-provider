@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.middleware.csrf import rotate_token
 from django.templatetags.static import static
 from django.shortcuts import render, redirect
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from importlib import import_module
 from ipware import get_client_ip
