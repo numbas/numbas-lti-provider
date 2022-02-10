@@ -61,7 +61,7 @@ def send_score_on_attempt_creation(sender, instance, created, **kwargs):
     if not created:
         return
     if instance.resource.report_mark_time == 'immediately':
-        tasks.attempt_report_outcome(instance)
+        tasks.attempt_report_outcome.schedule((instance,), delay=0.1)
 
 @receiver(models.signals.post_save,sender=Attempt)
 def send_receipt_on_completion(sender,instance, **kwargs):
@@ -71,7 +71,7 @@ def send_receipt_on_completion(sender,instance, **kwargs):
         return
     if getattr(settings,'EMAIL_COMPLETION_RECEIPTS',False) and attempt.resource.email_receipts:
         if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
-            tasks.send_attempt_completion_receipt(attempt)
+            tasks.send_attempt_completion_receipt.schedule((attempt,), delay=0.1)
 
 
 @receiver(models.signals.post_save,sender=ScormElement)
@@ -82,7 +82,7 @@ def scorm_set_score(sender,instance,created,**kwargs):
     if not instance.newer_than(instance.attempt.scaled_score_element):
         return
 
-    tasks.scorm_set_score(instance)
+    tasks.scorm_set_score.schedule((instance,), delay=0.1)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
@@ -92,14 +92,14 @@ def scorm_set_completion_status(sender,instance,created,**kwargs):
     if not instance.newer_than(instance.attempt.completion_status_element):
         return
 
-    tasks.scorm_set_completion_status(instance)
+    tasks.scorm_set_completion_status.schedule((instance,), delay=0.1)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_start_time(sender,instance,created,**kwargs):
     if instance.key != 'cmi.suspend_data' or not created:
         return
 
-    tasks.scorm_set_start_time(instance)
+    tasks.scorm_set_start_time.schedule((instance,), delay=0.1)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_num_questions(sender,instance,created,**kwargs):
@@ -108,7 +108,7 @@ def scorm_set_num_questions(sender,instance,created,**kwargs):
         return
 
     number = int(re.match(r'q(\d+)',instance.value).group(1))+1
-    tasks.scorm_set_num_questions(instance.attempt.resource, number)
+    tasks.scorm_set_num_questions.schedule((instance.attempt.resource, number,), delay=0.1)
 
 @receiver(models.signals.pre_delete, sender=FileReport)
 def delete_file_report(sender,instance,**kwargs):
