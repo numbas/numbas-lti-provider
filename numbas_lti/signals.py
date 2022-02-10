@@ -82,7 +82,7 @@ def scorm_set_score(sender,instance,created,**kwargs):
     if not instance.newer_than(instance.attempt.scaled_score_element):
         return
 
-    tasks.scorm_set_score(instance)
+    tasks.scorm_set_score.schedule((instance,), delay=0.1)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):
