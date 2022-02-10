@@ -94,7 +94,7 @@ def scorm_set_completion_status(element):
     attempt.save(update_fields=update_fields)
 
     if attempt.resource.report_mark_time == 'oncompletion' and attempt.completion_status=='completed':
-        tasks.attempt_report_outcome.schedule((attempt,),delay=0.1)
+        attempt_report_outcome.schedule((attempt,),delay=0.1)
 
 @db_task(priority=9)
 def scorm_set_start_time(element):
