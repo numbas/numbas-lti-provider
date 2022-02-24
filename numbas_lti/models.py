@@ -948,7 +948,7 @@ class Attempt(models.Model):
 
         remarked = self.remarked_parts.filter(part=part)
         if include_remark and remarked.exists():
-            return remarked.get().score
+            return remarked.last().score
 
         if (include_remark and self.remarked_parts.filter(part__startswith=part+'g').exists()) or self.resource.discounted_parts.filter(part__startswith=part+'g').exists():
             gaps = self.part_gaps(part)
