@@ -1328,7 +1328,7 @@ class EditorLink(models.Model):
     name = models.CharField(max_length=200,verbose_name=_('Editor name'))
     url = models.URLField(verbose_name=_('Base URL of the editor'),unique=True)
     cached_available_exams = models.TextField(blank=True,editable=False,verbose_name=_('Cached JSON list of available exams from this editor'))
-    last_cache_update = models.DateTimeField(blank=True,editable=False,verbose_name=_('Time of last cache update'))
+    last_cache_update = models.DateTimeField(null=True,blank=True,editable=False,verbose_name=_('Time of last cache update'))
 
     class Meta:
         verbose_name = _('editor link')
