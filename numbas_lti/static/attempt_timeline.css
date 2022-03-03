@@ -1,3 +1,7 @@
+body:not(.loaded) #loaded,
+body.loaded #loading {
+    display: none;
+}
 #timeline {
     margin: 2em 0;
 }

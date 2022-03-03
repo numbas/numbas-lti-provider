@@ -370,3 +370,4 @@ var tl = new Timeline(elements, remarked_elements, launches);
 tl.listen_for_changes(listener_url);
 
 ko.applyBindings(tl);
+document.body.classList.add('loaded');

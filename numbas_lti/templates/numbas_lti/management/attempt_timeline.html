@@ -12,65 +12,69 @@
 
 {% block attempt_content %}
 
-<p><a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review this attempt" %}</span></a></p>
-
-<p><a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View raw SCORM data for this attempt" %}</a></p>
-
-<p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
-
-<table class="table" id="timeline" data-bind="if: grouped_timeline().length">
-    <colgroup>
-        <col style="width: 12em;"/>
-        <col style="width: 2em;"/>
-        <col/>
-        <col style="width: 5em;"/>
-        <col style="width: 5em;"/>
-    </colgroup>
-    <thead>
-        <tr>
-            <th>{% trans "Time" %}</th>
-            <th></th>
-            <th>{% trans "Action" %}</th>
-            <th>{% trans "Total Score" %}</th>
-            <th>{% trans "Scaled Score" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- ko foreach: {data: grouped_timeline, afterAdd: scrollIntoView} -->
-            <!-- ko foreach: items -->
-            <tr class="item" data-bind="css: css">
-                <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
-                    <p data-bind="text: time_string"></p>
-                    <!-- ko if: $parent.remarked_by -->
-                    <p class="remarked-by small">
-                        {% trans "Remarked by" %}
-                        <span data-bind="text: $parent.remarked_by"></span>
-                    </p>
-                    <!-- /ko -->
-                </td>
-                <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
-                <td class="message"><span data-bind="html: message"></span></td>
-                <td class="exam-score raw" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
-                    <!-- ko if: $parent.exam_score_changed -->
-                    <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
-                    <!-- /ko -->
-                </td>
-                <td class="exam-score scaled" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
-                    <!-- ko if: $parent.exam_score_changed -->
-                    <span data-bind="text: $parent.exam_scaled_score"></span>
-                    <!-- /ko -->
-                </td>
-            </tr>
-            <!-- /ko -->
-        <!-- /ko -->
-    </tbody>
-</table>
-<!-- ko if: !grouped_timeline().length -->
-<div class="alert alert-warning">
-    <p>{% trans "There's no data for this attempt." %}</p>
+<div class="alert alert-info" id="loading">
+    <p>{% trans "Loading attempt data..." %}</p>
 </div>
-<!-- /ko -->
+<div id="loaded">
+    <p><a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review this attempt" %}</span></a></p>
 
+    <p><a class="btn btn-link" href="{% url 'attempt_scorm_listing' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View raw SCORM data for this attempt" %}</a></p>
+
+    <p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
+
+    <table class="table" id="timeline" data-bind="if: grouped_timeline().length">
+        <colgroup>
+            <col style="width: 12em;"/>
+            <col style="width: 2em;"/>
+            <col/>
+            <col style="width: 5em;"/>
+            <col style="width: 5em;"/>
+        </colgroup>
+        <thead>
+            <tr>
+                <th>{% trans "Time" %}</th>
+                <th></th>
+                <th>{% trans "Action" %}</th>
+                <th>{% trans "Total Score" %}</th>
+                <th>{% trans "Scaled Score" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach: {data: grouped_timeline, afterAdd: scrollIntoView} -->
+                <!-- ko foreach: items -->
+                <tr class="item" data-bind="css: css">
+                    <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
+                        <p data-bind="text: time_string"></p>
+                        <!-- ko if: $parent.remarked_by -->
+                        <p class="remarked-by small">
+                            {% trans "Remarked by" %}
+                            <span data-bind="text: $parent.remarked_by"></span>
+                        </p>
+                        <!-- /ko -->
+                    </td>
+                    <td class="icon"><span data-bind="if: icon, attr: {'class': 'glyphicon glyphicon-'+ko.unwrap(icon)}"></span></td>
+                    <td class="message"><span data-bind="html: message"></span></td>
+                    <td class="exam-score raw" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                        <!-- ko if: $parent.exam_score_changed -->
+                        <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
+                        <!-- /ko -->
+                    </td>
+                    <td class="exam-score scaled" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
+                        <!-- ko if: $parent.exam_score_changed -->
+                        <span data-bind="text: $parent.exam_scaled_score"></span>
+                        <!-- /ko -->
+                    </td>
+                </tr>
+                <!-- /ko -->
+            <!-- /ko -->
+        </tbody>
+    </table>
+    <!-- ko if: !grouped_timeline().length -->
+    <div class="alert alert-warning">
+        <p>{% trans "There's no data for this attempt." %}</p>
+    </div>
+    <!-- /ko -->
+</div>
 {% endblock attempt_content %}
 
 {% block javascripts %}
