@@ -1,7 +1,9 @@
 from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
 from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
+from numbas_lti.models import Exam, EditorLink
 from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
+from django import http
 from django.contrib.auth.models import User
 from django.middleware.csrf import rotate_token
 from django.templatetags.static import static
@@ -13,6 +15,7 @@ from ipware import get_client_ip
 import json
 import logging
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
+from numbas_lti.util import download_scorm_file
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +64,18 @@ def lti_entry(request):
     session_key = request.session.session_key
     return redirect(add_query_param(reverse('check_cookie_entry'),{'session_key':session_key}))
 
+@csrf_exempt
+def lti_entry_with_editorlink_exam(request, editorlink_ref, exam_ref):
+    if request.method != 'POST':
+        return not_post(request)
+
+    if request.session.session_key is None:
+        request.session.save()
+    session_key = request.session.session_key
+    return redirect(
+            add_query_param(reverse('check_cookie_entry'), {'session_key':session_key, 'editorlink_ref': editorlink_ref, 'exam_ref': exam_ref})
+        )
+
 def do_lti_entry(request):
     data = {}
     if hasattr(request,'LTI'):
@@ -104,7 +119,19 @@ def not_post(request):
 def not_an_lti_launch(request):
     return render(request,'numbas_lti/launch_errors/not_an_lti_launch.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 
+def unknown_editorlink(request):
+    editorlink_ref = request.GET.get('editorlink_ref')
+    return render(request,'numbas_lti/launch_errors/unknown_editorlink.html',{ "editorlink_ref": editorlink_ref })
+
+def unknown_exam_ref(request):
+    editorlink_ref = request.GET.get('editorlink_ref')
+    exam_ref = request.GET.get('exam_ref')
+    return render(request,'numbas_lti/launch_errors/unknown_exam_ref.html',{ "editorlink_ref": editorlink_ref, "exam_ref": exam_ref })
+
 def basic_lti_launch(request):
+    editorlink_ref = request.GET.get('editorlink_ref')
+    exam_ref = request.GET.get('exam_ref')
+
     try:
         request.resource
     except AttributeError:
@@ -141,16 +168,47 @@ def basic_lti_launch(request):
         ip_address = ip_address
     )
 
-    if is_instructor:
-        if not request.resource.exam:
-            return redirect(reverse('create_exam',args=(request.resource.pk,)))
+    if not request.resource.exam and editorlink_ref is not None and exam_ref is not None:
+        el = EditorLink.objects.filter(name=editorlink_ref).first()
+        if el is not None:
+            exam_data = next(filter(lambda x: x["url"].endswith(exam_ref) or x["url"].endswith(exam_ref + "/"), el.available_exams), None)
+            if exam_data is not None:
+                rest_url = exam_data["url"]
+                retrieve_url = exam_data["download"]
+
+                package = download_scorm_file(retrieve_url) 
+                exam = Exam.objects.create(rest_url=rest_url, retrieve_url=retrieve_url, resource=request.resource, package=package)
+                # todo title
+                # todo: code to check the zip? (See CreateExamForm)
+                exam.save()
+                request.resource.exam = exam
+                request.resource.save()
+                if is_instructor:
+                    return http.HttpResponseRedirect(request.resource.get_settings_url())
+                else:
+                    return redirect(reverse('show_attempts'))
+            else:
+                if is_instructor:
+                    return unknown_exam_ref(request)
+                else:
+                    return render(request,'numbas_lti/exam_not_set_up.html',{})
         else:
-            return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
-    else:
-        if not request.resource.exam:
-            return render(request,'numbas_lti/exam_not_set_up.html',{})
+            if is_instructor:
+                return unknown_editorlink(request)
+            else:
+                return render(request,'numbas_lti/exam_not_set_up.html',{})
+
+    else: # there is already an exam pr the exam is not specified
+        if is_instructor:
+            if not request.resource.exam:
+                    return redirect(reverse('create_exam',args=(request.resource.pk,)))
+            else:
+                return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
         else:
-            return redirect(reverse('show_attempts'))
+            if not request.resource.exam:
+                return render(request,'numbas_lti/exam_not_set_up.html',{})
+            else:
+                return redirect(reverse('show_attempts'))
 
 @csrf_exempt
 def no_resource(request):

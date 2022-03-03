@@ -2,6 +2,13 @@ import string
 import re
 from datetime import timedelta
 
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+from django.core.files import File
+from django.conf import settings
+import requests
+from io import BytesIO
+
+
 def letter_ordinal(n):
     if n==0:
         return string.ascii_lowercase[0]
@@ -73,3 +80,11 @@ def parse_scorm_timeinterval(s):
     seconds = (lengths['hours']*60 + lengths['minutes'])*60 + lengths['seconds']
 
     return timedelta(days=days, seconds=seconds)
+
+def download_scorm_file(retrieve_url):
+    scheme, netloc, path, params, qs, fragment = urlparse(retrieve_url)
+    query = parse_qs(qs)
+    query.setdefault('scorm','')
+    retrieve_url = urlunparse((scheme, netloc, path, params, urlencode(query,True), fragment))
+    package_bytes = requests.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
+    return File(BytesIO(package_bytes),name='exam.zip')
