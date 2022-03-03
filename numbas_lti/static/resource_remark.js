@@ -112,7 +112,7 @@ const exam_source = JSON.parse(exam_source_json);
 const exam_window = document.getElementById('exam-iframe').contentWindow;
 
 const ignore_keys = {
-    'cmi.suspend_data': true
+//    'cmi.suspend_data': true
 };
 
 let resource_link_id;
