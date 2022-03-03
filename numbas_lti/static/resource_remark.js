@@ -47,6 +47,10 @@ Vue.filter('change_class', function(a,b) {
     };
 });
 
+Vue.filter('datetime', function(t) {
+    return t.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
+});
+
 Vue.component('score-change', {
     props: ['from', 'to'],
     computed: {
@@ -75,6 +79,8 @@ class Attempt {
     constructor(data) {
         const a = this;
         this.pk = data.pk;
+        this.data = data;
+        this.start_time = DateTime.fromISO(data.start_time);
         this.completion_status = data.completion_status;
         this.user = data.user;
         this.status = 'not loaded';
@@ -123,6 +129,17 @@ class Attempt {
     get can_save() {
         return this.status=='remarked' && this.remarked_raw_score!=this.original_raw_score && this.status != 'saved';
     }
+
+    get completion_status_display() {
+        switch(this.completion_status) {
+            case 'not attempted':
+                return gettext('Not attempted');
+            case 'incomplete':
+                return gettext('Incomplete');
+            case 'completed':
+                return gettext('Complete');
+        }
+    }
 }
 
 const parameters_json = document.getElementById('parameters-json').textContent;
@@ -164,7 +181,8 @@ const app = new Vue({
         show_only: 'all',
         save_url: parameters['save_url'],
         saving: false,
-        save_error: null
+        save_error: null,
+        sort_by: 'name'
     },
     methods: {
         stop_marking: function() {
@@ -346,6 +364,18 @@ const app = new Vue({
             return total - this.remark_all_time;
         },
         shown_attempts: function() {
+            const [sort_key,sort_dir] = {
+                'name': [a => a.user.full_name, 1],
+                'identifier': [a => a.user.identifier, 1],
+                'start_time': [a => a.start_time, -1],
+                'original_score': [a => a.original_raw_score, 1],
+                'saved_score': [a => a.saved_raw_score, 1],
+                'completion_status': [a => ['completed','incomplete','not attempted'].indexOf(a.completion_status), 1]
+            }[this.sort_by];
+            function compare_attempts(a,b) {
+                [a,b] = [sort_key(a), sort_key(b)];
+                return (a>b ? 1 : a<b ? -1 : 0)*sort_dir;
+            }
             return this.attempts.filter(a=>{
                 switch(this.show_only) {
                     case 'all':
@@ -359,7 +389,7 @@ const app = new Vue({
                     case 'decreased':
                         return a.remarked_raw_score !== null && a.original_raw_score > a.remarked_raw_score;
                 }
-            });
+            }).sort(compare_attempts);
         },
         num_attempts_hidden: function() {
             return this.attempts.length - this.shown_attempts.length;

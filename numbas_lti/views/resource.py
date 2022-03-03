@@ -482,6 +482,7 @@ class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,Mus
             {
                 'pk': a.pk,
                 'completion_status': a.completion_status,
+                'start_time': a.start_time,
                 'user': { 
                     'full_name': a.user.get_full_name(),
                     'identifier': a.user_data().identifier(),

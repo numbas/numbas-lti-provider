@@ -62,6 +62,15 @@
             <option value="increased">{% trans "Only increased scores" %}</option>
             <option value="decreased">{% trans "Only decreased scores" %}</option>
         </select>
+        <label for="sort-by">{% trans "Sort by:" %}</label> 
+        <select id="sort-by" v-model="sort_by">
+            <option value="name">{% trans "Student name" %}</option>
+            <option value="identifier">{% trans "Student identifier" %}</option>
+            <option value="start_time">{% trans "Start time" %}</option>
+            <option value="completion_status">{% trans "Completion status" %}</option>
+            <option value="original_score">{% trans "Original score" %}</option>
+            <option value="saved_score">{% trans "Saved score" %}</option>
+        </select>
     </p>
 
     <table class="table" id="attempts-table">
@@ -80,6 +89,7 @@
             <tr>
                 <th>{% trans "Student" %}</th>
                 <th><!-- identifier --></th>
+                <th>{% trans "Start time" %}</th>
                 <th>{% trans "Completion status" %}</th>
                 <th>{% trans "Original score" %}</th>
                 <th>{% trans "Saved score" %}</th>
@@ -98,7 +108,8 @@
             <tr class="attempt" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
                 <td>[[attempt.user.full_name]]</td>
                 <td>[[attempt.user.identifier]]</td>
-                <td>[[attempt.get_completion_status_display]]</td>
+                <td>[[attempt.start_time|datetime]]</td>
+                <td>[[attempt.completion_status_display]]</td>
                 <td>
                     [[attempt.original_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]
                     <score-change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.original_raw_score" :to="attempt.remarked_raw_score"></score-change>
