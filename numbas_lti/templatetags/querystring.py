@@ -6,13 +6,16 @@ from django.http import QueryDict
 
 register = template.Library()
 
+def is_iterable(v):
+    return isinstance(v, collections.abc.Iterable) and not isinstance(v, str)
+
 @register.simple_tag
 def build_query(**kwargs):
     """Build a query string"""
     query_dict = QueryDict(mutable=True)
 
     for k, v in kwargs.items():
-        if isinstance(v, collections.abc.Iterable):
+        if is_iterable(v):
             query_dict.setlist(k, v)
         else:
             query_dict[k] = v
@@ -26,7 +29,7 @@ def set_query_values(context, **kwargs):
     query_dict = context.request.GET.copy()
 
     for k, v in kwargs.items():
-        if isinstance(v, collections.abc.Iterable):
+        if is_iterable(v):
             query_dict.setlist(k, v)
         else:
             query_dict[k] = v
@@ -40,7 +43,7 @@ def append_query_values(context, **kwargs):
     query_dict = context.request.GET.copy()
 
     for k, v in kwargs.items():
-        if isinstance(v, collections.abc.Iterable):
+        if is_iterable(v):
             for v_item in v:
                 query_dict.appendlist(k, v_item)
         else:
