@@ -1,4 +1,4 @@
-from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
+from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_lti_entry_url_with_editorlink_exam, get_config_url
 from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
 from numbas_lti.models import Exam, EditorLink
 from django_auth_lti.patch_reverse import reverse
@@ -28,6 +28,7 @@ def index(request):
         return redirect(reverse('create_superuser'))
     context = {
         'entry_url': get_lti_entry_url(request),
+        'entry_url_with_editorlink_exam': get_lti_entry_url_with_editorlink_exam(request),
     }
     return render(request,'numbas_lti/index.html',context)
 
