@@ -520,7 +520,7 @@ class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,Mus
 
         cmis = []
         for a in attempts:
-            cmi = a.scorm_cmi()
+            cmi = a.scorm_cmi(include_remarked_elements=False)
 
             dynamic_cmi = {
                 'cmi.mode': 'review',
@@ -532,6 +532,8 @@ class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,Mus
             cmi.update(dynamic_cmi)
             cmis.append({
                 'pk': a.pk, 
+                'raw_score': a.raw_score,
+                'max_score': a.max_score,
                 'cmi': cmi
                 })
 

@@ -81,7 +81,8 @@
                 <th>{% trans "Student" %}</th>
                 <th><!-- identifier --></th>
                 <th>{% trans "Completion status" %}</th>
-                <th>{% trans "Current score" %}</th>
+                <th>{% trans "Original score" %}</th>
+                <th>{% trans "Saved score" %}</th>
                 <th>{% trans "Remarked score" %}</th>
                 <th>{% trans "Status" %}</th>
                 <th colspan="3"></th>
@@ -98,20 +99,19 @@
                 <td>[[attempt.user.full_name]]</td>
                 <td>[[attempt.user.identifier]]</td>
                 <td>[[attempt.get_completion_status_display]]</td>
-                <td>[[attempt.original_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</td>
+                <td>
+                    [[attempt.original_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]
+                    <score-change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.original_raw_score" :to="attempt.remarked_raw_score"></score-change>
+                </td>
+                <td>
+                    [[attempt.saved_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]
+                    <score-change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.saved_raw_score" :to="attempt.remarked_raw_score"></score-change>
+                </td>
                 <td>
                     <span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</span>
                 </td>
                 <td :class="attempt.score_change_classes">
                     <div v-if="attempt.status=='error'">{% trans "Error" %}</div>
-                    <div v-else>
-                        [[attempt.score_change_description]]
-                        <div v-if="attempt.remarked_raw_score!==null">
-                            <span v-if="attempt.remarked_raw_score < attempt.original_raw_score">{% trans "Decreased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
-                            <span v-if="attempt.remarked_raw_score > attempt.original_raw_score">{% trans "Increased" %}<br>[[(attempt.remarked_raw_score - attempt.original_raw_score) | change]]</span>
-                            <span v-if="attempt.remarked_raw_score == attempt.original_raw_score">{% trans "Unchanged" %}</span>
-                        </div>
-                    </div>
                 </td>
                 <td>
                     <button class="btn btn-default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)"><span class="glyphicon glyphicon-repeat"></span> {% trans "Remark" %}</button>

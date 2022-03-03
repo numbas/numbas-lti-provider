@@ -35,6 +35,42 @@ Vue.filter('change', function(n) {
     }
 })
 
+Vue.filter('change_class', function(a,b) {
+    if(a === null) {
+        return {};
+    }
+    return {
+        'score-change': true,
+        'decreased': a<b,
+        'unchanged': a==b,
+        'increased': a>b
+    };
+});
+
+Vue.component('score-change', {
+    props: ['from', 'to'],
+    computed: {
+        classes: function() {
+            const a = this.to;
+            const b = this.from;
+            if(a === null) {
+                return {};
+            }
+            return {
+                'score-change': true,
+                'decreased': a<b,
+                'unchanged': a==b,
+                'increased': a>b
+            };
+        }
+    },
+    template: `
+<div :class="classes">
+    {{(to - from) | change}}
+</div>`
+});
+
+
 class Attempt {
     constructor(data) {
         const a = this;
@@ -64,6 +100,7 @@ class Attempt {
             this.status = 'loaded';
             this.max_score = parseFloat((this.cmi['cmi.score.max'] || {}).value || 0);
             this.original_raw_score = parseFloat((this.cmi['cmi.score.raw'] || {}).value || 0);
+            this.saved_raw_score = data.raw_score;
         })
     }
 
@@ -81,20 +118,6 @@ class Attempt {
 
     get timeline_url() {
         return '/attempt/'+this.pk+'/timeline'+resource_link_id_query;
-    }
-
-    get score_change_classes() {
-        if(this.remarked_raw_score !== null) {
-            const rs = this.remarked_raw_score;
-            const os = this.original_raw_score;
-            return {
-                'score-change': true,
-                decreased: rs<os,
-                unchanged: rs==os,
-                increased: rs>os
-            }
-        }
-        return {};
     }
 
     get can_save() {
@@ -255,7 +278,12 @@ const app = new Vue({
                 if(!d.success) {
                     this.save_error = d.message;
                 }
-                attempts.forEach(a=>a.status = d.saved.indexOf(a.pk)!=-1 ? 'saved' : 'error saving');
+                attempts.forEach(a => {
+                    a.status = d.saved.indexOf(a.pk)!=-1 ? 'saved' : 'error saving';
+                    if(a.changed_keys['cmi.score.raw'] !== undefined) {
+                        a.saved_raw_score = parseFloat(a.changed_keys['cmi.score.raw'][1]);
+                    }
+                });
             }).catch(err=>{
                 this.save_error = err;
             });
@@ -325,7 +353,7 @@ const app = new Vue({
                     case 'completed':
                         return a.completion_status == 'completed';
                     case 'changed':
-                        return a.remarked_raw_score !== null && a.original_raw_score != a.remarked_raw_score;
+                        return a.remarked_raw_score !== null && a.saved_raw_score != a.remarked_raw_score;
                     case 'increased':
                         return a.remarked_raw_score !== null && a.original_raw_score < a.remarked_raw_score;
                     case 'decreased':

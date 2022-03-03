@@ -700,7 +700,7 @@ class Attempt(models.Model):
                 default = default()
             return default
 
-    def scorm_cmi(self):
+    def scorm_cmi(self, include_remarked_elements=True):
         user_data = self.resource.user_data(self.user)
         learner_id = '' if user_data is None else user_data.consumer_user_id
 
@@ -726,6 +726,10 @@ class Attempt(models.Model):
         latest_elements = {}
 
         saved_elements = resolve_diffed_scormelements(self.scormelements.all().reverse())
+        if not include_remarked_elements:
+            remarked_elements = RemarkedScormElement.objects.filter(element__attempt=self).values_list('element', flat=True)
+            saved_elements = [e for e in saved_elements if e.pk not in remarked_elements]
+
         for e in saved_elements:
             latest_elements[e.key] = {'value':e.value,'time':e.time.timestamp()}
 
