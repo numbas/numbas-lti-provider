@@ -127,7 +127,7 @@ class Attempt {
     }
 
     get can_save() {
-        return this.status=='remarked' && this.remarked_raw_score!=this.original_raw_score && this.status != 'saved';
+        return this.status=='remarked' && this.remarked_raw_score!=this.saved_raw_score && this.status != 'saved';
     }
 
     get completion_status_display() {
