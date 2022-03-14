@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: v2.10\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-30 09:37+0000\n"
+"POT-Creation-Date: 2022-03-14 08:35+0000\n"
 "PO-Revision-Date: 2021-03-02 11:49+0000\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -314,7 +314,7 @@ msgstr ""
 msgid "Incomplete"
 msgstr ""
 
-#: numbas_lti/models.py:532 numbas_lti/models.py:1405
+#: numbas_lti/models.py:532 numbas_lti/models.py:1409
 msgid "Complete"
 msgstr ""
 
@@ -416,162 +416,162 @@ msgid_plural "attempts"
 msgstr[0] ""
 msgstr[1] ""
 
-#: numbas_lti/models.py:1105
+#: numbas_lti/models.py:1109
 #, python-brace-format
 msgid "Numbas: Receipt for {resource_name}"
 msgstr ""
 
-#: numbas_lti/models.py:1136
+#: numbas_lti/models.py:1140
 msgid "attempt launch"
 msgstr ""
 
-#: numbas_lti/models.py:1137
+#: numbas_lti/models.py:1141
 msgid "attempt launches"
 msgstr ""
 
-#: numbas_lti/models.py:1156
+#: numbas_lti/models.py:1160
 msgid "question score"
 msgstr ""
 
-#: numbas_lti/models.py:1157
+#: numbas_lti/models.py:1161
 msgid "question scores"
 msgstr ""
 
-#: numbas_lti/models.py:1169
+#: numbas_lti/models.py:1173
 msgid "remarked part"
 msgstr ""
 
-#: numbas_lti/models.py:1170
+#: numbas_lti/models.py:1174
 msgid "remarked parts"
 msgstr ""
 
-#: numbas_lti/models.py:1176
+#: numbas_lti/models.py:1180
 msgid "Remove from total"
 msgstr ""
 
-#: numbas_lti/models.py:1177
+#: numbas_lti/models.py:1181
 msgid "Award everyone full credit"
 msgstr ""
 
-#: numbas_lti/models.py:1186
+#: numbas_lti/models.py:1190
 msgid "discounted part"
 msgstr ""
 
-#: numbas_lti/models.py:1187
+#: numbas_lti/models.py:1191
 msgid "discounted parts"
 msgstr ""
 
-#: numbas_lti/models.py:1214
+#: numbas_lti/models.py:1218
 msgid "Element counter to disambiguate elements with the same timestamp"
 msgstr ""
 
-#: numbas_lti/models.py:1218
+#: numbas_lti/models.py:1222
 msgid "SCORM element"
 msgstr ""
 
-#: numbas_lti/models.py:1219
+#: numbas_lti/models.py:1223
 msgid "SCORM elements"
 msgstr ""
 
-#: numbas_lti/models.py:1244
+#: numbas_lti/models.py:1248
 msgid "SCORM element diff"
 msgstr ""
 
-#: numbas_lti/models.py:1245
+#: numbas_lti/models.py:1249
 msgid "SCORM element diffs"
 msgstr ""
 
-#: numbas_lti/models.py:1314 numbas_lti/models.py:1315
+#: numbas_lti/models.py:1318 numbas_lti/models.py:1319
 msgid "remarked SCORM element"
 msgstr ""
 
-#: numbas_lti/models.py:1324
+#: numbas_lti/models.py:1328
 msgid "Editor name"
 msgstr ""
 
-#: numbas_lti/models.py:1325
+#: numbas_lti/models.py:1329
 msgid "Base URL of the editor"
 msgstr ""
 
-#: numbas_lti/models.py:1326
+#: numbas_lti/models.py:1330
 msgid "Cached JSON list of available exams from this editor"
 msgstr ""
 
-#: numbas_lti/models.py:1327
+#: numbas_lti/models.py:1331
 msgid "Time of last cache update"
 msgstr ""
 
-#: numbas_lti/models.py:1330
+#: numbas_lti/models.py:1334
 msgid "editor link"
 msgstr ""
 
-#: numbas_lti/models.py:1331
+#: numbas_lti/models.py:1335
 msgid "editor links"
 msgstr ""
 
-#: numbas_lti/models.py:1365
+#: numbas_lti/models.py:1369
 msgid "Editor that this project belongs to"
 msgstr ""
 
-#: numbas_lti/models.py:1366
+#: numbas_lti/models.py:1370
 msgid "Name of the project"
 msgstr ""
 
-#: numbas_lti/models.py:1367
+#: numbas_lti/models.py:1371
 msgid "Description of the project"
 msgstr ""
 
-#: numbas_lti/models.py:1368
+#: numbas_lti/models.py:1372
 msgid "ID of the project on the editor"
 msgstr ""
 
-#: numbas_lti/models.py:1369
+#: numbas_lti/models.py:1373
 msgid "URL of the project's homepage on the editor"
 msgstr ""
 
-#: numbas_lti/models.py:1370
+#: numbas_lti/models.py:1374
 msgid "URL of the project on the editor's REST API"
 msgstr ""
 
-#: numbas_lti/models.py:1373 numbas_lti/models.py:1374
+#: numbas_lti/models.py:1377 numbas_lti/models.py:1378
 msgid "linked editor project"
 msgstr ""
 
-#: numbas_lti/models.py:1384
+#: numbas_lti/models.py:1388
 msgid "stress test"
 msgstr ""
 
-#: numbas_lti/models.py:1385
+#: numbas_lti/models.py:1389
 msgid "stress tests"
 msgstr ""
 
-#: numbas_lti/models.py:1400
+#: numbas_lti/models.py:1404
 msgid "stress test note"
 msgstr ""
 
-#: numbas_lti/models.py:1401
+#: numbas_lti/models.py:1405
 msgid "stress test notes"
 msgstr ""
 
-#: numbas_lti/models.py:1404
+#: numbas_lti/models.py:1408
 #: numbas_lti/templates/numbas_lti/show_attempts.html:46
 msgid "In progress"
 msgstr ""
 
-#: numbas_lti/models.py:1406
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:106
+#: numbas_lti/models.py:1410
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:125
 msgid "Error"
 msgstr ""
 
-#: numbas_lti/models.py:1414
+#: numbas_lti/models.py:1418
 msgid "Time this report was created"
 msgstr ""
 
-#: numbas_lti/models.py:1418
+#: numbas_lti/models.py:1422
 msgid "Report file"
 msgstr ""
 
-#: numbas_lti/models.py:1419
+#: numbas_lti/models.py:1423
 msgid "Report files"
 msgstr ""
 
@@ -891,7 +891,7 @@ msgstr ""
 #: numbas_lti/templates/numbas_lti/management/admin/consumer/manage_time_periods.html:64
 #: numbas_lti/templates/numbas_lti/management/admin/editorlink/edit.html:77
 #: numbas_lti/templates/numbas_lti/management/discount.html:54
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:120
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:131
 #: numbas_lti/templates/numbas_lti/management/resource_settings.html:21
 msgid "Save"
 msgstr ""
@@ -1385,6 +1385,8 @@ msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/admin/user_info.html:32
 #: numbas_lti/templates/numbas_lti/management/attempts.html:59
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:69
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:92
 #: numbas_lti/templates/numbas_lti/management/validate_receipt.html:86
 #: numbas_lti/templates/numbas_lti/show_attempts.html:30
 msgid "Start time"
@@ -1392,7 +1394,7 @@ msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/admin/user_info.html:42
 #: numbas_lti/templates/numbas_lti/management/attempts.html:78
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:125
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:136
 msgid "Review"
 msgstr ""
 
@@ -1418,7 +1420,7 @@ msgid "Mode"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/admin/user_info.html:85
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:31
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:35
 msgid "Time"
 msgstr ""
 
@@ -1447,7 +1449,7 @@ msgid "Started %(time)s"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:18
-msgid "Re-mark question parts"
+msgid "Change scores for question parts"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:20
@@ -1480,12 +1482,14 @@ msgid "Score"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:37
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:71
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:94
 msgid "Original score"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:51
 #, python-format
-msgid "Re-mark part %(path)s?"
+msgid "Change score for part %(path)s?"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:53
@@ -1498,7 +1502,7 @@ msgid "Save these scores"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:14
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:15
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:19
 #: numbas_lti/templates/numbas_lti/show_attempts.html:58
 msgid "Review this attempt"
 msgstr ""
@@ -1508,7 +1512,7 @@ msgid "View activity timeline for this attempt"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_scorm_listing.html:18
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:19
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:23
 msgid "Download attempt data in JSON format"
 msgstr ""
 
@@ -1528,27 +1532,31 @@ msgstr ""
 msgid "Question scores"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:17
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:16
+msgid "Loading attempt data..."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:21
 msgid "View raw SCORM data for this attempt"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:33
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:37
 msgid "Action"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:34
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:38
 msgid "Total Score"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:35
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:39
 msgid "Scaled Score"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:46
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:50
 msgid "Re-marked by"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:70
+#: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:74
 msgid "There's no data for this attempt."
 msgstr ""
 
@@ -1585,12 +1593,13 @@ msgid "Earlier"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempts.html:55
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:81
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:90
 msgid "Student"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempts.html:61
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:83
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:70
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:93
 msgid "Completion status"
 msgstr ""
 
@@ -1599,13 +1608,11 @@ msgid "(old exam)"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempts.html:79
-#: numbas_lti/templates/numbas_lti/management/nav.html:16
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:117
-msgid "Re-mark"
+msgid "Change score"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempts.html:80
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:126
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:137
 msgid "Data"
 msgstr ""
 
@@ -2043,6 +2050,11 @@ msgstr ""
 msgid "Discount?"
 msgstr ""
 
+#: numbas_lti/templates/numbas_lti/management/nav.html:16
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:128
+msgid "Re-mark"
+msgstr ""
+
 #: numbas_lti/templates/numbas_lti/management/nav.html:17
 #: numbas_lti/templates/numbas_lti/management/resource_settings.html:10
 msgid "Settings"
@@ -2260,54 +2272,55 @@ msgstr ""
 msgid "Only decreased scores"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:84
-msgid "Current score"
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:65
+msgid "Sort by:"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:85
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:67
+msgid "Student name"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:68
+msgid "Student identifier"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:72
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:95
+msgid "Saved score"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:96
 msgid "Re-marked score"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:86
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:97
 #: numbas_lti/templates/numbas_lti/management/resource_reports.html:18
 msgid "Status"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:93
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:104
 msgid "Number of hidden attempts:"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:110
-msgid "Decreased"
-msgstr ""
-
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:111
-msgid "Increased"
-msgstr ""
-
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:112
-msgid "Unchanged"
-msgstr ""
-
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:121
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:132
 msgid "Saved"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:122
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:133
 msgid "Saving error"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:131
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:142
 msgid "There was an error remarking this attempt:"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/management/resource_remark.html:132
+#: numbas_lti/templates/numbas_lti/management/resource_remark.html:143
 msgid "There was an error fetching data for this attempt:"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark_not_supported.html:13
 msgid ""
-"This resource's exam package does not support automatic remarking. If you "
+"This resource's exam package does not support automatic re-marking. If you "
 "can, please update it with a newer version."
 msgstr ""
 
@@ -2524,63 +2537,74 @@ msgstr ""
 #: numbas_lti/templates/numbas_lti/run_attempt.html:18
 #, python-format
 msgid ""
-"This resource automatically closed at <span class=\"available-until\">"
-"%(available_until)s</span>"
+"This attempt will automatically close at <span class=\"available-until\">"
+"%(available_until)s</span>, if not already closed. "
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/run_attempt.html:23
-msgid "Attempt data is being saved to the database. Please wait."
+#, python-format
+msgid ""
+"This attempt automatically closed at <span class=\"available-until\">"
+"%(available_until)s</span>"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/run_attempt.html:28
+msgid "Attempt data is being saved to the database. Please wait."
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:33
 msgid ""
 "All attempt data has been saved to the database. You may now close this "
 "window."
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:33
+#: numbas_lti/templates/numbas_lti/run_attempt.html:38
 msgid ""
 "There is currently no connection to the server - your attempt data can not "
 "be saved to the database."
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:34
+#: numbas_lti/templates/numbas_lti/run_attempt.html:39
 msgid "When the connection is restored, data will be saved to the database."
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:35
+#: numbas_lti/templates/numbas_lti/run_attempt.html:40
 msgid ""
 "Data is being saved locally, so you'll be able to resume this attempt "
 "<strong>from this device</strong> when the connection is restored."
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:36
+#: numbas_lti/templates/numbas_lti/run_attempt.html:41
 msgid "If this warning remains visible for a long time, please contact "
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:42
+#: numbas_lti/templates/numbas_lti/run_attempt.html:47
 msgid ""
 "The following code can be used by your instructor to verify the information "
 "in this receipt:"
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:48
+#: numbas_lti/templates/numbas_lti/run_attempt.html:53
 msgid ""
 "There was an error closing this attempt. Please ask your instructor to check "
 "that your data has been saved correctly."
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:53
+#: numbas_lti/templates/numbas_lti/run_attempt.html:54
+msgid "Try again"
+msgstr ""
+
+#: numbas_lti/templates/numbas_lti/run_attempt.html:59
 msgid ""
 "The availability dates for this attempt have changed. The attempt is "
 "available until <span class=\"available-until\"></span>."
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:54
+#: numbas_lti/templates/numbas_lti/run_attempt.html:60
 msgid "Click this message to dismiss it."
 msgstr ""
 
-#: numbas_lti/templates/numbas_lti/run_attempt.html:86
+#: numbas_lti/templates/numbas_lti/run_attempt.html:92
 msgid "A connection to the server could not be created. Please report this."
 msgstr ""
 
@@ -2712,7 +2736,7 @@ msgstr ""
 msgid "{slug}-attempts.csv"
 msgstr ""
 
-#: numbas_lti/views/resource.py:569
+#: numbas_lti/views/resource.py:572
 msgid "There was an error while saving some data."
 msgstr ""
 
