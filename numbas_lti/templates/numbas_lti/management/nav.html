@@ -13,7 +13,7 @@
             <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'resource_dashboard' request.resource.pk %}"><span class="glyphicon glyphicon-dashboard"></span> {% trans "Dashboard" %}</a></li>
             <li class="{% if management_tab == 'attempts' %}active{% endif %}"><a href="{% url 'manage_attempts' request.resource.pk %}"><span class="glyphicon glyphicon-stats"></span> {% trans "Attempts" %}</a></li>
             <li class="{% if management_tab == 'stats' %}active{% endif %}"><a href="{% url 'resource_stats' request.resource.pk %}"><span class="glyphicon glyphicon-stats"></span> {% trans "Statistics" %}</a></li>
-            <li class="{% if management_tab == 'remark' %}active{% endif %}"><a href="{% url 'resource_remark' request.resource.pk %}"><span class="glyphicon glyphicon-pencil"></span> {% trans "Remark" %}</a></li>
+            <li class="{% if management_tab == 'remark' %}active{% endif %}"><a href="{% url 'resource_remark' request.resource.pk %}"><span class="glyphicon glyphicon-pencil"></span> {% trans "Re-mark" %}</a></li>
             <li class="{% if management_tab == 'settings' %}active{% endif %}"><a href="{% url 'resource_settings' request.resource.pk %}"><span class="glyphicon glyphicon-cog"></span> {% trans "Settings" %}</a></li>
             <li class="{% if management_tab == 'access-changes' %}active{% endif %}"><a href="{% url 'resource_access_changes' request.resource.pk %}"><span class="glyphicon glyphicon-time"></span> {% trans "Access changes" %}</a></li>
             <li class="{% if management_tab == 'reports' %}active{% endif %}"><a href="{% url 'resource_reports' request.resource.pk %}"><span class="glyphicon glyphicon-save-file"></span> {% trans "Reports" %}</a></li>

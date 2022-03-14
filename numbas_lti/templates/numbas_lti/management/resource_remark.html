@@ -7,7 +7,7 @@
 {% block management_content %}
     {% include "numbas_lti/csrf_token_form.html" %}
 <h2>
-    {% blocktrans with resource_name=resource.title %}Remark <strong>{{resource_name}}</strong>{% endblocktrans %}
+    {% blocktrans with resource_name=resource.title %}Re-mark <strong>{{resource_name}}</strong>{% endblocktrans %}
     <br>
     <small>{{resource.context.name}}</small>
 </h2>
@@ -21,7 +21,7 @@
     </p>
     <p>
     {% blocktrans %}
-        Remarking is computationally intensive. Your browser may become unresponsive while remarking all attempts.
+        Re-marking is computationally intensive. Your browser may become unresponsive while remarking all attempts.
     {% endblocktrans %}
     </p>
 </div>
@@ -31,7 +31,7 @@
         <input id="use-unsubmitted" type="checkbox" v-model="use_unsubmitted"> <label for="use-unsubmitted">{% trans "Use unsubmitted answers" %}
     </p>
     <p>
-        <button class="btn btn-primary" @click="remark_all"><span class="glyphicon glyphicon-repeat"></span> {% trans "Remark all attempts" %}</button>
+        <button class="btn btn-primary" @click="remark_all"><span class="glyphicon glyphicon-repeat"></span> {% trans "Re-mark all attempts" %}</button>
         <button class="btn btn-warning" @click="stop_marking"><span class="glyphicon glyphicon-stop"></span> {% trans "Stop marking" %}</button>
         <button class="btn btn-danger" @click="save_changed_attempts" :disabled="changed_attempts.length==0 || saving"><span class="glyphicon glyphicon-save"></span> {% trans "Save all changed attempts" %}</button>
     </p>
@@ -93,7 +93,7 @@
                 <th>{% trans "Completion status" %}</th>
                 <th>{% trans "Original score" %}</th>
                 <th>{% trans "Saved score" %}</th>
-                <th>{% trans "Remarked score" %}</th>
+                <th>{% trans "Re-marked score" %}</th>
                 <th>{% trans "Status" %}</th>
                 <th colspan="3"></th>
             </tr>
@@ -125,7 +125,7 @@
                     <div v-if="attempt.status=='error'">{% trans "Error" %}</div>
                 </td>
                 <td>
-                    <button class="btn btn-default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)"><span class="glyphicon glyphicon-repeat"></span> {% trans "Remark" %}</button>
+                    <button class="btn btn-default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)"><span class="glyphicon glyphicon-repeat"></span> {% trans "Re-mark" %}</button>
                 </td>
                 <td>
                     <button class="btn btn-danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)"><span class="glyphicon glyphicon-save"></span> {% trans "Save" %}</button>

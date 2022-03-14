@@ -1447,7 +1447,7 @@ msgid "Started %(time)s"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:18
-msgid "Remark question parts"
+msgid "Re-mark question parts"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:20
@@ -1485,7 +1485,7 @@ msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:51
 #, python-format
-msgid "Remark part %(path)s?"
+msgid "Re-mark part %(path)s?"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_remark.html:53
@@ -1545,7 +1545,7 @@ msgid "Scaled Score"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:46
-msgid "Remarked by"
+msgid "Re-marked by"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempt_timeline.html:70
@@ -1601,7 +1601,7 @@ msgstr ""
 #: numbas_lti/templates/numbas_lti/management/attempts.html:79
 #: numbas_lti/templates/numbas_lti/management/nav.html:16
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:117
-msgid "Remark"
+msgid "Re-mark"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/attempts.html:80
@@ -2176,7 +2176,7 @@ msgstr ""
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:10
 #: numbas_lti/templates/numbas_lti/management/resource_remark_not_supported.html:8
 #, python-format
-msgid "Remark <strong>%(resource_name)s</strong>"
+msgid "Re-mark <strong>%(resource_name)s</strong>"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:17
@@ -2191,7 +2191,7 @@ msgstr ""
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:23
 msgid ""
 "\n"
-"        Remarking is computationally intensive. Your browser may become "
+"        Re-marking is computationally intensive. Your browser may become "
 "unresponsive while remarking all attempts.\n"
 "    "
 msgstr ""
@@ -2201,7 +2201,7 @@ msgid "Use unsubmitted answers"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:34
-msgid "Remark all attempts"
+msgid "Re-mark all attempts"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:35
@@ -2265,7 +2265,7 @@ msgid "Current score"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:85
-msgid "Remarked score"
+msgid "Re-marked score"
 msgstr ""
 
 #: numbas_lti/templates/numbas_lti/management/resource_remark.html:86
