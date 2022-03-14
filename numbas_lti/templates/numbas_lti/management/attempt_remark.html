@@ -50,7 +50,7 @@
                             {% if part.p and not part.has_gaps %}
                             <input title="{% blocktrans with path=part.path %}Remark part {{path}}?{% endblocktrans %}" type="checkbox" class="remark" name="remark-{{part.path}}" {% if part.remark %}checked{% endif %}>
                             <span class="control monospace">
-                                <input title="{% blocktrans with path=part.path %}Score for part {{path}}{% endblocktrans %}" class="form-control score" type="number" name="score-{{part.path}}" data-original-score="{{part.original_score}}" value="{{part.score}}" min="0" max="{{part.max_score}}" step="0.1" {% if not part.remark %}disabled{% endif %}>
+                                <input title="{% blocktrans with path=part.path %}Score for part {{path}}{% endblocktrans %}" class="form-control score" type="number" name="score-{{part.path}}" data-original-score="{{part.original_score}}" value="{{part.score}}" min="0" max="{{part.max_score}}" step="0.01" {% if not part.remark %}disabled{% endif %}>
                             </span>
                             {% endif %}
                         {% endif %}
