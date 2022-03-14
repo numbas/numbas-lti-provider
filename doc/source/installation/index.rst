@@ -17,7 +17,6 @@ If you're installing on a platform not listed below, follow the :ref:`Ubuntu ins
    docker
    ubuntu
    rhel-7
-   heroku
    settings
    troubleshooting/index
    upgrade

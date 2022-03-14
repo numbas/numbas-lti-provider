@@ -1,7 +1,7 @@
 How it works
 ============
 
-* :ref:`Install the software <installation>` on your own server, or on the cloud platform Heroku.
+* :ref:`Install the software <installation>` on your own server.
 * :ref:`Create an LTI consumer key <add-consumer>` and add the LTI tool to your VLE using the details provided.
 * Add a link to the tool from your course's page on the VLE and upload a Numbas exam package.
 * Students click on the link to attempt the exam.
