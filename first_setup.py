@@ -42,7 +42,7 @@ class Command(object):
         Question('INSTANCE_NAME', 'What should this installation be called?', 'University of Somewhere'),
         Question('ALLOWED_HOSTS', 'Domain names that the site will be served from', 'numbas-lti.youruni.edu'),
         Question('SECURE_SSL_REDIRECT', 'Should this server only be accessed through HTTPS?', True),
-        Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgresql, mysql, sqlite3)', 'mysql'),
+        Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgresql, mysql, sqlite3)', 'postgresql'),
         Question('STATIC_ROOT', 'Where are static files stored?', '/srv/numbas-lti-static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?', '/srv/numbas-lti-media/', validation=path_exists),
         Question('EMAIL_COMPLETION_RECEIPTS', 'Email students a receipt on completion of attempts?', True),
