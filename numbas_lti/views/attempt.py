@@ -143,6 +143,9 @@ class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
         context['elements'] = [e.as_json() for e in resolve_diffed_scormelements(self.object.scormelements.reverse())]
         context['remarked_elements'] = [r.as_json() for r in RemarkedScormElement.objects.filter(element__attempt=self.object)]
         context['launches'] = [l.as_json() for l in self.object.launches.all()]
+        context['metadata'] = {
+            'review_url': reverse('run_attempt',args=(self.object.pk,)),
+        }
 
         return context
 
@@ -301,7 +304,11 @@ class RunAttemptView(generic.detail.DetailView):
         user = attempt.user
         available_from, available_until = attempt.resource.available_for_user(user)
 
-        scorm_cmi = attempt.scorm_cmi()
+        at_time = self.request.GET.get('at_time')
+        if at_time is not None:
+            at_time = datetime.datetime.fromisoformat(at_time)
+
+        scorm_cmi = attempt.scorm_cmi(at_time=at_time)
 
 
         duration_extension_amount, duration_extension_units = attempt.resource.duration_extension_for_user(user)

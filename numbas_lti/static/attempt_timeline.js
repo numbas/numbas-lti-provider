@@ -46,6 +46,10 @@ function Timeline(elements, remarked_elements, launches) {
 
     launches.forEach(this.add_launch, this);
 
+    /** Timeline items, with elements within a second of each other grouped together.
+     *  Elements created by remarking are always put in a separate group to other elements.
+     */
+    var seen_location = false;
     this.grouped_timeline = ko.computed(function() {
         var timeline = this.timeline().sort(function(a,b) {
             a = a.time;
@@ -56,11 +60,13 @@ function Timeline(elements, remarked_elements, launches) {
         var current_group = null;
         timeline.forEach(function(item) {
             var remarked_by = item.element.remarked ? item.element.remarked.user : null;
+            seen_location = seen_location || item.element.key=='cmi.location';
             if(current_group==null || item.time.diff(current_group.time).as('seconds')>1 || current_group.remarked_by != remarked_by) {
                 current_group = {
                     time: item.time,
                     remarked_by: remarked_by,
-                    items: []
+                    items: [],
+                    seen_location: seen_location
                 }
                 groups.push(current_group);
             }
@@ -348,6 +354,7 @@ function TimelineItem(message,element,kind,icon) {
     this.element = element;
     this.time = DateTime.fromISO(element.time);
     this.time_string = this.time.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
+    this.review_url = metadata.review_url + (metadata.review_url.match(/\?/) ? '&' : '?')+'at_time='+encodeURIComponent(this.time.toISO());
     this.kind = kind;
     this.css = {};
     kind.split(' ').forEach(function(cls) {
@@ -357,14 +364,15 @@ function TimelineItem(message,element,kind,icon) {
     this.icon = icon;
 }
 
-var scorm_json = document.getElementById('scorm-elements').textContent;
-var elements = JSON.parse(scorm_json);
+function load_json(id) {
+    var json = document.getElementById(id).textContent;
+    return JSON.parse(json);
+}
 
-var remarked_json = document.getElementById('remarked-elements').textContent;
-var remarked_elements = JSON.parse(remarked_json);
-
-var launches_json = document.getElementById('launches').textContent;
-var launches = JSON.parse(launches_json);
+var elements = load_json('scorm-elements');
+var remarked_elements = load_json('remarked-elements');
+var launches = load_json('launches');
+var metadata = load_json('metadata');
 
 var tl = new Timeline(elements, remarked_elements, launches);
 tl.listen_for_changes(listener_url);

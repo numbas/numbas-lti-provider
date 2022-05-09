@@ -44,7 +44,14 @@
                 <!-- ko foreach: items -->
                 <tr class="item" data-bind="css: css">
                     <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
-                        <p data-bind="text: time_string"></p>
+                        <p>
+                            <!-- ko if: $parent.seen_location -->
+                            <a title="View the attempt at this point in time" target="review_attempt" data-bind="attr: {href: $data.review_url}, text: time_string"></a>
+                            <!-- /ko -->
+                            <!-- ko if: !$parent.seen_location -->
+                            <span data-bind="text: time_string"></span>
+                            <!-- /ko -->
+                        </p>
                         <!-- ko if: $parent.remarked_by -->
                         <p class="remarked-by small">
                             {% trans "Re-marked by" %}
@@ -86,6 +93,7 @@
 {{elements|json_script:"scorm-elements"}}
 {{remarked_elements|json_script:"remarked-elements"}}
 {{launches|json_script:"launches"}}
+{{metadata|json_script:"metadata"}}
 <script>
     var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
 </script>
