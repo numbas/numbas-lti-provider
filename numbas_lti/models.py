@@ -770,7 +770,8 @@ class Attempt(models.Model):
             'current': scorm_cmi,
         }
         if include_all_scorm:
-            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in self.scormelements.all().reverse()]
+            all_elements = resolve_diffed_scormelements(self.scormelements.all().reverse())
+            data['scorm']['all'] = [{'key': e.key, 'value': e.value, 'time': e.time.timestamp(), 'counter': e.counter} for e in all_elements]
 
         re_interaction_id = re.compile(r'^cmi\.interactions\.(\d+)\.id$')
         part_ids = {}
