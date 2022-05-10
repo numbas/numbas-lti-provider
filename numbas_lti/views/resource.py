@@ -582,6 +582,9 @@ class RemarkIframeView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstr
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args,**kwargs)
         resource = self.object
+        context['exam_data'] = {
+            'extracted_url': resource.exam.extracted_url,
+        }
         context['scripts_url'] = resource.exam.extracted_url +'/scripts.js'
         return context
 

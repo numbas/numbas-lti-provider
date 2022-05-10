@@ -3,8 +3,14 @@ function die(e) {
     alert(interpolate(gettext("There's been an error: %s"),[e.message]));
 }
 
+const exam_data_json = document.getElementById('exam-data-json').textContent;
+const exam_data = JSON.parse(exam_data_json);
+
 const numbas_ready = new Promise((resolve,reject) => {
     try {
+        Numbas.getStandaloneFileURL = function(extension, path) {
+		return exam_data['extracted_url']+'/extensions/'+extension+'/standalone_scripts/'+path;
+        }
         Numbas.queueScript('web-remarking',['start-exam'],function() {
             try {
                 for(var x in Numbas.extensions) {
