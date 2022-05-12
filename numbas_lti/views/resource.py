@@ -251,7 +251,6 @@ class DiscountPartsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMi
             if part['p'] is None:
                 continue
             behaviour = request.POST.get('discount-'+part['path'])
-            print(part['path'],behaviour)
             if behaviour:
                 discount, created = DiscountPart.objects.get_or_create(resource=resource,part=part['path'])
                 discount.behaviour = behaviour

@@ -1,0 +1,24 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block meta %}
+    {{block.super}}
+    <meta http-equiv="refresh" content="0;URL='{{lockdown_url}}'" />    
+{% endblock meta %}
+
+{% block content %}
+<div class="container">
+    <div class="jumbotron">
+        <header>
+            <h1>{% translate "This resource must run in the Numbas lockdown app" %}</h1>
+        </header>
+
+        <main>
+            <p>{% translate "The Numbas lockdown app will open automatically, if you have it installed." %}</p>
+            <p>{% translate "Or, click the link below to open this resource in the Numbas lockdown app" %}</p>
+            <p><a class="btn btn-lg btn-primary" href="{{lockdown_url}}">{% trans "Launch in the Numbas lockdown app" %}</a></p>
+        </main>
+    </div>
+</div>
+{% endblock content %}
+
