@@ -56,7 +56,7 @@ First, install packages, set up users, and create the required paths (you can sa
     mkdir /srv/numbas-lti-static
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-media
     chown -R www-data:www-data /srv/numbas-lti-static
-    chmod -R 770 /srv/numbas-lti-*
+    chmod -R 770 /srv/numbas-lti-media /srv/numbas-lti-static
 
     # create the virtualenv for the python modules
     virtualenv -p python3 /opt/numbas_lti_python

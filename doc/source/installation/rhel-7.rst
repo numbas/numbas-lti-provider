@@ -71,7 +71,7 @@ Run the following commands as root::
     mkdir /srv/numbas-lti-static
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-media
     chown -R nginx:nginx /srv/numbas-lti-static
-    chmod -R 770 /srv/numbas-lti-*
+    chmod -R 770 /srv/numbas-lti-media /srv/numbas-lti-static
 
     # get the numbas-lti-provider code
     git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
