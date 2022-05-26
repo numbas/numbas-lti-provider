@@ -6,11 +6,10 @@ from django.forms import ModelForm, Form
 from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
+from .util import download_scorm_file
+
 from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange
 from .test_exam import test_zipfile, ExamTestException
-
-from django.core.files import File
-from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
 import bootstrap_datepicker_plus
@@ -185,12 +184,7 @@ class CreateExamForm(ModelForm):
         if package is None:
             if not retrieve_url:
                 raise forms.ValidationError(_("You must upload a file."))
-            scheme, netloc, path, params, qs, fragment = urlparse(retrieve_url)
-            query = parse_qs(qs)
-            query.setdefault('scorm','')
-            retrieve_url = urlunparse((scheme, netloc, path, params, urlencode(query,True), fragment))
-            package_bytes = requests.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
-            cleaned_data['package'] = File(BytesIO(package_bytes),name='exam.zip')
+            cleaned_data['package'] = download_scorm_file(retrieve_url) 
 
         if getattr(settings,'TEST_UPLOADED_EXAMS',False) and hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
             try:

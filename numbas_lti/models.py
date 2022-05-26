@@ -513,6 +513,9 @@ class Resource(models.Model):
         from . import tasks
         tasks.resource_report_scores(self)
 
+    def get_settings_url(self):
+        return reverse('resource_settings',args=(self.pk,))
+
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')

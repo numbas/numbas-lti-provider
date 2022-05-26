@@ -1,0 +1,15 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Exam ref not found" %}</h1>
+    </header>
+    <main>
+        <p>{% blocktrans %} The exam with ref {{exam_ref}} can't be found in the editorlink with ref {{editorlink_ref}}. {% endblocktrans %}</p>
+        <p>{% trans "Are you sure that the project to which this exam belongs, is selected by the LTI administrator?" %}</p>
+    </main>
+</div>
+{% endblock content %}
+

@@ -16,6 +16,9 @@ INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES',['Instructor','Admini
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
 
+def get_lti_entry_url_with_editorlink_exam(request):
+        return request.build_absolute_uri(reverse('lti_entry_with_editorlink_exam', args= (":editorlink_ref", ":exam_ref"), exclude_resource_link_id=True))
+
 def get_config_url(request):
     return request.build_absolute_uri(reverse('config_xml',exclude_resource_link_id=True))
 

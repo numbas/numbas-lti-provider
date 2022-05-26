@@ -51,10 +51,7 @@ class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorM
         exam.save()
         resource.exam = exam
         resource.save()
-        return http.HttpResponseRedirect(self.get_success_url())
-
-    def get_success_url(self):
-        return reverse('resource_settings',args=(self.request.resource.pk,))
+        return http.HttpResponseRedirect(resource.get_settings_url())
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'

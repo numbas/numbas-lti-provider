@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.entry.index, name='index'),
     path('lti_entry', views.entry.lti_entry, name='lti_entry'),
+    path('lti_entry/<str:editorlink_ref>/<path:exam_ref>', views.entry.lti_entry_with_editorlink_exam, name='lti_entry_with_editorlink_exam'),
     path('check_cookie_entry', views.entry.check_cookie_entry, name='check_cookie_entry'),
     path('set_cookie_entry', views.entry.set_cookie_entry, name='set_cookie_entry'),
 

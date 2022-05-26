@@ -1,0 +1,14 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Invalid editorlink reference" %}</h1>
+    </header>
+    <main>
+        <p>{% blocktrans %} The editorlink with ref {{editorlink_ref}} is not set up. {% endblocktrans %}</p>
+    </main>
+</div>
+{% endblock content %}
+
