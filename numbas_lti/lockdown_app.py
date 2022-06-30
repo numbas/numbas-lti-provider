@@ -1,0 +1,69 @@
+import binascii
+from Crypto import Random
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from django_auth_lti.patch_reverse import reverse
+from django.conf import settings
+from django.core import signing
+from django.utils.translation import gettext_lazy as _
+import hashlib
+import json
+import re
+from .util import add_query_param
+
+def make_key(password):
+    key = hashlib.scrypt(password.encode('utf-8'),salt=settings.LOCKDOWN_APP['salt'].encode('utf-8'),n=16384,r=8,p=1)
+    return key[:24]
+
+def encrypt(password, message):
+    msglist = []
+    key = make_key(password)
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    encrypted = cipher.encrypt(pad(message.encode('utf-8'), AES.block_size))
+    return iv, encrypted
+
+
+def make_link(request):
+    launch_url = add_query_param(
+        request.build_absolute_uri(reverse('lockdown_launch')),
+        {
+            'session_key': request.session.session_key,
+            'resource_link_id': request.GET.get('resource_link_id'),
+        }
+    )
+    link_settings = {
+        'url': launch_url,
+        'token': token_for_request(request)
+    }
+    iv, encrypted = encrypt(settings.LOCKDOWN_APP['password'],json.dumps(link_settings))
+    url = f'numbas://{request.get_host()}/'+binascii.hexlify(iv+encrypted).decode('ascii')
+    return url
+
+def token_for_request(request):
+    return signing.dumps({
+        'resource': request.resource.pk,
+        'user': request.user.pk,
+    })
+
+def validate_token(request, token):
+    d = signing.loads(token)
+    return isinstance(d,dict) and d.get('resource') == request.resource.pk and d.get('user') == request.user.pk
+
+def is_lockdown_app(request):
+    header = request.META.get('HTTP_AUTHORIZATION')
+    if header is None:
+        return False
+
+    m = re.match(r'^Basic (?P<token>.*)$',header)
+    if not m:
+        return False
+    
+    token = m.group('token')
+
+    try:
+        validate_token(request, token)
+    except signing.BadSignature:
+        return False
+
+    return True

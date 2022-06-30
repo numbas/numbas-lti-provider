@@ -1,4 +1,6 @@
 from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
+from numbas_lti import lockdown_app
+from numbas_lti.util import add_query_param
 from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
 from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
@@ -12,7 +14,6 @@ from importlib import import_module
 from ipware import get_client_ip
 import json
 import logging
-from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 logger = logging.getLogger(__name__)
 
@@ -39,18 +40,6 @@ def config_xml(request):
         content_type='application/xml' 
     )
 
-def add_query_param(url,extras):
-    parsed = urlparse(url)
-    query = parse_qs(parsed.query)
-    for k,v in extras.items():
-        if k not in query:
-            query[k] = [v]
-    url = urlunparse(
-        (parsed.scheme, parsed.netloc, parsed.path, parsed.params,
-         urlencode(query,doseq=True), parsed.fragment)
-    )
-    return url
-    
 @csrf_exempt
 def lti_entry(request):
     if request.method != 'POST':
@@ -134,10 +123,12 @@ def basic_lti_launch(request):
 
     ip_address, ip_routable = get_client_ip(request)
 
-    LTILaunch.objects.create(
+    user_agent = request.META.get('HTTP_USER_AGENT')
+
+    launch = LTILaunch.objects.create(
         user = request.user,
         resource = request.resource,
-        user_agent = request.META.get('HTTP_USER_AGENT'),
+        user_agent = user_agent,
         ip_address = ip_address
     )
 
@@ -147,10 +138,23 @@ def basic_lti_launch(request):
         else:
             return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
     else:
+        if request.resource.require_lockdown_app and not lockdown_app.is_lockdown_app(request):
+            return show_lockdown_app(request, launch)
+
         if not request.resource.exam:
             return render(request,'numbas_lti/exam_not_set_up.html',{})
         else:
             return redirect(reverse('show_attempts'))
+
+def show_lockdown_app(request, launch):
+    lockdown_url = lockdown_app.make_link(request)
+    return render(request, 'numbas_lti/lockdown_link.html', {'lockdown_url': lockdown_url,})
+
+def lockdown_launch(request):
+    session_key = request.GET.get('session_key')
+    resource_link_id = request.GET.get('resource_link_id')
+    user_agent = request.META.get('HTTP_USER_AGENT')
+    return redirect(add_query_param(reverse('set_cookie_entry'), {'resource_link_id': resource_link_id, 'session_key': session_key}))
 
 @csrf_exempt
 def no_resource(request):

@@ -11,3 +11,4 @@ django-ipware==4.0.0
 django-statici18n==2.0.1
 simplejson==3.17.5
 huey==2.4.1
+pycryptodome==3.14.1

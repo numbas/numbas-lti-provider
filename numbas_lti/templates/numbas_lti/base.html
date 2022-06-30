@@ -4,7 +4,9 @@
 <html>
     <head>
         <title>{% block title %}{{INSTANCE_NAME}} {% trans "Numbas LTI Provider" %}{% endblock %}</title>
+        {% block meta %}
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% endblock meta %}
         {% block stylesheets %}
         <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
         <link rel="stylesheet" href="{% static 'numbas_lti.css' %}">

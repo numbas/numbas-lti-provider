@@ -1,4 +1,5 @@
 from django.conf import settings
+from django import http
 from django.templatetags.static import static
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
@@ -8,6 +9,7 @@ from django.views import generic
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django_auth_lti.verification import is_allowed
 from functools import wraps
+from numbas_lti import lockdown_app
 from numbas_lti.models import Resource, Exam
 import urllib.parse
 
@@ -98,3 +100,28 @@ class HelpLinkMixin(object):
         context = super().get_context_data(*args,**kwargs)
         context['page_helplink'] = self.helplink
         return context
+
+def needs_lockdown_app(request):
+    if not hasattr(request,'resource'):
+        return False
+    if not request.resource.require_lockdown_app:
+        return False
+    if request_is_instructor(request):
+        return False
+
+    return True
+
+def require_lockdown_token(view_func):
+    @wraps(view_func)
+    def decorator(request,*args,**kwargs):
+        if needs_lockdown_app(request) and not lockdown_app.is_lockdown_app(request):
+            return http.HttpResponseForbidden(_('This resource can only be accessed through the Numbas lockdown app'))
+        else:
+            return view_func(request, *args, **kwargs)
+
+class RequireLockdownAppMixin(object):
+    def dispatch(self,*args,**kwargs):
+        if needs_lockdown_app(self.request) and not lockdown_app.is_lockdown_app(self.request):
+            return http.HttpResponseForbidden(_('This resource can only be accessed through the Numbas lockdown app'))
+        else:
+            return super().dispatch(*args,**kwargs)

@@ -259,6 +259,8 @@ class Resource(models.Model):
 
     num_questions = models.PositiveIntegerField(default=0)
 
+    require_lockdown_app = models.BooleanField(default=False, verbose_name=_("Require the lockdown app?"))
+
     class Meta:
         verbose_name = _('resource')
         verbose_name_plural = _('resources')

@@ -108,7 +108,7 @@ class AccessChangeForm(ModelForm):
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app']
         widgets = {
             'allow_review_from': DateTimePickerInput(format=datetime_format),
             'available_from': DateTimePickerInput(format=datetime_format),
