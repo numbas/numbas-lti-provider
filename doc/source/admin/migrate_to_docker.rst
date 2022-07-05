@@ -31,7 +31,7 @@ Dump the database to a file::
 Compress the uploaded media::
 
     cd /srv
-    tar czf /tmp/numbas_lti_media.tar.gz numbas_lti_media
+    tar czf /tmp/numbas_lti_media.tar.gz numbas-lti-media
 
 Copy the files ``/tmp/numbas_lti.psql`` and ``/tmp/numbas_lti_media.tar.gz`` to the machine which will run the Docker containers.
 
@@ -55,7 +55,7 @@ This will recreate the volume for the postgres database::
 
 Restore the database dump to the postgres volume (``numbas_lti.psql`` is the database dump created on the old server)::
 
-    cat numbas_lti.psql | docker exec -i numbas-lti-provider-docker_postgres_1 psql -U numbas_lti
+    cat numbas_lti.psql | docker-compose exec -T postgres psql -U numbas_lti
 
 Decompress the media files (``numbas_lti_media.tar.gz`` is the compressed media folder created on the old server)::
 
@@ -77,6 +77,6 @@ Copy the media files to the volume::
 
 I had to change the permissions on the copied directory::
 
-    sudo chmod 777 $MOUNTPOINT/numbas-lti-media
+    sudo chmod -R 777 $MOUNTPOINT/numbas-lti-media
 
 That's it!
