@@ -15,6 +15,9 @@
 
         <main>
             <p>{% translate "The Numbas lockdown app will open automatically, if you have it installed." %}</p>
+            {% if install_url %}
+            <p><a class="btn btn-info" href="{{install_url}}" target="_blank"><span class="glyphicon glyphicon-download"></span> {% translate "Install the app" %}</a></p>
+            {% endif %}
             <p>{% translate "Or, click the link below to open this resource in the Numbas lockdown app" %}</p>
             <p><a class="btn btn-lg btn-primary" href="{{lockdown_url}}">{% trans "Launch in the Numbas lockdown app" %}</a></p>
         </main>

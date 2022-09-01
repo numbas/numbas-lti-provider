@@ -148,7 +148,7 @@ def basic_lti_launch(request):
 
 def show_lockdown_app(request, launch):
     lockdown_url = lockdown_app.make_link(request)
-    return render(request, 'numbas_lti/lockdown_link.html', {'lockdown_url': lockdown_url,})
+    return render(request, 'numbas_lti/lockdown_link.html', {'lockdown_url': lockdown_url, 'install_url': settings.LOCKDOWN_APP.get('install_url')})
 
 def lockdown_launch(request):
     session_key = request.GET.get('session_key')
