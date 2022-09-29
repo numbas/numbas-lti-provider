@@ -69,7 +69,7 @@ Moodle 3.0+
 ^^^^^^^^^^^
 
 * Go to :guilabel:`Site administration` → :guilabel:`Plugins` → :guilabel:`Activity modules` → :guilabel:`External tool` → :guilabel:`Manage tools`.
-* Paste your **automatic configuration URL** into the box labelled :guilabel:`Tool URL`, and click :guilabel:`Add`.
+* Paste your **automatic configuration URL** into the box labelled :guilabel:`Tool URL`, and click :guilabel:`Add Legacy LTI`.
 * Enter your **consumer key** and **shared secret**, then click "*Save changes*".
 * Go back to the :guilabel:`Manage tools` page and edit the Numbas tool. 
 * For :guilabel:`Default launch container`, select "New window".
