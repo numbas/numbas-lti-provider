@@ -20,20 +20,25 @@ class NumbasLTIResourceMiddleware(object):
             label = request.LTI.get('context_label')
             label = label if label is not None else name
             instance_guid = request.LTI.get('tool_consumer_instance_guid')
-            try:
-                context = LTIContext.objects.get(context_id=context_id,instance_guid=instance_guid)
-                if (name,label) != (context.name,context.label):
-                    context.name = name
-                    context.label = label
-                    context.save()
-            except LTIContext.DoesNotExist:
-                context = LTIContext.objects.create(
-                        consumer = LTIConsumer.objects.get(key=request.POST.get('oauth_consumer_key')),
-                        context_id=context_id, 
-                        name=name, 
-                        label=label, 
-                        instance_guid=instance_guid
-                    )
+
+            consumer_key = request.LTI.get('oauth_consumer_key')
+            consumer = LTIConsumer.objects.get(key=consumer_key)
+
+            context, _ = LTIContext.objects.get_or_create(
+                context_id=context_id,
+                instance_guid=instance_guid,
+                defaults = {
+                    'consumer': consumer,
+                    'name': name,
+                    'label': label,
+                }
+            )
+            if (name,label) != (context.name,context.label):
+                context.update(
+                    name = name,
+                    label = label
+                )
+
             title = request.LTI.get('resource_link_title')
             if title is None:
                 title = ''

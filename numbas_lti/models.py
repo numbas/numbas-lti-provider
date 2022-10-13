@@ -227,6 +227,7 @@ class LTIContext(models.Model):
     class Meta:
         verbose_name = _('LTI context')
         verbose_name_plural = _('LTI contexts')
+        unique_together = (('context_id', 'instance_guid'),)
 
     def __str__(self):
         if self.name == self.label:
