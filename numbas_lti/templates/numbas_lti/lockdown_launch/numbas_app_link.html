@@ -1,0 +1,41 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block meta %}
+    {{block.super}}
+    <!--    <meta http-equiv="refresh" content="0;URL='{{lockdown_url}}'" />      -->
+{% endblock meta %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1>
+            {{request.resource.title}}
+            <span class="text-muted">·</span>
+            <small>{{request.resource.context.name}}</small>
+        </h1>
+    </header>
+
+    <main>
+        <p>{% translate "This resource must run in the Numbas lockdown app." %}</p>
+        <p>{% translate "The Numbas lockdown app will open automatically, if you have it installed." %}</p>
+
+        {% if install_url %}
+        <p><a class="btn btn-info" href="{{install_url}}" target="_blank"><span class="glyphicon glyphicon-download"></span> {% translate "Install the app" %}</a></p>
+        {% endif %}
+
+        {% with password=request.resource.get_lockdown_app_password %}
+        {% if request.resource.show_lockdown_app_password and password %}
+        <div class="alert alert-info">
+            <p>{% translate "The password to open the exam is" %}</p>
+            <pre class="lockdown-app-password">{{password}}</pre>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <p>{% translate "Or, click the link below to open this resource in the Numbas lockdown app" %}</p>
+        <p><a class="btn btn-lg btn-primary" href="{{lockdown_url}}">{% trans "Launch in the Numbas lockdown app" %}</a></p>
+    </main>
+</div>
+{% endblock content %}
+

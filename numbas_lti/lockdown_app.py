@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 import hashlib
 import json
 import re
+import urllib.parse
 from .util import add_query_param
 
 def make_key(password):
@@ -32,11 +33,17 @@ def make_link(request):
             'resource_link_id': request.GET.get('resource_link_id'),
         }
     )
+
+    token = token_for_request(request)
+
     link_settings = {
         'url': launch_url,
-        'token': token_for_request(request)
+        'token': token,
     }
-    iv, encrypted = encrypt(settings.LOCKDOWN_APP['password'],json.dumps(link_settings))
+
+    password = request.resource.get_lockdown_app_password()
+
+    iv, encrypted = encrypt(password, json.dumps(link_settings))
     url = f'numbas://{request.get_host()}/'+binascii.hexlify(iv+encrypted).decode('ascii')
     return url
 
@@ -51,6 +58,21 @@ def validate_token(request, token):
     return isinstance(d,dict) and d.get('resource') == request.resource.pk and d.get('user') == request.user.pk
 
 def is_lockdown_app(request):
+    required = request.resource.require_lockdown_app
+
+    checker = {
+        'numbas': is_numbas_lockdown_app,
+        'seb': is_seb,
+    }
+
+    try:
+        fn = checker[required]
+    except KeyError:
+        return False
+
+    return fn(request)
+
+def is_numbas_lockdown_app(request):
     header = request.META.get('HTTP_AUTHORIZATION')
     if header is None:
         return False
@@ -67,3 +89,37 @@ def is_lockdown_app(request):
         return False
 
     return True
+
+def make_seb_link(request):
+    query_args = {
+        'session_key': request.session.session_key,
+        'resource_link_id': request.GET.get('resource_link_id'),
+    }
+
+    query = '&'.join(f'{k}={urllib.parse.quote(v)}' for k,v in query_args.items())
+
+    settings_url = request.resource.seb_settings.settings_file.url
+
+    url = urllib.parse.urlunparse(('seb', request.get_host(), settings_url, '', '', ''))+'??'+query
+    return url
+
+def is_seb(request):
+    """
+        Check that the request has come from SEB.
+        The Mac and iOS apps don't send this header any more, so this only works for Windows SEB.
+
+        There's a description of how this is supposed to work at https://safeexambrowser.org/developer/seb-config-key.html
+    """
+
+    try:
+        seb_settings = request.resource.seb_settings
+    except AttributeError:
+        return False
+
+    header_hash = request.headers.get('X-Safeexambrowser-Configkeyhash')
+    uri = request.build_absolute_uri()
+    key = seb_settings.config_key_hash
+
+    expected_hash = hashlib.sha256((uri + key).encode('utf-8')).hexdigest()
+
+    return header_hash == expected_hash

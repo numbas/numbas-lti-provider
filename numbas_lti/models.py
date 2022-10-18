@@ -238,6 +238,24 @@ class LTIContext(models.Model):
     def get_absolute_url(self):
         return reverse('view_context', args=(self.pk,))
 
+REQUIRE_LOCKDOWN_APP_CHOICES = [
+    ('', _('No')),
+    ('numbas', _('Numbas lockdown app')),
+    ('seb', _('Safe Exam Browser')),
+]
+
+class SebSettings(models.Model):
+    name = models.CharField(max_length=200, verbose_name=_('Name'), help_text=_('A descriptive name for this settings file.'))
+    settings_file = models.FileField(upload_to='seb_settings/', verbose_name=_('Settings file'), help_text=_('Save the settings file and upload it here.'))
+    config_key_hash = models.CharField(max_length=64, verbose_name=_('Configuration key'), help_text=_('Turn on <strong>Use Browser Exam Key and Configuration Key</strong>, and paste the Configuration Key in the tool here.'))
+    password = models.CharField(max_length=30, blank=True, verbose_name=_('Password'), help_text=_('If you set a <strong>Settings password</strong> and would like the Numbas LTI tool to show it to the student, paste it here.'))
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('edit_seb_settings',args=(self.pk,))
+
 class Resource(models.Model):
     resource_link_id = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL,related_name='main_exam_of')
@@ -260,7 +278,12 @@ class Resource(models.Model):
 
     num_questions = models.PositiveIntegerField(default=0)
 
-    require_lockdown_app = models.BooleanField(default=False, verbose_name=_("Require the lockdown app?"))
+    require_lockdown_app = models.CharField(max_length=20, default='', blank=True, choices = REQUIRE_LOCKDOWN_APP_CHOICES, verbose_name=_("Require a lockdown app?"))
+
+    lockdown_app_password = models.CharField(max_length=30, blank=True, verbose_name=_('Password for the Numbas lockdown app'))
+    show_lockdown_app_password = models.BooleanField(default=False, verbose_name=_('Show the password for the lockdown app on the launch page?'))
+
+    seb_settings = models.ForeignKey(SebSettings, blank=True, null=True, on_delete=models.SET_NULL, related_name='resources')
 
     class Meta:
         verbose_name = _('resource')
@@ -515,6 +538,21 @@ class Resource(models.Model):
     def task_report_scores(self):
         from . import tasks
         tasks.resource_report_scores(self)
+
+    def get_lockdown_app_password(self):
+        if self.require_lockdown_app == 'numbas':
+            if self.lockdown_app_password:
+                return self.lockdown_app_password
+
+            return settings.LOCKDOWN_APP.get('password')
+        
+        if self.require_lockdown_app == 'seb':
+            try:
+                return self.seb_settings.password
+            except SebSettings.DoesNotExist:
+                return None
+
+        return None
 
 
 class ReportProcess(models.Model):

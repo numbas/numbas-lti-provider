@@ -1,0 +1,27 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block title %}{% blocktranslate with name=object.name %}Delete "{{name}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
+
+{% block management_content %}
+<div class="container">
+    <header>
+        <h1>Delete a SEB settings file</h1>
+    </header>
+
+    <main>
+        <p>
+            {% blocktranslate with name=object.name %}Are you sure you want to delete the SEB settings file <strong>{{name}}</strong>?{% endblocktranslate %}
+        </p>
+        <p class="text-danger">{% translate "All resources using this settings file will be inaccessible until you pick a new settings file." %}</p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <p>
+                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% translate "Delete this SEB settings file" %}</button>
+                <a class="btn btn-link" href="{% url 'edit_seb_settings' object.pk %}">{% translate "Cancel" %}</a>
+            </p>
+        </form>
+    </main>
+</div>
+{% endblock management_content %}

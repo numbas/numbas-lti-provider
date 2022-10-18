@@ -138,23 +138,39 @@ def basic_lti_launch(request):
         else:
             return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
     else:
-        if request.resource.require_lockdown_app and not lockdown_app.is_lockdown_app(request):
-            return show_lockdown_app(request, launch)
+        if request.resource.require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
+            return show_lockdown_app(request)
+
+        if request.resource.require_lockdown_app=='seb' and not lockdown_app.is_seb(request):
+            return show_seb_link(request)
 
         if not request.resource.exam:
             return render(request,'numbas_lti/exam_not_set_up.html',{})
         else:
             return redirect(reverse('show_attempts'))
 
-def show_lockdown_app(request, launch):
+def show_lockdown_app(request):
     lockdown_url = lockdown_app.make_link(request)
-    return render(request, 'numbas_lti/lockdown_link.html', {'lockdown_url': lockdown_url, 'install_url': settings.LOCKDOWN_APP.get('install_url')})
+    return render(request, 'numbas_lti/lockdown_launch/numbas_app_link.html', {'lockdown_url': lockdown_url, 'install_url': settings.LOCKDOWN_APP.get('install_url')})
 
 def lockdown_launch(request):
     session_key = request.GET.get('session_key')
     resource_link_id = request.GET.get('resource_link_id')
-    user_agent = request.META.get('HTTP_USER_AGENT')
     return redirect(add_query_param(reverse('set_cookie_entry'), {'resource_link_id': resource_link_id, 'session_key': session_key}))
+
+def show_seb_link(request):
+    seb_url = lockdown_app.make_seb_link(request)
+    return render(request, 'numbas_lti/lockdown_launch/seb_link.html', {'seb_url': seb_url, 'install_url': settings.LOCKDOWN_APP.get('seb_install_url')})
+
+def seb_launch(request):
+    is_seb = lockdown_app.is_seb(request)
+
+    if is_seb:
+        session_key = request.GET.get('session_key')
+        resource_link_id = request.GET.get('resource_link_id')
+        return redirect(add_query_param(reverse('set_cookie_entry'), {'resource_link_id': resource_link_id, 'session_key': session_key}))
+
+    return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
 
 @csrf_exempt
 def no_resource(request):

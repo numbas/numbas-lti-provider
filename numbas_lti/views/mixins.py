@@ -104,20 +104,10 @@ class HelpLinkMixin(object):
 def needs_lockdown_app(request):
     if not hasattr(request,'resource'):
         return False
-    if not request.resource.require_lockdown_app:
-        return False
     if request_is_instructor(request):
         return False
 
-    return True
-
-def require_lockdown_token(view_func):
-    @wraps(view_func)
-    def decorator(request,*args,**kwargs):
-        if needs_lockdown_app(request) and not lockdown_app.is_lockdown_app(request):
-            return http.HttpResponseForbidden(_('This resource can only be accessed through the Numbas lockdown app'))
-        else:
-            return view_func(request, *args, **kwargs)
+    return request.resource.require_lockdown_app != ''
 
 class RequireLockdownAppMixin(object):
     def dispatch(self,*args,**kwargs):

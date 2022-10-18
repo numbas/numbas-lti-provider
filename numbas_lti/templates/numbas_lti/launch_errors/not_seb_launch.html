@@ -1,0 +1,13 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% translate "Not launched by Safe Exam Browser" %}</h1>
+    </header>
+    <main>
+        <p>{% blocktranslate %}This resource must be launched through Safe Exam Browser with the correct settings.{% endblocktranslate %}</p>
+    </main>
+</div>
+{% endblock content %}
