@@ -6,11 +6,15 @@ from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
 from django.core import signing
 from django.utils.translation import gettext_lazy as _
+import gzip
 import hashlib
+import hmac
 import json
+import os
 import re
 import urllib.parse
 from .util import add_query_param
+
 
 def make_key(password):
     key = hashlib.scrypt(password.encode('utf-8'),salt=settings.LOCKDOWN_APP['salt'].encode('utf-8'),n=16384,r=8,p=1)
@@ -123,3 +127,43 @@ def is_seb(request):
     expected_hash = hashlib.sha256((uri + key).encode('utf-8')).hexdigest()
 
     return header_hash == expected_hash
+
+SaltBitSize = 64
+KeyBitSize = 256
+BlockBitSize = 128
+Iterations = 10000
+PASSWORD_MODE = 'pswd'
+RNCRYPTOR_HEADER = b'\x02\x01'
+
+def encrypt_seb_settings(xml: str, password: str):
+    cleanedxml = (xml
+        .replace('<array />', '<array></array>')
+        .replace('<dict />', '<dict></dict>')
+        .replace('<data />', '<data></data>')
+    )
+    data = cleanedxml.encode('utf-8')
+
+    compressed = gzip.compress(data)
+
+    prefixString = PASSWORD_MODE
+
+    cryptSalt = os.urandom(SaltBitSize//8)
+    cryptKey = hashlib.pbkdf2_hmac('sha1', password.encode('utf-8'), cryptSalt, Iterations, KeyBitSize//8)
+
+    authSalt = os.urandom(SaltBitSize//8)
+    authKey = hashlib.pbkdf2_hmac('sha1', password.encode('utf-8'), authSalt, Iterations, KeyBitSize//8)
+
+    aes = AES.new(cryptKey, AES.MODE_CBC)
+    iv = aes.iv
+
+    ciphertext = aes.encrypt(pad(compressed, BlockBitSize//8))
+
+    body = RNCRYPTOR_HEADER + cryptSalt + authSalt + iv + ciphertext
+
+    tag = hmac.new(authKey, body, digestmod='sha256').digest()
+
+    out_data = prefixString.encode('utf-8') + body + tag
+
+    compressed_encrypted = gzip.compress(out_data)
+
+    return compressed_encrypted
