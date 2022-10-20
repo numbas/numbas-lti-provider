@@ -163,14 +163,13 @@ def show_seb_link(request):
     return render(request, 'numbas_lti/lockdown_launch/seb_link.html', {'seb_url': seb_url, 'install_url': settings.LOCKDOWN_APP.get('seb_install_url')})
 
 def seb_launch(request):
-    is_seb = lockdown_app.is_seb(request)
+    session_key = request.GET.get('session_key')
+    resource_link_id = request.GET.get('resource_link_id')
 
-    if is_seb:
-        session_key = request.GET.get('session_key')
-        resource_link_id = request.GET.get('resource_link_id')
-        return redirect(add_query_param(reverse('set_cookie_entry'), {'resource_link_id': resource_link_id, 'session_key': session_key}))
+    if session_key is None or resource_link_id is None:
+        return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
 
-    return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
+    return redirect(add_query_param(reverse('set_cookie_entry'), {'resource_link_id': resource_link_id, 'session_key': session_key}))
 
 @csrf_exempt
 def no_resource(request):
