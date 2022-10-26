@@ -98,4 +98,5 @@ urlpatterns = [
     path('safe_exam_browser/settings/new', views.seb_settings.CreateView.as_view(), name='create_seb_settings'),
     path('safe_exam_browser/settings/<int:pk>/edit', views.seb_settings.UpdateView.as_view(), name='edit_seb_settings'),
     path('safe_exam_browser/settings/<int:pk>/delete', views.seb_settings.DeleteView.as_view(), name='delete_seb_settings'),
+    path('safe_exam_browser/quit', views.seb_settings.QuitView.as_view(), name='seb_quit'),
 ]

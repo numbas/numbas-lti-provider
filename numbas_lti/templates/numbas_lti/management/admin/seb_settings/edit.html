@@ -11,8 +11,7 @@
     </header>
 
     <main>
-        <p>{% translate "In the Safe Exam Browser configuration tool, set the start URL to:" %}</p>
-        <pre>{{seb_launch_url}}</pre>
+        {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
         <hr>
         <form method="POST" action="" enctype="multipart/form-data">
             {% csrf_token %}

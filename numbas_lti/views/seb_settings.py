@@ -19,6 +19,7 @@ class SebSettingsManagementMixin(PermissionRequiredMixin, LoginRequiredMixin, Ma
         context = super().get_context_data(*args, **kwargs)
 
         context['seb_launch_url'] = self.request.build_absolute_uri(reverse('seb_launch'))
+        context['seb_quit_url'] = self.request.build_absolute_uri(reverse('seb_quit'))
 
         return context
 
@@ -46,3 +47,6 @@ class DeleteView(HelpLinkMixin, SebSettingsManagementMixin, generic.edit.DeleteV
     template_name = 'numbas_lti/management/admin/seb_settings/delete.html'
     success_url = reverse_lazy('list_seb_settings')
     helplink = 'admin/lockdown/seb_settings.html'
+
+class QuitView(generic.base.TemplateView):
+    template_name = 'numbas_lti/seb_quit.html'
