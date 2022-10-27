@@ -104,7 +104,8 @@ def make_seb_link(request):
 
     settings_url = request.resource.seb_settings.settings_file.url
 
-    url = urllib.parse.urlunparse(('seb', request.get_host(), settings_url, '', '', ''))+'??'+query
+    scheme = 'sebs' if request.is_secure() else 'seb'
+    url = urllib.parse.urlunparse((scheme, request.get_host(), settings_url, '', '', ''))+'??'+query
     return url
 
 def is_seb(request):
