@@ -34,10 +34,9 @@ class NumbasLTIResourceMiddleware(object):
                 }
             )
             if (name,label) != (context.name,context.label):
-                context.update(
-                    name = name,
-                    label = label
-                )
+                context.name = name
+                context.label = label
+                context.save()
 
             title = request.LTI.get('resource_link_title')
             if title is None:
