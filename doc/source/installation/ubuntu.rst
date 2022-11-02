@@ -149,6 +149,21 @@ Once you've set this up, run::
 
 Supervisord will start the Numbas LTI provider, and restart it automatically if it ever crashes.
 
+Set up regular maintenance jobs
+-------------------------------
+
+The LTI provider uses a database-backed session store by default, which must be cleaned regularly.
+
+Put the following in :file:`/etc/cron.daily/numbas-lti-clearsessions`::
+
+    #!/bin/sh
+    cd /srv/numbas-lti-provider
+    /opt/numbas_lti_python/bin/python manage.py clearsessions
+    
+And then make it executable::
+
+    chmod +x /etc/cron.daily/numbas-lti-clearsessions
+
 Set up a webserver
 ------------------
 
