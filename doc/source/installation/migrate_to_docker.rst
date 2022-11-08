@@ -3,7 +3,7 @@ Migrating to Docker
 
 These instructions describe how to move from an existing server running the LTI provider on Ubuntu, to the Docker version.
 
-They have bene run once, by Christian Lawson-Perfect, and not tested by anyone else yet.
+They have been run once, by Christian Lawson-Perfect, and not tested by anyone else yet.
 Some changes might be necessary when you follow this.
 
 If you encounter problems at any stage, please `tell us about them <mailto:numbas@ncl.ac.uk>`__.
