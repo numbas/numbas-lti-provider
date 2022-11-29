@@ -9,4 +9,5 @@ For administrators
     editorlink
     stress-tests
     dashboard
+    lockdown-apps
     search

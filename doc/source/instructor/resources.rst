@@ -404,6 +404,27 @@ If ticked, then when a student completes an attempt at this resource they will b
 The receipt contains a code which instructors can use to confirm the receipt's contents.
 See :ref:`validate-receipt`.
 
+.. _require-lockdown-app:
+
+Require a lockdown app?
+^^^^^^^^^^^^^^^^^^^^^^^
+
+You can require that students access this resource through the Numbas lockdown app or, if configured, Safe Exam Browser.
+See :ref:`the documentation on lockdown-apps <lockdown-apps>`.
+
+If you select :guilabel:`Numbas lockdown app`, you can give a password that the student must submit to launch the resource, or leave the field empty to use the LTI provider's default password.
+
+If you select :guilabel:`Safe Exam Browser`, you must select a settings file to use; these must be installed by a server administrator.
+
+Whichever app you use, you can choose whether or not to show the password to the student before the app launches.
+
+When a student launches a resource requiring a lockdown app, they will be shown a button to launch the app, along with a link to install it if they haven't already.
+
+.. figure:: _static/lockdown-launch.png
+   :alt: Screenshot of the "Launch in the Numbas lockdown app" screen. The resource's name and context above a button to install the app, and a button to launch in the Numbas lockdown app.
+
+   This is what a student sees when they launch a resource which requires the Numbas lockdown app.
+
 .. _auto-remark:
 
 Remark
