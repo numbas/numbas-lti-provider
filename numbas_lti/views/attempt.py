@@ -1,4 +1,4 @@
-from .mixins import MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, request_is_instructor
+from .mixins import MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, request_is_instructor, RequireLockdownAppMixin
 from .generic import JSONView
 import datetime
 from django import http
@@ -168,7 +168,7 @@ class DeleteAttemptView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManageme
         return reverse('manage_attempts',args=(self.request.resource.pk,))
 
 
-class ShowAttemptsView(generic.list.ListView):
+class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
     model = Attempt
     template_name = 'numbas_lti/show_attempts.html'
 
@@ -235,7 +235,7 @@ class BrokenAttemptException(Exception):
     def __init__(self,attempt):
         self.attempt = attempt
 
-class RunAttemptView(generic.detail.DetailView):
+class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
     model = Attempt
     context_object_name = 'attempt'
 

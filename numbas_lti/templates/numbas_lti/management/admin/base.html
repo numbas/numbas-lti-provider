@@ -23,6 +23,7 @@
                 <li class="{% if management_tab == 'editor-links' %}active{% endif %}"><a href="{% url 'list_editorlinks' %}"><span class="glyphicon glyphicon-transfer"></span> {% trans "Editor links" %}</a></li>
                 <li class="{% if management_tab == 'stress-tests' %}active{% endif %}"><a href="{% url 'list_stresstests' %}"><span class="glyphicon glyphicon-scale"></span> {% trans "Stress tests" %}</a></li>
                 <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'global_dashboard' %}"><span class="glyphicon glyphicon-globe"></span> {% trans "Dashboard" %}</a></li>
+                <li class="{% if management_tab == 'lockdown' %}active{% endif %}"><a href="{% url 'lockdown_dashboard' %}"><span class="glyphicon glyphicon-lock"></span> {% trans "Lockdown apps" %}</a></li>
             </ul>
             <form class="navbar-form navbar-left" method="GET" action="{% url 'global_search' %}">
                 <div class="form-group">

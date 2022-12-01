@@ -42,18 +42,25 @@ Follow `Blackboard's instructions <https://en-us.help.blackboard.com/Learn/Admin
 
 Blackboard doesn't support automatic configuration by URL, so you'll have to use the manual configuration settings.
 
-For the tool provider:
+For the tool provider, fill in the following values:
 
-* The **Provider domain** is your launch URL.
-* The **Tool provider key** is your consumer key.
-* The **Tool provider secret** is your shared secret.
+Provider domain
+    Your launch URL.
+Tool provider key
+    Your consumer key.
+Tool provider secret
+    Your shared secret.
 
-For the placement:
+For the placement, fill in the following values:
 
-* The **Label** is "Numbas" (or whatever you want it to be)
-* The **Type** is "Content Type", and select "Assessments" in the menu.
-* Tick **Placement allows grading**.
-* Save the icon from your "Manage consumers" page and upload it under the **Icon** field on the Blackboard form.
+Label
+    "Numbas"
+Type
+    "Content Type", and select "Assessments" in the menu.
+Placement allows grading
+    Ticked.
+
+Save the icon from your "Manage consumers" page and upload it under the **Icon** field on the Blackboard form.
 
 You can now add a Numbas exam to any folder in Blackboard by selecting "Numbas" from the *Assignments* menu.
 
@@ -82,10 +89,16 @@ Versions of Moodle before 3.0
 
 * Go to :guilabel:`Site administration` → :guilabel:`Plugins` → :guilabel:`Activity modules` → :guilabel:`External tool` → :guilabel:`Manage tools`.
 * Click on :guilabel:`Configure a tool manually`.
-* Set :guilabel:`Tool name` to "Numbas".
-* The :guilabel:`Tool base URL` is your launch URL.
-* The :guilabel:`Consumer key` is your consumer key.
-* The :guilabel:`Shared secret` is your shared secret.
+* Fill in the following values:
+
+    Tool name
+        "Numbas".
+    Tool base URL
+        Your launch URL.
+    Consumer key
+        Your consumer key.
+    Shared secret
+        Your shared secret.
 * Under :guilabel:`Tool configuration usage`, select "Show in activity chooser and as a preconfigured tool".
 
 Now you can add a Numbas exam in any course by clicking :guilabel:`Add an activity or resource` and selecting :guilabel:`Numbas`.
@@ -95,16 +108,68 @@ Canvas LMS
 
 * Go to your course's :guilabel:`Settings` page, then click on :guilabel:`Apps` and :guilabel:`View App Configurations`.
 * Click the button to add an App.
-* For :guilabel:`Configuration type`, select "By URL".
-* The :guilabel:`Consumer key` is your consumer key.
-* The :guilabel:`Shared secret` is your shared secret.
-* The :guilabel:`Config URL` is your automatic configuration URL.
+* Fill in the following values:
+
+    Configuration type
+        "By URL".
+    Consumer key
+        Your consumer key.
+    Shared secret
+        Your shared secret.
+    Config URL
+        Your automatic configuration URL.
 
 Now you can add a Numbas exam in your :guilabel:`Modules` page:
 
 * Click the button to add an item.
 * Select :guilabel:`External tool` and click on :guilabel:`Numbas`.
 * Click :guilabel:`Add item`.
+
+D2L BrightSpace
+************************
+
+.. note::
+
+    These notes were based on a single installation performed in March 2022.
+
+You must have the "Manage External Learning Tools Configuration" permission.
+
+* In the :guilabel:`Admin Tools` menu, under :guilabel:`Organizational Tools`, click :guilabel:`External Learning Tools`.
+* Switch to the :guilabel:`Manage External Learning Tool Links` tab.
+* Click :guilabel:`New Link`.
+* Fill in the following values:
+
+    Title
+        "Numbas".
+    URL
+        Your launch URL.
+    Allowe users to view this link
+        Ticked
+    Sign messages with key/secret with
+        "Link key/secret"
+    Key
+        Your consumer key.
+    Secret
+        Your shared secret.
+    Security settings
+        Ensure the following are ticked:
+
+        * "Send tool consumer information to tool provider"
+        * "Send LTI user ID and LTI role list to tool provider"
+
+        If you want to be able to identify students within the Numbas LTI tool, you should also tick:
+
+        * "Send user name to tool provider"
+        * "Send user email to tool provider"
+* Click :guilabel:`Save and Close`.
+
+Now you can add a Numbas exam in your :guilabel:`Modules` page:
+
+* Click :guilabel:`Existing activities`.
+* Select :guilabel:`External Learning Tools`.
+* Select :guilabel:`Numbas`.
+
+
 
 Managing a consumer
 -------------------

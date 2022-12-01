@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.conf import settings
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
@@ -72,3 +73,16 @@ class GlobalUserInfoView(HelpLinkMixin, ManagementViewMixin, generic.DetailView)
         context['consumers'] = consumers
         
         return context
+
+class LockdownDashboardView(HelpLinkMixin, ManagementViewMixin, generic.TemplateView):
+    template_name = 'numbas_lti/management/admin/lockdown_dashboard.html'
+    management_tab = 'lockdown'
+    helplink = 'admin/lockdown/index.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['lockdown_app_password'] = settings.LOCKDOWN_APP.get('password')
+
+        return context
+

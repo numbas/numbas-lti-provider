@@ -1,4 +1,4 @@
-import difflib
+from diff_match_patch import diff_match_patch
 import re
 
 escape_map = str.maketrans({
@@ -12,21 +12,31 @@ def escape(s):
 def unescape(s):
     return re.sub(r'\\[\\n]',lambda m: '\n' if m[0][1]=='n' else '\\',s)
 
-def make_diff(a,b):
-    d = difflib.SequenceMatcher(None,a,b)
-    output= []
-    for opcode, i1,i2,j1,j2 in d.get_opcodes():
-        if opcode == 'equal':
-            pass
-        elif opcode == 'delete':
-            output.append('d{:x},{:x}'.format(i1,i2))
-        elif opcode == 'insert':
-            s = escape(d.b[j1:j2])
-            output.append('i{:x},{}'.format(i1,s))
-        elif opcode == 'replace':
-            s = escape(d.b[j1:j2])
-            output.append('r{:x},{:x},{}'.format(i1,i2,s))
+def make_diff(a, b):
+    dmp = diff_match_patch()
+
+    i = 0
+    j = 0
+    diffs = dmp.diff_main(a, b)
+    output = []
+    for n, (op, s) in enumerate(diffs):
+        l = len(s)
+        if op == diff_match_patch.DIFF_EQUAL:
+            i += l
+            j += l
+        elif op == diff_match_patch.DIFF_DELETE:
+            output.append(f'd{i:x},{i+l:x}')
+            i += l
+        elif op == diff_match_patch.DIFF_INSERT:
+            es = escape(s)
+            if n>0 and diffs[n-1][0] == diff_match_patch.DIFF_DELETE:
+                output.pop()
+                output.append(f'r{i-len(diffs[n-1][1]):x},{i:x},{es}')
+            else:
+                output.append(f'i{i:x},{es}')
+            j += l
     return '\n'.join(output)
+
 
 def apply_diff(d,a):
     ops = d.split('\n')

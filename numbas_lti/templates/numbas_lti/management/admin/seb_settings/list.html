@@ -1,0 +1,27 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "SEB Settings" %} - {{block.super}}{% endblock %}
+
+
+{% block management_content %}
+    {% if object_list.exists %}
+        <div>
+            <p>{% trans "The configured Safe Exam Browser settings are listed below." %}</p>
+        </div>
+        <ul>
+            {% for settings in object_list %}
+            <li>
+                <a href="{{settings.get_absolute_url}}">{{settings.name}}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-warning">
+            <p>{% trans "No SEB settings files have been set up yet." %}</p>
+        </div>
+    {% endif %}
+
+    <p><a href="{% url 'create_seb_settings' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add a new SEB settings file" %}</a></p>
+{% endblock management_content %}

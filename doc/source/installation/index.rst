@@ -15,6 +15,7 @@ If you're installing on a platform not listed below, follow the :ref:`Ubuntu ins
    :maxdepth: 1
 
    docker
+   migrate_to_docker
    ubuntu
    rhel-7
    settings

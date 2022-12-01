@@ -3,77 +3,93 @@
 {% load i18n %}
 
 {% block content %}
-<main class="container">
-    <h2>{{resource}}</h2>
-    <p class="lead">
-        {% blocktrans with name=user.get_full_name %} Hi {{name}}.{% endblocktrans %}
-        {% trans "You have already attempted this activity." %}
-        <br>
-        {% blocktrans count num_attempts=object_list|length %}You can resume or review your previous attempt{% plural %}You can resume or review your previous attempts{% endblocktrans %}{% if can_start_new_attempt %}{% trans ", or start a new one" %}{% endif %}.
-    </p>
+<div class="container">
+    <header class="page-header">
+        <h1>
+            {{resource.title}}
+            <span class="text-muted">·</span>
+            <small>{{resource.context.name}}</small>
+        </h1>
+    </header>
 
-    {% if resource.discounted_parts.exists %}
-    <div class="alert alert-info">
-        <p>{% blocktranslate %}Parts of this activity have been discounted by an instructor. Your final score may not match the one you see.{% endblocktranslate %}</p>
-    </div>
-    {% endif %}
+    <main>
+        <p class="lead">
+            {% blocktranslate with name=user.get_full_name %} Hi {{name}}.{% endblocktranslate %}
+            {% translate "You have already attempted this activity." %}
+            <br>
+            {% blocktranslate count num_attempts=object_list|length %}You can resume or review your previous attempt{% plural %}You can resume or review your previous attempts{% endblocktranslate %}{% if can_start_new_attempt %}{% translate ", or start a new one" %}{% endif %}.
+        </p>
 
-    {% for message in messages %}
-    <div class="alert alert-info">
-        {{message}}
-    </div>
-    {% endfor %}
+        {% if resource.discounted_parts.exists %}
+        <div class="alert alert-info">
+            <p>{% blocktranslate %}Parts of this activity have been discounted by an instructor. Your final score may not match the one you see.{% endblocktranslate %}</p>
+        </div>
+        {% endif %}
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>{% trans "Start time" %}</th>
-                <th>{% trans "Score" %}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for attempt in object_list %}
-            <tr>
-                <td>{{attempt.start_time}}</td>
-                <td>
-                    {% if attempt.should_show_scores %}
-                        {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})
-                    {% else %}
-                        {% if attempt.completed %}
-                            {% trans "Completed" %}
+        {% for message in messages %}
+        <div class="alert alert-info">
+            {{message}}
+        </div>
+        {% endfor %}
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>{% translate "Start time" %}</th>
+                    <th>{% translate "Score" %}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if can_start_new_attempt %}
+                <tr>
+                    <td colspan="2">
+                    <td>
+                        <a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% translate "Start a new attempt" %}</a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% for attempt in object_list %}
+                <tr>
+                    <td>{{attempt.start_time}}</td>
+                    <td>
+                        {% if attempt.should_show_scores %}
+                            {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})
                         {% else %}
-                            <em>{% trans "In progress" %}</em>
-                        {% endif %}
-                    {% endif %}
-                    {% if attempt.is_remarked %}
-                    <br>
-                    <small>{% translate "This score has been manually changed by an instructor." %}</small>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if attempt.completed %}
-                        {% if attempt.review_allowed %}
-                        <a class="btn btn-info" href="{% url 'run_attempt' pk=attempt.pk %}">
-                            <span class="glyphicon glyphicon-apple"></span> {% trans "Review this attempt" %}
-                        </a>
-                        {% else %}
-                            {% if attempt.resource.allow_review_from %}
-                                {% blocktrans with time=attempt.resource.allow_review_from %}Review will be available from {{time}}{% endblocktrans %}
+                            {% if attempt.completed %}
+                                {% translate "Completed" %}
+                            {% else %}
+                                <em>{% translate "In progress" %}</em>
                             {% endif %}
                         {% endif %}
-                    {% else %}
-                        {% if attempt.resume_allowed %}
-                        <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
-                            <span class="glyphicon glyphicon-play"></span> {% trans "Continue" %}
-                        </a>
+                        {% if attempt.is_remarked %}
+                        <br>
+                        <small>{% translate "This score has been manually changed by an instructor." %}</small>
                         {% endif %}
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% if can_start_new_attempt %}<a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% trans "Start a new attempt" %}</a>{% endif %}
-</main>
+                    </td>
+                    <td>
+                        {% if attempt.completed %}
+                            {% if attempt.review_allowed %}
+                            <a class="btn btn-info" href="{% url 'run_attempt' pk=attempt.pk %}">
+                                <span class="glyphicon glyphicon-apple"></span> {% translate "Review this attempt" %}
+                            </a>
+                            {% else %}
+                                {% if attempt.resource.allow_review_from %}
+                                    {% blocktranslate with time=attempt.resource.allow_review_from %}Review will be available from {{time}}{% endblocktranslate %}
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            {% if attempt.resume_allowed %}
+                            <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
+                                <span class="glyphicon glyphicon-play"></span> {% translate "Continue" %}
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+</div>
 {% endblock content %}

@@ -1,0 +1,20 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Lockdown apps" %} - {{block.super}}{% endblock %}
+
+{% block management_content %}
+<h1>{% translate "Lockdown apps" %}</h1>
+
+<section>
+    <h2>{% translate "Numbas lockdown app" %}</h2>
+    <p>{% translate "The default password for the Numbas lockdown app is" %}</p>
+    <div class="well"><code>{{lockdown_app_password}}</code></div>
+</section>
+
+<section>
+    <h2>{% translate "Safe Exam Browser" %}</h2>
+    <p><a href="{% url 'list_seb_settings' %}">{% translate "Manage SEB settings files" %}</a></p>
+</section>
+{% endblock management_content %}

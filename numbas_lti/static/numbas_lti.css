@@ -40,3 +40,10 @@ body.dashboard ul.actions li {
     font-size: 1.1em;
     margin: 0 1em 3em 3em;
 }
+
+.lockdown-app-password {
+    text-align: center;
+    font-size: 1.2em;
+    color: black;
+    background: white;
+}

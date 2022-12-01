@@ -9,6 +9,25 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v3.2
+----
+
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
+There is a new setting for the :ref:`lockdown app <lockdown-apps>` support:
+
+* ``NUMBAS_LOCKDOWN_APP_PASSWORD`` - a default password to use with the Numbas lockdown app.
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+There are new settings for the :ref:`lockdown app <lockdown-apps>` support.
+Copy the ``LOCKDOWN_APP`` setting from :file:`numbasltiprovider/settings.py.dist` into :file:`numbasltiprovider/settings.py`, and change the ``'password'`` value.
+
+The installation instructions now recommend you regularly run the ``clearsessions`` command. 
+See :ref:`maintenance-cron-jobs`.
+
 v3.0
 ----
 

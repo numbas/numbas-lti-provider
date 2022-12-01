@@ -31,6 +31,9 @@
     <span class="status-message text-ok">
         <div class="text">
             <p>{% trans "All attempt data has been saved to the database. You may now close this window." %}</p>
+            {% if attempt.resource.require_lockdown_app == 'seb' %}
+            <p><a href="{{SEB_QUIT_LINK}}">{% translate "Close the window" %}</a></p>
+            {% endif %}
         </div>
     </span>
     <span class="status-message text-disconnected">

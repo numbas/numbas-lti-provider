@@ -1,0 +1,25 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block title %}{% trans "Edit a SEB settings file" %} - {{block.super}}{% endblock %}
+
+{% block management_content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Edit a SEB settings file" %}</h1>
+    </header>
+
+    <main>
+        {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
+        <hr>
+        <form method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{form|bootstrap}}
+            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> {% translate "Save" %}</button>
+            <a class="btn btn-link" href="{% url 'list_seb_settings' %}">{% translate "Cancel" %}</a>
+            <a class="btn btn-danger" href="{% url 'delete_seb_settings' object.pk %}"><span class="glyphicon glyphicon-remove"></span> {% translate "Delete this settings file" %}</a>
+        </form>
+    </main>
+</div>
+{% endblock management_content %}

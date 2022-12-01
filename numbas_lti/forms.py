@@ -6,7 +6,7 @@ from django.forms import ModelForm, Form
 from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings
 from .test_exam import test_zipfile, ExamTestException
 
 from django.core.files import File
@@ -108,11 +108,12 @@ class AccessChangeForm(ModelForm):
 class ResourceSettingsForm(ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts']
+        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
         widgets = {
             'allow_review_from': DateTimePickerInput(format=datetime_format),
             'available_from': DateTimePickerInput(format=datetime_format),
             'available_until': DateTimePickerInput(format=datetime_format),
+            'lockdown_app_password': forms.TextInput(attrs={'class':'form-control', 'placeholder': getattr(settings,'LOCKDOWN_APP',{}).get('password','')}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -261,3 +262,8 @@ ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTim
 
 class ValidateReceiptForm(Form):
     code = forms.CharField(strip=True,widget=forms.Textarea(attrs={'class':'form-control'}))
+
+class CreateSebSettingsForm(ModelForm):
+    class Meta:
+        model = SebSettings
+        fields = ('name', 'config_key_hash', 'password', 'settings_file')

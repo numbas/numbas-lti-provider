@@ -88,4 +88,15 @@ urlpatterns = [
     path('stress/<int:pk>/new-attempt', views.stress.NewAttemptView.as_view(), name='new_stresstest_attempt'),
     path('stress/<int:pk>/wipe', views.stress.WipeDataView.as_view(), name='wipe_stresstest'),
     path('stress/<int:pk>/delete', views.stress.DeleteStressTestView.as_view(), name='delete_stresstest'),
+
+    path('lockdown/dashboard', views.admin.LockdownDashboardView.as_view(), name='lockdown_dashboard'),
+
+    path('lockdown/launch', views.entry.lockdown_launch, name='lockdown_launch'),
+
+    path('safe_exam_browser/launch', views.entry.seb_launch, name='seb_launch'),
+    path('safe_exam_browser/settings', views.seb_settings.ListView.as_view(), name='list_seb_settings'),
+    path('safe_exam_browser/settings/new', views.seb_settings.CreateView.as_view(), name='create_seb_settings'),
+    path('safe_exam_browser/settings/<int:pk>/edit', views.seb_settings.UpdateView.as_view(), name='edit_seb_settings'),
+    path('safe_exam_browser/settings/<int:pk>/delete', views.seb_settings.DeleteView.as_view(), name='delete_seb_settings'),
+    path('safe_exam_browser/quit', views.seb_settings.QuitView.as_view(), name='seb_quit'),
 ]

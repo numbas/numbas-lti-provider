@@ -1,6 +1,7 @@
 import string
 import re
 from datetime import timedelta
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 def letter_ordinal(n):
     if n==0:
@@ -73,3 +74,16 @@ def parse_scorm_timeinterval(s):
     seconds = (lengths['hours']*60 + lengths['minutes'])*60 + lengths['seconds']
 
     return timedelta(days=days, seconds=seconds)
+
+def add_query_param(url,extras):
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    for k,v in extras.items():
+        if k not in query:
+            query[k] = [v]
+    url = urlunparse(
+        (parsed.scheme, parsed.netloc, parsed.path, parsed.params,
+         urlencode(query,doseq=True), parsed.fragment)
+    )
+    return url
+    
