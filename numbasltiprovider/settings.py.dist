@@ -243,4 +243,7 @@ LOCKDOWN_APP = {
 
     # The URL to download the app from.
     'install_url': 'https://www.numbas.org.uk/lockdown-app',
+
+    # The URL to download the Safe Exam Browser app from.
+    'seb_install_url': 'https://safeexambrowser.org/download_en.html',
 }
