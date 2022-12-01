@@ -149,6 +149,8 @@ Once you've set this up, run::
 
 Supervisord will start the Numbas LTI provider, and restart it automatically if it ever crashes.
 
+.. _maintenance-cron-jobs
+
 Set up regular maintenance jobs
 -------------------------------
 
