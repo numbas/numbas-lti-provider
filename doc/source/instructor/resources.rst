@@ -425,6 +425,11 @@ When a student launches a resource requiring a lockdown app, they will be shown 
 
    This is what a student sees when they launch a resource which requires the Numbas lockdown app.
 
+.. raw:: html
+
+    <iframe src="https://player.vimeo.com/video/778056290?h=18a23970ca" width="640" height="564" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+
+
 .. _auto-remark:
 
 Remark
