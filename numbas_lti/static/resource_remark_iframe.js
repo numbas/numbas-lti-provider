@@ -45,6 +45,7 @@ function load_exam() {
 
         var seed = Math.seedrandom(new Date().getTime());
         var job = Numbas.schedule.add;
+        Numbas.load_pre_submit_cache = false;
         Numbas.xml.loadXMLDocs();
         var store = Numbas.store = new Numbas.storage.scorm.SCORMStorage();
         var xml = Numbas.xml.examXML.selectSingleNode('/exam');
@@ -124,17 +125,18 @@ function remark_session(options) {
                     if(options.use_unsubmitted) {
                         p.stagedAnswer = p.resume_stagedAnswer || p.stagedAnswer;
                     }
-                    p.pre_submit_cache = [];
                 });
                 if(options.use_unsubmitted) {
                     q.parts.forEach(function(p) {
                         p.revealed = false;
                         p.submit();
-                        if(p.waiting_for_pre_submit) {
-                            pre_submit_promises.push(p.waiting_for_pre_submit);
-                        }
                     });
                 }
+                q.parts.forEach(function(p) {
+                    if(p.waiting_for_pre_submit) {
+                        pre_submit_promises.push(p.waiting_for_pre_submit);
+                    }
+                });
             });
 
             Promise.all(pre_submit_promises).then(results => {

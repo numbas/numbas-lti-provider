@@ -523,7 +523,7 @@ class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,Mus
             cmi = a.scorm_cmi(include_remarked_elements=False)
 
             dynamic_cmi = {
-                'cmi.mode': 'review',
+                'cmi.mode': 'normal',
                 'cmi.entry': 'resume',
                 'numbas.user_role': 'student',
             }
