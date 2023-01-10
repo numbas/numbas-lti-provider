@@ -124,6 +124,7 @@ function remark_session(options) {
                     if(options.use_unsubmitted) {
                         p.stagedAnswer = p.resume_stagedAnswer || p.stagedAnswer;
                     }
+                    p.pre_submit_cache = [];
                 });
                 if(options.use_unsubmitted) {
                     q.parts.forEach(function(p) {
