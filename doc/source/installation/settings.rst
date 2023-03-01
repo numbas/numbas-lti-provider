@@ -48,6 +48,10 @@ Note that receipts are only sent for attempts at resources where the option is t
 
 If this is ``False``, then no completion receipts will be sent for any resource.
 
+The Numbas LTI provider uses Django's email system to send email through the SMTP protocol.
+See the `Django documentation on sending email <https://docs.djangoproject.com/en/4.1/topics/email/>`__ for information about configuring this.
+The relevant settings are `EMAIL_HOST <https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-EMAIL_HOST>`__, `EMAIL_PORT <https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-EMAIL_PORT>`__, `EMAIL_USER <https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-EMAIL_USER>`__ and `EMAIL_PASSWORD <https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-EMAIL_PASSWORD>`__.
+
 ``REQUEST_TIMEOUT``
 -------------------
 
