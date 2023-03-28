@@ -18,6 +18,22 @@
     {% endblocktrans %}
     <form method="POST" action="{% url 'replace_exam' request.resource.pk %}">
         {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <a class="close" data-dismiss="alert">&times;</a>
+                {% for field in form %}
+                    {% if field.errors %}
+                    <p><strong>{{field.label}}</strong>:
+                    {% for error in field.errors %}
+                         {{ error|safe }}
+                    {% endfor %}
+                    </p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <input type="hidden" name="retrieve_url" value="{{current_exam.retrieve_url}}">
         <input type="hidden" name="rest_url" value="{{current_exam.rest_url}}">
         <div class="checkbox">
@@ -49,6 +65,8 @@
     {% for field in form.hidden_fields %}
         {{ field }}
     {% endfor %}
+
+    <input type="hidden" name="retrieve_url" value="">
 
     {% for field in form.visible_fields %}
         {% include 'bootstrapform/field.html' %}
