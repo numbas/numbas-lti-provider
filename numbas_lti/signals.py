@@ -83,6 +83,7 @@ def scorm_set_score(sender,instance,created,**kwargs):
         return
 
     tasks.scorm_set_score.schedule((instance,), delay=0.1)
+    tasks.scorm_set_score.schedule((instance, True), delay=10)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def scorm_set_completion_status(sender,instance,created,**kwargs):

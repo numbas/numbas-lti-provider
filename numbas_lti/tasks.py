@@ -57,8 +57,14 @@ def diff_suspend_data():
     logger.debug(f"Diffed {num_diffed} attempts")
 
 @db_task(priority=10)
-def scorm_set_score(element):
+def scorm_set_score(element, fetch=False):
     attempt = element.attempt
+
+    if fetch:
+        try:
+            element = attempt.scormelements.current('cmi.score.scaled')
+        except ScormElement.DoesNotExist:
+            return
 
     logger.debug(f"Set score for attempt {attempt}")
     try:
