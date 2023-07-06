@@ -525,6 +525,7 @@ class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,Mus
             dynamic_cmi = {
                 'cmi.mode': 'normal',
                 'cmi.entry': 'resume',
+                'cmi.completion_status': 'incomplete',
                 'numbas.user_role': 'student',
             }
             etime = datetime.datetime.now().timestamp()
