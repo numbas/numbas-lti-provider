@@ -42,7 +42,7 @@ You are given values to enter in the SEB config tool's :guilabel:`Start URL` and
 
 See `the Safe Exam Browser configuration documentation <https://safeexambrowser.org/windows/win_usermanual_en.html#configuration>`__ for more information on how SEB can be configured.
 
-Once you have created a settings file, copy the :guilabel:`Configuration key` from the configuration tool's :guilabel:`Browser` tab into the Numbas LTI provider form.
+Once you have created a settings file, copy the :guilabel:`Configuration key` from the configuration tool's :guilabel:`Exam` tab into the Numbas LTI provider form.
 
 If you set a :guilabel:`Settings password` and would like to show it to students when they launch a resource, you should also copy the password into the Numbas LTI provider form.
 
