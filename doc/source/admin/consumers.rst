@@ -143,7 +143,7 @@ You must have the "Manage External Learning Tools Configuration" permission.
         "Numbas".
     URL
         Your launch URL.
-    Allowe users to view this link
+    Allow users to view this link
         Ticked
     Sign messages with key/secret with
         "Link key/secret"
