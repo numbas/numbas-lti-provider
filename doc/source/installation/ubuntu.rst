@@ -54,14 +54,16 @@ First, install packages, set up users, and create the required paths (you can sa
     # create media and static file directories
     mkdir /srv/numbas-lti-media
     mkdir /srv/numbas-lti-static
-    chown -R numbas_lti:numbas_lti /srv/numbas-lti-media
-    chown -R www-data:www-data /srv/numbas-lti-static
-    chmod -R 770 /srv/numbas-lti-media /srv/numbas-lti-static
+    chown numbas_lti:numbas_lti /srv/numbas-lti-media
+    chown www-data:www-data /srv/numbas-lti-static
+    chmod u+rwX /srv/numbas-lti-media /srv/numbas-lti-static
+    chmod g+rwX /srv/numbas-lti-media /srv/numbas-lti-static
 
     # create the virtualenv for the python modules
     virtualenv -p python3 /opt/numbas_lti_python
     chown -R numbas_lti:numbas_lti /opt/numbas_lti_python
-    chmod -R 770 /opt/numbas_lti_python
+    chmod -R u+rwX /opt/numbas_lti_python
+    chmod -R g+rwX /opt/numbas_lti_python
 
     # install python modules
     cd /srv/numbas-lti-provider
