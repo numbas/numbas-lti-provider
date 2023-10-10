@@ -365,6 +365,9 @@ class Resource(models.Model):
 
         return best_extension
 
+    def duration_disabled_for_user(self, user):
+        return self.access_changes.for_user(user).filter(disable_duration=True).exists()
+
     def availability_json(self,user=None):
         available_from, available_until = self.available_for_user(user)
         if user is not None:
@@ -378,7 +381,8 @@ class Resource(models.Model):
             'duration_extension': {
                 'amount': extension_amount,
                 'units': extension_units,
-            }
+            },
+            'disable_duration': self.duration_disabled_for_user(user)
         }
         return data
 
@@ -602,6 +606,7 @@ class AccessChange(models.Model):
     max_attempts = models.PositiveIntegerField(blank=True, null=True, verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
     extend_duration = models.FloatField(blank=True, null=True, verbose_name=_('Extend exam duration by'))
     extend_duration_units = models.CharField(max_length=10, blank=True, null=True, default='percent', choices=EXTEND_DURATION_UNITS)
+    disable_duration = models.BooleanField(default=False, verbose_name=_('Disable time limit?'))
 
     users = models.ManyToManyField(User, blank=True, related_name='access_changes')
 

@@ -21,8 +21,6 @@ function SCORM_API(options) {
     this.fallback_url = options.fallback_url;
     this.show_attempts_url = options.show_attempts_url;
 
-    this.update_availability_dates(options,true);
-
     /** Key to save data under in localStorage
      */
     this.localstorage_key = 'numbas-lti-attempt-'+this.attempt_pk+'-scorm-data';
@@ -46,6 +44,8 @@ function SCORM_API(options) {
     this.sent_acc = (new Date()).getTime();
 
     this.initialise_data(data);
+
+    this.update_availability_dates(options,true);
 
     this.initialise_api();
 
@@ -136,13 +136,24 @@ SCORM_API.prototype = {
             }
         }
 
-        if(data.duration_extension) {
-            this.data['numbas.duration_extension.amount'] = data.duration_extension.amount;
-            this.data['numbas.duration_extension.units'] = data.duration_extension.units;
+        if(data.disable_duration) {
+            this.data['numbas.duration_extension.amount'] = '-100';
+            this.data['numbas.duration_extension.units'] = 'percent';
+            this.data['numbas.disable_duration'] = 'true';
             this.post_message({
                 'numbas change': 'exam duration extension'
             });
+        } else {
+            this.data['numbas.disable_duration'] = 'false';
+            if(data.duration_extension) {
+                this.data['numbas.duration_extension.amount'] = data.duration_extension.amount;
+                this.data['numbas.duration_extension.units'] = data.duration_extension.units;
+                this.post_message({
+                    'numbas change': 'exam duration extension'
+                });
+            }
         }
+
     },
 
     post_message: function(data) {
