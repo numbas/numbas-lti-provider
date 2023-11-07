@@ -1,4 +1,4 @@
-from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
+from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required, CachedLTI_13_Mixin
 from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange, DISCOUNT_BEHAVIOURS
@@ -26,7 +26,17 @@ import datetime
 import json
 import itertools
 
-class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
+class LTI_13_CreateResourceView(CachedLTI_13_Mixin, MustBeInstructorMixin, generic.edit.CreateView):
+    model = Resource
+    management_tab = 'create_resource'
+    http_methods = ['post']
+    form_class = forms.LTI_13_CreateResourceForm
+    template_name = 'numbas_lti/management/create_resource.html'
+
+    def get_success_url(self):
+        return reverse('create_exam', args=(self.object.pk,)) + '?lti_13_launch_id=' + self.get_message_launch().get_launch_id()
+
+class CreateExamView(CachedLTI_13_Mixin, HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.edit.CreateView):
     model = Exam
     management_tab = 'create_exam'
     template_name = 'numbas_lti/management/create_exam.html'
@@ -43,6 +53,9 @@ class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorM
         context['exams'] = available_exams
 
         return context
+
+    def get_resource(self):
+        return self.request.resource
 
     def form_valid(self,form):
         resource = self.request.resource

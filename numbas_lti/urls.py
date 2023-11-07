@@ -1,26 +1,55 @@
-from django.urls import path
+from django.urls import path, include
 from django.contrib import auth
 
 from . import views
 urlpatterns = [
+    # Top-level views: no authentication required
     path('', views.entry.index, name='index'),
+    path('config.xml', views.entry.config_xml, name='config_xml'),
+
+    # Admin views: should be locally authenticated as a superuser
+    path('login', auth.views.LoginView.as_view(), name='login'),
+    path('create-superuser', views.admin.CreateSuperuserView.as_view(), name='create_superuser'),
+    path('dashboard', views.admin.DashboardView.as_view(), name='global_dashboard'),
+    path('user-info/<int:pk>', views.admin.GlobalUserInfoView.as_view(), name='global_user_info'),
+    path('search-autocomplete', views.search.search_autocomplete, name='search_autocomplete'),
+    path('global-search', views.search.global_search, name='global_search'),
+    path('lockdown/dashboard', views.admin.LockdownDashboardView.as_view(), name='lockdown_dashboard'),
+    path('stress', views.stress.ListStressTestsView.as_view(), name='list_stresstests'),
+    path('stress/create', views.stress.create_stress_test, name='create_stresstest'),
+    path('stress/<int:pk>/view', views.stress.StressTestView.as_view(), name='view_stresstest'),
+    path('stress/<int:pk>/new-attempt', views.stress.NewAttemptView.as_view(), name='new_stresstest_attempt'),
+    path('stress/<int:pk>/wipe', views.stress.WipeDataView.as_view(), name='wipe_stresstest'),
+    path('stress/<int:pk>/delete', views.stress.DeleteStressTestView.as_view(), name='delete_stresstest'),
+    path('consumers', views.consumer.ListConsumersView.as_view(), name='list_consumers'),
+    path('consumers/create', views.consumer.CreateConsumerView.as_view(), name='create_consumer'),
+    path('consumers/<int:pk>', views.consumer.ManageConsumerView.as_view(), name='view_consumer'),
+    path('consumers/<int:pk>/time-periods', views.consumer.ManageTimePeriodsView.as_view(), name='consumer_manage_time_periods'),
+    path('consumers/<int:pk>/delete', views.consumer.DeleteConsumerView.as_view(), name='delete_consumer'),
+    path('time-period/<int:pk>/delete', views.consumer.DeleteTimePeriodView.as_view(), name='delete_consumer_time_period'),
+    path('contexts/<int:pk>', views.context.ManageContextView.as_view(), name='view_context'),
+    path('contexts/<int:pk>/delete', views.context.DeleteContextView.as_view(), name='delete_context'),
+    path('editorlinks', views.editorlink.ListEditorLinksView.as_view(), name='list_editorlinks'),
+    path('editorlinks/create', views.editorlink.CreateEditorLinkView.as_view(), name='create_editorlink'),
+    path('editorlink/<int:pk>/edit', views.editorlink.UpdateEditorLinkView.as_view(), name='edit_editorlink'),
+    path('editorlink/<int:pk>/delete', views.editorlink.DeleteEditorLinkView.as_view(), name='delete_editorlink'),
+    path('safe_exam_browser/settings', views.seb_settings.ListView.as_view(), name='list_seb_settings'),
+    path('safe_exam_browser/settings/new', views.seb_settings.CreateView.as_view(), name='create_seb_settings'),
+    path('safe_exam_browser/settings/<int:pk>/edit', views.seb_settings.UpdateView.as_view(), name='edit_seb_settings'),
+    path('safe_exam_browser/settings/<int:pk>/delete', views.seb_settings.DeleteView.as_view(), name='delete_seb_settings'),
+
+
+    # LTI entry views: handling LTI launch data
     path('lti_entry', views.entry.lti_entry, name='lti_entry'),
     path('check_cookie_entry', views.entry.check_cookie_entry, name='check_cookie_entry'),
     path('set_cookie_entry', views.entry.set_cookie_entry, name='set_cookie_entry'),
+    path('no-websockets', views.entry.no_websockets, name='no_websockets'),
+    path('not-authorized', views.entry.not_authorized, name='not_authorized'),
+    path('lti13/', include('numbas_lti.lti_13_urls', namespace='lti_13')),
 
-    path('login', auth.views.LoginView.as_view(), name='login'),
-
-    path('create-superuser', views.admin.CreateSuperuserView.as_view(), name='create_superuser'),
-
-    path('dashboard', views.admin.DashboardView.as_view(), name='global_dashboard'),
-    path('user-info/<int:pk>', views.admin.GlobalUserInfoView.as_view(), name='global_user_info'),
-
-    path('search-autocomplete', views.search.search_autocomplete, name='search_autocomplete'),
-    path('global-search', views.search.global_search, name='global_search'),
-
+    # Resource management views: either locally authenticated as superuser, or authenticated through LTI launch and carrying role information.
     path('resource/<int:pk>/create_exam', views.resource.CreateExamView.as_view(), name='create_exam'),
     path('exam/<int:pk>/run', views.resource.RunExamView.as_view(), name='run_exam'),
-
     path('resource/<int:pk>', views.resource.DashboardView.as_view(), name='resource_dashboard'),
     path('resource/<int:pk>/student_progress', views.resource.StudentProgressView.as_view(), name='student_progress'),
     path('resource/<int:pk>/discount_parts', views.resource.DiscountPartsView.as_view(), name='discount_parts'),
@@ -57,46 +86,12 @@ urlpatterns = [
 
     path('report-process/<int:pk>/dismiss', views.resource.DismissReportProcessView.as_view(), name='dismiss_report_process'),
 
+    # Student views: should be authneticated through LTI, carrying role information.
     path('show_attempts', views.attempt.ShowAttemptsView.as_view(), name='show_attempts'),
     path('new_attempt', views.attempt.new_attempt, name='new_attempt'),
     path('run_attempt/<int:pk>', views.attempt.RunAttemptView.as_view(), name='run_attempt'),
-
-    path('no-websockets', views.entry.no_websockets, name='no_websockets'),
-    path('not-authorized', views.entry.not_authorized, name='not_authorized'),
-
-    path('consumers', views.consumer.ListConsumersView.as_view(), name='list_consumers'),
-    path('consumers/create', views.consumer.CreateConsumerView.as_view(), name='create_consumer'),
-    path('consumers/<int:pk>', views.consumer.ManageConsumerView.as_view(), name='view_consumer'),
-    path('consumers/<int:pk>/time-periods', views.consumer.ManageTimePeriodsView.as_view(), name='consumer_manage_time_periods'),
-    path('consumers/<int:pk>/delete', views.consumer.DeleteConsumerView.as_view(), name='delete_consumer'),
-
-    path('time-period/<int:pk>/delete', views.consumer.DeleteTimePeriodView.as_view(), name='delete_consumer_time_period'),
-
-    path('contexts/<int:pk>', views.context.ManageContextView.as_view(), name='view_context'),
-    path('contexts/<int:pk>/delete', views.context.DeleteContextView.as_view(), name='delete_context'),
-
-    path('editorlinks', views.editorlink.ListEditorLinksView.as_view(), name='list_editorlinks'),
-    path('editorlinks/create', views.editorlink.CreateEditorLinkView.as_view(), name='create_editorlink'),
-    path('editorlink/<int:pk>/edit', views.editorlink.UpdateEditorLinkView.as_view(), name='edit_editorlink'),
-    path('editorlink/<int:pk>/delete', views.editorlink.DeleteEditorLinkView.as_view(), name='delete_editorlink'),
-
-    path('config.xml', views.entry.config_xml, name='config_xml'),
-
-    path('stress', views.stress.ListStressTestsView.as_view(), name='list_stresstests'),
-    path('stress/create', views.stress.create_stress_test, name='create_stresstest'),
-    path('stress/<int:pk>/view', views.stress.StressTestView.as_view(), name='view_stresstest'),
-    path('stress/<int:pk>/new-attempt', views.stress.NewAttemptView.as_view(), name='new_stresstest_attempt'),
-    path('stress/<int:pk>/wipe', views.stress.WipeDataView.as_view(), name='wipe_stresstest'),
-    path('stress/<int:pk>/delete', views.stress.DeleteStressTestView.as_view(), name='delete_stresstest'),
-
-    path('lockdown/dashboard', views.admin.LockdownDashboardView.as_view(), name='lockdown_dashboard'),
-
     path('lockdown/launch', views.entry.lockdown_launch, name='lockdown_launch'),
-
     path('safe_exam_browser/launch', views.entry.seb_launch, name='seb_launch'),
-    path('safe_exam_browser/settings', views.seb_settings.ListView.as_view(), name='list_seb_settings'),
-    path('safe_exam_browser/settings/new', views.seb_settings.CreateView.as_view(), name='create_seb_settings'),
-    path('safe_exam_browser/settings/<int:pk>/edit', views.seb_settings.UpdateView.as_view(), name='edit_seb_settings'),
-    path('safe_exam_browser/settings/<int:pk>/delete', views.seb_settings.DeleteView.as_view(), name='delete_seb_settings'),
     path('safe_exam_browser/quit', views.seb_settings.QuitView.as_view(), name='seb_quit'),
+
 ]

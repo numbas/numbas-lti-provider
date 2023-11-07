@@ -48,6 +48,7 @@ def lti_entry(request):
     if request.session.session_key is None:
         request.session.save()
     session_key = request.session.session_key
+    return render(request, 'numbas_lti/debug.html', {})
     return redirect(add_query_param(reverse('check_cookie_entry'),{'session_key':session_key}))
 
 def do_lti_entry(request):

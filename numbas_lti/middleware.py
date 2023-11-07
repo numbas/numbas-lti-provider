@@ -1,6 +1,6 @@
 import logging
 
-from .models import Resource, LTIContext, LTIConsumer
+from .models import Resource, LTIContext, LTIConsumer, LTI_11_ResourceLink
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,6 @@ class NumbasLTIResourceMiddleware(object):
 
     def __call__(self,request):
         resource_link_id = request.LTI.get('resource_link_id')
-        tool_consumer_instance_guid = request.LTI.get('tool_consumer_instance_guid')
         #logger.debug('Numbas LTI middleware processing request {}'.format(request))
         if resource_link_id is not None and tool_consumer_instance_guid is not None:
             context_id = request.LTI.get('context_id')
@@ -19,16 +18,14 @@ class NumbasLTIResourceMiddleware(object):
             name = name if name is not None else context_id
             label = request.LTI.get('context_label')
             label = label if label is not None else name
-            instance_guid = request.LTI.get('tool_consumer_instance_guid')
 
             consumer_key = request.LTI.get('oauth_consumer_key')
-            consumer = LTIConsumer.objects.get(key=consumer_key)
+            consumer = LTIConsumer.objects.get(lti_11__key=consumer_key)
 
             context, _ = LTIContext.objects.get_or_create(
                 context_id=context_id,
-                instance_guid=instance_guid,
+                consumer=consumer,
                 defaults = {
-                    'consumer': consumer,
                     'name': name,
                     'label': label,
                 }
@@ -36,7 +33,7 @@ class NumbasLTIResourceMiddleware(object):
             if (name,label) != (context.name,context.label):
                 context.name = name
                 context.label = label
-                context.save()
+                context.save(update_fields=('name', 'label'))
 
             title = request.LTI.get('resource_link_title')
             if title is None:
@@ -45,24 +42,17 @@ class NumbasLTIResourceMiddleware(object):
             if description is None:
                 description = ''
             try:
-                resource = Resource.objects.get(context=context, resource_link_id=resource_link_id)
-                resource = Resource.objects.get(context__instance_guid=tool_consumer_instance_guid, resource_link_id=resource_link_id)
-                #logger.debug("Got resource: {}".format(resource))
-            except Resource.MultipleObjectsReturned:
-                resource = Resource.objects.filter(context__instance_guid=tool_consumer_instance_guid, resource_link_id=resource_link_id).last()
-                #logger.debug("Multiple resources found; using {}".format(resource))
-            except Resource.DoesNotExist:
-                resource = Resource.objects.create(resource_link_id=resource_link_id, context=context, title=title, description=description)
-                #logger.debug("New resource")
+                resource_link = LTI_11_ResourceLink.objects.filter(context=context, resource_link_id=resource_link_id).last()
+                resource = resource_link.resource
+            except LTI_11_ResourceLink.DoesNotExist:
+                resource = Resource.objects.create(title=title, description=description)
+                resource_link = LTI_11_ResourceLink.objects.create(resource=resource, context=context, resource_link_id=resource_link_id)
             finally:
-                if (title,description,context) != (resource.title,resource.description,resource.context):
+                if (title,description) != (resource.title,resource.description):
                     resource.title = title
                     resource.description = description
-                    resource.context = context
-                    resource.save()
+                    resource.save(update_fields=('title', 'description'))
                 request.resource = resource
-        #else:
-        #    logger.debug("No resource associated with this request. resource_link_id: {resource_link_id}, tool_consumer_instance_guid: {tool_consumer_instance_guid}".format(resource_link_id=resource_link_id, tool_consumer_instance_guid=tool_consumer_instance_guid))
 
         response = self.get_response(request)
 

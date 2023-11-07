@@ -6,7 +6,7 @@ from django.forms import ModelForm, Form
 from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink
 from .test_exam import test_zipfile, ExamTestException
 
 from django.core.files import File
@@ -145,16 +145,38 @@ class CreateSuperuserForm(UserCreationForm):
         return user
 
 class CreateConsumerForm(ModelForm):
+    key = forms.CharField(strip=True,widget=forms.Textarea(attrs={'class':'form-control'}))
+
     class Meta:
         model = LTIConsumer
-        fields = ('key','url','identifier_field',)
+        fields = ('url','identifier_field',)
 
     def save(self,commit=True):
         consumer = super(CreateConsumerForm,self).save(commit=False)
-        consumer.secret = get_random_string(20,allowed_chars = string.ascii_lowercase+string.digits)
         if commit:
             consumer.save()
+            key = self.cleaned_data['key']
+            lti_11_consumer = LTI_11_Consumer.objects.create(
+                consumer=consumer,
+                key=key,
+                secret=get_random_string(20,allowed_chars = string.ascii_lowercase+string.digits)
+            )
         return consumer
+
+class LTI_13_CreateResourceForm(ModelForm):
+    class Meta:
+        model = LTI_13_ResourceLink
+        fields = ('resource_link_id', 'title', 'description', 'context')
+
+    def save(self, commit=True):
+        if commit:
+            try:
+                resource = self.instance.resource
+            except Resource.DoesNotExist:
+                resource = Resource.objects.create()
+                self.instance.resource = resource
+
+        return super().save(commit=commit)
 
 class CreateExamForm(ModelForm):
     package = forms.FileField(required=False)

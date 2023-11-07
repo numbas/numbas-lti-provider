@@ -21,6 +21,7 @@ import json
 from lxml import etree
 import os
 from pathlib import Path
+from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
 import re
 import requests
 import shutil
@@ -47,9 +48,10 @@ IDENTIFIER_FIELDS = [
 ]
 
 class LTIConsumer(models.Model):
+    """
+        An LTI 1.1 consumer.
+    """
     url = models.URLField(blank=True,default='',verbose_name=_('Home URL of consumer'))
-    key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
-    secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
     identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name=_('Field used to identify students'))
 
@@ -60,7 +62,7 @@ class LTIConsumer(models.Model):
         verbose_name_plural = _('LTI consumers')
 
     def __str__(self):
-        return self.key
+        return f'Consumer {self.url} (ID: {self.pk})'
 
     @property
     def resources(self):
@@ -103,6 +105,31 @@ class LTIConsumer(models.Model):
             out.append((None,no_creation[:]))
         groups = [(p,sorted(cs,key=lambda c:c.name.upper())) for p,cs in out]
         return groups
+
+class LTI_11_Consumer(models.Model):
+    consumer = models.OneToOneField(LTIConsumer, related_name='lti_11', on_delete=models.CASCADE)
+    key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
+    secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
+
+class LTI_11_UserAlias(models.Model):
+    consumer = models.ForeignKey(LTIConsumer, related_name='lti_11_user_aliases', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='lti_11_aliases', on_delete=models.CASCADE)
+    consumer_user_id = models.TextField()
+
+class LTI_13_Consumer(models.Model):
+    consumer = models.OneToOneField(LTIConsumer, related_name='lti_13', on_delete=models.CASCADE)
+    tool = models.OneToOneField(LtiTool, related_name='numbas', on_delete=models.CASCADE)
+
+class LTI_13_UserAlias(models.Model):
+    consumer = models.ForeignKey(LTIConsumer, related_name='lti_13_user_aliases', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='lti_13_aliases', on_delete=models.CASCADE)
+    sub = models.CharField(max_length=255)
+
+    full_name = models.CharField(max_length=1000, blank=True, default='')
+    given_name = models.CharField(max_length=1000, blank=True, default='')
+    family_name = models.CharField(max_length=1000, blank=True, default='')
+    email = models.EmailField(blank=True, default='')
+    locale = models.CharField(max_length=30, blank=True, default='')
 
 class ConsumerTimePeriod(models.Model):
     consumer = models.ForeignKey(LTIConsumer, related_name='time_periods', on_delete=models.CASCADE)
@@ -257,9 +284,7 @@ class SebSettings(models.Model):
         return reverse('edit_seb_settings',args=(self.pk,))
 
 class Resource(models.Model):
-    resource_link_id = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL,related_name='main_exam_of')
-    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='resources')
     title = models.CharField(max_length=300,default='')
     description = models.TextField(default='')
 
@@ -293,8 +318,12 @@ class Resource(models.Model):
     def __str__(self):
         if self.exam:
             return "Resource {}: {}".format(self.pk, self.exam)
-        elif self.context:
-            return _('Resource in "{}" - no exam uploaded').format(self.context.name)
+        elif self.lti_11_links.exists():
+            link = self.lti_11_links.first()
+            return _('Resource linked to "{context}"').format(context=link.context)
+        elif self.lti_13_links.exists():
+            link = self.lti_13_links.first()
+            return _('Resource linked to "{context}"').format(context=link.context)
         else:
             return gettext('Resource with no context')
 
@@ -558,6 +587,17 @@ class Resource(models.Model):
 
         return None
 
+class LTI_11_ResourceLink(models.Model):
+    resource = models.ForeignKey(Resource, related_name='lti_11_links', on_delete=models.CASCADE)
+    resource_link_id = models.CharField(max_length=300)
+    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='lti_11_resource_links')
+
+class LTI_13_ResourceLink(models.Model):
+    resource = models.ForeignKey(Resource, related_name='lti_13_links', on_delete=models.CASCADE)
+    resource_link_id = models.CharField(max_length=300)
+    title = models.CharField(max_length=300,default='')
+    description = models.TextField(default='', blank=True)
+    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='lti_13_resource_links')
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -659,6 +699,9 @@ class EmailAccessChange(models.Model):
     email = models.EmailField()
 
 class LTIUserData(models.Model):
+    """
+        Associate the LTI 1.1 data for a user with a consumer.
+    """
     consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
@@ -689,6 +732,9 @@ class LTIUserData(models.Model):
             return ''
 
 class LTILaunch(models.Model):
+    """
+        Record when a user launches a resource from LTI 1.1.
+    """
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_launches')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE, related_name='launches')
     time = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,13 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% trans "Numbas LTI provider" %}</h1>
+    </header>
+    <main>{% block main %}{% endblock main %}</main>
+
+    {% include "numbas_lti/management/footer.html" %}
+</div>
+{% endblock content %}

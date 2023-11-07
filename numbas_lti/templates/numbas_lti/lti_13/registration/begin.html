@@ -1,0 +1,7 @@
+{% extends "numbas_lti/lti_13/base.html" %}
+{% load i18n %}
+
+{% block main %}
+<p>{% translate "Use this URL to register your platform with this tool, using LTI Dynamic Registration:" %}</p>
+<code>{{register_url}}</code>
+{% endblock main %}

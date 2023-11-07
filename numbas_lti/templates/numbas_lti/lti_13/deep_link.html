@@ -1,0 +1,33 @@
+{% extends "numbas_lti/lti_13/base.html" %}
+{% load i18n %}
+
+{% block main %}
+Deep link!
+
+<dl>
+    <dt>User</dt>
+    <dd>{{user}}</dd>
+
+    <dt>Message launch</dt>
+    <dd>{{message_launch}}</dd>
+
+    <dt>LTI Tool</dt>
+    <dd>{{lti_tool.title}}, {{lti_tool.issuer}}, {{lti_tool.client_id}}</dd>
+
+    <dt>LTI Context</dt>
+    <dd>{{lti_context.name}} - {{lti_context.label}} ({{lti_context.context_id}})</dd>
+
+    <dt>Message launch data</dt>
+    <dd>
+        <dl>
+            {% for key, val in message_launch_data.items %}
+            <dt>{{key}}</dt>
+            <dd>{{val}}</dd>
+            {% endfor %}
+        </dl>
+    </dd>
+
+    <dt>Resource link claim</dt>
+    <dd>{{resource_link_claim}}</dd>
+</dl>
+{% endblock main %}

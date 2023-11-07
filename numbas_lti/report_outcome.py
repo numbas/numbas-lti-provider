@@ -86,7 +86,7 @@ def report_outcome(resource,user):
             r = requests.post(
                     user_data.lis_outcome_service_url,
                     data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
-                    auth=OAuth1(user_data.consumer.key,user_data.consumer.secret,signature_type='auth_header',client_class=Client, force_include_body=True),
+                    auth=OAuth1(user_data.consumer.lti_11.key, user_data.consumer.lti_11.secret, signature_type='auth_header', client_class=Client, force_include_body=True),
                     headers={'Content-Type': 'application/xml'},
                     timeout = getattr(settings,'REQUEST_TIMEOUT',60)
                 )

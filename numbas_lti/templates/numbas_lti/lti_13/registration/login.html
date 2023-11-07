@@ -1,0 +1,18 @@
+{% extends "numbas_lti/lti_13/base.html" %}
+{% load i18n %}
+
+{% block body_class %}login{% endblock %}
+
+{% block title %}{% translate "Log in" %} - {{block.super}}{% endblock %}
+
+{% block main %}
+    {% if next %}
+    <p>{% blocktranslate %}Access to this page is restricted. Please log in with an account that has access.{% endblocktranslate %}</p>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        {{form}}
+        <button type="submit">{% translate "Log in" %}</button>
+    </form>
+{% endblock main %}
