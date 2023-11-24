@@ -307,9 +307,9 @@ Timeline.prototype = {
     add_launch: function(launch) {
         var msg;
         if(launch.user!=null) {
-            msg = interpolate(_('Launched in %s mode by %s.'),[launch.mode,launch.user]);
+            msg = interpolate(_('Launched in %s mode by %s.'), [launch.mode,launch.user]);
         } else {
-            msg = interpolate(_('Launched in %s mode.'),launch.mode);
+            msg = interpolate(_('Launched in %s mode.'), [launch.mode]);
         }
         this.add_timeline_item(new TimelineItem(
             msg,

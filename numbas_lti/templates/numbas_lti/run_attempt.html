@@ -56,6 +56,12 @@
             <button type="button" id="try-final-ajax-again">{% trans "Try again" %}</button>
         </div>
     </span>
+    <span class="status-message text-loading-error">
+        <div class="text">
+            <p>{% trans "There was an error loading the data for this attempt. Please reload the page." %}</p>
+            <button type="button" onclick="location.reload()">{% trans "Reload the page" %}</button>
+        </div>
+    </span>
 </div>
 <div id="deadline-change-display" tabindex="1">
     <p>{% blocktrans %}The availability dates for this attempt have changed. The attempt is available until <span class="available-until"></span>.{% endblocktrans %}</p>
@@ -65,7 +71,7 @@
     <h1 style="text-align: center">Loading "{{attempt.resource.title}}"</h1>
 </div>
 
-{% if scorm_cmi %}
+{% if load_cmi %}
 <script>
 /*! modernizr 3.3.1 (Custom Build) | MIT *
  * https://modernizr.com/download/?-websockets-setclasses !*/
@@ -84,27 +90,7 @@ if(!Modernizr.websockets) {
 {% include "numbas_lti/scripts/luxon.html" %}
 <script type="text/javascript" src="{% static 'api.js' %}"></script>
 {{js_vars|json_script:"js_vars"}}
-<script type="text/javascript">
-    var js_vars = JSON.parse(document.getElementById('js_vars').textContent);
-    try {
-        var sc = new SCORM_API(js_vars);
-        window.API_1484_11 = sc.API_1484_11;
-    } catch(e) {
-        console.error(e);
-        alert("{% trans "A connection to the server could not be created. Please report this." %}");
-        window.location.href = '{% url 'show_attempts' %}';
-    }
-    window.addEventListener('load',function() {
-        var iframe = document.createElement('iframe');
-        iframe.setAttribute('id','scorm-player');
-        iframe.setAttribute('width','100%');
-        iframe.setAttribute('height','100%');
-        iframe.setAttribute('src',js_vars.exam_url);
-        var iframe_container = document.getElementById('scorm-player-container');
-        iframe_container.innerHTML = '';
-        iframe_container.appendChild(iframe);
-    });
-</script>
+<script type="text/javascript" src="{% static 'run_attempt.js' %}"></script>
 {% endif %}
 
 <script type="text/javascript">

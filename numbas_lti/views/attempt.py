@@ -19,7 +19,7 @@ from numbas_lti import tasks
 from numbas_lti.forms import RemarkPartScoreForm
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch, resolve_diffed_scormelements, RemarkedScormElement
 from numbas_lti.save_scorm_data import save_scorm_data
-from numbas_lti.util import transform_part_hierarchy
+from numbas_lti.util import transform_part_hierarchy, add_query_param
 import re
 import simplejson
 
@@ -235,7 +235,44 @@ class BrokenAttemptException(Exception):
     def __init__(self,attempt):
         self.attempt = attempt
 
-class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
+class AttemptAccessMixin:
+    def dispatch(self, request, *args, **kwargs):
+        self.mode = self.get_mode()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_mode(self):
+        attempt = self.get_object()
+
+        if attempt.user != self.request.user:
+            user_data = attempt.resource.user_data(self.request.user)
+            if (user_data is not None and user_data.is_instructor) or request_is_instructor(self.request):
+                return 'review'
+            else:
+                raise PermissionDenied(gettext("You're not allowed to review this attempt."))
+
+        if attempt.completed():
+            if not attempt.review_allowed():
+                if attempt.resource.allow_review_from:
+                    template = get_template('numbas_lti/review_not_allowed.html')
+                    raise PermissionDenied(template.render({'allow_review_from': attempt.resource.allow_review_from}))
+                else:
+                    raise PermissionDenied(_("You're not allowed to review this attempt."))
+            return 'review'
+        else:
+            return 'normal'
+
+
+    def get_at_time(self):
+        if not request_is_instructor(self.request):
+            return
+
+        at_time = self.request.GET.get('at_time')
+        if at_time is not None:
+            at_time = datetime.datetime.fromisoformat(at_time)
+        return at_time
+
+
+class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, generic.detail.DetailView):
     model = Attempt
     context_object_name = 'attempt'
 
@@ -248,17 +285,57 @@ class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
             response = http.HttpResponseServerError(_("This attempt is broken - there isn't enough saved SCORM data to resume it."))
             self.mode = 'broken'
 
-        AttemptLaunch.objects.create(
-            attempt = self.object,
-            mode = self.mode,
-            user = self.request.user if not self.request.user.is_anonymous else None
-        )
         return response
 
     def get_context_data(self,*args,**kwargs):
         context = super(RunAttemptView,self).get_context_data(*args,**kwargs)
 
         attempt = self.get_object()
+
+        context['mode'] = self.mode
+
+        user = attempt.user
+        available_from, available_until = attempt.resource.available_for_user(user)
+
+        context['support_name'] = getattr(settings,'SUPPORT_NAME',None)
+        context['support_url'] = getattr(settings,'SUPPORT_URL',None)
+
+        context['available_until'] = available_until
+
+        context['load_cmi'] = True
+
+        at_time = self.get_at_time()
+        cmi_url = reverse('run_attempt_scorm_cmi', args=(attempt.pk,))
+        if at_time is not None:
+            cmi_url = add_query_param(cmi_url, {'at_time': at_time.isoformat()})
+
+        context['js_vars'] = {
+            'cmi_url': cmi_url,
+            'exam_url': attempt.exam.extracted_url+'/index.html',
+            'scorm_api_data': {
+                'show_attempts_url': reverse('show_attempts'),
+                'attempt_pk': attempt.pk,
+                'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
+                'show_attempts_url': reverse('show_attempts'),
+                'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
+                'available_from': available_from.isoformat() if available_from else None,
+                'available_until': available_until.isoformat() if available_until else None,
+            }
+        }
+
+        return context
+
+class AttemptScormCMIView(JSONView, AttemptAccessMixin, generic.detail.DetailView):
+    download = False
+    model = Attempt
+
+    def get_data(self):
+        attempt = self.get_object()
+
+        scorm_cmi = attempt.scorm_cmi(at_time=self.get_at_time())
+
+        user = attempt.user
+        mode = self.get_mode()
 
         try:
             completion_status = attempt.scormelements.current('cmi.completion_status')
@@ -287,31 +364,6 @@ class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
             entry = 'ab-initio'
             context['attempt'] = attempt
 
-
-        if attempt.completed():
-            mode = 'review'
-        else:
-            mode = 'normal'
-
-        if attempt.user != self.request.user:
-            user_data = attempt.resource.user_data(self.request.user)
-            if (user_data is not None and user_data.is_instructor) or request_is_instructor(self.request):
-                mode = 'review'
-            else:
-                raise PermissionDenied(gettext("You're not allowed to review this attempt."))
-
-        context['mode'] = self.mode = mode
-
-        user = attempt.user
-        available_from, available_until = attempt.resource.available_for_user(user)
-
-        at_time = self.request.GET.get('at_time')
-        if at_time is not None:
-            at_time = datetime.datetime.fromisoformat(at_time)
-
-        scorm_cmi = attempt.scorm_cmi(at_time=at_time)
-
-
         duration_extension_amount, duration_extension_units = attempt.resource.duration_extension_for_user(user)
         dynamic_cmi = {
             'cmi.mode': mode,
@@ -325,24 +377,20 @@ class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
         dynamic_cmi = {k: {'value':v,'time':now} for k,v in dynamic_cmi.items()}
         scorm_cmi.update(dynamic_cmi)
 
-        context['support_name'] = getattr(settings,'SUPPORT_NAME',None)
-        context['support_url'] = getattr(settings,'SUPPORT_URL',None)
-        
-        context['scorm_cmi'] = simplejson.encoder.JSONEncoderForHTML().encode(scorm_cmi)
-        context['available_until'] = available_until
+        AttemptLaunch.objects.create(
+            attempt = attempt,
+            user = self.request.user if not self.request.user.is_anonymous else None,
+            mode = mode
+        )
 
-        context['js_vars'] = {
-            'exam_url': attempt.exam.extracted_url+'/index.html',
-            'scorm_cmi': scorm_cmi,
-            'attempt_pk': attempt.pk,
-            'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
-            'show_attempts_url': reverse('show_attempts'),
-            'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
-            'available_from': available_from.isoformat() if available_from else None,
-            'available_until': available_until.isoformat() if available_until else None,
-        }
+        return scorm_cmi
 
-        return context
+    def render_to_response(self, context, **kwargs):
+        response = super().render_to_response(context, **kwargs)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
 @require_POST
 def scorm_data_fallback(request,pk,*args,**kwargs):

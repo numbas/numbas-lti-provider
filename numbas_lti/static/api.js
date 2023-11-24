@@ -199,7 +199,8 @@ SCORM_API.prototype = {
         for(var id in stored_data.sent) {
             this.sent[id] = {
                 elements: stored_data.sent[id].map(function(e) {
-                    return new SCORMData(e.key,e.value,DateTime.fromSeconds(e.time));
+                    var time = e.time_iso !== undefined ? DateTime.fromISO(e.time_iso) : DateTime.fromSeconds(e.time);
+                    return new SCORMData(e.key, e.value, time);
                 }),
                 time: DateTime.utc()
             }

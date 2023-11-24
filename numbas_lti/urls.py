@@ -60,6 +60,7 @@ urlpatterns = [
     path('show_attempts', views.attempt.ShowAttemptsView.as_view(), name='show_attempts'),
     path('new_attempt', views.attempt.new_attempt, name='new_attempt'),
     path('run_attempt/<int:pk>', views.attempt.RunAttemptView.as_view(), name='run_attempt'),
+    path('run_attempt/<int:pk>/scorm_cmi', views.attempt.AttemptScormCMIView.as_view(), name='run_attempt_scorm_cmi'),
 
     path('no-websockets', views.entry.no_websockets, name='no_websockets'),
     path('not-authorized', views.entry.not_authorized, name='not_authorized'),

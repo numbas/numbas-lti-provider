@@ -75,7 +75,7 @@
                             </a>
                             {% else %}
                                 {% if attempt.resource.allow_review_from %}
-                                    {% blocktranslate with time=attempt.resource.allow_review_from %}Review will be available from {{time}}{% endblocktranslate %}
+                                    {% include "numbas_lti/review_not_allowed.html" with allow_review_from=attempt.resource.allow_review_from %}
                                 {% endif %}
                             {% endif %}
                         {% else %}

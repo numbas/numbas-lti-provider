@@ -51,12 +51,16 @@ class CreateFileReportView(object):
         return HttpResponseRedirect(self.get_success_url())
 
 class JSONView(object):
+    download = True
+
     def get_data(self):
         raise NotImplementedError()
+
     def get_filename(self):
         raise NotImplementedError()
 
     def render_to_response(self,context,**kwargs):
         response = JsonResponse(self.get_data())
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(self.get_filename())
+        if self.download:
+            response['Content-Disposition'] = 'attachment; filename="{}"'.format(self.get_filename())
         return response
