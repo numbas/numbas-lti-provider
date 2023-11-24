@@ -247,10 +247,11 @@ class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
         except BrokenAttemptException as e:
             response = http.HttpResponseServerError(_("This attempt is broken - there isn't enough saved SCORM data to resume it."))
             self.mode = 'broken'
+
         AttemptLaunch.objects.create(
             attempt = self.object,
             mode = self.mode,
-            user = self.request.user
+            user = self.request.user if not self.request.user.is_anonymous else None
         )
         return response
 
