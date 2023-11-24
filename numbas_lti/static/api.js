@@ -212,7 +212,7 @@ SCORM_API.prototype = {
             var elements = this.sent[id].elements;
             elements.forEach(function(e) {
                 var d = data[e.key];
-                if(!(e.key in data) || data[e.key].time < e.time)) {
+                if(!(e.key in data) || data[e.key].time < e.time) {
                     data[e.key] = {value: e.value,time: e.time};
                 }
             });
@@ -403,7 +403,7 @@ SCORM_API.prototype = {
             this.last_show_warning = get_now();
         }
         warning_linger_duration = luxon.Duration.fromMillis(this.terminated ? 0 : this.warning_linger_duration);
-        var show_warning = !ok || (get_now().diff(this.last_show_warning)) < warning_linger_duration;
+        var show_warning = !ok || (this.last_show_warning && (get_now().diff(this.last_show_warning)) < warning_linger_duration);
 
         var status_display = document.getElementById('status-display');
 
