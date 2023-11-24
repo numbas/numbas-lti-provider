@@ -9,6 +9,10 @@
  */
 var _ = gettext;
 
+function get_now() {
+    return DateTime.utc();
+}
+
 function SCORM_API(options) {
     var data = options.scorm_cmi;
     var sc = this;
@@ -121,7 +125,7 @@ SCORM_API.prototype = {
         var unavailable_time = this.unavailable_time();
         if(unavailable_time) {
             Array.from(document.querySelectorAll('.available-until')).forEach(function(s) {
-                s.textContent = unavailable_time.toLocaleString(DateTime.DATETIME_FULL);
+                s.textContent = unavailable_time.toLocal().toLocaleString(DateTime.DATETIME_FULL);
             });
         }
         var deadline_change_display = document.getElementById('deadline-change-display');
@@ -197,7 +201,7 @@ SCORM_API.prototype = {
                 elements: stored_data.sent[id].map(function(e) {
                     return new SCORMData(e.key,e.value,DateTime.fromSeconds(e.time));
                 }),
-                time: DateTime.local()
+                time: DateTime.utc()
             }
         }
 
@@ -208,8 +212,8 @@ SCORM_API.prototype = {
             var elements = this.sent[id].elements;
             elements.forEach(function(e) {
                 var d = data[e.key];
-                if(!(e.key in data) || data[e.key].time<e.timestamp()) {
-                    data[e.key] = {value:e.value,time:e.timestamp()};
+                if(!(e.key in data) || data[e.key].time < e.time)) {
+                    data[e.key] = {value: e.value,time: e.time};
                 }
             });
         }
@@ -231,7 +235,7 @@ SCORM_API.prototype = {
 
         // Force review mode from now on if activity is completed - could be out of sync if resuming a session which wasn't saved properly.
         if(this.data['cmi.completion_status'] == 'completed') {
-            if(this.allow_review_from!==null && DateTime.local()<this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
+            if(this.allow_review_from!==null && get_now() < this.allow_review_from && this.data['numbas.user_role'] != 'instructor') {
                 var player = document.getElementById('scorm-player');
                 if(player) {
                     player.parentElement.removeChild(player);
@@ -387,7 +391,7 @@ SCORM_API.prototype = {
             unreceived = true;
             break;
         }
-        var queued = this.queue.length>0;
+        var queued = this.queue.length > 0;
         var disconnected = !(this.socket_is_open() || this.ajax_is_working());
 
         var unavailable_time = this.unavailable_time();
@@ -396,10 +400,10 @@ SCORM_API.prototype = {
         var ok = !((unreceived || queued || !this.signed_receipt) && (disconnected || this.terminated)) && !this.failed_final_ajax && !show_unavailable_at;
 
         if(!ok) {
-            this.last_show_warning = DateTime.local();
+            this.last_show_warning = get_now();
         }
-        warning_linger_duration = this.terminated ? 0 : this.warning_linger_duration;
-        var show_warning = !ok || (DateTime.local()-this.last_show_warning)<warning_linger_duration;
+        warning_linger_duration = luxon.Duration.fromMillis(this.terminated ? 0 : this.warning_linger_duration);
+        var show_warning = !ok || (get_now().diff(this.last_show_warning)) < warning_linger_duration;
 
         var status_display = document.getElementById('status-display');
 
@@ -452,7 +456,7 @@ SCORM_API.prototype = {
         if(this.offline) {
             return true;
         }
-        var now = DateTime.local();
+        var now = get_now();
         if(this.available_from===undefined || this.available_until===undefined) {
             return (this.available_from===undefined || now >= this.available_from) && (this.available_until===undefined || now <= this.available_until);
         }
@@ -470,7 +474,7 @@ SCORM_API.prototype = {
     batch_sent: function(elements,id) {
         this.sent[id] = {
             elements: elements,
-            time: DateTime.local()
+            time: get_now()
         };
         this.set_localstorage();
         this.callbacks.trigger('batch_sent',elements,id);
@@ -495,7 +499,7 @@ SCORM_API.prototype = {
             var data = {
                 sent: {},
                 current: this.data,
-                save_time: DateTime.local().toMillis()
+                save_time_iso: get_now().toISO()
             }
             for(var id in this.sent) {
                 data.sent[id] = this.make_batch(this.sent[id].elements);
@@ -641,10 +645,11 @@ SCORM_API.prototype = {
 
         var stuff_to_send = false;
         var batches = {};
-        var now = DateTime.local().toMillis();
+        var now = get_now();
+        var ajax_period = luxon.Duration.fromMillis(this.ajax_period);
         for(var key in this.sent) {
-            var dt = now - this.sent[key].time;
-            if(this.sent[key].elements.length && dt>this.ajax_period) {
+            var dt = now.diff(this.sent[key].time);
+            if(this.sent[key].elements.length && dt > ajax_period) {
                 stuff_to_send = true;
                 batches[key] = this.make_batch(this.sent[key].elements);
             }
@@ -783,7 +788,7 @@ SCORM_API.prototype = {
         if(changed) {
     		this.data[key] = value;
             this.check_key_counts_something(key);
-            this.queue.push(new SCORMData(key,value, DateTime.local(),this.element_acc++));
+            this.queue.push(new SCORMData(key, value, get_now(),this.element_acc++));
         }
         this.callbacks.trigger('SetValue',key,value,changed);
 	},
@@ -817,7 +822,7 @@ CallbackHandler.prototype = {
 
 /** A single SCORM data model element, with the time it was set.
  */
-function SCORMData(key,value,time,counter) {
+function SCORMData(key, value, time, counter) {
     this.key = key;
     this.value = value;
     this.time = time;
@@ -828,13 +833,9 @@ SCORMData.prototype = {
         return {
             key: this.key,
             value: this.value,
-            time: this.timestamp(),
+            time_iso: this.time.toISO(),
             counter: this.counter
         }
-    },
-
-    timestamp: function() {
-        return this.time.toSeconds()
     }
 }
 

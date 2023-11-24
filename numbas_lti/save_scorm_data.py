@@ -5,6 +5,7 @@ from django.db.utils import OperationalError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 import logging
+from pytz.exceptions import AmbiguousTimeError
 import re
 
 from . import tasks
@@ -19,7 +20,17 @@ def save_scorm_data(attempt,batches):
         needs_diff = False
         for id,elements in batches.items():
             for element in elements:
-                time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time']))
+
+                if 'time_iso' in element:
+                    time = datetime.datetime.fromisoformat(re.sub(r'Z$','+00:00',element['time_iso']))
+                else:
+                    # versions of the LTI provider before v3.4 returned the time as a timestamp without timezone info.
+                    # In case there are still clients with that version of the SCORM API open, continue loading that.
+                    try:
+                        time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time']))
+                    except AmbiguousTimeError:
+                        time = timezone.make_aware(datetime.datetime.fromtimestamp(element['time']), is_dst=False)
+
                 if attempt.completion_status=='completed' and (attempt.end_time is None or time > attempt.end_time):
                     continue    # don't save new elements after the exam has been created
 
