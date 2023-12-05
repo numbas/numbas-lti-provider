@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('lti1p3_tool_config', '0003_auto_20231026_1437'),
+        ('lti1p3_tool_config', '0002_alter_ltitool_id_alter_ltitoolkey_id'),
         ('numbas_lti', '0078_lti_11_useralias'),
     ]
 

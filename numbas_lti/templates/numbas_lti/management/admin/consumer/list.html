@@ -22,17 +22,40 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>{% trans "Consumer key" %}</th>
-                    <th>{% trans "Shared secret" %}</th>
-                    <th></th>
+                    <th>{% trans "Consumer" %}</th>
+                    <th>{% trans "Summary" %}</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for consumer in object_list %}
                 <tr>
-                    <td><code>{{consumer.key}}</code></td>
-                    <td><code>{{consumer.secret}}</code></td>
+                    <td>
+                    {% if consumer.lti_11 %}
+                        <dl>
+                            <dt>{% trans "LTI version" %}</dt>
+                            <dd>1.1</dd>
+
+                            <dt>{% trans "Consumer key" %}</dt>
+                            <dd><code>{{consumer.lti_11.key}}</code></dd>
+
+                            <dt>{% trans "Shared secret" %}</dt>
+                            <dd><code>{{consumer.lti_11.secret}}</code></dd>
+                        </dl>
+                    {% endif %}
+                    {% if consumer.lti_13 %}
+                        <dl>
+                            <dt>{% trans "LTI version" %}</dt>
+                            <dd>1.3</dd>
+
+                            <dt>{% trans "Name" %}</dt>
+                            <dd>{{consumer.lti_13.tool.title}}</dd>
+
+                            <dt>{% trans "Issuer" %}</dt>
+                            <dd><code>{{consumer.lti_13.tool.issuer}}</code></dd>
+                        </dl>
+                    {% endif %}
+                    </td>
                     <td>
                         {% blocktrans count num_resources=consumer.resources.count %}
                         1 resource.

@@ -49,7 +49,8 @@ IDENTIFIER_FIELDS = [
 
 class LTIConsumer(models.Model):
     """
-        An LTI 1.1 consumer.
+        An LTI consumer.
+        Specific settings for the LTI 1.1 and LTI 1.3 protocols are in separate models, ``LTI_11_Consumer`` and ``LTI_13_Consumer``.
     """
     url = models.URLField(blank=True,default='',verbose_name=_('Home URL of consumer'))
     deleted = models.BooleanField(default=False)
@@ -66,7 +67,7 @@ class LTIConsumer(models.Model):
 
     @property
     def resources(self):
-        return Resource.objects.filter(context__consumer=self)
+        return Resource.objects.filter(lti_11_links__context__consumer=self)
 
     def contexts_grouped_by_period(self):
         contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time'),num_attempts=Count('resources__attempts')).order_by('-creation')

@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'numbas_lti.apps.PyLTI1p3ToolConfigBigAutoField',
     'channels',
     'statici18n',
     'huey.contrib.djhuey',
@@ -49,7 +50,11 @@ MIDDLEWARE = [
     'numbas_lti.middleware.NumbasLTIResourceMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = ['numbas_lti.backends.LTIAuthBackend','django.contrib.auth.backends.ModelBackend']
+AUTHENTICATION_BACKENDS = [
+    'numbas_lti.backends.LTI_11_AuthBackend',
+    'numbas_lti.backends.LTI_13_AuthBackend',
+    'django.contrib.auth.backends.ModelBackend'
+]
 
 ROOT_URLCONF = 'numbasltiprovider.urls'
 
@@ -177,7 +182,9 @@ INSTANCE_NAME = ''
 ALLOWED_HOSTS = ['localhost']
 
 # Which roles should be interpreted as conferring instructor privileges?
-LTI_INSTRUCTOR_ROLES = ['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant']
+LTI_INSTRUCTOR_ROLES = {
+    'lti_11': ['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant'],
+}
 
 # Database connection details
 # This is normally set by the setup script.
@@ -241,7 +248,7 @@ LOCKDOWN_APP = {
     # This is built into the lockdown app, so shouldn't change unless you have your own version.
     'salt': '45ab2cf2e139c01f8447d17dc653d585',
 
-    # The URL to download the app from.
+    # The URL to download the Numbas lockdown app from.
     'install_url': 'https://www.numbas.org.uk/lockdown-app',
 
     # The URL to download the Safe Exam Browser app from.
