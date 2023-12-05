@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load bootstrap %}
 {% load i18n %}
+{% load querystring %}
 
 {% block management_content %}
 <h1>{% trans "Replace the exam package" %}</h1>
@@ -16,7 +17,7 @@
     {% blocktrans %}
     <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
     {% endblocktrans %}
-    <form method="POST" action="{% url 'replace_exam' request.resource.pk %}">
+    <form method="POST" action="{% url_with_lti 'replace_exam' request.resource.pk %}">
         {% csrf_token %}
 
         {% if form.errors %}
@@ -51,7 +52,7 @@
 {% endif %}
 
 
-<form method="POST" enctype="multipart/form-data" action="{% url 'replace_exam' request.resource.pk %}">
+<form method="POST" enctype="multipart/form-data" action="{% url_with_lti 'replace_exam' request.resource.pk %}">
     {% csrf_token %}
     {% if form.non_field_errors %}
         <div class="alert alert-danger">
@@ -85,7 +86,7 @@
 <p><strong>If it is safe to do so</strong>, you can set these attempts to use the active version instead.</p>
 {% endblocktrans %}
 <p class="text-danger">{% trans "This can not be undone." %}</p>
-<form method="POST" action="{% url 'use_current_version' request.resource.pk %}">
+<form method="POST" action="{% url_with_lti 'use_current_version' request.resource.pk %}">
     {% csrf_token %}
     <button class="btn btn-danger"><span class="glyphicon glyphicon-arrow-up"></span> {% trans "Set all attempts to use the current version." %}</button>
 </form>
@@ -112,7 +113,7 @@
         {% for exam,num_attempts in exams %}
         <tr class="{% if exam.is_active %}active{% endif %}">
             <td>
-                <a target="_blank" href="{% url 'run_exam' exam.pk %}"><span class="glyphicon glyphicon-play"></span> {% trans "Test run" %}</a>
+                <a target="_blank" href="{% url_with_lti 'run_exam' exam.pk %}"><span class="glyphicon glyphicon-play"></span> {% trans "Test run" %}</a>
             </td>
             <td>
                 <a href="{{exam.package.url}}"><span class="glyphicon glyphicon-save"></span> {% trans "Download" %}</a>
@@ -122,7 +123,7 @@
             <td>{{num_attempts}}</td>
             <td>
                 {% if not exam.is_active %}
-                <form method="POST" action="{% url 'restore_exam' request.resource.pk %}">
+                <form method="POST" action="{% url_with_lti 'restore_exam' request.resource.pk %}">
                         {% csrf_token %}
                         <input type="hidden" name="exam" value="{{exam.pk}}">
                         <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> {% trans "Use this version" %}</button>
@@ -137,5 +138,5 @@
 </table>
 
 <hr>
-<p><a class="btn btn-link" href="{% url 'resource_dashboard' request.resource.pk %}"><span class="glyphicon glyphicon-arrow-left"></span> {% trans "Cancel" %}</a></p>
+<p><a class="btn btn-link" href="{% url_with_lti 'resource_dashboard' request.resource.pk %}"><span class="glyphicon glyphicon-arrow-left"></span> {% trans "Cancel" %}</a></p>
 {% endblock management_content %}

@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load percentage %}
 {% load i18n %}
+{% load querystring %}
 
 {% block body_class %}dashboard{% endblock %}
 
@@ -24,19 +25,19 @@
         {% if last_report_process.status == 'reporting' %}
             <div class="alert alert-info">
                 <p>{% trans "Scores are currently being reported back to the grade book" %}.</p>
-                <p><a class="btn btn-danger" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Cancel" %}</a></p>
+                <p><a class="btn btn-danger" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% trans "Cancel" %}</a></p>
             </div>
         {% elif last_report_process.status == 'complete' %}
             <div class="alert alert-success">
                 <p>{% trans "Scores were successfully reported back to the grade book." %}</p>
-                <p><a class="btn btn-success btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
+                <p><a class="btn btn-success btn-sm" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
             </div>
         {% elif last_report_process.status == 'error' %}
             <div class="alert alert-danger">
                 <p>{% trans "An error was encountered while reporting scores back to the grade book:" %}</p>
                 <pre>{{last_report_process.response}}</pre>
                 <p>{% trans "Report this error to your VLE's administrator." %}</p>
-                <p><a class="btn btn-danger btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
+                <p><a class="btn btn-danger btn-sm" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
             </div>
         {% endif %}
     </section>
@@ -44,22 +45,22 @@
 
     <section>
         <ul class="list-unstyled actions">
-            <li><form method="POST" action="{% url 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</button></form></li>
+            <li><form method="POST" action="{% url_with_lti 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</button></form></li>
             {% if not last_report_process %}
             <li>
-                <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>
+                <a class="btn btn-warning" href="{% url_with_lti 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>
                 {% if dismissed_report_process %}
                 <span class="text-warning">{% trans "A report process is being cancelled. Consider waiting until it has finished." %}</span>
                 {% endif %}
             </li>
             {% endif %}
-            <li><a href="{% url 'student_progress' resource.pk %}"><span class="glyphicon glyphicon-user"></span> {% trans "View individual student progress and grant access tokens" %}</a></li>
+            <li><a href="{% url_with_lti 'student_progress' resource.pk %}"><span class="glyphicon glyphicon-user"></span> {% trans "View individual student progress and grant access tokens" %}</a></li>
             <li>
-                <a class="btn btn-danger" href="{% url 'discount_parts' resource.pk %}"><span class="glyphicon glyphicon-minus-sign"></span> {% trans "Discount question parts" %}</a>
+                <a class="btn btn-danger" href="{% url_with_lti 'discount_parts' resource.pk %}"><span class="glyphicon glyphicon-minus-sign"></span> {% trans "Discount question parts" %}</a>
                 <span class="help-block">{% trans "You can remark individual attempts on the attempts page." %}</span>
             </li>
             <li>
-                <a class="btn btn-info" href="{% url 'validate_receipt' resource.pk %}"><span class="glyphicon glyphicon-ok"></span> {% trans "Validate a receipt code" %}</a>
+                <a class="btn btn-info" href="{% url_with_lti 'validate_receipt' resource.pk %}"><span class="glyphicon glyphicon-ok"></span> {% trans "Validate a receipt code" %}</a>
             </li>
         </ul>
     </section>

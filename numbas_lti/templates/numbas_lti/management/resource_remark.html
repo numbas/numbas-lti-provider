@@ -3,6 +3,7 @@
 {% load i18n %}
 {% load static %}
 {% load statici18n %}
+{% load querystring %}
 
 {% block management_content %}
     {% include "numbas_lti/csrf_token_form.html" %}
@@ -148,7 +149,7 @@
     </table>
 
 </div>
-<iframe id="exam-iframe" src="{% url 'resource_remark_iframe' resource.pk %}">
+<iframe id="exam-iframe" src="{% url_with_lti 'resource_remark_iframe' resource.pk %}">
 </iframe>
 
 {% endblock management_content %}

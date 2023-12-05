@@ -1,4 +1,4 @@
-from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required, CachedLTI_13_Mixin
+from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
 from numbas_lti.models import \
@@ -30,7 +30,7 @@ import datetime
 import json
 import itertools
 
-class LTI_13_CreateResourceView(CachedLTI_13_Mixin, MustBeInstructorMixin, generic.edit.CreateView):
+class LTI_13_CreateResourceView(MustBeInstructorMixin, generic.edit.CreateView):
     model = LTI_13_ResourceLink
     management_tab = 'create_resource'
     http_methods = ['post']
@@ -40,7 +40,7 @@ class LTI_13_CreateResourceView(CachedLTI_13_Mixin, MustBeInstructorMixin, gener
     def get_success_url(self):
         return reverse('create_exam', args=(self.object.resource.pk,)) + '?lti_13_launch_id=' + self.get_message_launch().get_launch_id()
 
-class CreateExamView(CachedLTI_13_Mixin, HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.edit.CreateView):
+class CreateExamView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.edit.CreateView):
     model = Exam
     management_tab = 'create_exam'
     template_name = 'numbas_lti/management/create_exam.html'
@@ -285,7 +285,7 @@ class DiscountPartsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMi
 
         return self.get(request,*args,**kwargs)
 
-class ResourceSettingsView(CachedLTI_13_Mixin, HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+class ResourceSettingsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource
     form_class = forms.ResourceSettingsForm
     template_name = 'numbas_lti/management/resource_settings.html'

@@ -24,7 +24,7 @@ Teacher launch!
 <ul>
     {% for resource in resources %}
     <li>
-        {{resource}}
+        <a href="{% url_with_lti 'resource_dashboard' resource.pk %}">{{resource}}</a>
         <ul>
             {% for link in resource.lti_13_links.all %}
             <li>{{link.resource_link_id}}, {{link.title}}</li>

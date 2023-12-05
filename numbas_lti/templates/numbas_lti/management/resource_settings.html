@@ -2,6 +2,7 @@
 {% load bootstrap %}
 {% load i18n %}
 {% load tz %}
+{% load querystring %}
 
 
 {% block management_content %}
@@ -9,7 +10,7 @@
 <section>
     <h1>{% trans "Settings" %}</h1>
     <ul class="list-inline">
-        <li><a class="btn btn-warning" href="{% url 'replace_exam' resource.pk %}"><span class="glyphicon glyphicon-refresh"></span> {% trans "Replace exam package" %}</a></li>
+        <li><a class="btn btn-warning" href="{% url_with_lti 'replace_exam' resource.pk %}"><span class="glyphicon glyphicon-refresh"></span> {% trans "Replace exam package" %}</a></li>
         {% with edit_url=current_exam.manifest.edit_url %}
         {% if edit_url %}
         <li><a class="btn btn-primary" href="{{edit_url}}" target="_blank"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit this exam" %}</a></li>
@@ -19,12 +20,12 @@
         <li><a class="btn btn-info" href="{{resource.exam.package.url}}"><span class="glyphicon glyphicon-save"></span> {% trans "Download exam package" %}</a></li>
     </ul>
     <hr>
-    <form method="POST" action="{% url 'resource_settings' resource.pk %}">
+    <form method="POST" action="{% url_with_lti 'resource_settings' resource.pk %}">
         {% csrf_token %}
         {% get_current_timezone as TIME_ZONE %}
         <p class="help-block">{% blocktrans with TIME_ZONE=TIME_ZONE %}All times are in the timezone {{TIME_ZONE}}.{% endblocktrans %}</p>
         {{form|bootstrap}}
-        <p><button class="btn btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url 'resource_dashboard' resource.pk %}">{% trans "Cancel" %}</a></p>
+        <p><button class="btn btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% trans "Cancel" %}</a></p>
     </form>
 </section>
 {% endblock management_content %}

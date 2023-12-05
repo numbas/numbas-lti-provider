@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/attempt_base.html" %}
 {% load static %}
 {% load i18n %}
+{% load querystring %}
 
 {% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}
 
@@ -11,11 +12,11 @@
 
 {% block attempt_content %}
 
-<p><a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review this attempt" %}</span></a></p>
+<p><a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review this attempt" %}</span></a></p>
 
-<p><a class="btn btn-link" href="{% url 'attempt_timeline' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View activity timeline for this attempt" %}</a></p>
+<p><a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View activity timeline for this attempt" %}</a></p>
 
-<p><a class="btn btn-primary" href="{% url 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
+<p><a class="btn btn-primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
 
 <div class="search">
     <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>

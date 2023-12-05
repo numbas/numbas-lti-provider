@@ -1,8 +1,9 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load i18n %}
+{% load querystring %}
 
 {% block management_header %}
-<p><a href="{% url 'manage_attempts' attempt.resource.pk %}">{% trans "Back to attempts listing" %}</a></p>
+<p><a href="{% url_with_lti 'manage_attempts' attempt.resource.pk %}">{% trans "Back to attempts listing" %}</a></p>
 
     <h2>
         {% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %}

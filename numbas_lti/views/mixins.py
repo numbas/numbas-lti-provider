@@ -153,6 +153,10 @@ class CachedLTI_13_Mixin(LTI_13_Mixin):
 
         return message_launch
 
+    def get_context_data(self, **kwargs):
+        self.get_lti_data()
+        return  super().get_context_data(**kwargs)
+
 
 class LTI_13_Only_Mixin:
     @method_decorator(csrf_exempt)
@@ -162,7 +166,7 @@ class LTI_13_Only_Mixin:
         return super().dispatch(request, *args, **kwargs)
 
 
-class LTIRoleOrSuperuserMixin(LTIRoleRestrictionMixin):
+class LTIRoleOrSuperuserMixin(CachedLTI_13_Mixin, LTIRoleRestrictionMixin):
     raise_exception = False
 
     @property

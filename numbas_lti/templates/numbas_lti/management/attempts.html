@@ -15,8 +15,8 @@
     {% if resource.attempts.count %}
     <h2>{% trans "Attempts" %}</h2>
 
-    <p><form method="POST" action="{% url 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</button></form></p>
-    <p><form method="POST" action="{% url 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</button></form></p>
+    <p><form method="POST" action="{% url_with_lti 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</button></form></p>
+    <p><form method="POST" action="{% url_with_lti 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</button></form></p>
 
     <form method="GET" class="form-inline">
         <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
@@ -75,13 +75,13 @@
                 {% endif %}
                 <td>{{attempt.start_time}}</td>
                 <td>
-                    <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% trans "(old exam)" %}{% endif %}
-                    <a class="btn btn-link" href="{% url 'remark_parts' attempt.pk %}"><span class="text-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Change score" %}</span></a>
-                    <a class="btn btn-link" href="{% url 'attempt_timeline' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
-                    <a class="btn btn-link" href="{% url 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
+                    <a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% trans "(old exam)" %}{% endif %}
+                    <a class="btn btn-link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="text-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Change score" %}</span></a>
+                    <a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
+                    <a class="btn btn-link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
                 </td>
                 <td>
-                    {% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url 'reopen_attempt' attempt.pk %}">{% trans "(reopen)" %}</a>{% endif %}{% endif %}
+                    {% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}">{% trans "(reopen)" %}</a>{% endif %}{% endif %}
                 </td>
                 <td>
                     <div class="attempt-score">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% trans "(remarked)" %}{% endif %}</div>
