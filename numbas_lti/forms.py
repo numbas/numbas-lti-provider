@@ -173,7 +173,7 @@ class LTI_13_CreateResourceForm(ModelForm):
             try:
                 resource = self.instance.resource
             except Resource.DoesNotExist:
-                resource = Resource.objects.create()
+                resource = Resource.objects.create(title = self.cleaned_data['title'], description=self.cleaned_data['description'])
                 self.instance.resource = resource
 
         return super().save(commit=commit)

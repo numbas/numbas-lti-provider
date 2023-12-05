@@ -1,7 +1,11 @@
 from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required, CachedLTI_13_Mixin
 from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange, DISCOUNT_BEHAVIOURS
+from numbas_lti.models import \
+        Resource, LTI_13_ResourceLink, AccessToken, Exam, Attempt, \
+        ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, \
+        LTIUserData, ScormElement, RemarkedScormElement, AccessChange, \
+        DISCOUNT_BEHAVIOURS
 from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
@@ -27,14 +31,14 @@ import json
 import itertools
 
 class LTI_13_CreateResourceView(CachedLTI_13_Mixin, MustBeInstructorMixin, generic.edit.CreateView):
-    model = Resource
+    model = LTI_13_ResourceLink
     management_tab = 'create_resource'
     http_methods = ['post']
     form_class = forms.LTI_13_CreateResourceForm
     template_name = 'numbas_lti/management/create_resource.html'
 
     def get_success_url(self):
-        return reverse('create_exam', args=(self.object.pk,)) + '?lti_13_launch_id=' + self.get_message_launch().get_launch_id()
+        return reverse('create_exam', args=(self.object.resource.pk,)) + '?lti_13_launch_id=' + self.get_message_launch().get_launch_id()
 
 class CreateExamView(CachedLTI_13_Mixin, HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.edit.CreateView):
     model = Exam
@@ -44,6 +48,7 @@ class CreateExamView(CachedLTI_13_Mixin, HelpLinkMixin, ResourceManagementViewMi
     helplink = 'instructor/resources.html#creating-a-new-resource'
 
     def get_context_data(self,*args,**kwargs):
+        self.get_lti_data()
         context = super(CreateExamView,self).get_context_data(*args,**kwargs)
 
         context['editor_links'] = EditorLink.objects.all()
@@ -55,19 +60,22 @@ class CreateExamView(CachedLTI_13_Mixin, HelpLinkMixin, ResourceManagementViewMi
         return context
 
     def get_resource(self):
+        return Resource.objects.get(pk=self.kwargs['pk'])
+
         return self.request.resource
 
     def form_valid(self,form):
-        resource = self.request.resource
+        resource = self.get_resource()
         exam = self.object = form.save(commit=False)
         exam.resource = resource
         exam.save()
         resource.exam = exam
         resource.save()
+        print(f"Resource {resource.pk} has exam {exam.pk}")
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('resource_settings',args=(self.request.resource.pk,))
+        return self.reverse_with_lti('resource_settings', args=(self.request.resource.pk,))
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
@@ -277,7 +285,7 @@ class DiscountPartsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMi
 
         return self.get(request,*args,**kwargs)
 
-class ResourceSettingsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+class ResourceSettingsView(CachedLTI_13_Mixin, HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
     model = Resource
     form_class = forms.ResourceSettingsForm
     template_name = 'numbas_lti/management/resource_settings.html'

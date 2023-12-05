@@ -2,6 +2,7 @@
 {% load bootstrap %}
 {% load i18n %}
 {% load helplink %}
+{% load querystring %}
 
 {% block stylesheets %}
 {{block.super}}
@@ -70,7 +71,7 @@
                         <h2 class="panel-title"><span class="glyphicon glyphicon-import"></span> {% trans "Upload an exam package" %}</h2>
                     </div>
                     <div class="panel-body">
-                        <form method="POST" enctype="multipart/form-data" action="{% url 'create_exam' request.resource.pk %}">
+                        <form method="POST" enctype="multipart/form-data" action="{% url_with_lti 'create_exam' request.resource.pk %}">
                             <p>{% blocktrans %}To obtain an exam package, find your exam in the Numbas editor and click <em>"Download SCORM package"</em>.{% endblocktrans %}</p>
                             {% if editor_links.count == 1 %}
                             <p class="text-center"><a class="btn btn-link" target="_blank" href="{{editor_links.first.url}}"><span class="glyphicon glyphicon-new-window"></span> {% trans "Click here to open the Numbas editor." %}</a></p>

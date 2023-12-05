@@ -1,6 +1,7 @@
 from django import http
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.http import QueryDict
 from django.templatetags.static import static
 from django.shortcuts import redirect
 from django_auth_lti.patch_reverse import reverse
@@ -111,6 +112,20 @@ class LTI_13_Mixin:
             context['message_launch'] = self.message_launch
 
         return context
+
+    def reverse_with_lti(self, view_name, args, current_app=None, kwargs={}):
+        query_dict = QueryDict(mutable=True)
+
+        message_launch = self.get_message_launch()
+        query_dict['lti_13_launch_id'] = message_launch.get_launch_id()
+
+        url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+
+        query = query_dict.urlencode()
+        if query:
+            url += '?' + query
+        
+        return url
 
 class CachedLTI_13_Mixin(LTI_13_Mixin):
     """

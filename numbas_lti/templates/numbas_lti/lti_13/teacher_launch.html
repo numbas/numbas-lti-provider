@@ -1,5 +1,6 @@
 {% extends "numbas_lti/lti_13/base.html" %}
 {% load i18n %}
+{% load querystring %}
 
 {% block title %}{{resource_link.title}}{% endblock title %}
 {% block page_title %}{{resource_link.title}}{% endblock page_title %}
@@ -7,14 +8,11 @@
 {% block main %}
 Teacher launch!
 
-<h2>Existing resource links</h2>
-<ul>
-    {% for resource in resources %}
-    <li>{{resource}}</li>
-    {% endfor %}
-</ul>
+<p>Link: {{resource_link_claim}}</p>
 
-<form method="post" action="{% url 'lti_13:create_resource' %}?lti_13_launch_id={{message_launch.get_launch_id}}">
+
+<h2>Existing resource links</h2>
+<form method="post" action="{% url_with_lti 'lti_13:create_resource' %}">
     {% csrf_token %}
     {% for field in new_resource_form %}
     {{field.as_hidden}}
@@ -22,6 +20,19 @@ Teacher launch!
 
     <button type="submit">{% translate "Create a new resource" %}</button>
 </form>
+
+<ul>
+    {% for resource in resources %}
+    <li>
+        {{resource}}
+        <ul>
+            {% for link in resource.lti_13_links.all %}
+            <li>{{link.resource_link_id}}, {{link.title}}</li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
 
 <h2>Launch data</h2>
 
