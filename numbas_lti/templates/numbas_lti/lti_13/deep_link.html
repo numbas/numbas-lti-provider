@@ -1,33 +1,49 @@
 {% extends "numbas_lti/lti_13/base.html" %}
 {% load i18n %}
+{% load querystring %}
 
 {% block main %}
-Deep link!
+<div class="help-block">
+    <p>{% blocktranslate %}Select a resource to link to, or create a new one.{% endblocktranslate %}</p>
+</div>
 
-<dl>
-    <dt>User</dt>
-    <dd>{{user}}</dd>
+<section id="new-resource">
+    <form method="post" action="{% url_with_lti 'lti_13:create_resource' %}">
+        {% csrf_token %}
+        {% for field in new_resource_form %}
+        {{field.as_hidden}}
+        {% endfor %}
 
-    <dt>Message launch</dt>
-    <dd>{{message_launch}}</dd>
+        <button class="btn btn-primary btn-lg" type="submit">{% translate "Create a new resource" %}</button>
+    </form>
+</section>
 
-    <dt>LTI Tool</dt>
-    <dd>{{lti_tool.title}}, {{lti_tool.issuer}}, {{lti_tool.client_id}}</dd>
+<hr>
 
-    <dt>LTI Context</dt>
-    <dd>{{lti_context.name}} - {{lti_context.label}} ({{lti_context.context_id}})</dd>
+<section id="existing-resources">
+    <h2>{% translate "Existing resources" %}</h2>
 
-    <dt>Message launch data</dt>
-    <dd>
-        <dl>
-            {% for key, val in message_launch_data.items %}
-            <dt>{{key}}</dt>
-            <dd>{{val}}</dd>
-            {% endfor %}
-        </dl>
-    </dd>
-
-    <dt>Resource link claim</dt>
-    <dd>{{resource_link_claim}}</dd>
-</dl>
+    <ul>
+        {% for resource in resources %}
+        <li>
+            <p>
+                <a href="{% url_with_lti 'resource_dashboard' resource.pk %}" target="resource">{{resource}}</a>
+                ({% blocktranslate count num_attempts=resource.attempts.count %}1 attempt{% plural %}{{num_attempts}} attempts{% endblocktranslate %})
+            </p>
+            <form method="POST" action="{% url_with_lti 'lti_13:deep_link_use_resource' %}">
+                <input type="hidden" name="resource_pk" value="{{resource.pk}}">
+                <button class="btn btn-default" type="submit">{% translate "Use this resource" %}</button>
+            </form>
+            {% if resource.lti_13_links.exists %}
+                <p>{% blocktranslate %}Existing links:{% endblocktranslate %}</p>
+                <ul>
+                    {% for link in resource.lti_13_links.all %}
+                    <li>{{link.title}}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</section>
 {% endblock main %}

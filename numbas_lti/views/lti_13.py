@@ -17,6 +17,7 @@ from numbas_lti.models import LTI_13_UserAlias, LTI_13_Consumer, LTIConsumer, LT
 import numbas_lti.forms
 import numbas_lti.views.entry
 from pathlib import PurePath
+from pylti1p3.deep_link_resource import DeepLinkResource
 from pylti1p3.contrib.django import DjangoOIDCLogin
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.dynamic_registration import DjangoDynamicRegistration
@@ -92,14 +93,14 @@ class LaunchView(LTIView, TemplateView):
 
         if mixins.request_is_instructor(self.request):
             if self.message_launch.is_deep_link_launch():
-                return redirect(reverse('lti_13:deep_link', args=(launch_id,)))
+                return redirect(self.reverse_with_lti('lti_13:deep_link'))
             elif self.message_launch.is_resource_launch():
-                return redirect(reverse('lti_13:teacher_launch', args=(launch_id,)))
+                return redirect(self.reverse_with_lti('lti_13:teacher_launch'))
             else:
                 return HttpResponseBadRequest("This launch type is not recognised.")
         elif mixins.request_is_student(self.request):
             if self.message_launch.is_resource_launch():
-                return redirect(reverse('lti_13:student_launch', args=(launch_id,)))
+                return redirect(self.reverse_with_lti('lti_13:student_launch'))
             else:
                 return HttpResponseBadRequest("This launch type is not recognised.")
         else:
@@ -222,7 +223,26 @@ class DeepLinkView(CachedLTIView, TemplateView):
         resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
         context['resource_link_claim'] = resource_link_claim
 
-        context['lti_context'] = self.get_lti_context()
+        lti_context = context['lti_context'] = self.get_lti_context()
+
+        context['resources'] = Resource.objects.filter(lti_13_links__context=lti_context).distinct()
 
         return context
 
+class DeepLinkUseResourceView(CachedLTIView, View):
+    http_method_names = ['post',]
+
+    def post(self, *args, **kwargs):
+        resource = Resource.objects.get(pk=self.request.POST['resource_pk'])
+
+        launch_url = self.request.build_absolute_uri(reverse('lti_13:launch'))
+
+        resource = DeepLinkResource()\
+            .set_url(launch_url)\
+            .set_custom_params({
+                'resource': resource.pk,
+            })\
+            .set_title(resource.exam.title)
+
+        html = self.message_launch.get_deep_link().output_response_form([resource])
+        return HttpResponse(html)

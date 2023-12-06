@@ -81,31 +81,34 @@ class NumbasLTIResourceMiddleware(object):
 
         try:
             message_launch_data = message_launch.get_launch_data()
+
             resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
-            resource_link_id = resource_link_claim.get('id')
 
-            iss = message_launch.get_iss()
-            client_id = message_launch.get_client_id()
-            lti_tool = message_launch.get_tool_conf().get_lti_tool(iss, client_id)
+            if resource_link_claim is not None:
+                resource_link_id = resource_link_claim.get('id')
 
-            consumer = lti_tool.numbas.consumer
+                iss = message_launch.get_iss()
+                client_id = message_launch.get_client_id()
+                lti_tool = message_launch.get_tool_conf().get_lti_tool(iss, client_id)
 
-            context_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/context',{})
+                consumer = lti_tool.numbas.consumer
 
-            context_id = str(context_claim.get('id',''))
-            context_title = context_claim.get('title','')
-            context_label = context_claim.get('label','')
+                context_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/context',{})
 
-            lti_context, _ = LTIContext.objects.get_or_create(
-                context_id=context_id,
-                consumer=consumer,
-                defaults = {
-                    'name': context_title,
-                    'label': context_label,
-                }
-            )
+                context_id = str(context_claim.get('id',''))
+                context_title = context_claim.get('title','')
+                context_label = context_claim.get('label','')
 
-            request.lti_13_resource_link = LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
-            request.resource = request.lti_13_resource_link.resource
+                lti_context, _ = LTIContext.objects.get_or_create(
+                    context_id=context_id,
+                    consumer=consumer,
+                    defaults = {
+                        'name': context_title,
+                        'label': context_label,
+                    }
+                )
+
+                request.lti_13_resource_link = LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
+                request.resource = request.lti_13_resource_link.resource
         except (LTI_13_ResourceLink.DoesNotExist, LtiTool.DoesNotExist):
             pass

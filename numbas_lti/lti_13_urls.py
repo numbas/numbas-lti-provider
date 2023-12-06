@@ -11,7 +11,8 @@ urlpatterns = [
     path(r'jwks/', views.JWKSView.as_view(), name='jwks'),
     path(r'launch/teacher/<str:lti_13_launch_id>', views.TeacherLaunchView.as_view(), name='teacher_launch'),
     path(r'launch/student/<str:lti_13_launch_id>', views.StudentLaunchView.as_view(), name='student_launch'),
-    path(r'deep-link/<str:lti_13_launch_id>/', views.DeepLinkView.as_view(), name='deep_link'),
+    path(r'deep-link', views.DeepLinkView.as_view(), name='deep_link'),
+    path(r'deep-link/use-resource', views.DeepLinkUseResourceView.as_view(), name='deep_link_use_resource'),
     path(r'create_resource', resource_views.LTI_13_CreateResourceView.as_view(), name='create_resource'),
 
 ]
