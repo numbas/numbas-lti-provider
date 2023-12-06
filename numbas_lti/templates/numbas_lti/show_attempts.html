@@ -1,6 +1,7 @@
 {% extends "numbas_lti/base.html" %}
 {% load percentage %}
 {% load i18n %}
+{% load querystring %}
 
 {% block content %}
 <div class="container">
@@ -45,7 +46,7 @@
                 <tr>
                     <td colspan="2">
                     <td>
-                        <a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% translate "Start a new attempt" %}</a>
+                        <a class="btn btn-warning" href="{% url_with_lti 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% translate "Start a new attempt" %}</a>
                     </td>
                 </tr>
                 {% endif %}
@@ -70,7 +71,7 @@
                     <td>
                         {% if attempt.completed %}
                             {% if attempt.review_allowed %}
-                            <a class="btn btn-info" href="{% url 'run_attempt' pk=attempt.pk %}">
+                            <a class="btn btn-info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                 <span class="glyphicon glyphicon-apple"></span> {% translate "Review this attempt" %}
                             </a>
                             {% else %}
@@ -80,7 +81,7 @@
                             {% endif %}
                         {% else %}
                             {% if attempt.resume_allowed %}
-                            <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
+                            <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                 <span class="glyphicon glyphicon-play"></span> {% translate "Continue" %}
                             </a>
                             {% endif %}

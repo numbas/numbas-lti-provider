@@ -24,6 +24,27 @@ INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES', {})
 INSTRUCTOR_ROLES.setdefault('lti_11', ['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant'])
 INSTRUCTOR_ROLES.setdefault('lti_13', [pylti1p3.roles.TeacherRole, pylti1p3.roles.TeachingAssistantRole, pylti1p3.roles.StaffRole, pylti1p3.roles.DesignerRole,])
 
+def reverse_with_lti(request, view_name, args=[], current_app=None, kwargs={}):
+    """
+        Reverse a view name to a URL, and add in any LTI launch data as a query parameter.
+        LTI 1.1 launch data is added automatically by the patched ``reverse`` method. For LTI 1.3, the launch ID is added here.
+    """
+
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+
+    if hasattr(request, 'lti_13_message_launch'):
+        message_launch = request.lti_13_message_launch
+
+        query_dict = QueryDict(mutable=True)
+
+        query_dict['lti_13_launch_id'] = message_launch.get_launch_id()
+
+        query = query_dict.urlencode()
+        if query:
+            url += '?' + query
+    
+    return url
+
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
 
@@ -33,11 +54,26 @@ def get_config_url(request):
 def request_is_instructor(request):
     if request.user.is_superuser:
         return True
+
+    # LTI 1.3
+    if hasattr(request, 'lti_13_message_launch'):
+        message_launch = request.lti_13_message_launch
+        return message_launch.check_teacher_access() or message_launch.check_teaching_assistant_access() or message_launch.check_staff_access()
+
+    # LTI 1.1
     return bool(is_allowed(request,INSTRUCTOR_ROLES['lti_11'],False))
+
+def request_is_student(request):
+    # LTI 1.3
+    if hasattr(request, 'lti_13_message_launch'):
+        message_launch = request.lti_13_message_launch
+        return message_launch.check_student_access()
+
+    # LTI 1.1
+    return not request_is_instructor(request)
 
 def static_view(template_name):
     return generic.TemplateView.as_view(template_name=template_name)
-
 
 class LTI_13_Mixin:
     """
@@ -65,6 +101,7 @@ class LTI_13_Mixin:
 
     def get_message_launch(self):
         message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage)
+        self.request.lti_13_message_launch = message_launch
         return message_launch
 
     def get_lti_tool(self):
@@ -113,19 +150,8 @@ class LTI_13_Mixin:
 
         return context
 
-    def reverse_with_lti(self, view_name, args, current_app=None, kwargs={}):
-        query_dict = QueryDict(mutable=True)
-
-        message_launch = self.get_message_launch()
-        query_dict['lti_13_launch_id'] = message_launch.get_launch_id()
-
-        url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
-
-        query = query_dict.urlencode()
-        if query:
-            url += '?' + query
-        
-        return url
+    def reverse_with_lti(self, *args, **kwargs):
+        return reverse_with_lti(self.request, *args, **kwargs)
 
 class CachedLTI_13_Mixin(LTI_13_Mixin):
     """
@@ -151,6 +177,8 @@ class CachedLTI_13_Mixin(LTI_13_Mixin):
 
         message_launch = self.message_launch_cls.from_cache(launch_id, self.request, self.tool_conf, launch_data_storage = self.launch_data_storage)
 
+        self.request.lti_13_message_launch = message_launch
+
         return message_launch
 
     def get_context_data(self, **kwargs):
@@ -169,12 +197,14 @@ class LTI_13_Only_Mixin:
 class LTIRoleOrSuperuserMixin(CachedLTI_13_Mixin, LTIRoleRestrictionMixin):
     raise_exception = False
 
+    allowed_roles = None
+
     @property
     def redirect_url(self):
         return reverse('not_authorized')+'?originalurl='+urllib.parse.quote(self.request.path+'?'+self.request.META.get('QUERY_STRING',''))
 
     def check_allowed(self, request):
-        if request.user.is_superuser:
+        if request.user.is_superuser or self.allowed_roles is None:
             return True
         else:
             try:
@@ -242,7 +272,7 @@ class MustHaveExamMixin(object):
     def dispatch(self,*args,**kwargs):
         resource = self.get_resource()
         if resource.exam is None:
-            return redirect(reverse('create_exam',args=(resource.pk,)))
+            return redirect(self.reverse_with_lti('create_exam',args=(resource.pk,)))
 
         return super(MustHaveExamMixin,self).dispatch(*args,**kwargs)
 

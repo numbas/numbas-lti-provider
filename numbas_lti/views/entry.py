@@ -1,4 +1,4 @@
-from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
+from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url, reverse_with_lti
 from numbas_lti import lockdown_app
 from numbas_lti.util import add_query_param
 from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
@@ -61,7 +61,7 @@ def do_lti_entry(request):
         return not_an_lti_launch(request)
 
     launch_types = {
-        'basic-lti-launch-request': basic_lti_launch,
+        'basic-lti-launch-request': basic_lti_11_launch,
         'ToolProxyRegistrationRequest': consumer_registration_request,
     }
     
@@ -94,7 +94,7 @@ def not_post(request):
 def not_an_lti_launch(request):
     return render(request,'numbas_lti/launch_errors/not_an_lti_launch.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 
-def basic_lti_launch(request):
+def basic_lti_11_launch(request):
     try:
         request.resource
     except AttributeError:
@@ -122,33 +122,39 @@ def basic_lti_launch(request):
     user_data.is_instructor = is_instructor
     user_data.save()
 
-    ip_address, ip_routable = get_client_ip(request)
+    record_launch(request, request.resource)
+
+    if is_instructor:
+        return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
+    else:
+        return student_launch(request, request.resource)
+
+def record_launch(request, resource):
+    ip_address, _ = get_client_ip(request)
 
     user_agent = request.META.get('HTTP_USER_AGENT')
 
     launch = LTILaunch.objects.create(
         user = request.user,
-        resource = request.resource,
+        resource = resource,
         user_agent = user_agent,
         ip_address = ip_address
     )
 
-    if is_instructor:
-        if not request.resource.exam:
-            return redirect(reverse('create_exam',args=(request.resource.pk,)))
-        else:
-            return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
+
+def student_launch(request, resource):
+    is_instructor = request_is_instructor(request)
+
+    if resource.require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
+        return show_lockdown_app(request)
+
+    if resource.require_lockdown_app=='seb' and not lockdown_app.is_seb(request):
+        return show_seb_link(request)
+
+    if not resource.exam:
+        return render(request,'numbas_lti/exam_not_set_up.html',{})
     else:
-        if request.resource.require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
-            return show_lockdown_app(request)
-
-        if request.resource.require_lockdown_app=='seb' and not lockdown_app.is_seb(request):
-            return show_seb_link(request)
-
-        if not request.resource.exam:
-            return render(request,'numbas_lti/exam_not_set_up.html',{})
-        else:
-            return redirect(reverse('show_attempts'))
+        return redirect(reverse_with_lti(request, 'show_attempts'))
 
 def show_lockdown_app(request):
     lockdown_url = lockdown_app.make_link(request)

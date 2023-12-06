@@ -335,6 +335,13 @@ class Resource(models.Model):
         else:
             return 'resource'
 
+    def lti_contexts(self):
+        """
+            LTI Contexts that this resource is linked to.
+        """
+
+        return LTIContext.objects.filter(Q(lti_11_resource_links__resource=self) | Q(lti_13_resource_links__resource=self)).distinct()
+
     def unbroken_attempts(self):
         return self.attempts.filter(broken=False)
 
@@ -417,6 +424,9 @@ class Resource(models.Model):
         return data
 
     def is_available(self,user=None):
+        if user is not None and user.is_anonymous:
+            return False
+
         available_from, available_until = self.available_for_user(user)
 
         if available_from is None and available_until is None:
@@ -543,10 +553,7 @@ class Resource(models.Model):
         return data
 
     def receipt_salt(self):
-        if self.context and self.context.consumer:
-            return 'numbas_lti:consumer:'+self.context.consumer.key
-        else:
-            return 'numbas_lti:resource:'+str(self.pk)
+        return 'numbas_lti:resource:'+str(self.pk)
 
     def report_scores(self):
         if ReportProcess.objects.filter(resource=self,status='reporting').exists():
@@ -630,6 +637,8 @@ class AccessChangeManager(models.Manager):
     use_for_related_fields = True
 
     def for_user(self,user):
+        if user.is_anonymous:
+            return AccessChange.objects.none()
         query = Q(users=user) | Q(usernames__username=user.username) | Q(emails__email__iexact=user.email)
         return self.get_queryset().filter(query).distinct()
 
@@ -724,7 +733,7 @@ class LTIUserData(models.Model):
             return self.consumer_user_id
 
     def identifier(self):
-        identifier_field = self.resource.context.consumer.identifier_field
+        identifier_field = self.resource.contexts().first().consumer.identifier_field
         if identifier_field == 'username':
             return self.get_source_id()
         elif identifier_field == 'email':
@@ -835,11 +844,12 @@ class Attempt(models.Model):
         remarked_parts = self.remarked_parts.all()
         discounted_parts = self.resource.discounted_parts.all()
 
+
         data = {
             'attempt': self.pk,
             'resource': {
                 'title': self.resource.title,
-                'context': self.resource.context.name,
+                'contexts': [c.name for c in self.resource.contexts()],
             },
             'exam': self.exam.pk,
             'user': {

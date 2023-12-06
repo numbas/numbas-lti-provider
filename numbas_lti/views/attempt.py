@@ -1,4 +1,4 @@
-from .mixins import MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, request_is_instructor, RequireLockdownAppMixin
+from .mixins import MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, request_is_instructor, RequireLockdownAppMixin, reverse_with_lti, LTIRoleOrSuperuserMixin
 from .generic import JSONView
 import datetime
 from django import http
@@ -107,7 +107,7 @@ class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
                 counter=1
             )
         messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
-        return redirect(reverse('manage_attempts',args=(attempt.resource.pk,)))
+        return redirect(self.reverse_with_lti('manage_attempts',args=(attempt.resource.pk,)))
 
 class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     model = Attempt
@@ -144,7 +144,7 @@ class AttemptTimelineView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManage
         context['remarked_elements'] = [r.as_json() for r in RemarkedScormElement.objects.filter(element__attempt=self.object)]
         context['launches'] = [l.as_json() for l in self.object.launches.all()]
         context['metadata'] = {
-            'review_url': reverse('run_attempt',args=(self.object.pk,)),
+            'review_url': self.reverse_with_lti('run_attempt',args=(self.object.pk,)),
         }
 
         return context
@@ -165,7 +165,7 @@ class DeleteAttemptView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManageme
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('manage_attempts',args=(self.request.resource.pk,))
+        return self.reverse_with_lti('manage_attempts',args=(self.request.resource.pk,))
 
 
 class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
@@ -229,13 +229,13 @@ def new_attempt(request):
         exam = request.resource.exam,
         user = request.user
     )
-    return redirect(reverse('run_attempt',args=(attempt.pk,)))
+    return redirect(reverse_with_lti('run_attempt',args=(attempt.pk,)))
 
 class BrokenAttemptException(Exception):
     def __init__(self,attempt):
         self.attempt = attempt
 
-class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
+class RunAttemptView(RequireLockdownAppMixin, LTIRoleOrSuperuserMixin, generic.detail.DetailView):
     model = Attempt
     context_object_name = 'attempt'
 
@@ -334,8 +334,8 @@ class RunAttemptView(RequireLockdownAppMixin, generic.detail.DetailView):
             'exam_url': attempt.exam.extracted_url+'/index.html',
             'scorm_cmi': scorm_cmi,
             'attempt_pk': attempt.pk,
-            'fallback_url': reverse('attempt_scorm_data_fallback', args=(attempt.pk,)),
-            'show_attempts_url': reverse('show_attempts'),
+            'fallback_url': self.reverse_with_lti('attempt_scorm_data_fallback', args=(attempt.pk,)),
+            'show_attempts_url': self.reverse_with_lti('show_attempts'),
             'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
             'available_from': available_from.isoformat() if available_from else None,
             'available_until': available_until.isoformat() if available_until else None,

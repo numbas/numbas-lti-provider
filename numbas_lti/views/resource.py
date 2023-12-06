@@ -38,7 +38,7 @@ class LTI_13_CreateResourceView(MustBeInstructorMixin, generic.edit.CreateView):
     template_name = 'numbas_lti/management/create_resource.html'
 
     def get_success_url(self):
-        return reverse('create_exam', args=(self.object.resource.pk,)) + '?lti_13_launch_id=' + self.get_message_launch().get_launch_id()
+        return self.reverse_with_lti('create_exam', args=(self.object.resource.pk,))
 
 class CreateExamView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.edit.CreateView):
     model = Exam
@@ -113,7 +113,7 @@ class RestoreExamView(MustBeInstructorMixin, ResourceManagementViewMixin,generic
     form_class = forms.RestoreExamForm
 
     def get_success_url(self):
-        return reverse('replace_exam',args=(self.request.resource.pk,))
+        return self.reverse_with_lti('replace_exam',args=(self.request.resource.pk,))
 
 class AttemptsUseCurrentVersionView(MustBeInstructorMixin, ResourceManagementViewMixin, generic.UpdateView):
     model = Resource
@@ -126,7 +126,7 @@ class AttemptsUseCurrentVersionView(MustBeInstructorMixin, ResourceManagementVie
                 a.exam = resource.exam
                 a.save()
         messages.add_message(self.request,messages.INFO,_('All attempts now use the active version of this resource\'s exam.'))
-        return redirect(reverse('replace_exam',args=(resource.pk,)))
+        return redirect(self.reverse_with_lti('replace_exam',args=(resource.pk,)))
 
 class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
@@ -294,7 +294,7 @@ class ResourceSettingsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementVie
     helplink = 'instructor/resources.html#settings'
 
     def get_success_url(self):
-        return reverse('resource_dashboard',args=(self.get_object().pk,))
+        return self.reverse_with_lti('resource_dashboard',args=(self.get_object().pk,))
 
 class CreateResourceFileReportView(MustBeInstructorMixin,CreateFileReportView,generic.detail.DetailView):
     model = Resource
@@ -303,7 +303,7 @@ class CreateResourceFileReportView(MustBeInstructorMixin,CreateFileReportView,ge
         return self.object
 
     def get_success_url(self):
-        return reverse('resource_dashboard',args=(self.object.pk,))
+        return self.reverse_with_lti('resource_dashboard',args=(self.object.pk,))
 
 class FileReportsListView(HelpLinkMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     template_name = 'numbas_lti/management/resource_reports.html'
@@ -360,7 +360,7 @@ def grant_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=resource)
 
-    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
+    return redirect(self.reverse_with_lti('resource_dashboard',args=(resource.pk,)))
 
 @lti_role_or_superuser_required(INSTRUCTOR_ROLES)
 def remove_access_token(request,resource_id,user_id):
@@ -368,7 +368,7 @@ def remove_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.filter(user=user,resource=resource).first().delete()
 
-    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
+    return redirect(self.reverse_with_lti('resource_dashboard',args=(resource.pk,)))
 
 class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
     model = ReportProcess
@@ -377,7 +377,7 @@ class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
         process = self.get_object()
         process.dismissed = True
         process.save()
-        return redirect(reverse('resource_dashboard',args=(process.resource.pk,)))
+        return redirect(self.reverse_with_lti('resource_dashboard',args=(process.resource.pk,)))
 
 class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     """
@@ -512,7 +512,7 @@ class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,Mus
         ]
 
         context['parameters'] = {
-            'save_url': reverse('resource_remark_save_data',args=(resource.pk,)),
+            'save_url': self.reverse_with_lti('resource_remark_save_data',args=(resource.pk,)),
         }
 
         source_path = Path(resource.exam.extracted_path) / 'source.exam'
@@ -673,7 +673,7 @@ class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
         return initial
 
     def get_success_url(self):
-        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+        return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
 
 class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
     model = AccessChange
@@ -686,7 +686,7 @@ class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
         return self.get_object().resource
 
     def get_success_url(self):
-        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+        return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
 
     def get_initial(self):
         initial = super().get_initial()
@@ -709,4 +709,4 @@ class DeleteAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
         return self.get_object().resource
 
     def get_success_url(self):
-        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+        return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))

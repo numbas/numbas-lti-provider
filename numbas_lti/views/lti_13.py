@@ -15,6 +15,7 @@ from . import mixins
 from numbas_lti.backends import new_lti_user
 from numbas_lti.models import LTI_13_UserAlias, LTI_13_Consumer, LTIConsumer, LTIContext, Resource, LTI_13_ResourceLink
 import numbas_lti.forms
+import numbas_lti.views.entry
 from pathlib import PurePath
 from pylti1p3.contrib.django import DjangoOIDCLogin
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
@@ -89,14 +90,14 @@ class LaunchView(LTIView, TemplateView):
 
         launch_id = self.message_launch.get_launch_id()
 
-        if self.message_launch.check_teacher_access() or self.message_launch.check_teaching_assistant_access() or self.message_launch.check_staff_access():
+        if mixins.request_is_instructor(self.request):
             if self.message_launch.is_deep_link_launch():
                 return redirect(reverse('lti_13:deep_link', args=(launch_id,)))
             elif self.message_launch.is_resource_launch():
                 return redirect(reverse('lti_13:teacher_launch', args=(launch_id,)))
             else:
                 return HttpResponseBadRequest("This launch type is not recognised.")
-        elif self.message_launch.check_student_access():
+        elif mixins.request_is_student(self.request):
             if self.message_launch.is_resource_launch():
                 return redirect(reverse('lti_13:student_launch', args=(launch_id,)))
             else:
@@ -156,8 +157,28 @@ def register_dynamic(request):
 
     return HttpResponse(registration.complete_html())
 
-class TeacherLaunchView(CachedLTIView, TemplateView):
+class ResourceLaunchView(CachedLTIView):
+    def get_resource_link(self):
+        try:
+            message_launch_data = self.message_launch.get_launch_data()
+            resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
+            resource_link_id = resource_link_claim.get('id')
+            lti_context = self.get_lti_context()
+            return LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
+        except LTI_13_ResourceLink.DoesNotExist:
+            return None
+
+class TeacherLaunchView(ResourceLaunchView, TemplateView):
     template_name ='numbas_lti/lti_13/teacher_launch.html'
+
+    def get(self, request, *args, **kwargs):
+        resource_link = self.get_resource_link()
+
+        if resource_link:
+            numbas_lti.views.entry.record_launch(request, resource_link.resource)
+            return redirect(self.reverse_with_lti('resource_dashboard', args=(resource_link.resource.pk,)))
+        else:
+            return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -181,9 +202,11 @@ class TeacherLaunchView(CachedLTIView, TemplateView):
 
         return context
 
-class StudentLaunchView(CachedLTIView, RedirectView):
-    def get_redirect_url(self, *args, **kwargs):
-        return '/'
+class StudentLaunchView(ResourceLaunchView, View):
+    def get(self, *args, **kwargs):
+        resource_link = self.get_resource_link()
+
+        return numbas_lti.views.entry.student_launch(self.request, resource_link.resource)
 
 
 class DeepLinkView(CachedLTIView, TemplateView):

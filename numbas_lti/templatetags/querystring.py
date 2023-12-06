@@ -62,23 +62,12 @@ def url_with_lti(context, view_name, *args, **kwargs):
         except AttributeError:
             current_app = None
 
-    try:
-        current_app = context.request.current_app
-    except AttributeError:
-        try:
-            current_app = context.request.resolver_match.namespace
-        except AttributeError:
-            current_app = None
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
 
     query_dict = QueryDict(mutable=True)
 
-    if 'lti_13_launch_id' in kwargs:
-        query_dict['lti_13_launch_id'] = kwargs.pop('lti_13_launch_id')
-
-    if 'message_launch' in context:
-        query_dict['lti_13_launch_id'] = context['message_launch'].get_launch_id()
-
-    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+    if hasattr(context.request, 'lti_13_message_launch'):
+        query_dict['lti_13_launch_id'] = context.request.lti_13_message_launch.get_launch_id()
 
     query = query_dict.urlencode()
     if query:
