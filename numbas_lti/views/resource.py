@@ -24,6 +24,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required
+from pylti1p3.roles import StudentRole
 from pathlib import Path
 import csv
 import datetime
@@ -654,7 +655,29 @@ class AccessChangesView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstruc
     resource_pk_url_kwarg = 'resource_id'
     helplink = 'instructor/resources.html#access-changes'
     
-class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.CreateView):
+class AccessChangeEditView:
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        message_launch = self.get_message_launch()
+        if message_launch:
+            nrps = message_launch.get_nrps()
+            members = nrps.get_members()
+            members = [
+                {
+                    'name': m['name'],
+                    'active': m['status'] == 'Active',
+                    'student': StudentRole({"https://purl.imsglobal.org/spec/lti/claim/roles": m['roles']}).check(),
+                    'user_id': m['user_id'],
+                    'ext_user_username': m['ext_user_username'],
+                }
+                for m in sorted(members, key=lambda x: (x['family_name'], x['given_name']))
+            ]
+            context['nrps_members'] = members
+
+        return context
+
+class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, AccessChangeEditView, generic.CreateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     template_name = 'numbas_lti/management/access_change/edit.html'
@@ -675,7 +698,7 @@ class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
     def get_success_url(self):
         return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
 
-class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, AccessChangeEditView, generic.UpdateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     management_tab = 'access-changes'
@@ -692,7 +715,9 @@ class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
         initial = super().get_initial()
         ac = self.get_object()
         initial['resource'] = ac.resource
-        initial['usernames'] = '\n'.join(u.username for u in ac.usernames.all())
+        usernames = [u.username for u in ac.usernames.all()]
+        initial['nrps_applies_to'] = usernames
+        initial['usernames'] = '\n'.join(usernames)
         initial['emails'] = '\n'.join(e.email for e in ac.emails.all())
         if ac.extend_deadline is not None:
             initial['extend_deadline_days'] = ac.extend_deadline.days

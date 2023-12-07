@@ -53,8 +53,17 @@ def split_newlines_commas(text):
     items = [x.strip() for x in sum((l.split(',') for l in text.split('\n')),[])]
     return [x for x in items if x!='']
 
+class MultipleStringField(forms.MultipleChoiceField):
+    """
+        A field that accepts any list of strings.
+    """
+
+    def valid_value(self, value):
+        return True
+
 class AccessChangeForm(ModelForm):
 
+    nrps_applies_to = MultipleStringField(required=False, label=_('Usernames'))
     usernames = forms.CharField(required=False, label=_('Usernames'), widget=forms.Textarea(attrs={'rows':5}), help_text=_('Enter usernames, separated by commas or one on each line.'))
     emails = forms.CharField(required=False, label=_('Email addresses'), widget=forms.Textarea(attrs={'rows':5}), help_text=_('Enter email addresses, separated by commas or one on each line.'))
     extend_deadline_days = forms.IntegerField(required=False, label=_('days'), widget=forms.NumberInput(attrs={'class':'form-control'}))
@@ -89,7 +98,9 @@ class AccessChangeForm(ModelForm):
 
         if commit:
             ac.save()
-            usernames = split_newlines_commas(self.cleaned_data['usernames'])
+            nrps_usernames = self.cleaned_data['nrps_applies_to']
+            text_usernames = split_newlines_commas(self.cleaned_data['usernames'])
+            usernames = text_usernames + nrps_usernames
             ac.usernames.exclude(username__in=usernames).delete()
             new_usernames = set(usernames) - set(ac.usernames.values_list('username',flat=True))
             for username in new_usernames:

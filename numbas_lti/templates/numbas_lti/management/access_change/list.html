@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load bootstrap %}
 {% load i18n %}
+{% load querystring %}
 {% load tz %}
 {% load static %}
 
@@ -51,8 +52,8 @@
                         </dl>
                     </div>
                     <div class="panel-footer">
-                        <a class="btn btn-link" href="{% url 'update_access_change' ac.pk %}" ><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit" %}</a>
-                        <a class="btn btn-danger" href="{% url 'delete_access_change' ac.pk %}" ><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</a>
+                        <a class="btn btn-link" href="{% url_with_lti 'update_access_change' ac.pk %}" ><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit" %}</a>
+                        <a class="btn btn-danger" href="{% url_with_lti 'delete_access_change' ac.pk %}" ><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</a>
                     </div>
                 </div>
             </li>
@@ -62,7 +63,7 @@
         <p>{% trans "No access changes have been applied to this resource." %}</p>
     {% endif %}
     <p>
-        <a href="{% url 'create_access_change' resource.pk %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Add an access change</a>
+        <a href="{% url_with_lti 'create_access_change' resource.pk %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Add an access change</a>
     </p>
 </section>
 

@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load i18n %}
 {% load bootstrap %}
+{% load querystring %}
 
 {% block title %}{% blocktrans with description=object.description %}Delete access change "{{description}}"{% endblocktrans %} - {{block.super}}{% endblock %}
 
@@ -19,7 +20,7 @@
             {% csrf_token %}
             <p>
                 <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this access change" %}</button>
-                <a class="btn btn-link" href="{% url 'resource_access_changes' object.resource.pk %}">{% trans "Cancel" %}</a>
+                <a class="btn btn-link" href="{% url_with_lti 'resource_access_changes' object.resource.pk %}">{% trans "Cancel" %}</a>
             </p>
         </form>
     </main>

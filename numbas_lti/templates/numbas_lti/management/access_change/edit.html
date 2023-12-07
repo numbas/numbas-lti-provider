@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load bootstrap %}
 {% load i18n %}
+{% load querystring %}
 {% load tz %}
 {% load static %}
 
@@ -8,7 +9,7 @@
 {% block management_content %}
 <h1>{% if create %}{% trans "Create an access change" %}{% else %}{% trans "Edit an access change" %}{% endif %}</h1>
 {% if not create %}
-<form method="POST" action="{% url 'delete_access_change' object.pk %}">
+<form method="POST" action="{% url_with_lti 'delete_access_change' object.pk %}">
     {% csrf_token %}
     <p>
         <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete this access change" %}</button>
@@ -19,7 +20,7 @@
     <p>{% blocktrans %}Only fill in the fields you wish to change. Fields left blank will not override the resource's normal settings.{% endblocktrans %}</p>
 </div>
 
-<form method="POST" action="{% if create %}{% url 'create_access_change' resource.pk %}{% else %}{% url 'update_access_change' object.pk %}{% endif %}">
+<form method="POST" action="{% if create %}{% url_with_lti 'create_access_change' resource.pk %}{% else %}{% url_with_lti 'update_access_change' object.pk %}{% endif %}">
     {{form.resource}}
     {% csrf_token %}
     {% get_current_timezone as TIME_ZONE %}
@@ -91,20 +92,48 @@
     </fieldset>
     <fieldset>
         <legend>{% trans "Applies to" %}</legend>
-        {{form.usernames|bootstrap}}
-        <p class="help-block">
-            {% blocktrans with username=user.username %}Your username is <code>{{username}}</code>.{% endblocktrans %}
-        </p>
-        {{form.emails|bootstrap}}
-        <p class="help-block">
-            {% if user.email %}
-                {% blocktrans with email=user.email %}Your email address is <code>{{email}}</code>.{% endblocktrans %}
-            {% else %}
-                {% trans "The LTI connection doesn't seem to share email addresses. You might not be able to identify students by email address." %}
-            {% endif %}
-        </p>
+
+        {% if nrps_members %}
+            <label for="nrps-member-search">Search for a student by name:</label>
+            <input id="nrps-member-search" type="search" list="nrps_members_list" placeholder="{% translate "Enter a student's name" %}">
+            <datalist id="nrps_members_list">
+                {% for member in nrps_members %}
+                <option value="{{member.user_id}}">{{member.name}}</option>
+                {% endfor %}
+            </datalist>
+
+            <table class="table">
+                <tbody>
+                {% for member in nrps_members %}
+                {% if member.student %}
+                {% with id="nrps_applies_to-"|add:member.user_id %}
+                <tr>
+                    <td><input id="{{id}}" type="checkbox" name="nrps_applies_to" value="{{member.user_id}}" {% if member.user_id in form.nrps_applies_to.value %}checked{% endif %}></td>
+                    <td><label for="{{id}}">{{member.name}}</label></td>
+                    <td><code>{{member.ext_user_username}}</code></td>
+                </li>
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+            </table>
+
+        {% else %}
+
+            {{form.usernames|bootstrap}}
+            <p class="help-block">
+                {% blocktrans with username=user.username %}Your username is <code>{{username}}</code>.{% endblocktrans %}
+            </p>
+            {{form.emails|bootstrap}}
+            <p class="help-block">
+                {% if user.email %}
+                    {% blocktrans with email=user.email %}Your email address is <code>{{email}}</code>.{% endblocktrans %}
+                {% else %}
+                    {% trans "The LTI connection doesn't seem to share email addresses. You might not be able to identify students by email address." %}
+                {% endif %}
+            </p>
+        {% endif %}
     </fieldset>
-    <p><button class="btn btn-lg btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url 'resource_settings' resource.pk %}">{% trans "Cancel" %}</a></p>
+    <p><button class="btn btn-lg btn-primary" type="submit">{% trans "Save" %}</button> <a class="btn btn-link" href="{% url_with_lti 'resource_settings' resource.pk %}">{% trans "Cancel" %}</a></p>
 </form>
 {% endblock management_content %}
 
