@@ -15,6 +15,7 @@ from django_auth_lti.verification import is_allowed
 from functools import wraps
 from numbas_lti import lockdown_app
 from numbas_lti.models import Resource, Exam, LTIContext
+from numbas_lti.middleware import get_lti_13_context
 import pylti1p3.roles
 from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
@@ -39,9 +40,7 @@ def reverse_with_lti(request, view_name, args=[], current_app=None, kwargs={}):
 
         query_dict['lti_13_launch_id'] = message_launch.get_launch_id()
 
-        query = query_dict.urlencode()
-        if query:
-            url += '?' + query
+        url += '?' + query_dict.urlencode()
     
     return url
 
@@ -78,9 +77,7 @@ def static_view(template_name):
 class LTI_13_Mixin:
     """
         A view mixin which adds can get LTI 1.3 message launch data.
-        The message launch data is loaded from POST parameters or the django cache.
-
-        For views which need access to the launch data after the launch/login flow, use CachedLTI_13_Mixin.
+        The message launch data is loaded from cache by the middleware, or POST parameters if the request is part of a launch.
     """
 
     tool_conf = DjangoDbToolConf()
@@ -88,113 +85,29 @@ class LTI_13_Mixin:
 
     message_launch_cls = DjangoMessageLaunch
 
-    """
-        Should this view try to get the message launch at the start of the dispatch method?
-        Return False if this view should sometimes work without an LTI launch.
-    """
-    get_message_launch_on_dispatch = True
-
-    def get_lti_data(self):
-        self.message_launch = self.get_message_launch()
-        self.lti_tool = self.get_lti_tool()
-        self.lti_context = self.get_lti_context()
-
     def get_message_launch(self):
-        message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage)
-        self.request.lti_13_message_launch = message_launch
-        return message_launch
+        if not hasattr(self.request, 'lti_13_message_launch'):
+            message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage)
+            self.request.lti_13_message_launch = message_launch
 
-    def get_lti_tool(self):
-        iss = self.message_launch.get_iss()
-        client_id = self.message_launch.get_client_id()
-        tool = self.message_launch.get_tool_conf().get_lti_tool(iss, client_id)
-        return tool
+        return self.request.lti_13_message_launch
 
     def get_lti_context(self):
-        lti_tool = self.get_lti_tool()
-
-        consumer = lti_tool.numbas.consumer
-
-        message_launch_data = self.message_launch.get_launch_data()
-
-        context_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/context',{})
-
-        context_id = str(context_claim.get('id',''))
-        context_title = context_claim.get('title','')
-        context_label = context_claim.get('label','')
-
-        context, _ = LTIContext.objects.get_or_create(
-            context_id=context_id,
-            consumer=consumer,
-            defaults = {
-                'name': context_title,
-                'label': context_label,
-            }
-        )
-
-        self.context = context
-
-        return context
+        if getattr(self, 'context', None) is None:
+            self.lti_context  = get_lti_13_context(self.get_message_launch())
+        return self.lti_context
 
     def get_custom_param(self, param_name):
-        message_launch_data = self.message_launch.get_launch_data()
+        message_launch_data = self.get_message_launch().get_launch_data()
 
-        return message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/custom', {})\
+        return message_launch_data\
+            .get('https://purl.imsglobal.org/spec/lti/claim/custom', {})\
             .get(param_name)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        if hasattr(self, 'message_launch'):
-            context['message_launch'] = self.message_launch
-
-        return context
 
     def reverse_with_lti(self, *args, **kwargs):
         return reverse_with_lti(self.request, *args, **kwargs)
 
-class CachedLTI_13_Mixin(LTI_13_Mixin):
-    """
-        A view mixin which adds a message_launch object to the view object.
-        The message launch data is loaded from cache storage.
-
-        The ID of the launch must be provided either as a POST parameter or in the query part of the URL under the key defined by the launch_id_param property.
-    """
-
-    launch_id_param = 'lti_13_launch_id'
-
-    def get_launch_id(self):
-        post_param = self.request.POST.get(self.launch_id_param, self.request.GET.get(self.launch_id_param))
-        if post_param:
-            return post_param
-        
-        return self.kwargs.get(self.launch_id_param)
-
-    def get_message_launch(self):
-        launch_id = self.get_launch_id()
-        if launch_id is None:
-            raise SuspiciousOperation
-
-        message_launch = self.message_launch_cls.from_cache(launch_id, self.request, self.tool_conf, launch_data_storage = self.launch_data_storage)
-
-        self.request.lti_13_message_launch = message_launch
-
-        return message_launch
-
-    def get_context_data(self, **kwargs):
-        self.get_lti_data()
-        return  super().get_context_data(**kwargs)
-
-
-class LTI_13_Only_Mixin:
-    @method_decorator(csrf_exempt)
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_message_launch_on_dispatch:
-            self.get_lti_data()
-        return super().dispatch(request, *args, **kwargs)
-
-
-class LTIRoleOrSuperuserMixin(CachedLTI_13_Mixin, LTIRoleRestrictionMixin):
+class LTIRoleOrSuperuserMixin(LTI_13_Mixin, LTIRoleRestrictionMixin):
     raise_exception = False
 
     allowed_roles = None
@@ -208,7 +121,6 @@ class LTIRoleOrSuperuserMixin(CachedLTI_13_Mixin, LTIRoleRestrictionMixin):
             return True
         else:
             try:
-                launch_id = self.get_launch_id()
                 message_launch = self.get_message_launch()
                 jwt_body = message_launch._get_jwt_body()
                 for role in self.allowed_roles['lti_13']:

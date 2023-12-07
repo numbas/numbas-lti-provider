@@ -26,15 +26,6 @@ INSTANCE_NAME = settings.INSTANCE_NAME
 PAGE_TITLE = gettext('{INSTANCE_NAME} Numbas').format(INSTANCE_NAME=INSTANCE_NAME)
 PAGE_DESCRIPTION = gettext('The Numbas LTI provider at {INSTANCE_NAME}.').format(INSTANCE_NAME=INSTANCE_NAME)
 
-class LTIView(mixins.LTI_13_Mixin, mixins.LTI_13_Only_Mixin):
-    pass
-
-class CachedLTIView(mixins.CachedLTI_13_Mixin, mixins.LTI_13_Only_Mixin):
-    pass
-
-class IndexView(TemplateView):
-    template_name ='numbas_lti/lti_13/index.html'
-
 class RegisterView(TemplateView):
     template_name ='numbas_lti/lti_13/registration/begin.html'
 
@@ -45,7 +36,7 @@ class RegisterView(TemplateView):
 
         return context
 
-class LoginView(LTIView, View):
+class LoginView(mixins.LTI_13_Mixin, View):
     """
         LTI login: verify the credentials, and redirect to the target link URI given in the launch parameters.
         The OIDCLogin object handles checking that cookies can be set.
@@ -70,13 +61,17 @@ class LoginView(LTIView, View):
             .enable_check_cookies()\
             .redirect(target_link_uri)
 
-class LaunchView(LTIView, TemplateView):
+class LaunchView(mixins.LTI_13_Mixin, TemplateView):
     """
         Handle a launch activity.
 
         There are several kinds of launch; the kind of launch is given by the message_launch object.
     """
     http_method_names = ['post']
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
     def authenticate_user(self):
         user = auth.authenticate(self.request)
@@ -89,17 +84,18 @@ class LaunchView(LTIView, TemplateView):
         self.authenticate_user()
         self.get_lti_context()
 
-        launch_id = self.message_launch.get_launch_id()
+        message_launch = self.get_message_launch()
+        launch_id = message_launch.get_launch_id()
 
         if mixins.request_is_instructor(self.request):
-            if self.message_launch.is_deep_link_launch():
+            if message_launch.is_deep_link_launch():
                 return redirect(self.reverse_with_lti('lti_13:deep_link'))
-            elif self.message_launch.is_resource_launch():
+            elif message_launch.is_resource_launch():
                 return redirect(self.reverse_with_lti('lti_13:teacher_launch'))
             else:
                 return HttpResponseBadRequest("This launch type is not recognised.")
         elif mixins.request_is_student(self.request):
-            if self.message_launch.is_resource_launch():
+            if message_launch.is_resource_launch():
                 return redirect(self.reverse_with_lti('lti_13:student_launch'))
             else:
                 return HttpResponseBadRequest("This launch type is not recognised.")
@@ -158,13 +154,12 @@ def register_dynamic(request):
 
     return HttpResponse(registration.complete_html())
 
-class ResourceLaunchView(CachedLTIView):
+class ResourceLaunchView(mixins.LTI_13_Mixin):
     def get_resource_link(self):
         try:
-            message_launch_data = self.message_launch.get_launch_data()
-            resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
-            resource_link_id = resource_link_claim.get('id')
-            lti_context = self.get_lti_context()
+            message_launch = self.get_message_launch()
+            message_launch_data = message_launch.get_launch_data()
+            lti_context, resource_link_id = self.get_lti_context()
             return LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
         except LTI_13_ResourceLink.DoesNotExist:
             return None
@@ -184,8 +179,8 @@ class TeacherLaunchView(ResourceLaunchView, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        lti_tool = context['lti_tool'] = self.get_lti_tool()
-        message_launch_data = self.message_launch.get_launch_data()
+        message_launch = self.get_message_launch()
+        message_launch_data = message_launch.get_launch_data()
         context['message_launch_data'] = message_launch_data
 
         resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
@@ -210,26 +205,27 @@ class StudentLaunchView(ResourceLaunchView, View):
         return numbas_lti.views.entry.student_launch(self.request, resource_link.resource)
 
 
-class DeepLinkView(CachedLTIView, TemplateView):
+class DeepLinkView(mixins.LTI_13_Mixin, TemplateView):
     template_name = "numbas_lti/lti_13/deep_link.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        lti_tool = context['lti_tool'] = self.get_lti_tool()
-        message_launch_data = self.message_launch.get_launch_data()
+        message_launch = self.get_message_launch()
+        message_launch_data = message_launch.get_launch_data()
         context['message_launch_data'] = message_launch_data
 
         resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
         context['resource_link_claim'] = resource_link_claim
 
-        lti_context = context['lti_context'] = self.get_lti_context()
+        lti_context, _ = self.get_lti_context()
+        context['lti_context'] = lti_context
 
         context['resources'] = Resource.objects.filter(lti_13_links__context=lti_context).distinct()
 
         return context
 
-class DeepLinkUseResourceView(CachedLTIView, View):
+class DeepLinkUseResourceView(mixins.LTI_13_Mixin, View):
     http_method_names = ['post',]
 
     def post(self, *args, **kwargs):
@@ -244,5 +240,6 @@ class DeepLinkUseResourceView(CachedLTIView, View):
             })\
             .set_title(resource.exam.title)
 
-        html = self.message_launch.get_deep_link().output_response_form([resource])
+        message_launch = self.get_message_launch()
+        html = message_launch.get_deep_link().output_response_form([resource])
         return HttpResponse(html)

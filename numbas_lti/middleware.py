@@ -6,6 +6,51 @@ from .models import Resource, LTIContext, LTIConsumer, LTI_11_ResourceLink, LtiT
 
 logger = logging.getLogger(__name__)
 
+def get_lti_13_launch_id(request, launch_id_param='lti_13_launch_id'):
+    return request.POST.get(launch_id_param, request.GET.get(launch_id_param, getattr(request, 'kwargs', {}).get(launch_id_param)))
+
+def get_cached_lti_13_message_launch(request, launch_id, tool_conf, launch_data_storage):
+    if not hasattr(request, 'lti_13_message_launch'):
+        request.lti_13_message_launch = DjangoMessageLaunch.from_cache(launch_id, request, tool_conf, launch_data_storage=launch_data_storage)
+
+    return request.lti_13_message_launch
+
+def get_lti_13_context(message_launch):
+    try:
+        message_launch_data = message_launch.get_launch_data()
+
+        iss = message_launch.get_iss()
+        client_id = message_launch.get_client_id()
+        lti_tool = message_launch.get_tool_conf().get_lti_tool(iss, client_id)
+
+        consumer = lti_tool.numbas.consumer
+
+        context_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/context',{})
+
+        context_id = str(context_claim.get('id',''))
+        context_title = context_claim.get('title','')
+        context_label = context_claim.get('label','')
+
+        lti_context, _ = LTIContext.objects.get_or_create(
+            context_id=context_id,
+            consumer=consumer,
+            defaults = {
+                'name': context_title,
+                'label': context_label,
+            }
+        )
+
+        resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
+
+        resource_link_id = None
+        if resource_link_claim is not None:
+            resource_link_id = resource_link_claim.get('id')
+
+        return lti_context, resource_link_id
+
+    except (LTI_13_ResourceLink.DoesNotExist, LtiTool.DoesNotExist):
+        return (None, None)
+
 class NumbasLTIResourceMiddleware(object):
     tool_conf = DjangoDbToolConf()
     launch_data_storage = DjangoCacheDataStorage()
@@ -72,43 +117,15 @@ class NumbasLTIResourceMiddleware(object):
                 request.resource = resource
 
     def get_lti_13_resource_link(self, request):
-        launch_id = request.POST.get(self.launch_id_param, request.GET.get(self.launch_id_param, getattr(request, 'kwargs', {}).get(self.launch_id_param)))
+        launch_id = get_lti_13_launch_id(request)
         if not launch_id:
             return
 
-        message_launch = DjangoMessageLaunch.from_cache(launch_id, request, self.tool_conf, launch_data_storage=self.launch_data_storage)
-        request.lti_13_message_launch = message_launch
+        message_launch = get_cached_lti_13_message_launch(request, launch_id, self.tool_conf, self.launch_data_storage)
 
-        try:
-            message_launch_data = message_launch.get_launch_data()
+        lti_context, resource_link_id = get_lti_13_context(message_launch)
+        resource_link = LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
 
-            resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
-
-            if resource_link_claim is not None:
-                resource_link_id = resource_link_claim.get('id')
-
-                iss = message_launch.get_iss()
-                client_id = message_launch.get_client_id()
-                lti_tool = message_launch.get_tool_conf().get_lti_tool(iss, client_id)
-
-                consumer = lti_tool.numbas.consumer
-
-                context_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/context',{})
-
-                context_id = str(context_claim.get('id',''))
-                context_title = context_claim.get('title','')
-                context_label = context_claim.get('label','')
-
-                lti_context, _ = LTIContext.objects.get_or_create(
-                    context_id=context_id,
-                    consumer=consumer,
-                    defaults = {
-                        'name': context_title,
-                        'label': context_label,
-                    }
-                )
-
-                request.lti_13_resource_link = LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
-                request.resource = request.lti_13_resource_link.resource
-        except (LTI_13_ResourceLink.DoesNotExist, LtiTool.DoesNotExist):
-            pass
+        if resource_link:
+            request.lti_13_resource_link = resource_link
+            request.resource = resource_link.resource

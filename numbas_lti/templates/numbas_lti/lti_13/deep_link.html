@@ -7,6 +7,8 @@
     <p>{% blocktranslate %}Select a resource to link to, or create a new one.{% endblocktranslate %}</p>
 </div>
 
+<p>Context: {{lti_context}}</p>
+
 <section id="new-resource">
     <form method="post" action="{% url_with_lti 'lti_13:create_resource' %}">
         {% csrf_token %}
@@ -27,7 +29,7 @@
         {% for resource in resources %}
         <li>
             <p>
-                <a href="{% url_with_lti 'resource_dashboard' resource.pk %}" target="resource">{{resource}}</a>
+            <a href="{% url_with_lti 'resource_dashboard' resource.pk %}" target="resource">{% if resource.exam %}{{resource.exam.title}}{% else %}{{resource.title}}{% endif %}</a>
                 ({% blocktranslate count num_attempts=resource.attempts.count %}1 attempt{% plural %}{{num_attempts}} attempts{% endblocktranslate %})
             </p>
             <form method="POST" action="{% url_with_lti 'lti_13:deep_link_use_resource' %}">
