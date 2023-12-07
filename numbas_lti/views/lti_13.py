@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _, gettext
-from . import mixins
+from . import mixins, resource
 from numbas_lti.backends import new_lti_user
 from numbas_lti.models import LTI_13_UserAlias, LTI_13_Consumer, LTIConsumer, LTIContext, Resource, LTI_13_ResourceLink
 import numbas_lti.forms
@@ -82,10 +82,25 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         self.authenticate_user()
-        self.get_lti_context()
+        lti_context, resource_link_id = self.get_lti_context()
 
         message_launch = self.get_message_launch()
         launch_id = message_launch.get_launch_id()
+
+        if message_launch.is_resource_launch():
+            resource_pk = self.get_custom_param('resource')
+            if resource_pk is not None:
+                resource = Resource.objects.get(pk=resource_pk)
+
+                resource_link = LTI_13_ResourceLink.objects.update_or_create(
+                    resource_link_id=resource_link_id,
+                    resource=resource,
+                    context=lti_context,
+                    defaults={
+                        "title": resource.title,
+                    }
+                )
+
 
         if mixins.request_is_instructor(self.request):
             if message_launch.is_deep_link_launch():
@@ -183,18 +198,15 @@ class TeacherLaunchView(ResourceLaunchView, TemplateView):
         message_launch_data = message_launch.get_launch_data()
         context['message_launch_data'] = message_launch_data
 
-        resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
-        context['resource_link_claim'] = resource_link_claim
-
-        lti_context = context['lti_context'] = self.get_lti_context()
+        lti_context, resource_link_id = self.get_lti_context()
+        context['lti_context'] = lti_context
 
         context['resources'] = Resource.objects.filter(lti_13_links__context=lti_context).distinct()
 
-        resource_link_id = resource_link_claim.get('id')
+        resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
         title = resource_link_claim.get('title')
         description = resource_link_claim.get('description')
-        context['new_resource_form'] = numbas_lti.forms.LTI_13_CreateResourceForm(instance=LTI_13_ResourceLink(resource_link_id=resource_link_id, title=title, description=description, context=lti_context))
-
+        context['new_resource_form'] = numbas_lti.forms.LTI_13_LinkResourceForm(instance=LTI_13_ResourceLink(resource_link_id=resource_link_id, title=title, description=description, context=lti_context))
 
         return context
 
@@ -204,8 +216,15 @@ class StudentLaunchView(ResourceLaunchView, View):
 
         return numbas_lti.views.entry.student_launch(self.request, resource_link.resource)
 
+class MustBeDeepLinkMixin(mixins.LTI_13_Mixin):
+    def dispatch(self, request, *args, **kwargs):
+        message_launch = self.get_message_launch()
+        if not message_launch.is_deep_link_launch():
+            raise SuspiciousOperation(_("This action can only be performed as part of a deep-link launch."))
 
-class DeepLinkView(mixins.LTI_13_Mixin, TemplateView):
+        return super().dispatch(request, *args, **kwargs)
+
+class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
     template_name = "numbas_lti/lti_13/deep_link.html"
 
     def get_context_data(self, **kwargs):
@@ -225,21 +244,38 @@ class DeepLinkView(mixins.LTI_13_Mixin, TemplateView):
 
         return context
 
-class DeepLinkUseResourceView(mixins.LTI_13_Mixin, View):
+def deep_link_response(request, message_launch, resource):
+    """
+        Return a response which ends the deep-link flow, with a link to the given resource
+    """
+    launch_url = request.build_absolute_uri(reverse('lti_13:launch'))
+
+    resource = DeepLinkResource()\
+        .set_url(launch_url)\
+        .set_custom_params({
+            'resource': resource.pk,
+        })\
+        .set_title(resource.exam.title)
+
+    html = message_launch.get_deep_link().output_response_form([resource])
+    return HttpResponse(html)
+
+class DeepLinkUseResourceView(MustBeDeepLinkMixin, View):
     http_method_names = ['post',]
 
     def post(self, *args, **kwargs):
         resource = Resource.objects.get(pk=self.request.POST['resource_pk'])
 
-        launch_url = self.request.build_absolute_uri(reverse('lti_13:launch'))
+        message_launch = self.get_message_launch()
 
-        resource = DeepLinkResource()\
-            .set_url(launch_url)\
-            .set_custom_params({
-                'resource': resource.pk,
-            })\
-            .set_title(resource.exam.title)
+        return deep_link_response(self.request, message_launch, resource)
+
+class DeepLinkCreateResourceView(MustBeDeepLinkMixin, resource.CreateExamView):
+    def form_valid(self, form):
+        exam = self.object = form.save(commit=True)
+
+        resource = Resource.objects.create(title = exam.title, exam=exam)
 
         message_launch = self.get_message_launch()
-        html = message_launch.get_deep_link().output_response_form([resource])
-        return HttpResponse(html)
+
+        return deep_link_response(self.request, message_launch, resource)

@@ -94,7 +94,7 @@ class LTI_13_Mixin:
 
     def get_lti_context(self):
         if getattr(self, 'context', None) is None:
-            self.lti_context  = get_lti_13_context(self.get_message_launch())
+            self.lti_context = get_lti_13_context(self.get_message_launch())
         return self.lti_context
 
     def get_custom_param(self, param_name):

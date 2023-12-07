@@ -163,7 +163,7 @@ class CreateConsumerForm(ModelForm):
             )
         return consumer
 
-class LTI_13_CreateResourceForm(ModelForm):
+class LTI_13_LinkResourceForm(ModelForm):
     class Meta:
         model = LTI_13_ResourceLink
         fields = ('resource_link_id', 'title', 'description', 'context')

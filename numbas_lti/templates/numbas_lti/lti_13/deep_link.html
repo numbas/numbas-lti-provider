@@ -10,14 +10,7 @@
 <p>Context: {{lti_context}}</p>
 
 <section id="new-resource">
-    <form method="post" action="{% url_with_lti 'lti_13:create_resource' %}">
-        {% csrf_token %}
-        {% for field in new_resource_form %}
-        {{field.as_hidden}}
-        {% endfor %}
-
-        <button class="btn btn-primary btn-lg" type="submit">{% translate "Create a new resource" %}</button>
-    </form>
+    <a class="btn btn-primary btn-lg" href="{% url_with_lti 'lti_13:deep_link_create_resource' %}">{% translate "Create a new resource" %}</a>
 </section>
 
 <hr>
@@ -33,6 +26,7 @@
                 ({% blocktranslate count num_attempts=resource.attempts.count %}1 attempt{% plural %}{{num_attempts}} attempts{% endblocktranslate %})
             </p>
             <form method="POST" action="{% url_with_lti 'lti_13:deep_link_use_resource' %}">
+                {% csrf_token %}
                 <input type="hidden" name="resource_pk" value="{{resource.pk}}">
                 <button class="btn btn-default" type="submit">{% translate "Use this resource" %}</button>
             </form>

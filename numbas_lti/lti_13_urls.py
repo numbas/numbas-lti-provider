@@ -17,7 +17,8 @@ urlpatterns = [
 
     path(r'deep-link/', views.DeepLinkView.as_view(), name='deep_link'),
     path(r'deep-link/use-resource/', views.DeepLinkUseResourceView.as_view(), name='deep_link_use_resource'),
+    path(r'deep-link/create-resource/', views.DeepLinkCreateResourceView.as_view(), name='deep_link_create_resource'),
 
-    path(r'create_resource/', resource_views.LTI_13_CreateResourceView.as_view(), name='create_resource'),
+    path(r'create-resource/', resource_views.LTI_13_CreateResourceView.as_view(), name='create_resource'),
 ]
 

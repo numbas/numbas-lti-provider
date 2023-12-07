@@ -8,9 +8,6 @@
 {% block main %}
 Teacher launch!
 
-<p>Link: {{resource_link_claim}}</p>
-
-
 <h2>Existing resource links</h2>
 <form method="post" action="{% url_with_lti 'lti_13:create_resource' %}">
     {% csrf_token %}

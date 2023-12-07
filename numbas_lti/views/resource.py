@@ -34,13 +34,13 @@ class LTI_13_CreateResourceView(MustBeInstructorMixin, generic.edit.CreateView):
     model = LTI_13_ResourceLink
     management_tab = 'create_resource'
     http_methods = ['post']
-    form_class = forms.LTI_13_CreateResourceForm
+    form_class = forms.LTI_13_LinkResourceForm
     template_name = 'numbas_lti/management/create_resource.html'
 
     def get_success_url(self):
         return self.reverse_with_lti('create_exam', args=(self.object.resource.pk,))
 
-class CreateExamView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.edit.CreateView):
+class CreateExamView(HelpLinkMixin, MustBeInstructorMixin, generic.edit.CreateView):
     model = Exam
     management_tab = 'create_exam'
     template_name = 'numbas_lti/management/create_exam.html'
@@ -48,7 +48,6 @@ class CreateExamView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructo
     helplink = 'instructor/resources.html#creating-a-new-resource'
 
     def get_context_data(self,*args,**kwargs):
-        self.get_lti_data()
         context = super(CreateExamView,self).get_context_data(*args,**kwargs)
 
         context['editor_links'] = EditorLink.objects.all()
@@ -59,6 +58,10 @@ class CreateExamView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructo
 
         return context
 
+    def get_success_url(self):
+        return self.reverse_with_lti('resource_settings', args=(self.request.resource.pk,))
+
+class LTI_11_CreateExamView(ResourceManagementViewMixin, CreateExamView):
     def get_resource(self):
         return Resource.objects.get(pk=self.kwargs['pk'])
 
@@ -71,11 +74,8 @@ class CreateExamView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructo
         exam.save()
         resource.exam = exam
         resource.save()
-        print(f"Resource {resource.pk} has exam {exam.pk}")
         return http.HttpResponseRedirect(self.get_success_url())
 
-    def get_success_url(self):
-        return self.reverse_with_lti('resource_settings', args=(self.request.resource.pk,))
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'

@@ -48,7 +48,7 @@ urlpatterns = [
     path('lti13/', include('numbas_lti.lti_13_urls', namespace='lti_13')),
 
     # Resource management views: either locally authenticated as superuser, or authenticated through LTI launch and carrying role information.
-    path('resource/<int:pk>/create_exam', views.resource.CreateExamView.as_view(), name='create_exam'),
+    path('resource/<int:pk>/create_exam', views.resource.LTI_11_CreateExamView.as_view(), name='create_exam'),
     path('exam/<int:pk>/run', views.resource.RunExamView.as_view(), name='run_exam'),
     path('resource/<int:pk>', views.resource.DashboardView.as_view(), name='resource_dashboard'),
     path('resource/<int:pk>/student_progress', views.resource.StudentProgressView.as_view(), name='student_progress'),
