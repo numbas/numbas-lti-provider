@@ -741,15 +741,25 @@ class LTIUserData(models.Model):
         else:
             return ''
 
+LAUNCH_ROLE_CHOICES = [
+    ('', _('Unknown')),
+    ('teacher', _('Teacher')),
+    ('student', _('Student')),
+]
+
 class LTILaunch(models.Model):
     """
-        Record when a user launches a resource from LTI 1.1.
+        Record when a user launches a resource.
     """
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_launches')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE, related_name='launches')
     time = models.DateTimeField(auto_now_add=True)
     user_agent = models.CharField(max_length=500)
     ip_address = models.CharField(max_length=100)
+
+    role = models.CharField(max_length=20, choices=LAUNCH_ROLE_CHOICES, default='', blank=True)
+    lti_11_resource_link = models.ForeignKey(LTI_11_ResourceLink, on_delete=models.SET_NULL, related_name='launches', null=True)
+    lti_13_resource_link = models.ForeignKey(LTI_13_ResourceLink, on_delete=models.SET_NULL, related_name='launches', null=True)
 
     def __str__(self):
         return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)

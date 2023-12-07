@@ -122,23 +122,34 @@ def basic_lti_11_launch(request):
     user_data.is_instructor = is_instructor
     user_data.save()
 
-    record_launch(request, request.resource)
+    record_launch(request, role='teacher' if is_instructor else 'student', lti_11_resource_link=request.lti_11_resource_link)
 
     if is_instructor:
         return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
     else:
         return student_launch(request, request.resource)
 
-def record_launch(request, resource):
+def record_launch(request, role='', lti_11_resource_link=None, lti_13_resource_link=None):
     ip_address, _ = get_client_ip(request)
 
     user_agent = request.META.get('HTTP_USER_AGENT')
+
+    resource = None
+
+    if lti_11_resource_link is not None:
+        resource = lti_11_resource_link.resource
+
+    if lti_13_resource_link is not None:
+        resource = lti_13_resource_link.resource
 
     launch = LTILaunch.objects.create(
         user = request.user,
         resource = resource,
         user_agent = user_agent,
-        ip_address = ip_address
+        ip_address = ip_address,
+        role = role,
+        lti_11_resource_link = lti_11_resource_link,
+        lti_13_resource_link = lti_13_resource_link
     )
 
 

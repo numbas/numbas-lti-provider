@@ -110,11 +110,12 @@ class NumbasLTIResourceMiddleware(object):
                 resource = Resource.objects.create(title=title, description=description)
                 resource_link = LTI_11_ResourceLink.objects.create(resource=resource, context=context, resource_link_id=resource_link_id)
             finally:
-                if (title,description) != (resource.title,resource.description):
+                if (title,description) != (resource.title, resource.description):
                     resource.title = title
                     resource.description = description
                     resource.save(update_fields=('title', 'description'))
                 request.resource = resource
+                request.lti_11_resource_link = resource_link
 
     def get_lti_13_resource_link(self, request):
         launch_id = get_lti_13_launch_id(request)

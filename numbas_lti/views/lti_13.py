@@ -186,7 +186,7 @@ class TeacherLaunchView(ResourceLaunchView, TemplateView):
         resource_link = self.get_resource_link()
 
         if resource_link:
-            numbas_lti.views.entry.record_launch(request, resource_link.resource)
+            numbas_lti.views.entry.record_launch(request, role='teacher', lti_13_resource_link=resource_link)
             return redirect(self.reverse_with_lti('resource_dashboard', args=(resource_link.resource.pk,)))
         else:
             return super().get(request, *args, **kwargs)
@@ -211,10 +211,11 @@ class TeacherLaunchView(ResourceLaunchView, TemplateView):
         return context
 
 class StudentLaunchView(ResourceLaunchView, View):
-    def get(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         resource_link = self.get_resource_link()
 
-        return numbas_lti.views.entry.student_launch(self.request, resource_link.resource)
+        numbas_lti.views.entry.record_launch(request, role='student', lti_13_resource_link=resource_link)
+        return numbas_lti.views.entry.student_launch(request, resource_link.resource)
 
 class MustBeDeepLinkMixin(mixins.LTI_13_Mixin):
     def dispatch(self, request, *args, **kwargs):
