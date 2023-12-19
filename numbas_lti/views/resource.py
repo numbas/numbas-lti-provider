@@ -735,3 +735,26 @@ class DeleteAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
 
     def get_success_url(self):
         return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
+
+class GradesView(MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.detail.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/grades.html'
+    management_tab = 'grades'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        resource = self.get_object()
+
+        import json
+        context['jwt'] = json.dumps(self.get_message_launch()._jwt, indent=4)
+
+        ags = self.get_message_launch().get_ags()
+        context['ags'] = ags
+
+        lineitem = resource.get_lti_13_lineitem(ags)
+
+        context['lineitem'] = lineitem
+        context['grades'] = ags.get_grades(lineitem)
+
+        return context

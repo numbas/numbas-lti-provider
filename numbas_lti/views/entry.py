@@ -1,7 +1,7 @@
 from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url, reverse_with_lti
 from numbas_lti import lockdown_app
 from numbas_lti.util import add_query_param
-from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
+from numbas_lti.models import LTIConsumer, LTIUserData, LTI_11_UserData, LTILaunch
 from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -112,15 +112,17 @@ def basic_lti_11_launch(request):
         'consumer': consumer, 
         'consumer_user_id': user_id,
     }
-    user_data = LTIUserData.objects.filter(**user_data_args).last()
-    if user_data is None:
-        user_data = LTIUserData.objects.create(**user_data_args)
+    user_data, _ = LTIUserData.objects.update_or_create(**user_data_args, defaults={"is_instructor": is_instructor})
 
-    user_data.lis_result_sourcedid = request.LTI.get('lis_result_sourcedid')
-    user_data.lis_person_sourcedid = request.LTI.get('lis_person_sourcedid','')
-    user_data.lis_outcome_service_url = request.LTI.get('lis_outcome_service_url')
-    user_data.is_instructor = is_instructor
-    user_data.save()
+    lti_11_data, _ = LTI_11_UserData.objects.update_or_create(
+        user_data=user_data,
+        defaults = {
+            "lis_result_sourcedid": request.LTI.get('lis_result_sourcedid'),
+            "lis_person_sourcedid": request.LTI.get('lis_person_sourcedid',''),
+            "lis_outcome_service_url": request.LTI.get('lis_outcome_service_url'),
+            "is_instructor": is_instructor,
+        }
+    )
 
     record_launch(request, role='teacher' if is_instructor else 'student', lti_11_resource_link=request.lti_11_resource_link)
 

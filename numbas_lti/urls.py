@@ -51,6 +51,7 @@ urlpatterns = [
     path('resource/<int:pk>/create_exam', views.resource.LTI_11_CreateExamView.as_view(), name='create_exam'),
     path('exam/<int:pk>/run', views.resource.RunExamView.as_view(), name='run_exam'),
     path('resource/<int:pk>', views.resource.DashboardView.as_view(), name='resource_dashboard'),
+    path('resource/<int:pk>/grades', views.resource.GradesView.as_view(), name='resource_grades'),
     path('resource/<int:pk>/student_progress', views.resource.StudentProgressView.as_view(), name='student_progress'),
     path('resource/<int:pk>/discount_parts', views.resource.DiscountPartsView.as_view(), name='discount_parts'),
     path('resource/<int:pk>/validate_receipt', views.resource.ValidateReceiptView.as_view(), name='validate_receipt'),

@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _, gettext
 from . import mixins, resource
 from numbas_lti.backends import new_lti_user
-from numbas_lti.models import LTI_13_UserAlias, LTI_13_Consumer, LTIConsumer, LTIContext, Resource, LTI_13_ResourceLink
+from numbas_lti.models import LTI_13_UserAlias, LTI_13_Consumer, LTIConsumer, LTIContext, Resource, LTI_13_ResourceLink, LTIUserData, LTI_13_Context
 import numbas_lti.forms
 import numbas_lti.views.entry
 from pathlib import PurePath
@@ -87,6 +87,8 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
         message_launch = self.get_message_launch()
         launch_id = message_launch.get_launch_id()
 
+        is_instructor = mixins.request_is_instructor(self.request)
+
         if message_launch.is_resource_launch():
             resource_pk = self.get_custom_param('resource')
             if resource_pk is not None:
@@ -102,7 +104,7 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
                 )
 
 
-        if mixins.request_is_instructor(self.request):
+        if is_instructor:
             if message_launch.is_deep_link_launch():
                 return redirect(self.reverse_with_lti('lti_13:deep_link'))
             elif message_launch.is_resource_launch():
@@ -143,6 +145,9 @@ class DynamicRegistration(DjangoDynamicRegistration):
     def get_scopes(self):
         return [
             'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly',
+            'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem',
+            'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly',
+            'https://purl.imsglobal.org/spec/lti-ags/scope/score'
         ]
 
     def get_messages(self):
@@ -170,6 +175,26 @@ def register_dynamic(request):
     return HttpResponse(registration.complete_html())
 
 class ResourceLaunchView(mixins.LTI_13_Mixin):
+
+    def record_user_data(self, resource_link):
+        user = self.request.user
+
+        consumer = resource_link.context.consumer
+
+        user_alias = user.lti_13_aliases.get(consumer=consumer)
+
+        is_instructor = mixins.request_is_instructor(self.request)
+
+        user_data_args = {
+            'user': user, 
+            'resource': resource_link.resource, 
+            'consumer': consumer, 
+            'consumer_user_id': user_alias.sub,
+        }
+
+        user_data, _ = LTIUserData.objects.update_or_create(**user_data_args, defaults={"is_instructor": is_instructor})
+
+
     def get_resource_link(self):
         try:
             message_launch = self.get_message_launch()
@@ -186,8 +211,9 @@ class TeacherLaunchView(ResourceLaunchView, TemplateView):
         resource_link = self.get_resource_link()
 
         if resource_link:
+            self.record_user_data(resource_link)
             numbas_lti.views.entry.record_launch(request, role='teacher', lti_13_resource_link=resource_link)
-            return redirect(self.reverse_with_lti('resource_dashboard', args=(resource_link.resource.pk,)))
+            return redirect(self.reverse_with_lti('resource_grades', args=(resource_link.resource.pk,)))
         else:
             return super().get(request, *args, **kwargs)
 
@@ -213,7 +239,8 @@ class TeacherLaunchView(ResourceLaunchView, TemplateView):
 class StudentLaunchView(ResourceLaunchView, View):
     def get(self, request, *args, **kwargs):
         resource_link = self.get_resource_link()
-
+    
+        self.record_user_data(resource_link)
         numbas_lti.views.entry.record_launch(request, role='student', lti_13_resource_link=resource_link)
         return numbas_lti.views.entry.student_launch(request, resource_link.resource)
 

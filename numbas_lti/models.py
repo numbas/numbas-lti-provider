@@ -21,7 +21,11 @@ import json
 from lxml import etree
 import os
 from pathlib import Path
+from pylti1p3.assignments_grades import AssignmentsGradesService
+from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
+from pylti1p3.lineitem import LineItem
+from pylti1p3.service_connector import ServiceConnector, REQUESTS_USER_AGENT
 import re
 import requests
 import shutil
@@ -266,6 +270,31 @@ class LTIContext(models.Model):
     def get_absolute_url(self):
         return reverse('view_context', args=(self.pk,))
 
+class LTI_13_Context(models.Model):
+    tool_conf = DjangoDbToolConf()
+
+    context = models.OneToOneField(LTIContext, on_delete=models.CASCADE, related_name='lti_13')
+    ags_data = models.JSONField(blank=True, default=dict, null=True)
+
+    def get_ags(self):
+        """
+            Get the Assignments and Grades Service controller for this context.
+        """
+        tool = self.context.consumer.lti_13.tool
+
+        registration = self.tool_conf.find_registration_by_params(iss=tool.issuer, client_id=tool.client_id)
+
+        requests_session = requests.Session()
+        requests_session.headers['User-Agent'] = REQUESTS_USER_AGENT
+
+        service_connector = ServiceConnector(registration, requests_session)
+
+        service_data = self.ags_data
+
+        ags = AssignmentsGradesService(service_connector, service_data)
+
+        return ags
+
 REQUIRE_LOCKDOWN_APP_CHOICES = [
     ('', _('No')),
     ('numbas', _('Numbas lockdown app')),
@@ -342,27 +371,28 @@ class Resource(models.Model):
 
         return LTIContext.objects.filter(Q(lti_11_resource_links__resource=self) | Q(lti_13_resource_links__resource=self)).distinct()
 
+    def lti_13_contexts(self):
+        return LTI_13_Context.objects.filter(context__lti_13_resource_links__resource=self).distinct()
+
     def unbroken_attempts(self):
         return self.attempts.filter(broken=False)
 
     def grade_user(self,user):
+        """
+            Find the attempt representing the user's grade at this resource.
+            Depends on ``grading_method``.
+        """
         methods = {
-            'highest': self.grade_highest,
-            'last': self.grade_last,
+            'highest': '-scaled_score',
+            'last': '-start_time',
         }
         attempts = self.attempts.filter(user=user)
         if not self.include_incomplete_attempts:
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():
-            return 0
-        score = methods[self.grading_method](user,attempts)
-        return min(1,max(score,0))
-
-    def grade_highest(self,user,attempts):
-        return attempts.aggregate(highest_score=models.Max('scaled_score'))['highest_score']
-
-    def grade_last(self,user,attempts):
-        return attempts.order_by('-start_time').first().scaled_score
+            return None
+        attempt = attempts.order_by(methods[self.grading_method]).first()
+        return attempt
 
     def students(self):
         return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
@@ -562,7 +592,7 @@ class Resource(models.Model):
         process = ReportProcess.objects.create(resource=self)
 
         errors = []
-        for user in User.objects.filter(attempts__resource=self).distinct():
+        for user in User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct():
             try:
                 request = report_outcome(self,user)
             except ReportOutcomeException as e:
@@ -594,6 +624,56 @@ class Resource(models.Model):
                 return None
 
         return None
+
+    def estimate_max_score(self):
+        """
+            Estimate the maximum score for this resource.
+            Because the maximum score for a question can't be determined without running it, and might be different for different attempts, we can only estimate the maximum score by looking at an attempt at the exam.
+            If no attempts exist, return 1.
+            LTI platforms only store the scaled score, so this can only help readability and shouldn't affect any automated decisions.
+        """
+        try:
+            attempt = self.attempts.first()
+            return attempt.max_score
+        except Attempt.DoesNotExist:
+            return 1
+
+    def get_lti_13_lineitem(self, ags):
+        lineitem = LineItem({
+            "scoreMaximum": self.estimate_max_score(),
+            "tag": "grade",
+            "label": self.title,
+            "resourceId": f"resource-{self.pk}",
+        })
+        print(lineitem.get_value())
+
+        if self.available_from is not None:
+            lineitem.set_start_date_time(self.available_from.isoformat())
+        if self.available_until is not None:
+            lineitem.set_end_date_time(self.available_until.isoformat())
+
+        saved_lineitem = ags.find_or_create_lineitem(lineitem, condition = lambda l: l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id())
+        if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
+            or saved_lineitem.get_start_date_time() != lineitem.get_start_date_time()
+            or saved_lineitem.get_end_date_time() != lineitem.get_end_date_time()
+            ):
+            saved_lineitem.set_score_maximum(lineitem.get_score_maximum())
+            saved_lineitem.set_start_date_time(lineitem.get_start_date_time())
+            saved_lineitem.set_end_date_time(lineitem.get_end_date_time())
+            self.update_lti_13_lineitem(ags, saved_lineitem)
+
+        return saved_lineitem
+
+    def update_lti_13_lineitem(self, ags, lineitem=None):
+        if lineitem is None:
+            lineitem = self.get_lti_13_lineitem(ags)
+        scope = ags._service_data['scope']
+        access_token = ags._service_connector.get_access_token(scope)
+
+        ags._service_connector._requests_session.put(lineitem.get_id(), data=lineitem.get_value(), headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json', 'Content-Type': 'application/vnd.ims.lis.v2.lineitem+json'})
+
+        return lineitem
+
 
 class LTI_11_ResourceLink(models.Model):
     resource = models.ForeignKey(Resource, related_name='lti_11_links', on_delete=models.CASCADE)
@@ -715,9 +795,6 @@ class LTIUserData(models.Model):
     consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
-    lis_result_sourcedid = models.CharField(max_length=1000,default='',blank=True,null=True)
-    lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
-    lis_person_sourcedid = models.CharField(max_length=1000,blank=True,default='',null=True)
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
@@ -740,6 +817,12 @@ class LTIUserData(models.Model):
             return self.user.email
         else:
             return ''
+
+class LTI_11_UserData(models.Model):
+    user_data = models.OneToOneField(LTIUserData, on_delete=models.CASCADE, related_name='lti_11')
+    lis_result_sourcedid = models.CharField(max_length=1000,default='',blank=True,null=True)
+    lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
+    lis_person_sourcedid = models.CharField(max_length=1000,blank=True,default='',null=True)
 
 LAUNCH_ROLE_CHOICES = [
     ('', _('Unknown')),

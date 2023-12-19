@@ -2,7 +2,7 @@ import logging
 from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 
-from .models import Resource, LTIContext, LTIConsumer, LTI_11_ResourceLink, LtiTool, LTI_13_ResourceLink
+from .models import Resource, LTIContext, LTI_13_Context, LTIConsumer, LTI_11_ResourceLink, LtiTool, LTI_13_ResourceLink
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,13 @@ def get_lti_13_context(message_launch):
             defaults = {
                 'name': context_title,
                 'label': context_label,
+            }
+        )
+
+        lti_13_context, _ = LTI_13_Context.objects.update_or_create(
+            context=lti_context,
+            defaults = {
+                "ags_data": message_launch._get_jwt_body().get("https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"),
             }
         )
 
