@@ -672,7 +672,7 @@ SCORM_API.prototype = {
             },
             body: JSON.stringify({
                 batches: batches,
-                complete: force
+                complete: this.data['cmi.completion_status']=='completed'
             })
         });
 

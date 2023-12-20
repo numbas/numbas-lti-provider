@@ -39,7 +39,7 @@ body.terminated #status-display .symbol, #status-display .symbol {
 #status-display.ok .text-ok,
 #status-display.confirmation .text-confirmation,
 #status-display.unavailable-at .text-unavailable-at,
-#status-display.terminated:not(.ok):not(.failed-final-ajax) .text-terminated,
+#status-display.terminated:not(.ok):not(.failed-final-ajax):not(.ended) .text-terminated,
 #status-display.failed-final-ajax .text-failed-final-ajax,
 #status-display.loading-error .text-loading-error
 {
