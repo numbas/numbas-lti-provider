@@ -1,24 +1,21 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 {% load static %}
 
-{% block title %}{% blocktrans with key=consumer.key %}Manage time periods for "{{key}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+{% block title %}{% blocktranslate with key=consumer.key %}Manage time periods for "{{key}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
 
 {% block stylesheets %}
     {{block.super}}
     <link rel="stylesheet" href="{% static 'view_consumer.css' %}">
 {%endblock stylesheets %}
 
+{% block management_header %}
+    <h1>{% blocktranslate with title=consumer.title %}Manage time periods for {{title}}{% endblocktranslate %}</h1>
+{% endblock management_header %}
+
 {% block management_content %}
-    <header>
-        <h1>{% blocktrans with key=consumer.key %}Manage time periods for <code>{{key}}</code>{% endblocktrans %}</h1>
-    </header>
-    <section>
-        {% blocktrans %}
-        <p>Use time periods to group contexts belonging to this consumer by the time in which they were active.</p>
-        {% endblocktrans %}
-    </section>
+    <p>{% translate "Use time periods to group contexts belonging to this consumer by the time in which they were active." %}</p>
 
     <form method="POST" class="form-inline">
         {{form.management_form}}
@@ -26,9 +23,9 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>{% trans "Name" %}</th>
-                    <th>{% trans "Start" %}</th>
-                    <th>{% trans "End" %}</th>
+                    <th>{% translate "Name" %}</th>
+                    <th>{% translate "Start" %}</th>
+                    <th>{% translate "End" %}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -53,7 +50,7 @@
                     {% endfor %}
                     {% if subform.instance.pk %}
                     <td>
-                        <a href="{% url 'delete_consumer_time_period' subform.instance.pk %}" class="text-danger" title="{% trans "Delete this period" %}"><span class="glyphicon glyphicon-trash"></span></a>
+                        <a href="{% url 'delete_consumer_time_period' subform.instance.pk %}" class="text-danger" title="{% translate "Delete this period" %}">{% icon 'trash' %}</a>
                     </td>
                     {% endif %}
                 </tr>
@@ -61,8 +58,8 @@
             </tbody>
         </table>
         
-        <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
-        <a href="{% url 'view_consumer' consumer.pk %}" class="btn btn-link">{% trans "Cancel" %}</a>
+        <button type="submit" class="btn btn-primary">{% translate "Save" %}</button>
+        <a href="{% url 'view_consumer' consumer.pk %}" class="btn btn-link">{% translate "Cancel" %}</a>
     </form>
 </div>
 {% endblock management_content %}

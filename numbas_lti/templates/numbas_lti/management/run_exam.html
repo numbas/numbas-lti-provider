@@ -20,26 +20,26 @@
 
 {% block content %}
     {% include "numbas_lti/management/nav.html" %}
+
     <iframe id="scorm-player" width="100%" src="{{exam.extracted_url}}/index.html"></iframe>
 
-    <script type="text/javascript">
-        window.addEventListener('load',function() {
-            var iframe = document.getElementById('scorm-player');
+    <script type="text/javascript" defer>
+        var iframe = document.getElementById('scorm-player');
 
-            function resize_iframe() {
-                if(!iframe.contentWindow) {
-                    return;
-                }
-                try {
-                    var dh = document.documentElement.getBoundingClientRect().bottom;
-                    var irect = iframe.getBoundingClientRect();
-                    var iy = irect.y || (irect.top+5);
-                    var height = dh-iy;
-                    iframe.style.height = height+'px';
-                } catch(e) {
-                }
+        // TODO replace with ResizeObserver, and use the same template as run_attempt?
+        function resize_iframe() {
+            if(!iframe.contentWindow) {
+                return;
             }
-            setInterval(resize_iframe,500);
-        });
+            try {
+                var dh = document.documentElement.getBoundingClientRect().bottom;
+                var irect = iframe.getBoundingClientRect();
+                var iy = irect.y || (irect.top+5);
+                var height = dh-iy;
+                iframe.style.height = height+'px';
+            } catch(e) {
+            }
+        }
+        setInterval(resize_iframe,500);
     </script>
 {% endblock content %}

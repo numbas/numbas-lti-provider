@@ -60,13 +60,11 @@ class CreateExamView(HelpLinkMixin, MustBeInstructorMixin, generic.edit.CreateVi
         return context
 
     def get_success_url(self):
-        return self.reverse_with_lti('resource_settings', args=(self.request.resource.pk,))
+        return self.reverse_with_lti('resource_settings', args=(self.object.resource.pk,))
 
 class LTI_11_CreateExamView(ResourceManagementViewMixin, CreateExamView):
     def get_resource(self):
         return Resource.objects.get(pk=self.kwargs['pk'])
-
-        return self.request.resource
 
     def form_valid(self,form):
         resource = self.get_resource()
@@ -84,9 +82,15 @@ class ReplaceExamView(CreateExamView):
     form_class = forms.ReplaceExamForm
     helplink = 'instructor/resources.html#replace-exam-package'
 
+    def get_resource(self):
+        return Resource.objects.get(pk=self.kwargs['pk'])
+
     def get_context_data(self,*args,**kwargs):
-        resource = self.request.resource
         context = super(ReplaceExamView,self).get_context_data(*args,**kwargs)
+
+        resource = self.get_resource()
+        context['resource'] = resource
+
         context['current_exam'] = resource.exam
         exams = []
         for exam in resource.exams.all():
@@ -97,31 +101,32 @@ class ReplaceExamView(CreateExamView):
         return context
 
     def form_valid(self,form):
-        resource = self.request.resource
+        resource = self.get_resource()
         old_exam = resource.exam
-        response = super().form_valid(form)
+        exam = self.object = form.save(commit=False)
+        exam.resource = resource
+        exam.save()
 
-        new_exam = self.object
         if form.cleaned_data['safe_replacement']:
             resource.attempts.filter(exam=old_exam).update(exam=new_exam)
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
-        return response
+        return http.HttpResponseRedirect(self.get_success_url())
 
 class RestoreExamView(MustBeInstructorMixin, ResourceManagementViewMixin,generic.edit.UpdateView):
     model = Resource
     form_class = forms.RestoreExamForm
 
     def get_success_url(self):
-        return self.reverse_with_lti('replace_exam',args=(self.request.resource.pk,))
+        return self.reverse_with_lti('replace_exam',args=(self.get_resource().pk,))
 
 class AttemptsUseCurrentVersionView(MustBeInstructorMixin, ResourceManagementViewMixin, generic.UpdateView):
     model = Resource
     http_method_names = ['post']
 
     def post(self, request, *args, **kwargs):
-        resource = self.request.resource
+        resource = self.get_resource()
         with transaction.atomic():
             for a in Attempt.objects.filter(resource=resource).exclude(exam=resource.exam):
                 a.exam = resource.exam
@@ -212,10 +217,17 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
 
         context['unlimited_attempts'] = resource.max_attempts == 0
 
+        def get_score(student):
+            attempt = resource.grade_user(student)
+            if attempt:
+                return attempt.scaled_score
+            else:
+                return 0
+
         context['student_summary'] = [
             (
                 student,
-                resource.grade_user(student),
+                get_score(student),
                 student.lti_data.filter(resource=resource).last(),
                 Attempt.objects.filter(user=student,resource=resource).exclude(broken=True).count(),
                 AccessToken.objects.filter(user=student,resource=resource).count(),

@@ -1,20 +1,21 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
+{% load icon %}
 {% load static %}
 
-{% block title %}{% trans "Dashboard" %} - {{block.super}}{% endblock %}
+{% block title %}{% translate "Dashboard" %} - {{block.super}}{% endblock %}
 
 {% block management_content %}
-<h1>{% trans "Dashboard" %}</h1>
+<h1>{% translate "Dashboard" %}</h1>
 
-<h2>{% trans "Today" %}</h2>
+<h2>{% translate "Today" %}</h2>
 {% if active_resources %}
     <table class="table">
         <thead>
             <tr>
-                <th>{% trans "Resource" %}</th>
-                <th>{% trans "Launches today" %}</th>
-                <th>{% trans "Attempts completed today" %}</th>
+                <th>{% translate "Resource" %}</th>
+                <th>{% translate "Launches today" %}</th>
+                <th>{% translate "Attempts completed today" %}</th>
                 <th></th>
             </tr>
         </thead>
@@ -28,12 +29,12 @@
                 </td>
                 <td>{{resource.recent_launches}}</td>
                 <td>{{resource.recent_completions}}</td>
-                <td><a href="{% url 'resource_stats' resource.pk %}" target="_blank"><span class="glyphicon glyphicon-stats"></span> {% trans "Statistics" %}</a></td>
+                <td><a href="{% url 'resource_stats' resource.pk %}" target="_blank">{% icon 'stats' %} {% translate "Statistics" %}</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 {% else %}
-<p>{% trans "No activity so far today!" %}</p>
+<p>{% translate "No activity so far today!" %}</p>
 {% endif %}
 {% endblock management_content %}

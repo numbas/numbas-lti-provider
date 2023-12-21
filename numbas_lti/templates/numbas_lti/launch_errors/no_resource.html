@@ -1,28 +1,24 @@
-{% extends "numbas_lti/base.html" %}
+{% extends "numbas_lti/error_message.html" %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <header>
-        <h1>{% trans "Authentication failed" %}</h1>
-    </header>
-    <main>
-        <p>{% trans "The most likely cause is a misconfiguration of your LTI tool." %}</p>
+{% block body_class %}{{block.super}} launch-error authentication-failed{% endblock %}
 
-        {% if debug %}
-        <h2>POST data</h2>
-        <table>
-            <thead>
-                <tr><th>{% trans "Key" %}</th><th>{% trans "Value" %}</th></tr>
-            </thead>
-            <tbody>
-                {% for key,value in post_data %}
-                <tr><td><code>{{key}}</code></td><td><code>{{value}}</code></td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-    </main>
-</div>
-{% endblock content %}
+{% block header_message %}{% translate "Authentication failed" %}{% endblock %}
 
+{% block main %}
+    <p>{% translate "The most likely cause is a misconfiguration of your LTI tool." %}</p>
+
+    {% if debug %}
+    <h2>POST data</h2>
+    <table>
+        <thead>
+            <tr><th>{% translate "Key" %}</th><th>{% translate "Value" %}</th></tr>
+        </thead>
+        <tbody>
+            {% for key,value in post_data %}
+            <tr><td><code>{{key}}</code></td><td><code>{{value}}</code></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock main %}

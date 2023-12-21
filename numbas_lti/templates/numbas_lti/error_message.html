@@ -1,0 +1,15 @@
+{% extends "numbas_lti/base.html" %}
+
+{% block body_class %}{{block.super}} error-message{% endblock %}
+
+{% block content %}
+    <header>
+        <h1>{% block header_message %}{% endblock header_message %}</h1>
+    </header>
+
+    <main>
+        {% block main %}{% endblock main %}
+    </main>
+{% endblock content %}
+
+

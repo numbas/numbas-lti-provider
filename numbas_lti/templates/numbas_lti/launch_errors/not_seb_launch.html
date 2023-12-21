@@ -1,13 +1,10 @@
-{% extends "numbas_lti/base.html" %}
+{% extends "numbas_lti/error_message.html" %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <header>
-        <h1>{% translate "Not launched by Safe Exam Browser" %}</h1>
-    </header>
-    <main>
-        <p>{% blocktranslate %}This resource must be launched through Safe Exam Browser with the correct settings.{% endblocktranslate %}</p>
-    </main>
-</div>
-{% endblock content %}
+{% block body_class %}{{block.super}} launch-error not-seb-launch{% endblock %}
+
+{% block header_message %}{% translate "Not launched by Safe Exam Browser" %}{% endblock %}
+
+{% block main %}
+    <p>{% blocktranslate %}This resource must be launched through Safe Exam Browser with the correct settings.{% endblocktranslate %}</p>
+{% endblock main %}

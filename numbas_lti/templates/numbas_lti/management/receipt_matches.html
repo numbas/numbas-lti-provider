@@ -1,7 +1,13 @@
+{% load i18n %}
+{% load icon %}
 {% if matches %}
-    <span class="glyphicon glyphicon-ok text-success"></span>
-    <span class="sr-only">{% trans "Matches" %}</span>
+    <span class="success">
+        {% icon 'ok' %}
+        <span class="sr-only">{% translate "Matches" %}</span>
+    </span>
 {% else %}
-    <span class="glyphicon glyphicon-remove text-danger"></span>
-    <span class="sr-only">{% trans "Doesn't match" %}</span>
+    <span class="danger">
+        {% icon 'not-ok' %}
+        <span class="sr-only">{% translate "Doesn't match" %}</span>
+    </span>
 {% endif %}

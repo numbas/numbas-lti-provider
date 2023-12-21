@@ -5,18 +5,19 @@
 {% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
 
 {% block content %}
-{% include "numbas_lti/management/nav.html" %}
-<div class="{% block main_container %}container{% endblock %}">
+    {% include "numbas_lti/management/nav.html" %}
+
+    {% if page_helplink %}
+        {% helplink page_helplink %}
+    {% endif %}
+
     <header>
         {% block management_header %}{% endblock %}
     </header>
-    {% if page_helplink %}
-        <p>{% helplink page_helplink %}</p>
-    {% endif %}
 
     <main>
         {% for message in messages %}
-        <div class="alert alert-info">
+        <div class="alert info">
             {{message}}
         </div>
         {% endfor %}
@@ -24,5 +25,4 @@
         {% block management_content %}{% endblock %}
     </main>
     {% include "numbas_lti/management/footer.html" %}
-</div>
 {% endblock content %}

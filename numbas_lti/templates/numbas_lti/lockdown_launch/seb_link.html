@@ -1,5 +1,6 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
+{% load icon %}
 
 {% block meta %}
     {{block.super}}
@@ -7,8 +8,7 @@
 {% endblock meta %}
 
 {% block content %}
-<div class="container">
-    <header class="page-header">
+    <header>
         <h1>
             {{request.resource.title}}
             <span class="text-muted">·</span>
@@ -21,12 +21,12 @@
         <p>{% translate "Safe Exam Browser will open automatically, if you have it installed." %}</p>
 
         {% if install_url %}
-        <p><a class="btn btn-info" href="{{install_url}}" target="_blank"><span class="glyphicon glyphicon-download"></span> {% translate "Install Safe Exam Browser" %}</a></p>
+        <p><a class="btn btn-info" href="{{install_url}}" target="_blank">{% icon 'download' %} {% translate "Install Safe Exam Browser" %}</a></p>
         {% endif %}
 
         {% with password=request.resource.get_lockdown_app_password %}
         {% if request.resource.show_lockdown_app_password and password %}
-        <div class="alert alert-info">
+        <div class="alert info">
             <p>{% translate "The password to open the exam is" %}</p>
             <pre class="lockdown-app-password">{{password}}</pre>
         </div>
@@ -34,8 +34,6 @@
         {% endwith %}
 
         <p>{% translate "Or, click the link below to open this resource in Safe Exam Browser:" %}</p>
-        <p><a class="btn btn-lg btn-primary" href="{{seb_url}}">{% trans "Launch in Safe Exam Browser" %}</a></p>
+        <p><a class="btn btn-lg btn-primary" href="{{seb_url}}">{% translate "Launch in Safe Exam Browser" %}</a></p>
     </main>
-</div>
 {% endblock content %}
-

@@ -1,7 +1,10 @@
 {% extends "numbas_lti/base.html" %}
-{% load static %}
 {% load i18n %}
+{% load icon %}
 {% load helplink %}
+{% load static %}
+
+{% block body_class %}{{block.super}} admin{% endblock %}
 
 {% block stylesheets %}
     {{block.super}}
@@ -10,48 +13,45 @@
 
 {% block javascripts %}
     {{block.super}}
-    <script src="{% static 'bootstrap-autocomplete.js' %}"></script>
     <script src="{% static 'admin-dashboard.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-<nav class="navbar navbar-default navbar-static-top">
-    <div class="container-fluid">
-        <div class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-                <li class="{% if management_tab == 'consumers' %}active{% endif %}"><a href="{% url 'list_consumers' %}"><span class="glyphicon glyphicon-tasks"></span> {% trans "LTI Consumers" %}</a></li>
-                <li class="{% if management_tab == 'editor-links' %}active{% endif %}"><a href="{% url 'list_editorlinks' %}"><span class="glyphicon glyphicon-transfer"></span> {% trans "Editor links" %}</a></li>
-                <li class="{% if management_tab == 'stress-tests' %}active{% endif %}"><a href="{% url 'list_stresstests' %}"><span class="glyphicon glyphicon-scale"></span> {% trans "Stress tests" %}</a></li>
-                <li class="{% if management_tab == 'dashboard' %}active{% endif %}"><a href="{% url 'global_dashboard' %}"><span class="glyphicon glyphicon-globe"></span> {% trans "Dashboard" %}</a></li>
-                <li class="{% if management_tab == 'lockdown' %}active{% endif %}"><a href="{% url 'lockdown_dashboard' %}"><span class="glyphicon glyphicon-lock"></span> {% trans "Lockdown apps" %}</a></li>
-            </ul>
-            <form class="navbar-form navbar-left" method="GET" action="{% url 'global_search' %}">
-                <div class="form-group">
-                    <input class="form-control" type="text" id="search" name="query" autocomplete="off" value="{{global_search_query}}">
-                    <input type="hidden" name="model" value="{{global_search_model}}">
-                </div>
-                <button type="submit" class="btn btn-default">{% trans "Search" %}</button>
-            </form>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="pull-right"><a href="/admin"><span class="glyphicon glyphicon-cog"></span> {% trans "Admin site" %}</a></li>
-            </ul>
+    <nav id="top-nav">
+        <span class="navbar-brand">{% block nav_title %}{{INSTANCE_NAME}} {% translate "Numbas LTI provider" %}{% endblock nav_title %}</span>
 
+        <a {% if management_tab == 'consumers' %} aria-current="page"{% endif %} href="{% url 'list_consumers' %}">{% icon 'houses' %} {% translate "LTI Consumers" %}</a>
+        <a {% if management_tab == 'editor-links' %} aria-current="page"{% endif %} href="{% url 'list_editorlinks' %}">{% icon 'link' %} {% translate "Editor links" %}</a>
+        <a {% if management_tab == 'stress-tests' %} aria-current="page"{% endif %} href="{% url 'list_stresstests' %}">{% icon 'scale' %} {% translate "Stress tests" %}</a>
+        <a {% if management_tab == 'dashboard' %} aria-current="page"{% endif %} href="{% url 'global_dashboard' %}">{% icon 'dashboard' %} {% translate "Dashboard" %}</a>
+        <a {% if management_tab == 'lockdown' %} aria-current="page"{% endif %} href="{% url 'lockdown_dashboard' %}">{% icon 'lock' %} {% translate "Lockdown apps" %}</a>
+
+        <form id="search-form" method="GET" action="{% url 'global_search' %}">
+            <input aria-labelledby="search-button" class="form-control" type="search" id="search" name="query" autocomplete="off" value="{{global_search_query}}">
+            <input type="hidden" name="model" value="{{global_search_model}}">
+            <button id="search-button" type="submit" class="btn btn-default">{% translate "Search" %}</button>
+        </form>
+        <a id="admin-link" href="/admin">{% icon 'cog' %} {% translate "Admin site" %}</a>
+    </nav>
+
+    {% if page_helplink %}
+        <p>{% helplink page_helplink %}</p>
+    {% endif %}
+
+    <header>
+        {% block management_header %}{% endblock management_header %}
+    </header>
+
+    <main>
+        {% for message in messages %}
+        <div class="alert alert-info">
+            {{message}}
         </div>
-    </div>
-</nav>
-{% if page_helplink %}
-    <p>{% helplink page_helplink %}</p>
-{% endif %}
-<main class="{% block admin_container %}container{% endblock %}">
-{% for message in messages %}
-<div class="alert alert-info">
-    {{message}}
-</div>
-{%endfor %}
+        {%endfor %}
 
-{% block management_content %}{% endblock %}
-</main>
+        {% block management_content %}{% endblock %}
+    </main>
 
-{% include "numbas_lti/management/footer.html" %}
+    {% include "numbas_lti/management/footer.html" %}
 {% endblock content %}
 

@@ -1,9 +1,8 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
 {% block content %}
-<div class="container">
     <header>
         <h1>Log in</h1>
     </header>
@@ -11,9 +10,8 @@
     <main>
         <form method="POST" action="">
             {% csrf_token %}
-            {{form|bootstrap}}
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-log-in"></span> {% trans "Log in" %}</button>
+            {{form}}
+            <button type="submit" class="btn btn-primary">{% icon 'log-in' %} {% translate "Log in" %}</button>
         </form>
     </main>
-</div>
 {% endblock content %}

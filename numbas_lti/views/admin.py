@@ -69,7 +69,7 @@ class GlobalUserInfoView(HelpLinkMixin, ManagementViewMixin, generic.DetailView)
 
         user = self.get_object()
 
-        consumers = LTIConsumer.objects.filter(contexts__resources__launches__user=user).distinct()
+        consumers = LTIConsumer.objects.filter(Q(contexts__lti_11_resource_links__resource__launches__user=user) | Q(contexts__lti_13_resource_links__resource__launches__user=user)).distinct()
         context['consumers'] = consumers
         
         return context

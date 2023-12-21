@@ -1,5 +1,111 @@
+:root {
+    --font-size: 16px;
+    --font-family: sans-serif;
+    --spacing: 0.5rem;
+    --double-space: calc(2 * var(--spacing));
+    --background-colour: white;
+    --text-colour: black;
+    --main-colour: #a2d1f0;
+    --main-darker: #85c3eb;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-colour: black;
+        --text-colour: white;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: var(--font-size);
+}
+
 body {
     min-height: 100%;
+    font-family: var(--font-family);
+    background: var(--background-colour);
+    color: var(--text-colour);
+    margin: 0;
+}
+
+button, .btn, input {
+    display: inline-block;
+    font-size: inherit;
+    padding: calc(0.5 * var(--spacing)) var(--spacing);
+    margin: var(--spacing);
+    line-height: calc(1em + var(--spacing));
+}
+
+table {
+    margin: var(--double-space);
+}
+
+td, th {
+    padding: var(--spacing);
+}
+
+#top-nav {
+    margin-bottom: var(--double-space);
+    padding: var(--double-space);
+    display: grid;
+    gap: var(--double-space);
+    justify-content: space-between;
+    align-items: baseline;
+    background: var(--main-colour);
+    grid-template-columns: repeat(auto-fill,10em) [last-start] 10em [last-end];
+}
+
+#top-nav > .navbar-brand {
+    grid-column: span 2;
+    justify-self: center;
+}
+#top-nav > #search-form {
+    grid-column: span 2;
+    display: flex;
+}
+#top-nav > #search-form > input[type="search"] {
+    flex-grow: 1;
+    margin-right: 0;
+}
+#top-nav > #search-form > button {
+    margin-left: 0;
+}
+#top-nav > #admin-link {
+    grid-column: last;
+}
+
+.icon {
+    width: 1.2em;
+    height: 1.2em;
+    margin: 0 0.1em;
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+:is(button, .btn) .icon {
+    vertical-align: middle;
+}
+
+.list-unstyled {
+    list-style: none;
+    padding-left: 0;
+}
+
+body > header {
+    padding: var(--spacing);
+    margin-bottom: var(--spacing);
+}
+
+body > header > h1 {
+    margin: 0;
+}
+
+body > main {
+    padding: var(--spacing);
 }
 
 body.dashboard ul.actions li ~ li {
@@ -38,7 +144,8 @@ body.dashboard ul.actions li {
 
 .helplink {
     font-size: 1.1em;
-    margin: 0 1em 3em 3em;
+    margin: 0 var(--spacing) var(--double-space) var(--double-space);
+    text-align: right;
 }
 
 .lockdown-app-password {
@@ -46,4 +153,20 @@ body.dashboard ul.actions li {
     font-size: 1.2em;
     color: black;
     background: white;
+}
+
+body.create-exam #available-exams {
+    max-height: 35rem;
+    overflow-y: auto;
+}
+body.create-exam #available-exams .available-exam.exclude {
+    display: none;
+}
+
+body.edit-editor-link .project h3 {
+    margin-top: 0;
+    font-size: 1.3em;
+}
+body.edit-editor-link .question.getPart(avatar ){
+    width: 2em;
 }

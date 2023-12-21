@@ -1,7 +1,8 @@
 {% extends "numbas_lti/management/base.html" %}
+{% load i18n %}
+{% load icon %}
 {% load percentage %}
 {% load querystring %}
-{% load i18n %}
 {% load static %}
 
 {% block stylesheets %}
@@ -9,98 +10,102 @@
     <link rel="stylesheet" href="{% static "attempts.css" %}">
 {% endblock %}
 
-{% block main_container %}container-fluid{% endblock %}
+{% block management_header %}
+    <h1>{% translate "Attempts" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
     {% if resource.attempts.count %}
-    <h2>{% trans "Attempts" %}</h2>
 
-    <p><form method="POST" action="{% url_with_lti 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempts summary as CSV" %}</button></form></p>
-    <p><form method="POST" action="{% url_with_lti 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download all attempt data as JSON" %}</button></form></p>
+        <p><form method="POST" action="{% url_with_lti 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info">{% icon 'save' %} {% translate "Download attempts summary as CSV" %}</button></form></p>
+        <p><form method="POST" action="{% url_with_lti 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info">{% icon 'save' %} {% translate "Download all attempt data as JSON" %}</button></form></p>
 
-    <form method="GET" class="form-inline">
-        <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
-        {% csrf_token %}
-        <label for="query">
-            {% trans "Search for a student:" %} 
-        </label>
-        <div class="input-group">
-            <input type="hidden" name="userid" value="">
-            <input id="query" name="query" type="search" class="form-control" value="{{query}}">
-            {% if query %}
-            <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}"><span class="glyphicon glyphicon-remove"></span><span class="sr-only">{% trans "Clear query" %}</span></a>
-            {% endif %}
-            <div class="input-group-btn">
-                <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-search"></span><span class="sr-only">{% trans "Search" %}</span></button>
+        <form method="GET" class="form-inline">
+            <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
+            {% csrf_token %}
+            <label for="query">
+                {% translate "Search for a student:" %} 
+            </label>
+            <div class="input-group">
+                <input type="hidden" name="userid" value="">
+                <input id="query" name="query" type="search" class="form-control" value="{{query}}">
+                {% if query %}
+                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}">{% icon 'trash' %}<span class="sr-only">{% translate "Clear query" %}</span></a>
+                {% endif %}
+                <div class="input-group-btn">
+                    <button class="btn btn-primary" type="submit">{% icon 'search' %}<span class="sr-only">{% translate "Search" %}</span></button>
+                </div>
             </div>
-        </div>
-    </form>
-    {% if page_obj.has_other_pages %}
-    <nav aria-label="Page navigation">
-        <ul class="pager">
-            {% if page_obj.has_previous %}
-            <li class="previous"><a href="?{% set_query_values page=page_obj.previous_page_number %}" aria-label="{% trans "Previous page" %}"><span aria-hidden="true">&laquo;</span> {% trans "Later" %}</a></li>
-            {% endif %}
-            <li>{% blocktrans with start=page_obj.start_index end=page_obj.end_index count count=paginator.count %}Showing the only attempt{% plural %}Showing attempts {{start}} - {{end}} of {{count}}{% endblocktrans %}</li>
-            {% if page_obj.has_next %}
-            <li class="next"><a href="?{% set_query_values page=page_obj.next_page_number %}" aria-label="{% trans "Next page" %}">{% trans "Earlier" %} <span aria-hidden="true">&raquo;</span></a></li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-    {% with identifier_field=resource.context.consumer.identifier_field %}
-    <table id="attempts" class="table table-striped">
-        <thead>
-            <tr>
-                <th>{% trans "Student" %}</th>
-                {% if identifier_field %}
-                <th>{{resource.context.consumer.get_identifier_field_display}}</th>
+        </form>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="pager" aria-label="Page navigation">
+                {% if page_obj.has_previous %}
+                <a class="previous" href="?{% set_query_values page=page_obj.previous_page_number %}" aria-label="{% translate "Previous page" %}">{% icon 'arrow-left' %} {% translate "Later" %}</a>
                 {% endif %}
-                <th>{% trans "Start time" %}</th>
-                <th></th>
-                <th>{% trans "Completion status" %}</th>
-                <th>{% trans "Score" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for attempt in attempts %}
-            <tr data-student="{{attempt.user.get_full_name}}">
-                <td>
-                    <a href="?{% set_query_values page=1 userid=attempt.user.pk %}">
-                        {{attempt.user.get_full_name}}
-                    </a>
-                </td>
-                {% if identifier_field %}
-                <td class="identifier">{{attempt.user_data.identifier}}</td>
+                <span class="current-page">{% blocktranslate with start=page_obj.start_index end=page_obj.end_index count count=paginator.count %}Showing the only attempt{% plural %}Showing attempts {{start}} - {{end}} of {{count}}{% endblocktranslate %}</span>
+                {% if page_obj.has_next %}
+                <a class="next" href="?{% set_query_values page=page_obj.next_page_number %}" aria-label="{% translate "Next page" %}">{% translate "Earlier" %} {% icon 'arrow-right' %}</a>
                 {% endif %}
-                <td>{{attempt.start_time}}</td>
-                <td>
-                    <a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% trans "(old exam)" %}{% endif %}
-                    <a class="btn btn-link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="text-warning"><span class="glyphicon glyphicon-pencil"></span> {% trans "Change score" %}</span></a>
-                    <a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="text-info"><span class="glyphicon glyphicon-list"></span> {% trans "Data" %}</span></a>
-                    <a class="btn btn-link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="text-danger"><span class="glyphicon glyphicon-remove"></span> {% trans "Delete" %}</span></a>
-                </td>
-                <td>
-                    {% if attempt.broken %}<span class="text-danger">{% trans "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}">{% trans "(reopen)" %}</a>{% endif %}{% endif %}
-                </td>
-                <td>
-                    <div class="attempt-score">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% trans "(remarked)" %}{% endif %}</div>
-                </td>
-                <td>
-                    <ul class="score-info">
-                        {% for aqs in attempt.question_scores %}
-                        {% if aqs.max_score %}
-                        <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}}; height: {{aqs.scaled_score|percentage:"10"}}" title="{% blocktrans with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktrans %} {% if aqs.completion_status == 'not attempted' %}{% trans "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
-                        {% endif %}
-                        {% endfor %}
-                    </ul>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endwith %}
+            </nav>
+        {% endif %}
+
+        {% with identifier_field=resource.context.consumer.identifier_field %}
+        <table id="attempts" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>{% translate "Student" %}</th>
+                    {% if identifier_field %}
+                    <th>{{resource.context.consumer.get_identifier_field_display}}</th>
+                    {% endif %}
+                    <th>{% translate "Start time" %}</th>
+                    <th></th>
+                    <th>{% translate "Completion status" %}</th>
+                    <th>{% translate "Score" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attempt in attempts %}
+                <tr data-student="{{attempt.user.get_full_name}}">
+                    <td>
+                        <a href="?{% set_query_values page=1 userid=attempt.user.pk %}">
+                            {{attempt.user.get_full_name}}
+                        </a>
+                    </td>
+                    {% if identifier_field %}
+                    <td class="identifier">{{attempt.user_data.identifier}}</td>
+                    {% endif %}
+                    <td>{{attempt.start_time}}</td>
+                    <td>
+                        <a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
+                        <a class="btn btn-link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="text-warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>
+                        <a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="text-info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                        <a class="btn btn-link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="text-danger">{% icon 'trash' %} {% translate "Delete" %}</span></a>
+                    </td>
+                    <td>
+                        {% if attempt.broken %}<span class="text-danger">{% translate "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}">{% translate "(reopen)" %}</a>{% endif %}{% endif %}
+                    </td>
+                    <td class="attempt-score">
+                        {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}
+                    </td>
+                    <td>
+                        <ul class="score-info">
+                            {% for aqs in attempt.question_scores %}
+                            {% if aqs.max_score %}
+                            <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}}; height: {{aqs.scaled_score|percentage:"10"}}" title="{% blocktranslate with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktranslate %} {% if aqs.completion_status == 'not attempted' %}{% translate "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endwith %}
+
     {% else %}
-    <p>{% trans "No students have attempted this exam yet. Information about students' attempts will appear here once a student has attempted this exam." %}</p>
+
+        <p>{% translate "No students have attempted this exam yet. Information about students' attempts will appear here once a student has attempted this exam." %}</p>
+
     {% endif %}
 {% endblock management_content %}

@@ -1,22 +1,20 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
-{% block title %}{% trans "Add a new LTI consumer" %} - {{block.super}}{% endblock %}
+{% block title %}{% translate "Add a new LTI consumer" %} - {{block.super}}{% endblock %}
+
+{% block management_header %}
+    <h1>{% translate "Add a new LTI consumer" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
-<div class="container">
-    <header>
-        <h1>{% trans "Add a new LTI consumer" %}</h1>
-    </header>
-
     <main>
-        <p class="lead">{% trans "Instructors will use the consumer key you enter below, and the automatically-generated consumer secret, to add the Numbas LTI tool to their course." %}</p>
+        <p class="lead">{% translate "Instructors will use the consumer key you enter below, and the automatically-generated consumer secret, to add the Numbas LTI tool to their course." %}</p>
         <form method="POST" action="">
             {% csrf_token %}
-            {{form|bootstrap}}
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add consumer" %}</button>
+            {{form}}
+            <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Add consumer" %}</button>
         </form>
     </main>
-</div>
 {% endblock management_content %}

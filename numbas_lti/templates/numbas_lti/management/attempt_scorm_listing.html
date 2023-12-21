@@ -1,9 +1,10 @@
 {% extends "numbas_lti/management/attempt_base.html" %}
-{% load static %}
 {% load i18n %}
+{% load icon %}
 {% load querystring %}
+{% load static %}
 
-{% block title %}{% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %} - {{block.super}}{% endblock title %}
+{% block title %}{% blocktranslate with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktranslate %} - {{block.super}}{% endblock title %}
 
 {% block stylesheets %}
     {{block.super}}
@@ -12,55 +13,60 @@
 
 {% block attempt_content %}
 
-<p><a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review this attempt" %}</span></a></p>
+    <p><a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
 
-<p><a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="glyphicon glyphicon-list"></span> {% trans "View activity timeline for this attempt" %}</a></p>
+    <p><a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}">{% icon 'list' %} {% translate "View activity timeline for this attempt" %}</a></p>
 
-<p><a class="btn btn-primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}"><span class="glyphicon glyphicon-save"></span> {% trans "Download attempt data in JSON format" %}</a></p>
+    <p><a class="btn btn-primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
 
-<div class="search">
-    <label>{% trans "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>
-    <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">{% trans "Answers" %}</button>
-    <button class="btn btn-default quick-query" data-query="(result|weighting)$">{% trans "Part scores" %}</button>
-    <button class="btn btn-default quick-query" data-query="score.(raw|max)">{% trans "Question scores" %}</button>
-</div>
-<div>
-    <label><input type="checkbox" data-bind="checked: most_recent_only"> Most recent value only</label>
-</div>
+    <div class="search">
+        <label>{% translate "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>
+        <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">{% translate "Answers" %}</button>
+        <button class="btn btn-default quick-query" data-query="(result|weighting)$">{% translate "Part scores" %}</button>
+        <button class="btn btn-default quick-query" data-query="score.(raw|max)">{% translate "Question scores" %}</button>
+    </div>
+    <div>
+        <label><input type="checkbox" data-bind="checked: most_recent_only"> Most recent value only</label>
+    </div>
 
-<table class="table" id="elements">
-    <colgroup>
-        <col>
-        <col style="width:10em;">
-        <col style="width:10em;">
-    </colgroup>
-    <thead>
-        <tr>
-            <th>Key</th>
-            <th>Time</th>
-            <th>Value</th>
-        </tr>
-    </thead>
-    <tbody id="dynamic-data" data-bind="foreach: show_elements">
-        <!-- ko foreach: elements -->
-        <tr data-bind="css: {first: $index()==0}">
-            <td class="key" data-bind="text: key"></td>
-            <td class="time" data-bind="text: time_string"></td>
-            <td class="value" data-bind="text: value"></td>
-        </tr>
-        <!-- /ko -->
-    </tbody>
-</table>
+    <table class="table" id="elements">
+        <colgroup>
+            <col>
+            <col style="width:10em;">
+            <col style="width:10em;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Time</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="dynamic-data" data-bind="foreach: show_elements">
+            <!-- ko foreach: elements -->
+            <tr data-bind="css: {first: $index()==0}">
+                <td class="key" data-bind="text: key"></td>
+                <td class="time" data-bind="text: time_string"></td>
+                <td class="value" data-bind="text: value"></td>
+            </tr>
+            <!-- /ko -->
+        </tbody>
+    </table>
 
 {% endblock attempt_content %}
 
 {% block javascripts %}
-<script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
-{% include "numbas_lti/scripts/luxon.html" %}
-<script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
-{{elements|json_script:"scorm-elements"}}
-<script>
-    var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
-</script>
-<script src="{% static 'attempt_scorm_listing.js' %}"></script>
+    <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
+
+    {% include "numbas_lti/scripts/luxon.html" %}
+
+    <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
+
+    {{elements|json_script:"scorm-elements"}}
+
+    <script>
+        var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
+    </script>
+
+    <script src="{% static 'attempt_scorm_listing.js' %}"></script>
 {% endblock javascripts %}

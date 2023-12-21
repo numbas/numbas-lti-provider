@@ -3,13 +3,14 @@
 {% load i18n %}
 {% load static %}
 
-{% block management_content %}
-<h2>
-    {% blocktrans with resource_name=resource.title %}Re-mark <strong>{{resource_name}}</strong>{% endblocktrans %}
-    <br>
-    <small>{{resource.context.name}}</small>
-</h2>
+{% block management_header %}
+    <h1>
+        {% blocktranslate with resource_name=resource.title %}Re-mark <strong>{{resource_name}}</strong>{% endblocktranslate %}
+    </h1>
+{% endblock management_header %}
 
-<p>{% blocktrans %}This resource's exam package does not support automatic re-marking. If you can, please update it with a newer version.{% endblocktrans %}</p>
+{% block management_content %}
+
+    <p>{% blocktranslate %}This resource's exam package does not support automatic re-marking. If you can, please update it with a newer version.{% endblocktranslate %}</p>
 
 {% endblock management_content %}

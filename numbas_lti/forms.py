@@ -13,7 +13,6 @@ from django.core.files import File
 from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
-import bootstrap_datepicker_plus
 from django.contrib.auth.models import User
 import os
 import requests
@@ -25,29 +24,6 @@ from django.utils.formats import get_format
 import string
 
 datetime_format = get_format('DATETIME_INPUT_FORMATS')[0]
-
-class DateTimePickerInput(bootstrap_datepicker_plus.DateTimePickerInput):
-    _default_options = dict(bootstrap_datepicker_plus.DateTimePickerInput._default_options, **{
-        'sideBySide': True,
-        'useCurrent': False,
-    })
-
-    def __init__(self, attrs=None, *args, **kwargs):
-        attrs = attrs if attrs else {}
-        if 'autocomplete' not in attrs:
-            attrs['autocomplete'] = 'no'
-        super().__init__(attrs, *args, **kwargs)
-
-class DatePickerInput(bootstrap_datepicker_plus.DatePickerInput):
-    _default_options = dict(bootstrap_datepicker_plus.DateTimePickerInput._default_options, **{
-        'format': 'YYYY-MM-DD',
-    })
-
-    def __init__(self, attrs=None, *args, **kwargs):
-        attrs = attrs if attrs else {}
-        if 'autocomplete' not in attrs:
-            attrs['autocomplete'] = 'no'
-        super().__init__(attrs, *args, **kwargs)
 
 def split_newlines_commas(text):
     items = [x.strip() for x in sum((l.split(',') for l in text.split('\n')),[])]
@@ -74,8 +50,8 @@ class AccessChangeForm(ModelForm):
         fields = ['description','resource','available_from', 'available_until', 'max_attempts', 'extend_duration', 'extend_duration_units', 'disable_duration']
         widgets = {
             'description': forms.TextInput(),
-            'available_from': DateTimePickerInput(format=datetime_format),
-            'available_until': DateTimePickerInput(format=datetime_format),
+            'available_from': forms.DateTimeInput(format=datetime_format),
+            'available_until': forms.DateTimeInput(format=datetime_format),
             'extend_duration': forms.TextInput(attrs={'class':'form-control'}),
             'extend_duration_units': forms.Select(attrs={'class':'form-control'}),
             'resource': forms.HiddenInput(),
@@ -121,9 +97,9 @@ class ResourceSettingsForm(ModelForm):
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
         widgets = {
-            'allow_review_from': DateTimePickerInput(format=datetime_format),
-            'available_from': DateTimePickerInput(format=datetime_format),
-            'available_until': DateTimePickerInput(format=datetime_format),
+            'allow_review_from': forms.DateTimeInput(format=datetime_format),
+            'available_from': forms.DateTimeInput(format=datetime_format),
+            'available_until': forms.DateTimeInput(format=datetime_format),
             'lockdown_app_password': forms.TextInput(attrs={'class':'form-control', 'placeholder': getattr(settings,'LOCKDOWN_APP',{}).get('password','')}),
         }
 
@@ -287,8 +263,8 @@ class ConsumerTimePeriodForm(ModelForm):
         fields = ['name','start','end']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
-            'start': DatePickerInput(attrs={'class':'form-control','type':'date'}),
-            'end': DatePickerInput(attrs={'class':'form-control','type':'date'}),
+            'start': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'end': forms.DateInput(attrs={'class':'form-control','type':'date'}),
         }
 
 ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)

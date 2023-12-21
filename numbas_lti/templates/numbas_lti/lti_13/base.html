@@ -2,12 +2,10 @@
 {% load i18n %}
 
 {% block content %}
-<div class="container">
     <header>
-        <h1>{% trans "Numbas" %}</h1>
+        <h1>{% translate "Numbas" %}</h1>
     </header>
     <main>{% block main %}{% endblock main %}</main>
 
     {% include "numbas_lti/management/footer.html" %}
-</div>
 {% endblock content %}

@@ -9,7 +9,7 @@ from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
-from django.db.models import Min, Count, Q, Subquery
+from django.db.models import Min, Count, Q, Subquery, OuterRef
 from django.template.loader import get_template
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _, gettext, ngettext
@@ -70,11 +70,19 @@ class LTIConsumer(models.Model):
         return f'Consumer {self.url} (ID: {self.pk})'
 
     @property
+    def title(self):
+        if hasattr(self, 'lti_11'):
+            return self.lti_11.key
+        elif hasattr(self, 'lti_13'):
+            return self.lti_13.tool.title
+
+    @property
     def resources(self):
-        return Resource.objects.filter(lti_11_links__context__consumer=self)
+        return Resource.objects.filter(Q(lti_11_links__context__consumer=self) | Q(lti_13_links__context__consumer=self))
 
     def contexts_grouped_by_period(self):
-        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time'),num_attempts=Count('resources__attempts')).order_by('-creation')
+        resources = Resource.objects.filter(Q(lti_13_links__context=OuterRef('pk')) | Q(lti_11_links__context=OuterRef('pk')))
+        contexts = self.contexts.exclude(name='').annotate(creation=Min(Subquery(resources.values('creation_time'))),num_attempts=Count(Subquery(resources.values('attempts')))).order_by('-creation')
         if not self.time_periods.exists():
             return [(None,contexts)]
         it = iter(self.time_periods.order_by('-end'))
@@ -266,6 +274,10 @@ class LTIContext(models.Model):
             return self.name
         else:
             return '{} ({})'.format(self.name, self.label)
+
+    @property
+    def resources(self):
+        return Resource.objects.filter(Q(lti_11_links__context=self) | Q(lti_13_links__context=self))
 
     def get_absolute_url(self):
         return reverse('view_context', args=(self.pk,))
@@ -810,7 +822,7 @@ class LTIUserData(models.Model):
             return self.consumer_user_id
 
     def identifier(self):
-        identifier_field = self.resource.contexts().first().consumer.identifier_field
+        identifier_field = self.resource.lti_contexts().first().consumer.identifier_field
         if identifier_field == 'username':
             return self.get_source_id()
         elif identifier_field == 'email':
@@ -942,7 +954,7 @@ class Attempt(models.Model):
             'attempt': self.pk,
             'resource': {
                 'title': self.resource.title,
-                'contexts': [c.name for c in self.resource.contexts()],
+                'contexts': [c.name for c in self.resource.lti_contexts()],
             },
             'exam': self.exam.pk,
             'user': {

@@ -1,1 +1,1 @@
-<span class="glyphicon glyphicon-book"></span> {{resource.title}}{% if resource.title != resource.exam.title %} / {{resource.exam.title}}{% endif %} ({{resource.context.name}} - <code>{{resource.context.consumer.key}}</code>)
+{% load icon %}{% icon 'book' %} {{resource.title}}{% if resource.title != resource.exam.title %} / {{resource.exam.title}}{% endif %} ({{resource.context.name}} - <code>{{resource.context.consumer.key}}</code>)

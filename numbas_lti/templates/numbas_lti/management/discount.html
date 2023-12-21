@@ -9,12 +9,16 @@
 <link rel="stylesheet" href="{% static "resource_discount.css" %}">
 {% endblock stylesheets %}
 
+{% block management_header %}
+    <h1>{% translate "Discount question parts" %}</h1>
+{% endblock management_header %}
+
+
 {% block management_content %}
-    <h2>{% trans "Discount question parts" %}</h2>
 
-    <p>{% blocktrans %}For each part that you want to discount, select whether to remove its marks from the total, or to give everyone full marks for that part.{% endblocktrans %}</p>
+    <p>{% blocktranslate %}For each part that you want to discount, select whether to remove its marks from the total, or to give everyone full marks for that part.{% endblocktranslate %}</p>
 
-    <form method="POST" class="form-inline">
+    <form method="POST">
         {% csrf_token %}
         <table id="parts" class="table table-hover table-condensed">
             <colgroup>
@@ -25,10 +29,10 @@
             </colgroup>
             <thead>
                 <tr>
-                    <th>{% trans "Question" %}</th>
-                    <th>{% trans "Part" %}</th>
-                    <th>{% trans "Gap" %}</th>
-                    <th>{% trans "Discount?" %}</th>
+                    <th>{% translate "Question" %}</th>
+                    <th>{% translate "Part" %}</th>
+                    <th>{% translate "Gap" %}</th>
+                    <th>{% translate "Discount?" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,6 +55,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        <button class="btn btn-primary btn-lg" type="submit">{% trans "Save" %}</button>
+        <button class="btn btn-primary btn-lg" type="submit">{% translate "Save" %}</button>
     </form>
 {% endblock management_content %}

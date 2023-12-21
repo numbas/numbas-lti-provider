@@ -1,15 +1,18 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
+{% load icon %}
 {% load static %}
 
-{% block title %}{% trans "SEB Settings" %} - {{block.super}}{% endblock %}
+{% block title %}{% translate "SEB Settings" %} - {{block.super}}{% endblock %}
 
+{% block management_header %}
+    <h1>{% translate "SEB Settings" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
     {% if object_list.exists %}
-        <div>
-            <p>{% trans "The configured Safe Exam Browser settings are listed below." %}</p>
-        </div>
+        <p>{% translate "The configured Safe Exam Browser settings are listed below." %}</p>
+
         <ul>
             {% for settings in object_list %}
             <li>
@@ -19,9 +22,9 @@
         </ul>
     {% else %}
         <div class="alert alert-warning">
-            <p>{% trans "No SEB settings files have been set up yet." %}</p>
+            <p>{% translate "No SEB settings files have been set up yet." %}</p>
         </div>
     {% endif %}
 
-    <p><a href="{% url 'create_seb_settings' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add a new SEB settings file" %}</a></p>
+    <p><a href="{% url 'create_seb_settings' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Add a new SEB settings file" %}</a></p>
 {% endblock management_content %}

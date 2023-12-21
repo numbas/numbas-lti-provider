@@ -1,27 +1,23 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
-{% block title %}{% blocktrans with name=context.name %}Delete "{{name}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+{% block title %}{% blocktranslate with name=context.name %}Delete "{{name}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
+
+{% block management_header %}
+    <h1>{% blocktranslate with name=context.name %}Delete "{{name}}"{% endblocktranslate %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
-<div class="container">
-    <header>
-        <h1>Delete a context</h1>
-    </header>
-
     <main>
-        <p>
-        {% blocktrans with name=context.name%}Are you sure you want to delete the context <em>{{name}}</em>?{% endblocktrans %}
-        </p>
-        <p class="text-danger">{% trans "All attempt data accessed through this context will be deleted." %}</p>
+        <p>{% blocktranslate with name=context.name%}Are you sure you want to delete the context <em>{{name}}</em>?{% endblocktranslate %}</p>
+        <p class="danger">{% translate "All attempt data accessed through this context will be deleted." %}</p>
         <form method="POST" action="">
             {% csrf_token %}
             <p>
-                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this context" %}</button>
+                <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this context" %}</button>
                 <a class="btn btn-link" href="{% url 'view_context' context.pk %}">Cancel</a>
             </p>
         </form>
     </main>
-</div>
 {% endblock management_content %}

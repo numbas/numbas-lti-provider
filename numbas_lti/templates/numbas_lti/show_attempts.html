@@ -1,15 +1,13 @@
 {% extends "numbas_lti/base.html" %}
-{% load percentage %}
 {% load i18n %}
+{% load icon %}
+{% load percentage %}
 {% load querystring %}
 
 {% block content %}
-<div class="container">
-    <header class="page-header">
+    <header>
         <h1>
             {{resource.title}}
-            <span class="text-muted">·</span>
-            <small>{{resource.context.name}}</small>
         </h1>
     </header>
 
@@ -46,7 +44,7 @@
                 <tr>
                     <td colspan="2">
                     <td>
-                        <a class="btn btn-warning" href="{% url_with_lti 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% translate "Start a new attempt" %}</a>
+                        <a class="btn btn-warning" href="{% url_with_lti 'new_attempt' %}">{% icon 'plus' %} {% translate "Start a new attempt" %}</a>
                     </td>
                 </tr>
                 {% endif %}
@@ -72,7 +70,7 @@
                         {% if attempt.completed %}
                             {% if attempt.review_allowed %}
                             <a class="btn btn-info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
-                                <span class="glyphicon glyphicon-apple"></span> {% translate "Review this attempt" %}
+                                {% icon 'play' %} {% translate "Review this attempt" %}
                             </a>
                             {% else %}
                                 {% if attempt.resource.allow_review_from %}
@@ -82,7 +80,7 @@
                         {% else %}
                             {% if attempt.resume_allowed %}
                             <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
-                                <span class="glyphicon glyphicon-play"></span> {% translate "Continue" %}
+                                {% icon 'play' %} {% translate "Continue" %}
                             </a>
                             {% endif %}
                         {% endif %}

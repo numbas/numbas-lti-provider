@@ -8,7 +8,6 @@ def helplink(context, url, **kwargs):
     return {
         'url': url, 
         'subject': kwargs.get('subject'), 
-        'float': kwargs.get('float',True),
         'HELP_URL': context['HELP_URL']
     }
 

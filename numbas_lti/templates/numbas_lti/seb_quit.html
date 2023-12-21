@@ -1,15 +1,12 @@
-{% extends "numbas_lti/base.html" %}
+{% extends "numbas_lti/error_message.html" %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <header>
-        <h1>{% translate "Quitting Safe Exam Browser" %}</h1>
-    </header>
-    <main>
-        <p>{% translate "You're not supposed to see this! Safe Exam Browser should have closed itself when you clicked the Quit link." %}</p>
-        <a class="btn btn-primary" onclick="history.back()">{% translate "Go back" %}</a>
-    </main>
-</div>
-{% endblock content %}
+{% block body_class %}{{block.super}} quitting-seb{% endblock %}
+
+{% block header_message %}{% translate "Quitting Safe Exam Browser" %}{% endblock %}
+
+{% block main %}
+    <p>{% translate "You're not supposed to see this! Safe Exam Browser should have closed itself when you clicked the Quit link." %}</p>
+    <a class="btn btn-primary" onclick="history.back()">{% translate "Go back" %}</a>
+{% endblock main %}
 

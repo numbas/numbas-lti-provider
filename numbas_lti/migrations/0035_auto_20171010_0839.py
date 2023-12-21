@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import datetime
 from django.db import migrations, models
 import django.db.models.deletion
-from django.utils.timezone import utc
+from datetime import timezone
 
 def set_creation_times(apps, schema_editor):
     Resource = apps.get_model('numbas_lti','Resource')
@@ -44,13 +44,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exam',
             name='creation_time',
-            field=models.DateTimeField(auto_now_add=True, default=datetime.datetime(2016, 1, 1, 1, 1, 1, 0, tzinfo=utc), verbose_name='Time this exam was created'),
+            field=models.DateTimeField(auto_now_add=True, default=datetime.datetime(2016, 1, 1, 1, 1, 1, 0, tzinfo=timezone.utc), verbose_name='Time this exam was created'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='resource',
             name='creation_time',
-            field=models.DateTimeField(auto_now_add=True, default=datetime.datetime(2016, 1, 1, 1, 1, 1, 0, tzinfo=utc), verbose_name='Time this resource was created'),
+            field=models.DateTimeField(auto_now_add=True, default=datetime.datetime(2016, 1, 1, 1, 1, 1, 0, tzinfo=timezone.utc), verbose_name='Time this resource was created'),
             preserve_default=False,
         ),
         migrations.RunPython(set_creation_times,migrations.RunPython.noop),

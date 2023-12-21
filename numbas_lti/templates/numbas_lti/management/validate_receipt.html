@@ -1,133 +1,132 @@
 {% extends "numbas_lti/management/base.html" %}
-{% load percentage %}
 {% load i18n %}
+{% load icon %}
+{% load percentage %}
 
-{% block body_class %}dashboard{% endblock %}
+{% block management_header %}
+    <h1>{% translate "Validate a receipt code" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
 
-<h1>{% trans "Validate a receipt code" %}</h1>
+    <p class="help-block">{% blocktranslate %}Enter a code from a student's attempt completion receipt to validate it.{% endblocktranslate %}</p>
 
-<p class="help-block">{% blocktrans %}Enter a code from a student's attempt completion receipt to validate it.{% endblocktrans %}</p>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div class="form-group">
+            {{form.code}}
+        </div>
+        <button type="submit" class="btn btn-primary">
+            {% icon 'ok' %}
+            {% translate "Validate this code" %}
+        </button>
+    </form>
 
-<form method="POST" action="">
-    {% csrf_token %}
-    <div class="form-group">
-        {{form.code}}
-    </div>
-    <button type="submit" class="btn btn-primary">
-        <span class="glyphicon glyphicon-ok"></span>
-        {% trans "Validate this code" %}
-    </button>
-</form>
+    {% if submitted %}
+        <hr>
+        <p class="result {% if valid %}success{% else %}danger{% endif %}">
+            {% if valid %}
+                {% icon 'ok' %}
+                {% translate "Valid code" %}
+            {% else %}
+                {% icon 'not-ok' %}
+                {% translate "Invalid code" %}
+            {% endif %}
+        </p>
 
-{% if submitted %}
-    <hr>
-    <h2 class="{% if valid %}text-success{% else %}text-danger{% endif %}">
-        {% if valid %}
-            <span class="glyphicon glyphicon-ok"></span>
-            {% trans "Valid code" %}
-        {% else %}
-            <span class="glyphicon glyphicon-remove"></span>
-            {% trans "Invalid code" %}
+        {% if invalid %}
+            <p class="danger">{% translate "The code you entered is not valid." %}</p>
         {% endif %}
-    </h2>
 
-    {% if invalid %}
-        <div class="text-danger">
-            <p>{% trans "The code you entered is not valid." %}</p>
-        </div>
+        {% if no_attempt %}
+            <p class="danger">{% translate "The code you entered does not correspond to an attempt at this resource." %}</p>
+        {% endif %}
+
+        {% if summary %}
+        <section id="summary">
+            <p>{% translate "The code you entered corresponds to the following information:" %}</p>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>{% translate "In receipt" %}</th>
+                        <th>{% translate "In database" %}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{% translate "Attempt" %}</td>
+                        <td>
+                            {% if attempt %}
+                            {% translate "by" %} {{attempt.user.get_full_name}} ({{attempt.user_data.identifier}})
+                            {% else %}
+                                {% translate "Attempt not found" %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if attempt %}
+                            <a href="{% url 'attempt_timeline' attempt.pk %}">{% translate "View attempt data" %}</a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not no_attempt %}
+                                {% icon 'ok' %}
+                                <span class="sr-only">{% translate "Matches" %}</span>
+                            {% else %}
+                                {% icon 'not-ok' %}
+                                <span class="sr-only">{% translate "Doesn't match" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{% translate "Start time" %}</td>
+                        <td>{{summary.start_time}}</td>
+                        <td>{{attempt.start_time}}</td>
+                        <td>
+                            {% if summary.start_time == attempt.start_time %}
+                                {% icon 'ok' %}
+                                <span class="sr-only">{% translate "Matches" %}</span>
+                            {% else %}
+                                {% icon 'not-ok' %}
+                                <span class="sr-only">{% translate "Doesn't match" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{% translate "End time" %}</td>
+                        <td>{{summary.end_time}}</td>
+                        <td>{{attempt.end_time}}</td>
+                        <td>
+                            {% if summary.end_time == attempt.end_time %}
+                                {% icon 'ok' %}
+                                <span class="sr-only">{% translate "Matches" %}</span>
+                            {% else %}
+                                {% icon 'not-ok' %}
+                                <span class="sr-only">{% translate "Doesn't match" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if "raw_score" in summary %}
+                    <tr>
+                        <td>{% translate "Score" %}</td>
+                        <td>{{summary.raw_score}}</td>
+                        <td>{{attempt.raw_score}}</td>
+                        <td>
+                            {% if summary.raw_score == attempt.raw_score %}
+                                {% icon 'ok' %}
+                                <span class="sr-only">{% translate "Matches" %}</span>
+                            {% else %}
+                                {% icon 'not-ok' %}
+                                <span class="sr-only">{% translate "Doesn't match" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
     {% endif %}
-
-    {% if no_attempt %}
-        <div class="text-danger">
-            <p>{% trans "The code you entered does not correspond to an attempt at this resource." %}</p>
-        </div>
-    {% endif %}
-
-    {% if summary %}
-        <p>{% trans "The code you entered corresponds to the following information:" %}</p>
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>{% trans "In receipt" %}</th>
-                    <th>{% trans "In database" %}</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{% trans "Attempt" %}</td>
-                    <td>
-                        {% if attempt %}
-                        {% trans "by" %} {{attempt.user.get_full_name}} ({{attempt.user_data.identifier}})
-                        {% else %}
-                            {% trans "Attempt not found" %}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if attempt %}
-                        <a href="{% url 'attempt_timeline' attempt.pk %}">{% trans "View attempt data" %}</a>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if not no_attempt %}
-                            <span class="glyphicon glyphicon-ok text-success"></span>
-                            <span class="sr-only">{% trans "Matches" %}</span>
-                        {% else %}
-                            <span class="glyphicon glyphicon-remove text-danger"></span>
-                            <span class="sr-only">{% trans "Doesn't match" %}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td>{% trans "Start time" %}</td>
-                    <td>{{summary.start_time}}</td>
-                    <td>{{attempt.start_time}}</td>
-                    <td>
-                        {% if summary.start_time == attempt.start_time %}
-                            <span class="glyphicon glyphicon-ok text-success"></span>
-                            <span class="sr-only">{% trans "Matches" %}</span>
-                        {% else %}
-                            <span class="glyphicon glyphicon-remove text-danger"></span>
-                            <span class="sr-only">{% trans "Doesn't match" %}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td>{% trans "End time" %}</td>
-                    <td>{{summary.end_time}}</td>
-                    <td>{{attempt.end_time}}</td>
-                    <td>
-                        {% if summary.end_time == attempt.end_time %}
-                            <span class="glyphicon glyphicon-ok text-success"></span>
-                            <span class="sr-only">{% trans "Matches" %}</span>
-                        {% else %}
-                            <span class="glyphicon glyphicon-remove text-danger"></span>
-                            <span class="sr-only">{% trans "Doesn't match" %}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% if "raw_score" in summary %}
-                <tr>
-                    <td>{% trans "Score" %}</td>
-                    <td>{{summary.raw_score}}</td>
-                    <td>{{attempt.raw_score}}</td>
-                    <td>
-                        {% if summary.raw_score == attempt.raw_score %}
-                            <span class="glyphicon glyphicon-ok text-success"></span>
-                            <span class="sr-only">{% trans "Matches" %}</span>
-                        {% else %}
-                            <span class="glyphicon glyphicon-remove text-danger"></span>
-                            <span class="sr-only">{% trans "Doesn't match" %}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    {% endif %}
-{% endif %}
 {% endblock management_content %}

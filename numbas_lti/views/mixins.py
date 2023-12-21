@@ -88,7 +88,11 @@ class LTI_13_Mixin:
     def get_message_launch(self):
         if not hasattr(self.request, 'lti_13_message_launch'):
             message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage)
-            self.request.lti_13_message_launch = message_launch
+            try:
+                message_launch.validate()
+                self.request.lti_13_message_launch = message_launch
+            except Exception:
+                return
 
         return self.request.lti_13_message_launch
 

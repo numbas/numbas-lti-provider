@@ -1,101 +1,101 @@
 {% extends "numbas_lti/management/base.html" %}
-{% load bootstrap %}
 {% load i18n %}
+{% load icon %}
 {% load static %}
 {% load statici18n %}
 
+{% block management_header %}
+    <h1>
+        {% blocktranslate with resource_name=resource.title %}Statistics for <strong>{{resource_name}}</strong>{% endblocktranslate %}
+    </h1>
+{% endblock management_header %}
+
 {% block management_content %}
-<h2>
-    {% blocktrans with resource_name=resource.title %}Statistics for <strong>{{resource_name}}</strong>{% endblocktrans %}
-    <br>
-    <small>{{resource.context.name}}</small>
-</h2>
+    <button type="button" onclick="window.print()" class="hidden-print btn btn-info">
+        {% icon 'print' %}
+        {% translate "Print this page" %}
+    </button>
 
-<button type="button" onclick="window.print()" class="hidden-print btn btn-info">
-    <span class="glyphicon glyphicon-print"></span>
-    {% trans "Print this page" %}
-</button>
+    <section id="attempt_completion">
+        <h3>{% translate "Attempt completion" %}</h3>
+        <table class="table" id="completion-table">
+            <tbody>
+                {% for label,value,n in completion_counts %}
+                <tr>
+                    <td>{{label}}</td>
+                    <td class="value" data-value="{{value}}">{{n}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
 
-<section id="attempt_completion">
-    <h3>{% trans "Attempt completion" %}</h3>
-    <table class="table" id="completion-table">
-        <tbody>
-            {% for label,value,n in completion_counts %}
-            <tr>
-                <td>{{label}}</td>
-                <td class="value" data-value="{{value}}">{{n}}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</section>
+    <input type="checkbox" id="completed-toggle"> <label for="completed-toggle">{% translate "Only count completed attempts" %}</label>
 
-<input type="checkbox" id="completed-toggle"> <label for="completed-toggle">{% trans "Only count completed attempts" %}</label>
+    <section id="summary_statistics">
+        <h3>{% translate "Summary statistics" %}</h3>
+        <table class="table" id="summary-stats-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>{% translate "Mean" %}</th>
+                    <th>{% translate "Lower quartile" %}</th>
+                    <th>{% translate "Median" %}</th>
+                    <th>{% translate "Upper quartile" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </section>
 
-<section id="summary_statistics">
-    <h3>{% trans "Summary statistics" %}</h3>
-    <table class="table" id="summary-stats-table">
-        <thead>
-            <tr>
-                <th></th>
-                <th>{% trans "Mean" %}</th>
-                <th>{% trans "Lower quartile" %}</th>
-                <th>{% trans "Median" %}</th>
-                <th>{% trans "Upper quartile" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-</section>
-
-<section id="stacked_status_chart">
-    <div class="legend">
-        <span class="num_not_attempted">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Not attempted" %}
-        </span>
-        <span class="num_incorrect">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Incorrect" %}
-        </span>
-        <span class="num_partial">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Partially correct" %}
-        </span>
-        <span class="num_correct">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Correct" %}
-        </span>
-    </div>
-    <div class="chart">
-        <svg class="diagram"></svg>
-    </div>
-</section>
+    <section id="stacked_status_chart">
+        <div class="legend">
+            <span class="num_not_attempted">
+                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                {% translate "Not attempted" %}
+            </span>
+            <span class="num_incorrect">
+                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                {% translate "Incorrect" %}
+            </span>
+            <span class="num_partial">
+                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                {% translate "Partially correct" %}
+            </span>
+            <span class="num_correct">
+                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                {% translate "Correct" %}
+            </span>
+        </div>
+        <div class="chart">
+            <svg class="diagram"></svg>
+        </div>
+    </section>
 
 
-<section id="question_scores_chart">
-    <h3>{% trans "Score distribution" %}</h3>
-    <p>{% blocktrans %}In the following charts, the horizontal axis represents scaled score, and the vertical axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
-    <div class="chart"></div>
-</section>
+    <section id="question_scores_chart">
+        <h3>{% translate "Score distribution" %}</h3>
+        <p>{% blocktranslate %}In the following charts, the horizontal axis represents scaled score, and the vertical axis represents the number of attempts achieving that score.{% endblocktranslate %}</p>
+        <div class="chart"></div>
+    </section>
 
-<section id="times">
-    <h3>{% trans "Attempt times" %}</h3>
-	<p>{% blocktrans %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktrans %}</p>
-    <div class="chart">
-        <svg class="diagram"></svg>
-    </div>
-</section>
+    <section id="times">
+        <h3>{% translate "Attempt times" %}</h3>
+        <p>{% blocktranslate %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktranslate %}</p>
+        <div class="chart">
+            <svg class="diagram"></svg>
+        </div>
+    </section>
 
-<section id="time_spent_chart">
-    <h3>{% trans "Time spent" %}</h3>
-	<p>{% blocktrans %}In the following chart, the horizontal axis represents the time spent on an attempt, and the vertical axis represents the number of attempts lasting that long.{% endblocktrans %}</p>
-    <div class="chart">
-    </div>
-</section>
+    <section id="time_spent_chart">
+        <h3>{% translate "Time spent" %}</h3>
+        <p>{% blocktranslate %}In the following chart, the horizontal axis represents the time spent on an attempt, and the vertical axis represents the number of attempts lasting that long.{% endblocktranslate %}</p>
+        <div class="chart">
+        </div>
+    </section>
 
-{% endblock %}
+{% endblock management_content %}
 
 {% block stylesheets %}
     {{block.super}}

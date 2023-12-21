@@ -1,24 +1,23 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
+{% load icon %}
 
 {% block content %}
-<div class="container">
     <header>
-        <h1>{% trans "Numbas LTI provider" %}</h1>
+        <h1>{% translate "Numbas LTI provider" %}</h1>
     </header>
     <main>
         <p class="lead">
-            {% blocktrans %}
+            {% blocktranslate %}
             Welcome to the Numbas LTI tool provider. To use this tool, you need a <strong>consumer key</strong> and <strong>consumer secret</strong>.
             The site administrator can create these for you.
-            {% endblocktrans %}
+            {% endblocktranslate %}
         </p>
-        <p>{% trans "Here is this tool's Launch URL:" %}</p>
+        <p>{% translate "Here is this tool's Launch URL:" %}</p>
         <pre>{{entry_url}}</pre>
 
-        <p class="pull-right"><a href="{% url 'list_consumers' %}"><span class="glyphicon glyphicon-list"></span> {% trans "Administration (login required)" %}</a></p>
+        <p><a href="{% url 'list_consumers' %}">{% icon 'list' %} {% translate "Administration (login required)" %}</a></p>
     </main>
 
     {% include "numbas_lti/management/footer.html" %}
-</div>
 {% endblock content %}

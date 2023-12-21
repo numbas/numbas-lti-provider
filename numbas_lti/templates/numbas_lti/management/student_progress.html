@@ -1,23 +1,27 @@
 {% extends "numbas_lti/management/base.html" %}
-{% load percentage %}
 {% load i18n %}
+{% load icon %}
+{% load percentage %}
 {% load querystring %}
+
+{% block management_header %}
+    <h1>{% translate "Student progress" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
     <section>
-        <h2>{% trans "Student progress" %}</h2>
 
         <div>
-            <label>{% trans "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
+            <label>{% translate "Search for a student:" %} <input id="query" type="text" class="form-control"></label>
         </div>
         <table class="table" id="students">
             <thead>
                 <tr>
-                    <th>{% trans "Name" %}</th>
-                    <th>{% trans "Score" %}</th>
-                    <th>{% trans "Attempts" %}</th>
+                    <th>{% translate "Name" %}</th>
+                    <th>{% translate "Score" %}</th>
+                    <th>{% translate "Attempts" %}</th>
                     {% if not unlimited_attempts %}
-                    <th colspan="2">{% trans "Access tokens" %}</th>
+                    <th colspan="2">{% translate "Access tokens" %}</th>
                     {% endif %}
                 </tr>
             </thead>
@@ -28,15 +32,15 @@
                     <td>
                         {{score|percentage}}
                         {% if lti_data.last_reported_score != score %}
-                        <span class="glyphicon glyphicon-warning-sign" title="{% trans "This score has not been reported to the grade book yet." %}"></span>
+                        {% icon 'warning-sign' %} <span class="sr-only">{% translate "This score has not been reported to the grade book yet." %}</span>
                         {% endif %}
                     </td>
                     <td>{{attempts}}</td>
                     {% if not unlimited_attempts %}
                     <td>{{access_tokens}}</td>
                     <td>
-                        <a class="btn btn-warning btn-sm" href="{% url_with_lti 'grant_access_token' resource.pk student.pk %}" title="{% trans "Grant an access token" %}"><span class="glyphicon glyphicon-plus"></span></a>
-                        {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url_with_lti 'remove_access_token' resource.pk student.pk %}" title="{% trans "Remove an access token" %}"><span class="glyphicon glyphicon-minus"></span></a>{% endif %}
+                        <a class="btn btn-warning btn-sm" href="{% url_with_lti 'grant_access_token' resource.pk student.pk %}" title="{% translate "Grant an access token" %}">{% icon 'plus' %}</a>
+                        {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url_with_lti 'remove_access_token' resource.pk student.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
                     </td>
                     {% endif %}
                 </tr>

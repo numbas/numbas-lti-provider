@@ -1,20 +1,24 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
+{% load icon %}
 {% load static %}
 
-{% block title %}{% trans "Editor links" %} - {{block.super}}{% endblock %}
+{% block title %}{% translate "Editor links" %} - {{block.super}}{% endblock %}
+
+{% block management_header %}
+    <h1>{% translate "Editor links" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
     {% if object_list.exists %}
-        <div>
-            <p>{% trans "The configured Numbas editor connections are listed below." %}</p>
-        </div>
+        <p>{% translate "The configured Numbas editor connections are listed below." %}</p>
+
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>{% trans "Editor" %}</th>
-                    <th>{% trans "Projects" %}</th>
-                    <th></th>
+                    <th>{% translate "Editor" %}</th>
+                    <th>{% translate "Projects" %}</th>
+                    <th>{% translate "Manage" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,23 +39,24 @@
                         {% endfor %}
                         </ul>
                         {% else %}
-                        <p>{% trans "No projects linked yet." %}</p>
+                        <p>{% translate "No projects linked yet." %}</p>
                         {% endif %}
                     </td>
                     <td class="text-right">
-                        <a class="btn btn-primary" href="{% url 'edit_editorlink' link.pk %}"><span class="glyphicon glyphicon-cog"></span> {% trans "Edit" %}</a>
-                        <a class="btn btn-danger" href="{% url 'delete_editorlink' link.pk %}" title="{% trans "Delete this connection" %}"><span class="glyphicon glyphicon-trash"></span> <span class="sr-only">{% trans "Delete this connection" %}</span></a>
+                        <a class="btn btn-primary" href="{% url 'edit_editorlink' link.pk %}">{% icon 'cog' %} {% translate "Edit" %}</a>
+                        <a class="btn btn-danger" href="{% url 'delete_editorlink' link.pk %}" title="{% translate "Delete this connection" %}">{% icon 'trash' %} <span class="sr-only">{% translate "Delete this connection" %}</span></a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Connect to a Numbas editor" %}</a></p>
+
+        <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Connect to a Numbas editor" %}</a></p>
 
     {% else %}
-        <div class="alert alert-warning">
-            <p>{% trans "No links to Numbas editors have been set up yet." %}</p>
-            <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Connect to a Numbas editor" %}</a></p>
+        <div class="alert warning">
+            <p>{% translate "No links to Numbas editors have been set up yet." %}</p>
+            <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Connect to a Numbas editor" %}</a></p>
         </div>
     {% endif %}
 {% endblock management_content %}
