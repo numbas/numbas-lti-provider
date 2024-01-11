@@ -9,18 +9,16 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <main>
-        <p>
-            {% blocktranslate with name=object.name %}Are you sure you want to delete the SEB settings file <strong>{{name}}</strong>?{% endblocktranslate %}
-        </p>
-        <p class="danger">{% translate "All resources using this settings file will be inaccessible until you pick a new settings file." %}</p>
+    <p>
+        {% blocktranslate with name=object.name %}Are you sure you want to delete the SEB settings file <strong>{{name}}</strong>?{% endblocktranslate %}
+    </p>
+    <p class="danger">{% translate "All resources using this settings file will be inaccessible until you pick a new settings file." %}</p>
 
-        <form method="POST" action="">
-            {% csrf_token %}
-            <p>
-                <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this SEB settings file" %}</button>
-                <a class="btn btn-link" href="{% url 'edit_seb_settings' object.pk %}">{% translate "Cancel" %}</a>
-            </p>
-        </form>
-    </main>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <p>
+            <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this SEB settings file" %}</button>
+            <a class="btn btn-link" href="{% url 'edit_seb_settings' object.pk %}">{% translate "Cancel" %}</a>
+        </p>
+    </form>
 {% endblock management_content %}

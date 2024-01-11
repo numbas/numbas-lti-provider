@@ -9,17 +9,15 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <main>
-        {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
+    {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
 
-        <hr>
+    <hr>
 
-        <form method="POST" action="" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{form}}
-            <button type="submit" class="btn btn-primary">{% icon 'save' %} {% translate "Save" %}</button>
-            <a class="btn btn-link" href="{% url 'list_seb_settings' %}">{% translate "Cancel" %}</a>
-            <a class="btn btn-danger" href="{% url 'delete_seb_settings' object.pk %}">{% icon 'trash' %} {% translate "Delete this settings file" %}</a>
-        </form>
-    </main>
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form}}
+        <button type="submit" class="btn btn-primary">{% icon 'save' %} {% translate "Save" %}</button>
+        <a class="btn btn-link" href="{% url 'list_seb_settings' %}">{% translate "Cancel" %}</a>
+        <a class="btn btn-danger" href="{% url 'delete_seb_settings' object.pk %}">{% icon 'trash' %} {% translate "Delete this settings file" %}</a>
+    </form>
 {% endblock management_content %}

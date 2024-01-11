@@ -9,12 +9,10 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <main>
-        <p class="lead">{% translate "Instructors will use the consumer key you enter below, and the automatically-generated consumer secret, to add the Numbas LTI tool to their course." %}</p>
-        <form method="POST" action="">
-            {% csrf_token %}
-            {{form}}
-            <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Add consumer" %}</button>
-        </form>
-    </main>
+    <p class="lead">{% translate "Instructors will use the consumer key you enter below, and the automatically-generated consumer secret, to add the Numbas LTI tool to their course." %}</p>
+    <form method="POST" action="">
+        {% csrf_token %}
+        {{form}}
+        <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Add consumer" %}</button>
+    </form>
 {% endblock management_content %}

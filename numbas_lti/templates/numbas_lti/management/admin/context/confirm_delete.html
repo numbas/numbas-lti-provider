@@ -9,15 +9,13 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <main>
-        <p>{% blocktranslate with name=context.name%}Are you sure you want to delete the context <em>{{name}}</em>?{% endblocktranslate %}</p>
-        <p class="danger">{% translate "All attempt data accessed through this context will be deleted." %}</p>
-        <form method="POST" action="">
-            {% csrf_token %}
-            <p>
-                <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this context" %}</button>
-                <a class="btn btn-link" href="{% url 'view_context' context.pk %}">Cancel</a>
-            </p>
-        </form>
-    </main>
+    <p>{% blocktranslate with name=context.name%}Are you sure you want to delete the context <em>{{name}}</em>?{% endblocktranslate %}</p>
+    <p class="danger">{% translate "All attempt data accessed through this context will be deleted." %}</p>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <p>
+            <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this context" %}</button>
+            <a class="btn btn-link" href="{% url 'view_context' context.pk %}">Cancel</a>
+        </p>
+    </form>
 {% endblock management_content %}

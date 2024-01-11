@@ -9,15 +9,11 @@
 {% endblock management_header %}
 
 {% block management_content %}
-<div class="container">
-    <main>
-        <form method="POST" action="">
-            {% csrf_token %}
-            {{form}}
+    <form method="POST" action="">
+        {% csrf_token %}
+        {{form}}
 
-            <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Connect" %}</button>
-            <a class="btn btn-link" href="{% url 'list_editorlinks' %}">{% translate "Cancel" %}</a>
-        </form>
-    </main>
-</div>
+        <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Connect" %}</button>
+        <a class="btn btn-link" href="{% url 'list_editorlinks' %}">{% translate "Cancel" %}</a>
+    </form>
 {% endblock management_content %}

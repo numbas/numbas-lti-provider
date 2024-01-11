@@ -9,17 +9,14 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <main>
+    <p>
+        {% blocktranslate with name=editorlink.name%}Are you sure you want to delete the connection to {{name}}?{% endblocktranslate %}
+    </p>
+    <form method="POST" action="">
+        {% csrf_token %}
         <p>
-            {% blocktranslate with name=editorlink.name%}Are you sure you want to delete the connection to {{name}}?{% endblocktranslate %}
+            <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this connection" %}</button>
+            <a class="btn btn-link" href="{% url 'list_editorlinks' %}">Cancel</a>
         </p>
-        <form method="POST" action="">
-            {% csrf_token %}
-            <p>
-                <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this connection" %}</button>
-                <a class="btn btn-link" href="{% url 'list_editorlinks' %}">Cancel</a>
-            </p>
-        </form>
-    </main>
-</div>
+    </form>
 {% endblock management_content %}

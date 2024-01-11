@@ -9,15 +9,13 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <main>
-        {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
+    {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
 
-        <hr>
+    <hr>
 
-        <form method="POST" action="" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{form}}
-            <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Add SEB settings" %}</button>
-        </form>
-    </main>
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form}}
+        <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Add SEB settings" %}</button>
+    </form>
 {% endblock management_content %}

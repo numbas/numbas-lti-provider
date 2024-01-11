@@ -9,19 +9,17 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <main>
+    <p>
+        {% blocktranslate with key=consumer.key%}Are you sure you want to delete the LTI consumer <code>{{key}}</code>?{% endblocktranslate %}
+    </p>
+
+    <p class="text-danger">{% translate "All attempt data accessed through this consumer will be deleted." %}</p>
+
+    <form method="POST" action="">
+        {% csrf_token %}
         <p>
-            {% blocktranslate with key=consumer.key%}Are you sure you want to delete the LTI consumer <code>{{key}}</code>?{% endblocktranslate %}
+            <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</button>
+            <a class="btn btn-link" href="{% url 'list_consumers' %}">{% translate "Cancel" %}</a>
         </p>
-
-        <p class="text-danger">{% translate "All attempt data accessed through this consumer will be deleted." %}</p>
-
-        <form method="POST" action="">
-            {% csrf_token %}
-            <p>
-                <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</button>
-                <a class="btn btn-link" href="{% url 'list_consumers' %}">{% translate "Cancel" %}</a>
-            </p>
-        </form>
-    </main>
+    </form>
 {% endblock management_content %}
