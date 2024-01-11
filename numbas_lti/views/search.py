@@ -10,41 +10,31 @@ from numbas_lti.models import LTIConsumer, LTIContext, Resource
 from django.utils.translation import gettext_lazy as _, gettext
 
 def user_json(user):
-    consumers = LTIConsumer.objects.filter(contexts__resources__launches__user=user).distinct()
+    resources = Resource.objects.filter(launches__user=user)
+    contexts = LTIContext.objects.filter(Q(lti_13_resource_links__resource__in=resources) | Q(lti_11_resource_links__resource__in=resources))
+    consumers = LTIConsumer.objects.filter(contexts__in=contexts).distinct()
     return {
         'model': 'user',
         'id': user.pk,
-        'username': user.username,
-        'name': user.get_full_name(),
-        'consumers': [c.key for c in consumers],
         'label': get_template('numbas_lti/management/search/autocomplete_user.html').render({'user': user, 'consumers': consumers}),
         'url': reverse('global_user_info', args=(user.pk,)),
-        'text': user.username,
     }
 
 def context_json(context):
     return {
         'model': 'context',
         'id': context.pk,
-        'name': context.name,
         'label': context.label,
-        'consumer': context.consumer.key,
         'label': get_template('numbas_lti/management/search/autocomplete_context.html').render({'context': context}),
         'url': context.get_absolute_url(),
-        'text': context.name,
     }
 
 def resource_json(resource):
-    consumer = resource.context.consumer if resource.context else None
     return {
         'model': 'resource',
         'id': resource.pk,
-        'title': resource.title,
-        'consumer': consumer.key if consumer else '',
-        'context': resource.context.name if resource.context else '',
         'label': get_template('numbas_lti/management/search/autocomplete_resource.html').render({'resource': resource}),
         'url': reverse('resource_dashboard',args=(resource.pk,)),
-        'text': resource.title,
     }
 
 def find_users(words):

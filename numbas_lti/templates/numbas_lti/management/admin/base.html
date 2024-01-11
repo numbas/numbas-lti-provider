@@ -13,7 +13,7 @@
 
 {% block javascripts %}
     {{block.super}}
-    <script src="{% static 'admin-dashboard.js' %}"></script>
+    <script src="{% static 'admin-dashboard.js' %}" type="module"></script>
 {% endblock %}
 
 {% block content %}
@@ -25,13 +25,15 @@
         <a {% if management_tab == 'stress-tests' %} aria-current="page"{% endif %} href="{% url 'list_stresstests' %}">{% icon 'scale' %} {% translate "Stress tests" %}</a>
         <a {% if management_tab == 'dashboard' %} aria-current="page"{% endif %} href="{% url 'global_dashboard' %}">{% icon 'dashboard' %} {% translate "Dashboard" %}</a>
         <a {% if management_tab == 'lockdown' %} aria-current="page"{% endif %} href="{% url 'lockdown_dashboard' %}">{% icon 'lock' %} {% translate "Lockdown apps" %}</a>
+        <a id="admin-link" href="/admin">{% icon 'cog' %} {% translate "Admin site" %}</a>
 
         <form id="search-form" method="GET" action="{% url 'global_search' %}">
-            <input aria-labelledby="search-button" class="form-control" type="search" id="search" name="query" autocomplete="off" value="{{global_search_query}}">
+            <input list="search-results" aria-labelledby="search-button" type="search" id="global-search-input" name="query" autocomplete="off" value="{{global_search_query}}">
             <input type="hidden" name="model" value="{{global_search_model}}">
             <button id="search-button" type="submit" class="btn btn-default">{% translate "Search" %}</button>
+            <datalist id="search-results">
+            </datalist>
         </form>
-        <a id="admin-link" href="/admin">{% icon 'cog' %} {% translate "Admin site" %}</a>
     </nav>
 
     {% if page_helplink %}

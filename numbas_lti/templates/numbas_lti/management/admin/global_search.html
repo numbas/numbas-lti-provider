@@ -6,16 +6,6 @@
 
 {% block title %}{% if global_search_query %}{% blocktranslate with query=global_search_query %}Searching for "{{query}}" {% endblocktranslate %}{% else %}Global search{% endif %} - {{block.super}}{% endblock %}
 
-{% block stylesheets %}
-    {{block.super}}
-    <link rel="stylesheet" href="{% static 'admin-dashboard.css' %}">
-{% endblock stylesheets %}
-
-{% block javascripts %}
-    {{block.super}}
-    <script src="{% static 'admin-dashboard.js' %}"></script>
-{% endblock %}
-
 {% block management_header %}
     <h1>{% translate "Search" %}</h1>
 {% endblock management_header %}

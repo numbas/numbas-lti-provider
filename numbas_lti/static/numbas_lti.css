@@ -64,7 +64,7 @@ td, th {
     justify-self: center;
 }
 #top-nav > #search-form {
-    grid-column: span 2;
+    grid-column: 1 / -1;
     display: flex;
 }
 #top-nav > #search-form > input[type="search"] {

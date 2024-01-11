@@ -1,1 +1,1 @@
-{% load icon %}{% icon 'user' %} {{user.get_full_name}} ({{user.username}} / {{user.email}}) {% for context in contexts %}<code>{{context.name}}</code>{% endfor %}
+{% load i18n %}{% translate "User:" %} {{user.get_full_name}} ({{user.username}} / {{user.email}}) {% for consumer in consumers %}<code>{{consumer.title}}</code>{% endfor %}
