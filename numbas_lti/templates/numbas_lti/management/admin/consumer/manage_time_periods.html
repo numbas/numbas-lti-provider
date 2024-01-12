@@ -43,14 +43,14 @@
                         {{field}}
                         {% if field.errors %}
                         {% for error in field.errors %}
-                            <span class="text-warning">{{error}}</span>
+                            <span class="warning">{{error}}</span>
                         {% endfor %}
                         {% endif %}
                         </td>
                     {% endfor %}
                     {% if subform.instance.pk %}
                     <td>
-                        <a href="{% url 'delete_consumer_time_period' subform.instance.pk %}" class="text-danger" title="{% translate "Delete this period" %}">{% icon 'trash' %}</a>
+                        <a href="{% url 'delete_consumer_time_period' subform.instance.pk %}" class="danger" title="{% translate "Delete this period" %}">{% icon 'trash' %}</a>
                     </td>
                     {% endif %}
                 </tr>

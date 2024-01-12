@@ -25,7 +25,7 @@
                 <td>
                     <a href="{% url 'resource_dashboard' resource.pk %}" target="_blank">{{resource.title|default:"Unnamed resource"}}</a>
                     <br>
-                    <small class="text-muted">{{resource.context.name}}</small>
+                    <small class="muted">{{resource.context.name}}</small>
                 </td>
                 <td>{{resource.recent_launches}}</td>
                 <td>{{resource.recent_completions}}</td>

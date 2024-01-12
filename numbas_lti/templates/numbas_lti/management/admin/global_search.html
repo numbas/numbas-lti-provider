@@ -63,7 +63,7 @@
                     {% endif %}
 
                     {% if global_search_model == 'resources' %}
-                    <td><a href="{% url 'resource_dashboard' result.pk %}">{{result.title}} (<em class="text-muted">{{result.exam.title}}</em>)</a></td>
+                    <td><a href="{% url 'resource_dashboard' result.pk %}">{{result.title}} (<em class="muted">{{result.exam.title}}</em>)</a></td>
                     <td>{% for context in result.lti_contexts %}{{context.name}}{% endfor %}</td>
                     {% endif %}
                 </li>

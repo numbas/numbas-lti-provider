@@ -55,7 +55,7 @@
                 <li>
                     <a class="button warning" href="{% url_with_lti 'report_scores' resource.pk %}">{% icon 'upload' %} {% translate "Report scores back to VLE" %}</a>
                     {% if dismissed_report_process %}
-                    <span class="text-warning">{% translate "A report process is being cancelled. Consider waiting until it has finished." %}</span>
+                    <span class="warning">{% translate "A report process is being cancelled. Consider waiting until it has finished." %}</span>
                     {% endif %}
                 </li>
                 {% endif %}

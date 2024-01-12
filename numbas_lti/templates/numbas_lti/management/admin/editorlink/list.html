@@ -42,7 +42,7 @@
                         <p>{% translate "No projects linked yet." %}</p>
                         {% endif %}
                     </td>
-                    <td class="text-right">
+                    <td>
                         <a class="button primary" href="{% url 'edit_editorlink' link.pk %}">{% icon 'cog' %} {% translate "Edit" %}</a>
                         <a class="button danger" href="{% url 'delete_editorlink' link.pk %}" title="{% translate "Delete this connection" %}">{% icon 'trash' %} <span class="sr-only">{% translate "Delete this connection" %}</span></a>
                     </td>

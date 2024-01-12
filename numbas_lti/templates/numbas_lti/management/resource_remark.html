@@ -101,7 +101,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr class="hidden-attempts-count text-muted" v-if="num_attempts_hidden > 0">
+                <tr class="hidden-attempts-count muted" v-if="num_attempts_hidden > 0">
                     <td colspan="6">
                         {% translate "Number of hidden attempts:" %} [[num_attempts_hidden]].
                     </td>
@@ -131,16 +131,16 @@
                     </td>
                     <td>
                         <button class="button danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)">{% icon 'save' %} {% translate "Save" %}</button>
-                        <span class="text-success saved">{% translate "Saved" %}</span>
-                        <span class="text-warning error-saving">{% translate "Saving error" %}</span>
+                        <span class="success saved">{% translate "Saved" %}</span>
+                        <span class="warning error-saving">{% translate "Saving error" %}</span>
                     </td>
                     <td>
-                        <a class="button link" target="review_attempt" :href="attempt.review_url"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>
-                        <a class="button link" target="_blank" :href="attempt.timeline_url"><span class="text-info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                        <a class="button link" target="review_attempt" :href="attempt.review_url"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
+                        <a class="button link" target="_blank" :href="attempt.timeline_url"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
                     </td>
                 </tr>
                 <tr v-if="attempt.status=='error'">
-                    <td colspan="9" class="text-warning">
+                    <td colspan="9" class="warning">
                         <p v-if="attempt.remark_error"><em>{% translate "There was an error remarking this attempt:" %}</em> [[attempt.remark_error]]</p>
                         <p v-if="attempt.fetch_error"><em>{% translate "There was an error fetching data for this attempt:" %}</em> [[attempt.fetch_error]]</p>
                     </td>

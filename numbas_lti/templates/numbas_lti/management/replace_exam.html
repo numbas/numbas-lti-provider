@@ -89,7 +89,7 @@
             <p>There are {{n}} attempts set to use exam package(s) other than the active one.</p>
             <p><strong>If it is safe to do so</strong>, you can set these attempts to use the active version instead.</p>
             {% endblocktranslate %}
-            <p class="text-danger">{% translate "This can not be undone." %}</p>
+            <p class="danger">{% translate "This can not be undone." %}</p>
             <form method="POST" action="{% url_with_lti 'use_current_version' resource.pk %}">
                 {% csrf_token %}
                 <button class="button danger">{% icon 'arrow-up' %} {% translate "Set all attempts to use the current version." %}</button>
