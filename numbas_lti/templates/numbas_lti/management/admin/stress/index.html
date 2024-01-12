@@ -27,7 +27,7 @@
                 <td>
                     <form method="POST" action="{% url 'delete_stresstest' test.pk %}">
                         {% csrf_token %}
-                        <button class="btn btn-danger btn-sm">{% translate "Delete" %}</button>
+                        <button class="button danger small">{% translate "Delete" %}</button>
                     </form>
                 </td>
             </tr>
@@ -35,5 +35,5 @@
         </tbody>
     </table>
 
-    <a class="btn btn-primary" href="{% url 'create_stresstest' %}">{% translate "Start a stress test" %}</a>
+    <a class="button primary" href="{% url 'create_stresstest' %}">{% translate "Start a stress test" %}</a>
 {% endblock %}

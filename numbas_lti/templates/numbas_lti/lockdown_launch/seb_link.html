@@ -21,7 +21,7 @@
         <p>{% translate "Safe Exam Browser will open automatically, if you have it installed." %}</p>
 
         {% if install_url %}
-        <p><a class="btn btn-info" href="{{install_url}}" target="_blank">{% icon 'download' %} {% translate "Install Safe Exam Browser" %}</a></p>
+        <p><a class="button info" href="{{install_url}}" target="_blank">{% icon 'download' %} {% translate "Install Safe Exam Browser" %}</a></p>
         {% endif %}
 
         {% with password=request.resource.get_lockdown_app_password %}
@@ -34,6 +34,6 @@
         {% endwith %}
 
         <p>{% translate "Or, click the link below to open this resource in Safe Exam Browser:" %}</p>
-        <p><a class="btn btn-lg btn-primary" href="{{seb_url}}">{% translate "Launch in Safe Exam Browser" %}</a></p>
+        <p><a class="button large primary" href="{{seb_url}}">{% translate "Launch in Safe Exam Browser" %}</a></p>
     </main>
 {% endblock content %}

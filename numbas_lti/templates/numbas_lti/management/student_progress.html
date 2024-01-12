@@ -39,8 +39,8 @@
                     {% if not unlimited_attempts %}
                     <td>{{access_tokens}}</td>
                     <td>
-                        <a class="btn btn-warning btn-sm" href="{% url_with_lti 'grant_access_token' resource.pk student.pk %}" title="{% translate "Grant an access token" %}">{% icon 'plus' %}</a>
-                        {% if access_tokens %}<a class="btn btn-danger btn-sm" href="{% url_with_lti 'remove_access_token' resource.pk student.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
+                        <a class="button warning small" href="{% url_with_lti 'grant_access_token' resource.pk student.pk %}" title="{% translate "Grant an access token" %}">{% icon 'plus' %}</a>
+                        {% if access_tokens %}<a class="button danger small" href="{% url_with_lti 'remove_access_token' resource.pk student.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
                     </td>
                     {% endif %}
                 </tr>

@@ -43,20 +43,20 @@
                         {% endif %}
                     </td>
                     <td class="text-right">
-                        <a class="btn btn-primary" href="{% url 'edit_editorlink' link.pk %}">{% icon 'cog' %} {% translate "Edit" %}</a>
-                        <a class="btn btn-danger" href="{% url 'delete_editorlink' link.pk %}" title="{% translate "Delete this connection" %}">{% icon 'trash' %} <span class="sr-only">{% translate "Delete this connection" %}</span></a>
+                        <a class="button primary" href="{% url 'edit_editorlink' link.pk %}">{% icon 'cog' %} {% translate "Edit" %}</a>
+                        <a class="button danger" href="{% url 'delete_editorlink' link.pk %}" title="{% translate "Delete this connection" %}">{% icon 'trash' %} <span class="sr-only">{% translate "Delete this connection" %}</span></a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Connect to a Numbas editor" %}</a></p>
+        <p><a href="{% url 'create_editorlink' %}" class="button primary">{% icon 'plus' %} {% translate "Connect to a Numbas editor" %}</a></p>
 
     {% else %}
         <div class="alert warning">
             <p>{% translate "No links to Numbas editors have been set up yet." %}</p>
-            <p><a href="{% url 'create_editorlink' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Connect to a Numbas editor" %}</a></p>
+            <p><a href="{% url 'create_editorlink' %}" class="button primary">{% icon 'plus' %} {% translate "Connect to a Numbas editor" %}</a></p>
         </div>
     {% endif %}
 {% endblock management_content %}

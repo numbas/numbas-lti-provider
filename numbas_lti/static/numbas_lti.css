@@ -32,7 +32,7 @@ body {
     margin: 0;
 }
 
-button, .btn, input {
+button, .button, input {
     display: inline-block;
     font-size: inherit;
     padding: calc(0.5 * var(--spacing)) var(--spacing);

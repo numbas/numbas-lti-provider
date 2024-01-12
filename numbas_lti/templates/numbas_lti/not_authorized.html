@@ -9,7 +9,7 @@
     <p>{% translate "It's possible your authorization expired - leave this activity and re-enter." %}</p>
     <p>{% translate "If this page has loaded inside a frame, try opening the activity in a new tab instead." %}</p>
     <p>
-        <a class="btn btn-primary" href="{{request.GET.originalurl}}" target="_blank">
+        <a class="button primary" href="{{request.GET.originalurl}}" target="_blank">
             {% icon 'new-window' %}
             Open in a new tab
         </a>

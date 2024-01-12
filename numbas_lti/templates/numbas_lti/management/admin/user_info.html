@@ -46,7 +46,7 @@
             <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="text-muted">{{attempt.resource.context.name}}</span></td>
             <td>{{attempt.start_time}}</td>
             <td>
-                <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>
+                <a class="button link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>
             </td>
         </tr>
         {% endfor %}

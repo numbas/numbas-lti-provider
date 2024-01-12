@@ -13,15 +13,15 @@
 {%endblock stylesheets %}
 
 {% block attempt_content %}
-    <div class="alert alert-info" id="loading">
+    <div class="alert info" id="loading">
         <p>{% translate "Loading attempt data..." %}</p>
     </div>
     <div id="loaded">
-        <p><a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
+        <p><a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
 
-        <p><a class="btn btn-link" href="{% url_with_lti 'attempt_scorm_listing' attempt.pk %}">{% icon 'list' %} {% translate "View raw SCORM data for this attempt" %}</a></p>
+        <p><a class="button link" href="{% url_with_lti 'attempt_scorm_listing' attempt.pk %}">{% icon 'list' %} {% translate "View raw SCORM data for this attempt" %}</a></p>
 
-        <p><a class="btn btn-primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
+        <p><a class="button primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
 
         <table class="table" id="timeline" data-bind="if: grouped_timeline().length">
             <colgroup>
@@ -78,7 +78,7 @@
             </tbody>
         </table>
         <!-- ko if: !grouped_timeline().length -->
-        <div class="alert alert-warning">
+        <div class="alert warning">
             <p>{% translate "There's no data for this attempt." %}</p>
         </div>
         <!-- /ko -->

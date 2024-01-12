@@ -32,11 +32,11 @@
             <form method="POST" enctype="multipart/form-data">
                 <p>{% blocktranslate %}To obtain an exam package, find your exam in the Numbas editor and click <em>"Download SCORM package"</em>.{% endblocktranslate %}</p>
                 {% if editor_links.count == 1 %}
-                <p class="text-center"><a class="btn btn-link" target="_blank" href="{{editor_links.first.url}}">{% icon 'new-window' %} {% translate "Click here to open the Numbas editor." %}</a></p>
+                <p class="text-center"><a class="button link" target="_blank" href="{{editor_links.first.url}}">{% icon 'new-window' %} {% translate "Click here to open the Numbas editor." %}</a></p>
                 {% endif %}
                 {% csrf_token %}
                 {{form|bootstrap}}
-                <button type="submit" class="btn btn-lg btn-primary">{% icon 'upload' %} {% translate "Submit" %}</button>
+                <button type="submit" class="button large primary">{% icon 'upload' %} {% translate "Submit" %}</button>
             </form>
         </section>
         {% if exams %}
@@ -71,8 +71,8 @@
                         <input type="hidden" name="retrieve_url" value="{{exam.download}}">
                         <input type="hidden" name="rest_url" value="{{exam.url}}">
                         <p>
-                        <a target="_blank" class="btn btn-default" href="{{exam.preview}}">{% icon 'play' %} {% translate "Preview" %}</a>
-                            <button class="btn btn-primary" type="submit">{% icon 'upload' %} {% translate "Use this" %}</button>
+                        <a target="_blank" class="button default" href="{{exam.preview}}">{% icon 'play' %} {% translate "Preview" %}</a>
+                            <button class="button primary" type="submit">{% icon 'upload' %} {% translate "Use this" %}</button>
                         </p>
                     </form>
                 </li>

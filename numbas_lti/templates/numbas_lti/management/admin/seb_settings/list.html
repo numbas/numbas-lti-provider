@@ -21,10 +21,10 @@
             {% endfor %}
         </ul>
     {% else %}
-        <div class="alert alert-warning">
+        <div class="alert warning">
             <p>{% translate "No SEB settings files have been set up yet." %}</p>
         </div>
     {% endif %}
 
-    <p><a href="{% url 'create_seb_settings' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Add a new SEB settings file" %}</a></p>
+    <p><a href="{% url 'create_seb_settings' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new SEB settings file" %}</a></p>
 {% endblock management_content %}

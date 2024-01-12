@@ -10,14 +10,14 @@
 
 {% block management_content %}
     <nav>
-        <li><a class="btn btn-warning" href="{% url_with_lti 'replace_exam' resource.pk %}">{% icon 'refresh' %} {% translate "Replace exam package" %}</a></li>
+        <li><a class="button warning" href="{% url_with_lti 'replace_exam' resource.pk %}">{% icon 'refresh' %} {% translate "Replace exam package" %}</a></li>
         {% with edit_url=current_exam.manifest.edit_url %}
         {% if edit_url %}
-        <li><a class="btn btn-primary" href="{{edit_url}}" target="_blank">{% icon 'pencil' %} {% translate "Edit this exam" %}</a></li>
+        <li><a class="button primary" href="{{edit_url}}" target="_blank">{% icon 'pencil' %} {% translate "Edit this exam" %}</a></li>
         {% endif %}
         {% endwith %}
 
-        <li><a class="btn btn-info" href="{{resource.exam.package.url}}">{% icon 'save' %} {% translate "Download exam package" %}</a></li>
+        <li><a class="button info" href="{{resource.exam.package.url}}">{% icon 'save' %} {% translate "Download exam package" %}</a></li>
     </nav>
 
     <hr>
@@ -30,7 +30,7 @@
 
             {{form}}
 
-            <p><button class="btn btn-primary" type="submit">{% translate "Save" %}</button> <a class="btn btn-link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% translate "Cancel" %}</a></p>
+            <p><button class="button primary" type="submit">{% translate "Save" %}</button> <a class="button link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% translate "Cancel" %}</a></p>
         </form>
     </section>
 {% endblock management_content %}

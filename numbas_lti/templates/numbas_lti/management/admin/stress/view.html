@@ -16,11 +16,11 @@
 
     <div id="app">
         {% verbatim %}
-        <p><button class="btn btn-danger" @click="wipe">Wipe all data</button></p>
-        <p>Start <input type="number" v-model="num_attempts_to_start"> {{num_attempts_to_start | pluralize('attempt')}} at <input type="time" v-model="time_to_start"> <button class="btn btn-default" @click="start_next_minute">next minute</button> <button class="btn btn-warning" @click="start_attempts">now</button></p>
+        <p><button class="button danger" @click="wipe">Wipe all data</button></p>
+        <p>Start <input type="number" v-model="num_attempts_to_start"> {{num_attempts_to_start | pluralize('attempt')}} at <input type="time" v-model="time_to_start"> <button class="button default" @click="start_next_minute">next minute</button> <button class="button warning" @click="start_attempts">now</button></p>
         <p>Set <input type="number" v-model="num_elements_set_on_creation"> {{num_elements_set_on_creation | pluralize('element')}} on attempt creation.</p>
         <p>Set new elements every <input type="number" v-model="element_period" min="1"> {{element_period | pluralize('second')}}.</p>
-        <button class="btn btn-primary" @click="start_attempt">Start an attempt</button>
+        <button class="button primary" @click="start_attempt">Start an attempt</button>
 
         <table class="table">
             <thead>

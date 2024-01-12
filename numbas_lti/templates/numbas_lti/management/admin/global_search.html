@@ -14,9 +14,9 @@
     {% if global_search_query %}
         <p>
             {% translate "Search for:" %}
-            <a href="?{% set_query_values page=0 model="users" %}" class="btn btn-link" {% if global_search_model == 'users' %}aria-current="page"{% endif %}>{% icon 'user' %} {% translate "Users" %} ({{users.count}})</a>
-            <a href="?{% set_query_values page=0 model="contexts" %}" class="btn btn-link" {% if global_search_model == 'contexts' %}aria-current="page"{% endif %}>{% icon 'slides' %} {% translate "Contexts" %} ({{contexts.count}})</a>
-            <a href="?{% set_query_values page=0 model="resources" %}" class="btn btn-link" {% if global_search_model == 'resources' %}aria-current="page"{% endif %}>{% icon 'book' %} {% translate "Resources" %} ({{resources.count}})</a>
+            <a href="?{% set_query_values page=0 model="users" %}" class="button link" {% if global_search_model == 'users' %}aria-current="page"{% endif %}>{% icon 'user' %} {% translate "Users" %} ({{users.count}})</a>
+            <a href="?{% set_query_values page=0 model="contexts" %}" class="button link" {% if global_search_model == 'contexts' %}aria-current="page"{% endif %}>{% icon 'slides' %} {% translate "Contexts" %} ({{contexts.count}})</a>
+            <a href="?{% set_query_values page=0 model="resources" %}" class="button link" {% if global_search_model == 'resources' %}aria-current="page"{% endif %}>{% icon 'book' %} {% translate "Resources" %} ({{resources.count}})</a>
         </p>
         {% if num_results > 0 %}
         <nav class="pager" aria-label="Page navigation">

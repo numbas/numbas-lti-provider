@@ -14,7 +14,7 @@
     <form method="POST" action="{% url_with_lti 'delete_access_change' object.pk %}">
         {% csrf_token %}
         <p>
-            <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this access change" %}</button>
+            <button type="submit" class="button danger">{% icon 'trash' %} {% translate "Delete this access change" %}</button>
         </p>
     </form>
     {% endif %}
@@ -136,7 +136,7 @@
                 </p>
             {% endif %}
         </fieldset>
-        <p><button class="btn btn-lg btn-primary" type="submit">{% translate "Save" %}</button> <a class="btn btn-link" href="{% url_with_lti 'resource_settings' resource.pk %}">{% translate "Cancel" %}</a></p>
+        <p><button class="button large primary" type="submit">{% translate "Save" %}</button> <a class="button link" href="{% url_with_lti 'resource_settings' resource.pk %}">{% translate "Cancel" %}</a></p>
     </form>
 {% endblock management_content %}
 

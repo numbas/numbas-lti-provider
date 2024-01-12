@@ -12,7 +12,7 @@
 
     <p>{% translate "A context in" %} <a href="{% url 'view_consumer' context.consumer.pk %}">{{context.consumer.title}}</a>.</p>
 
-    <p><a href="{% url 'delete_context' context.pk %}" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this context" %}</a></p>
+    <p><a href="{% url 'delete_context' context.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this context" %}</a></p>
 
     <section id="resources">
         {% if context.resources.exists %}

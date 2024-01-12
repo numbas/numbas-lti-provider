@@ -7,6 +7,6 @@
 
     <form action="" method="POST">
         {% csrf_token %}
-        <p><button type="submit" class="btn btn-danger">{% translate "Delete it" %}</button> <a class="btn btn-link" href="{% url_with_lti 'manage_attempts' attempt.resource.pk %}">{% translate "Cancel" %}</a></p>
+        <p><button type="submit" class="button danger">{% translate "Delete it" %}</button> <a class="button link" href="{% url_with_lti 'manage_attempts' attempt.resource.pk %}">{% translate "Cancel" %}</a></p>
     </form>
 {% endblock attempt_content %}

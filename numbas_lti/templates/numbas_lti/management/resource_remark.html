@@ -33,12 +33,12 @@
             <input id="use-unsubmitted" type="checkbox" v-model="use_unsubmitted"> <label for="use-unsubmitted">{% translate "Use unsubmitted answers" %}
         </p>
         <p>
-            <button class="btn btn-primary" @click="remark_all">{% icon 'repeat' %} {% translate "Re-mark all attempts" %}</button>
-            <button class="btn btn-warning" @click="stop_marking">{% icon 'stop' %} {% translate "Stop marking" %}</button>
-            <button class="btn btn-danger" @click="save_changed_attempts" :disabled="changed_attempts.length==0 || saving">{% icon 'save' %} {% translate "Save all changed attempts" %}</button>
+            <button class="button primary" @click="remark_all">{% icon 'repeat' %} {% translate "Re-mark all attempts" %}</button>
+            <button class="button warning" @click="stop_marking">{% icon 'stop' %} {% translate "Stop marking" %}</button>
+            <button class="button danger" @click="save_changed_attempts" :disabled="changed_attempts.length==0 || saving">{% icon 'save' %} {% translate "Save all changed attempts" %}</button>
         </p>
 
-        <div class="alert alert-default" v-if="remarking_all">
+        <div class="alert default" v-if="remarking_all">
             <div class="progress">
                 <div class="progress-bar" role="progressbar" :aria-valuenow="remarking_progress|percent" aria-valuemin="0" aria-valuemax="100" :style="{width: (100*remarking_progress)+'%'}">
                     [[remarking_progress|percent]]%
@@ -48,7 +48,7 @@
             <p>{% translate "Estimated end:" %} <span v-if="estimated_end">[[estimated_end|duration]]</span></p>
         </div>
 
-        <div class="alert alert-warning" v-if="save_error">
+        <div class="alert warning" v-if="save_error">
             <p>{% translate "There was an error saving changed data:" %}</p>
             <pre>[[save_error]]</pre>
         </div>
@@ -127,16 +127,16 @@
                         <div v-if="attempt.status=='error'">{% translate "Error" %}</div>
                     </td>
                     <td>
-                        <button class="btn btn-default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)">{% icon 'repeat' %} {% translate "Re-mark" %}</button>
+                        <button class="button default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)">{% icon 'repeat' %} {% translate "Re-mark" %}</button>
                     </td>
                     <td>
-                        <button class="btn btn-danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)">{% icon 'save' %} {% translate "Save" %}</button>
+                        <button class="button danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)">{% icon 'save' %} {% translate "Save" %}</button>
                         <span class="text-success saved">{% translate "Saved" %}</span>
                         <span class="text-warning error-saving">{% translate "Saving error" %}</span>
                     </td>
                     <td>
-                        <a class="btn btn-link" target="review_attempt" :href="attempt.review_url"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>
-                        <a class="btn btn-link" target="_blank" :href="attempt.timeline_url"><span class="text-info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                        <a class="button link" target="review_attempt" :href="attempt.review_url"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>
+                        <a class="button link" target="_blank" :href="attempt.timeline_url"><span class="text-info">{% icon 'list' %} {% translate "Data" %}</span></a>
                     </td>
                 </tr>
                 <tr v-if="attempt.status=='error'">

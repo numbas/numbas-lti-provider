@@ -17,8 +17,8 @@
 {% block management_content %}
     {% if resource.attempts.count %}
 
-        <p><form method="POST" action="{% url_with_lti 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info">{% icon 'save' %} {% translate "Download attempts summary as CSV" %}</button></form></p>
-        <p><form method="POST" action="{% url_with_lti 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info">{% icon 'save' %} {% translate "Download all attempt data as JSON" %}</button></form></p>
+        <p><form method="POST" action="{% url_with_lti 'attempts_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="button info">{% icon 'save' %} {% translate "Download attempts summary as CSV" %}</button></form></p>
+        <p><form method="POST" action="{% url_with_lti 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="button info">{% icon 'save' %} {% translate "Download all attempt data as JSON" %}</button></form></p>
 
         <form method="GET" class="form-inline">
             <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
@@ -30,10 +30,10 @@
                 <input type="hidden" name="userid" value="">
                 <input id="query" name="query" type="search" class="form-control" value="{{query}}">
                 {% if query %}
-                <a class="btn btn-default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}">{% icon 'trash' %}<span class="sr-only">{% translate "Clear query" %}</span></a>
+                <a class="button default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}">{% icon 'trash' %}<span class="sr-only">{% translate "Clear query" %}</span></a>
                 {% endif %}
                 <div class="input-group-btn">
-                    <button class="btn btn-primary" type="submit">{% icon 'search' %}<span class="sr-only">{% translate "Search" %}</span></button>
+                    <button class="button primary" type="submit">{% icon 'search' %}<span class="sr-only">{% translate "Search" %}</span></button>
                 </div>
             </div>
         </form>
@@ -77,13 +77,13 @@
                     {% endif %}
                     <td>{{attempt.start_time}}</td>
                     <td>
-                        <a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
-                        <a class="btn btn-link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="text-warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>
-                        <a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="text-info">{% icon 'list' %} {% translate "Data" %}</span></a>
-                        <a class="btn btn-link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="text-danger">{% icon 'trash' %} {% translate "Delete" %}</span></a>
+                        <a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
+                        <a class="button link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="text-warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>
+                        <a class="button link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="text-info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                        <a class="button link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="text-danger">{% icon 'trash' %} {% translate "Delete" %}</span></a>
                     </td>
                     <td>
-                        {% if attempt.broken %}<span class="text-danger">{% translate "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="btn btn-link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}">{% translate "(reopen)" %}</a>{% endif %}{% endif %}
+                        {% if attempt.broken %}<span class="text-danger">{% translate "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}text-success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="button link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}">{% translate "(reopen)" %}</a>{% endif %}{% endif %}
                     </td>
                     <td class="attempt-score">
                         {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}

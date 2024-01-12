@@ -14,7 +14,7 @@
         {% if resource.access_changes.exists %}
         <section id="access-changes">
             <p>
-                <a href="{% url_with_lti 'create_access_change' resource.pk %}" class="btn btn-primary">{% icon 'plus' %} Add an access change</a>
+                <a href="{% url_with_lti 'create_access_change' resource.pk %}" class="button primary">{% icon 'plus' %} Add an access change</a>
             </p>
             {% for ac in resource.access_changes.all %}
                 <article class="access-change">
@@ -55,8 +55,8 @@
                         <dt>{% translate "Applies to" %}</dt>
                         <dd>{{ac.applies_to_summary}}</dd>
                     </dl>
-                    <a class="btn btn-link" href="{% url_with_lti 'update_access_change' ac.pk %}" >{% icon 'pencil' %} {% translate "Edit" %}</a>
-                    <a class="btn btn-danger" href="{% url_with_lti 'delete_access_change' ac.pk %}" >{% icon 'trash' %} {% translate "Delete" %}</a>
+                    <a class="button link" href="{% url_with_lti 'update_access_change' ac.pk %}" >{% icon 'pencil' %} {% translate "Edit" %}</a>
+                    <a class="button danger" href="{% url_with_lti 'delete_access_change' ac.pk %}" >{% icon 'trash' %} {% translate "Delete" %}</a>
                 </article>
             {% endfor %}
         {% else %}

@@ -13,17 +13,17 @@
 
 {% block attempt_content %}
 
-    <p><a class="btn btn-link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
+    <p><a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
 
-    <p><a class="btn btn-link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}">{% icon 'list' %} {% translate "View activity timeline for this attempt" %}</a></p>
+    <p><a class="button link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}">{% icon 'list' %} {% translate "View activity timeline for this attempt" %}</a></p>
 
-    <p><a class="btn btn-primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
+    <p><a class="button primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
 
     <div class="search">
         <label>{% translate "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>
-        <button class="btn btn-default quick-query" data-query="learner_response|correct_responses">{% translate "Answers" %}</button>
-        <button class="btn btn-default quick-query" data-query="(result|weighting)$">{% translate "Part scores" %}</button>
-        <button class="btn btn-default quick-query" data-query="score.(raw|max)">{% translate "Question scores" %}</button>
+        <button class="button default quick-query" data-query="learner_response|correct_responses">{% translate "Answers" %}</button>
+        <button class="button default quick-query" data-query="(result|weighting)$">{% translate "Part scores" %}</button>
+        <button class="button default quick-query" data-query="score.(raw|max)">{% translate "Question scores" %}</button>
     </div>
     <div>
         <label><input type="checkbox" data-bind="checked: most_recent_only"> Most recent value only</label>

@@ -16,6 +16,6 @@
     <form method="POST" action="" enctype="multipart/form-data">
         {% csrf_token %}
         {{form}}
-        <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Add SEB settings" %}</button>
+        <button type="submit" class="button primary">{% icon 'plus' %} {% translate "Add SEB settings" %}</button>
     </form>
 {% endblock management_content %}

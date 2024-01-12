@@ -30,7 +30,7 @@
         <form id="search-form" method="GET" action="{% url 'global_search' %}">
             <input list="search-results" aria-labelledby="search-button" type="search" id="global-search-input" name="query" autocomplete="off" value="{{global_search_query}}">
             <input type="hidden" name="model" value="{{global_search_model}}">
-            <button id="search-button" type="submit" class="btn btn-default">{% translate "Search" %}</button>
+            <button id="search-button" type="submit" class="button default">{% translate "Search" %}</button>
             <datalist id="search-results">
             </datalist>
         </form>
@@ -46,7 +46,7 @@
 
     <main>
         {% for message in messages %}
-        <div class="alert alert-info">
+        <div class="alert info">
             {{message}}
         </div>
         {%endfor %}

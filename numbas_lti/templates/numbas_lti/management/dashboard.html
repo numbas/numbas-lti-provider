@@ -30,19 +30,19 @@
             {% if last_report_process.status == 'reporting' %}
                 <div class="alert info">
                     <p>{% translate "Scores are currently being reported back to the grade book" %}.</p>
-                    <p><a class="btn btn-danger" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Cancel" %}</a></p>
+                    <p><a class="button danger" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Cancel" %}</a></p>
                 </div>
             {% elif last_report_process.status == 'complete' %}
                 <div class="alert success">
                     <p>{% translate "Scores were successfully reported back to the grade book." %}</p>
-                    <p><a class="btn btn-success btn-sm" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
+                    <p><a class="button success small" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
                 </div>
             {% elif last_report_process.status == 'error' %}
                 <div class="alert danger">
                     <p>{% translate "An error was encountered while reporting scores back to the grade book:" %}</p>
                     <pre>{{last_report_process.response}}</pre>
                     <p>{% translate "Report this error to your VLE's administrator." %}</p>
-                    <p><a class="btn btn-danger btn-sm" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
+                    <p><a class="button danger small" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
                 </div>
             {% endif %}
         </section>
@@ -50,10 +50,10 @@
 
         <section>
             <ul class="list-unstyled actions">
-                <li><form method="POST" action="{% url_with_lti 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info">{% icon 'save' %} {% translate "Download scores as CSV" %}</button></form></li>
+                <li><form method="POST" action="{% url_with_lti 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="button info">{% icon 'save' %} {% translate "Download scores as CSV" %}</button></form></li>
                 {% if not last_report_process %}
                 <li>
-                    <a class="btn btn-warning" href="{% url_with_lti 'report_scores' resource.pk %}">{% icon 'upload' %} {% translate "Report scores back to VLE" %}</a>
+                    <a class="button warning" href="{% url_with_lti 'report_scores' resource.pk %}">{% icon 'upload' %} {% translate "Report scores back to VLE" %}</a>
                     {% if dismissed_report_process %}
                     <span class="text-warning">{% translate "A report process is being cancelled. Consider waiting until it has finished." %}</span>
                     {% endif %}
@@ -61,11 +61,11 @@
                 {% endif %}
                 <li><a href="{% url_with_lti 'student_progress' resource.pk %}">{% icon 'user' %} {% translate "View individual student progress and grant access tokens" %}</a></li>
                 <li>
-                    <a class="btn btn-danger" href="{% url_with_lti 'discount_parts' resource.pk %}">{% icon 'minus-sign' %} {% translate "Discount question parts" %}</a>
+                    <a class="button danger" href="{% url_with_lti 'discount_parts' resource.pk %}">{% icon 'minus-sign' %} {% translate "Discount question parts" %}</a>
                     <span class="help-block">{% translate "You can remark individual attempts on the attempts page." %}</span>
                 </li>
                 <li>
-                    <a class="btn btn-info" href="{% url_with_lti 'validate_receipt' resource.pk %}">{% icon 'ok' %} {% translate "Validate a receipt code" %}</a>
+                    <a class="button info" href="{% url_with_lti 'validate_receipt' resource.pk %}">{% icon 'ok' %} {% translate "Validate a receipt code" %}</a>
                 </li>
             </ul>
         </section>

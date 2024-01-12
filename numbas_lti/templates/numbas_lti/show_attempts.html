@@ -20,13 +20,13 @@
         </p>
 
         {% if resource.discounted_parts.exists %}
-        <div class="alert alert-info">
+        <div class="alert info">
             <p>{% blocktranslate %}Parts of this activity have been discounted by an instructor. Your final score may not match the one you see.{% endblocktranslate %}</p>
         </div>
         {% endif %}
 
         {% for message in messages %}
-        <div class="alert alert-info">
+        <div class="alert info">
             {{message}}
         </div>
         {% endfor %}
@@ -44,7 +44,7 @@
                 <tr>
                     <td colspan="2">
                     <td>
-                        <a class="btn btn-warning" href="{% url_with_lti 'new_attempt' %}">{% icon 'plus' %} {% translate "Start a new attempt" %}</a>
+                        <a class="button warning" href="{% url_with_lti 'new_attempt' %}">{% icon 'plus' %} {% translate "Start a new attempt" %}</a>
                     </td>
                 </tr>
                 {% endif %}
@@ -69,7 +69,7 @@
                     <td>
                         {% if attempt.completed %}
                             {% if attempt.review_allowed %}
-                            <a class="btn btn-info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                            <a class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                 {% icon 'play' %} {% translate "Review this attempt" %}
                             </a>
                             {% else %}
@@ -79,7 +79,7 @@
                             {% endif %}
                         {% else %}
                             {% if attempt.resume_allowed %}
-                            <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                            <a class="btn {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                 {% icon 'play' %} {% translate "Continue" %}
                             </a>
                             {% endif %}

@@ -18,8 +18,8 @@
     <form method="POST" action="">
         {% csrf_token %}
         <p>
-            <button type="submit" class="btn btn-danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</button>
-            <a class="btn btn-link" href="{% url 'list_consumers' %}">{% translate "Cancel" %}</a>
+            <button type="submit" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</button>
+            <a class="button link" href="{% url 'list_consumers' %}">{% translate "Cancel" %}</a>
         </p>
     </form>
 {% endblock management_content %}

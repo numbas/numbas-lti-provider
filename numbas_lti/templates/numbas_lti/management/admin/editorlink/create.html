@@ -13,7 +13,7 @@
         {% csrf_token %}
         {{form}}
 
-        <button type="submit" class="btn btn-primary">{% icon 'plus' %} {% translate "Connect" %}</button>
-        <a class="btn btn-link" href="{% url 'list_editorlinks' %}">{% translate "Cancel" %}</a>
+        <button type="submit" class="button primary">{% icon 'plus' %} {% translate "Connect" %}</button>
+        <a class="button link" href="{% url 'list_editorlinks' %}">{% translate "Cancel" %}</a>
     </form>
 {% endblock management_content %}

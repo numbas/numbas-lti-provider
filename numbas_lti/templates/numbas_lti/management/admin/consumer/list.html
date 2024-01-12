@@ -59,15 +59,15 @@
                             {% endblocktranslate %}
                         </td>
                         <td>
-                            <a href="{% url 'view_consumer' consumer.pk %}" class="btn btn-primary">{% translate "Manage" %}</a>
-                            <a href="{% url 'delete_consumer' consumer.pk %}" title="{% translate "Delete this consumer" %}" class="btn btn-link">{% icon 'trash' %}</a>
-                            {% if consumer.url %}<a class="btn btn-link" href="{{consumer.url}}" target="_blank">{% translate "Visit" %} {% icon 'new-window' %}</a>{% endif %}
+                            <a href="{% url 'view_consumer' consumer.pk %}" class="button primary">{% translate "Manage" %}</a>
+                            <a href="{% url 'delete_consumer' consumer.pk %}" title="{% translate "Delete this consumer" %}" class="button link">{% icon 'trash' %}</a>
+                            {% if consumer.url %}<a class="button link" href="{{consumer.url}}" target="_blank">{% translate "Visit" %} {% icon 'new-window' %}</a>{% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            <p><a href="{% url 'create_consumer' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Add a new LTI consumer" %}</a></p>
+            <p><a href="{% url 'create_consumer' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI consumer" %}</a></p>
         </section>
 
         <section>
@@ -90,7 +90,7 @@
     {% else %}
         <div class="alert warning">
             <p>{% translate "No LTI consumers have been set up yet." %}</p>
-            <p><a href="{% url 'create_consumer' %}" class="btn btn-primary">{% icon 'plus' %} {% translate "Add a new LTI consumer" %}</a></p>
+            <p><a href="{% url 'create_consumer' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI consumer" %}</a></p>
         </div>
     {% endif %}
 {% endblock management_content %}
