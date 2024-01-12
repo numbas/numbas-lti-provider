@@ -35,7 +35,7 @@
                 <p class="text-center"><a class="button link" target="_blank" href="{{editor_links.first.url}}">{% icon 'new-window' %} {% translate "Click here to open the Numbas editor." %}</a></p>
                 {% endif %}
                 {% csrf_token %}
-                {{form|bootstrap}}
+                {{form}}
                 <button type="submit" class="button large primary">{% icon 'upload' %} {% translate "Submit" %}</button>
             </form>
         </section>
