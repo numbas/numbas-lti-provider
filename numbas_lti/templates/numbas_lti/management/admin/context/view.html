@@ -17,7 +17,7 @@
     <section id="resources">
         {% if context.resources.exists %}
         <h2>{% translate "Resources" %}</h2>
-        <table class="table">
+        <table>
             {% for resource in context.resources.all %}
             <tr class="resource{% if resource.is_old %} old{% endif %}{% if resource.is_new %} new warning{% endif %}">
                 <td>

@@ -23,7 +23,7 @@
 
         <p><a class="button primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
 
-        <table class="table" id="timeline" data-bind="if: grouped_timeline().length">
+        <table id="timeline" data-bind="if: grouped_timeline().length">
             <colgroup>
                 <col style="width: 12em;"/>
                 <col style="width: 2em;"/>
