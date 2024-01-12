@@ -40,12 +40,12 @@
 
         <div class="alert default" v-if="remarking_all">
             <div class="progress">
-                <div class="progress-bar" role="progressbar" :aria-valuenow="remarking_progress|percent" aria-valuemin="0" aria-valuemax="100" :style="{width: (100*remarking_progress)+'%'}">
-                    [[remarking_progress|percent]]%
+                <div class="progress-bar" role="progressbar" :aria-valuenow="$filters.percent(remarking_progress)" aria-valuemin="0" aria-valuemax="100" :style="{width: (100*remarking_progress)+'%'}">
+                    [[$filters.percent(remarking_progress)]]%
               </div>
             </div>
-            <p>{% translate "Time taken:" %} <span v-if="remark_all_time">[[remark_all_time|duration]]</span></p>
-            <p>{% translate "Estimated end:" %} <span v-if="estimated_end">[[estimated_end|duration]]</span></p>
+            <p>{% translate "Time taken:" %} <span v-if="remark_all_time">[[$filters.duration(remark_all_time)]]</span></p>
+            <p>{% translate "Estimated end:" %} <span v-if="estimated_end">[[$filters.duration(estimated_end)]]</span></p>
         </div>
 
         <div class="alert warning" v-if="save_error">
@@ -110,18 +110,18 @@
                 <tr class="attempt" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
                     <td>[[attempt.user.full_name]]</td>
                     <td>[[attempt.user.identifier]]</td>
-                    <td>[[attempt.start_time|datetime]]</td>
+                    <td>[[$filters.datetime(attempt.start_time)]]</td>
                     <td>[[attempt.completion_status_display]]</td>
                     <td>
-                        [[attempt.original_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]
-                        <score-change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.original_raw_score" :to="attempt.remarked_raw_score"></score-change>
+                        [[$filters.dp(attempt.original_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]
+                        <Score-Change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.original_raw_score" :to="attempt.remarked_raw_score"></Score-Change>
                     </td>
                     <td>
-                        [[attempt.saved_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]
-                        <score-change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.saved_raw_score" :to="attempt.remarked_raw_score"></score-change>
+                        [[$filters.dp(attempt.saved_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]
+                        <Score-Change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.saved_raw_score" :to="attempt.remarked_raw_score"></Score-Change>
                     </td>
                     <td>
-                        <span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[attempt.remarked_raw_score|dp(3)]]/[[attempt.max_score|dp(3)]]</span>
+                        <span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[$filters.dp(attempt.remarked_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]</span>
                     </td>
                     <td :class="attempt.score_change_classes">
                         <div v-if="attempt.status=='error'">{% translate "Error" %}</div>
@@ -174,7 +174,6 @@
 
     {% include "numbas_lti/scripts/luxon.html" %}
 
-    <script src="{% static 'vue.js' %}"></script>
     <script src="{% static 'api.js' %}"></script>
-    <script src="{% static 'resource_remark.js' %}" defer></script>
+    <script src="{% static 'resource_remark.js' %}" type="module"></script>
 {% endblock %}

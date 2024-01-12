@@ -12,52 +12,50 @@
 {%endblock stylesheets %}
 
 {% block attempt_content %}
-
     <p><a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
 
     <p><a class="button link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}">{% icon 'list' %} {% translate "View activity timeline for this attempt" %}</a></p>
 
     <p><a class="button primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
 
-    <div class="search">
-        <label>{% translate "Search for an element:" %} <input class="form-control" id="query" type="text" data-bind="textInput: query"></label>
-        <button class="button default quick-query" data-query="learner_response|correct_responses">{% translate "Answers" %}</button>
-        <button class="button default quick-query" data-query="(result|weighting)$">{% translate "Part scores" %}</button>
-        <button class="button default quick-query" data-query="score.(raw|max)">{% translate "Question scores" %}</button>
-    </div>
-    <div>
-        <label><input type="checkbox" data-bind="checked: most_recent_only"> Most recent value only</label>
-    </div>
+    <div id="app">
+        <div class="search">
+            <label>{% translate "Search for an element:" %} <input class="form-control" id="query" type="text" v-model="query"></label>
+            <button class="button default quick-query" @click="set_query('learner_response|correct_responses')">{% translate "Answers" %}</button>
+            <button class="button default quick-query" @click="set_query('(result|weighting)$')">{% translate "Part scores" %}</button>
+            <button class="button default quick-query" @click="set_query('score.(raw|max)')">{% translate "Question scores" %}</button>
+        </div>
+        <div>
+            <label><input type="checkbox" :checked="most_recent_only"> {% translate "Most recent value only" %}</label>
+        </div>
 
-    <table id="elements">
-        <colgroup>
-            <col>
-            <col style="width:10em;">
-            <col style="width:10em;">
-        </colgroup>
-        <thead>
-            <tr>
-                <th>Key</th>
-                <th>Time</th>
-                <th>Value</th>
-            </tr>
-        </thead>
-        <tbody id="dynamic-data" data-bind="foreach: show_elements">
-            <!-- ko foreach: elements -->
-            <tr data-bind="css: {first: $index()==0}">
-                <td class="key" data-bind="text: key"></td>
-                <td class="time" data-bind="text: time_string"></td>
-                <td class="value" data-bind="text: value"></td>
-            </tr>
-            <!-- /ko -->
-        </tbody>
-    </table>
-
+        <table id="elements">
+            <colgroup>
+                <col style="width:30em;">
+                <col style="width:10em;">
+                <col>
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>{% translate "Key" %}</th>
+                    <th>{% translate "Time" %}</th>
+                    <th>{% translate "Value" %}</th>
+                </tr>
+            </thead>
+            <tbody id="dynamic-data">
+                <template v-for="group in show_elements">
+                    <tr v-for="(element, index) in group.elements">
+                        <td class="key" v-if="index == 0" :rowspan="group.elements.length"><code>[[element.key]]</code></td>
+                        <td class="time"><time :datetime="element.time.toISO()">[[element.time_string]]</time></td>
+                        <td class="value"><code>[[element.value]]</code></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
 {% endblock attempt_content %}
 
 {% block javascripts %}
-    <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
-
     {% include "numbas_lti/scripts/luxon.html" %}
 
     <script type="text/javascript" src="{% static 'robust-websocket.js' %}"></script>
@@ -68,5 +66,5 @@
         var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
     </script>
 
-    <script src="{% static 'attempt_scorm_listing.js' %}"></script>
+    <script src="{% static 'attempt_scorm_listing.js' %}" type="module"></script>
 {% endblock javascripts %}

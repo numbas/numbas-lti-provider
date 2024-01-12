@@ -59,9 +59,9 @@
                     <th>{{resource.context.consumer.get_identifier_field_display}}</th>
                     {% endif %}
                     <th>{% translate "Start time" %}</th>
-                    <th></th>
+                    <th aria-label="{% translate "Controls" %}"></th>
                     <th>{% translate "Completion status" %}</th>
-                    <th>{% translate "Score" %}</th>
+                    <th colspan="2">{% translate "Score" %}</th>
                 </tr>
             </thead>
             <tbody>

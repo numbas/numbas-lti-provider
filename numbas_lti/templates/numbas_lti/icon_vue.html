@@ -1,0 +1,9 @@
+{% load static %}
+<script>
+    const VueIcon = {
+            props: ['name'],
+            template: `
+<svg v-if="name" :aria-label="name" :alt="name" focusable="false" xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 180 180"><use :href="'{% static 'icons.svg' %}#'+name"></use></svg>
+            `
+    };
+</script>

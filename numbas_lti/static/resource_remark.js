@@ -1,79 +1,6 @@
+import {createApp} from './vue.js';
+
 const BATCH_SIZE = 50;
-
-Vue.filter('duration', function (value) {
-    const d = luxon.Duration.fromMillis(value);
-    return d.toFormat('mm:ss');
-})
-
-Vue.filter('percent', function (value) {
-    const pc = Math.floor(100*value);
-    return pc;
-})
-
-Vue.filter('pluralize', function (str, number) {
-    return str + (Math.abs(number)==1 ? '' : 's');
-})
-
-function todp(n,p) {
-    const s = n.toFixed(p);
-    return s.replace(/\.?0+$/,'')
-}
-
-Vue.filter('dp', function(n,p) {
-    if(isNaN(n) || typeof(n)!='number') {
-        return n;
-    }
-    return todp(n,p);
-})
-
-Vue.filter('change', function(n) {
-    const sn = todp(n,3)
-    if(n>=0) {
-        return '+'+sn;
-    } else {
-        return sn;
-    }
-})
-
-Vue.filter('change_class', function(a,b) {
-    if(a === null) {
-        return {};
-    }
-    return {
-        'score-change': true,
-        'decreased': a<b,
-        'unchanged': a==b,
-        'increased': a>b
-    };
-});
-
-Vue.filter('datetime', function(t) {
-    return t.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
-});
-
-Vue.component('score-change', {
-    props: ['from', 'to'],
-    computed: {
-        classes: function() {
-            const a = this.to;
-            const b = this.from;
-            if(a === null) {
-                return {};
-            }
-            return {
-                'score-change': true,
-                'decreased': a<b,
-                'unchanged': a==b,
-                'increased': a>b
-            };
-        }
-    },
-    template: `
-<div :class="classes">
-    {{(to - from) | change}}
-</div>`
-});
-
 
 class Attempt {
     constructor(data) {
@@ -101,13 +28,6 @@ class Attempt {
         this.load_data = new Promise((resolve,reject) => {
             a.load_data_resolve = resolve;
         });
-        this.load_data.then(data => {
-            this.cmi = data.cmi;
-            this.status = 'loaded';
-            this.max_score = parseFloat((this.cmi['cmi.score.max'] || {}).value || 0);
-            this.original_raw_score = parseFloat((this.cmi['cmi.score.raw'] || {}).value || 0);
-            this.saved_raw_score = data.raw_score;
-        })
     }
 
     get is_loaded() {
@@ -167,35 +87,56 @@ if(location.search) {
 }
 const resource_link_id_query = resource_link_id ? '?'+resource_link_id : '';
 
-const app = new Vue({
+const app = createApp({
     delimiters: ['[[',']]'],
-    el: '#app',
-    data: {
-        attempts: attempts,
-        apis: {},
-        remarking_all: false,
-        start_remark_all: new Date(),
-        end_remark_all: 0,
-        stopping_marking: false,
-        use_unsubmitted: false,
-        show_only: 'all',
-        save_url: parameters['save_url'],
-        saving: false,
-        save_error: null,
-        sort_by: 'name'
+    data() {
+        return {
+            attempts: attempts,
+            apis: {},
+            remarking_all: false,
+            start_remark_all: new Date(),
+            end_remark_all: 0,
+            stopping_marking: false,
+            use_unsubmitted: false,
+            show_only: 'all',
+            save_url: parameters['save_url'],
+            saving: false,
+            save_error: null,
+            sort_by: 'name'
+        }
     },
+
+    mounted() {
+        this.attempts.forEach(async attempt => {
+            const data = await attempt.load_data;
+            attempt.cmi = data.cmi;
+            attempt.status = 'loaded';
+            attempt.max_score = parseFloat((attempt.cmi['cmi.score.max'] || {}).value || 0);
+            attempt.original_raw_score = parseFloat((attempt.cmi['cmi.score.raw'] || {}).value || 0);
+            attempt.saved_raw_score = data.raw_score;
+        });
+
+        window.attempts = this.attempts;
+
+        this.fetch_all_attempt_data();
+
+        window.addEventListener('message',(event) => {
+            this.get_remarking_results(event.data);
+        });
+    },
+
     methods: {
         stop_marking: function() {
             this.stopping_marking = true;
             this.attempts.forEach(a=>a.await_remark=false);
         },
-        fetch_all_attempt_data: function() {
-            const promise = this.fetch_attempt_data();
-            if(promise) {
-                promise.then(d=>{ this.fetch_all_attempt_data() })
+        fetch_all_attempt_data: async function() {
+            let fetch_again = true;
+            while(fetch_again) {
+                fetch_again = await this.fetch_attempt_data();
             }
         },
-        fetch_attempt_data: function(include_attempt) {
+        fetch_attempt_data: async function(include_attempt) {
             const unloaded_attempts = this.attempts.filter(a=>a.status=='not loaded');
             const batch = unloaded_attempts.slice(0,BATCH_SIZE);
             if(include_attempt && include_attempt.status=='not loaded' && batch.indexOf(include_attempt)==-1) {
@@ -203,7 +144,7 @@ const app = new Vue({
             }
             const pks = batch.map(a=>a.pk);
             if(!pks.length) { 
-                return;
+                return false;
             }
             let query_params = [
                 'attempt_pks='+pks.join(',')
@@ -211,18 +152,22 @@ const app = new Vue({
             if(resource_link_id) {
                 query_params.push(resource_link_id);
             }
-            return fetch('remark/attempt_data?'+query_params.join('&'),{method:'GET',credentials:'same-origin'}).then(r=>r.json()).then(d => {
+            try {
+                const response = await fetch('remark/attempt_data?'+query_params.join('&'),{method:'GET',credentials:'same-origin'});
+                const d = await response.json();
                 d.cmis.forEach(cd=>{
                     const a = this.attempts.find(a=>a.pk==cd.pk);
                     a.load_data_resolve(cd);
                 });
-            }).catch(e=>{
+                return true;
+            } catch(e) {
                 batch.forEach(a=>{
                     a.fetch_error = e.message;
                     a.status = 'error';
                 });
                 console.error("Error getting attempt data:",e);
-            });
+                return false;
+            }
         },
         remark_single_attempt: function(attempt) {
             this.remarking_all = false;
@@ -399,8 +344,74 @@ const app = new Vue({
         }
     }
 });
-app.fetch_all_attempt_data();
 
-window.addEventListener('message',(event) => {
-    app.get_remarking_results(event.data);
+function todp(n,p) {
+    const s = n.toFixed(p);
+    return s.replace(/\.?0+$/,'')
+}
+
+app.config.globalProperties.$filters = {
+    duration: function(value) {
+        const d = luxon.Duration.fromMillis(value);
+        return d.toFormat('mm:ss');
+    },
+
+    percent: function(value) {
+        const pc = Math.floor(100*value);
+        return pc;
+    },
+
+    pluralize: function(str, number) {
+        return str + (Math.abs(number)==1 ? '' : 's');
+    },
+
+    dp: function(n,p) {
+        if(isNaN(n) || typeof(n)!='number') {
+            return n;
+        }
+        return todp(n,p);
+    },
+
+    datetime: function(t) {
+        return t.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
+    },
+};
+
+app.component('ScoreChange', {
+    data() {
+        return {}
+    },
+    props: ['from', 'to'],
+    computed: {
+        classes: function() {
+            const a = this.to;
+            const b = this.from;
+            if(a === null) {
+                return {};
+            }
+            return {
+                'score-change': true,
+                'decreased': a<b,
+                'unchanged': a==b,
+                'increased': a>b
+            };
+        },
+        change: function() {
+            const diff = this.to - this.from;
+            const sn = todp(diff, 3)
+            if(diff >= 0) {
+                return '+'+sn;
+            } else {
+                return sn;
+            }
+        }
+    },
+    template: `
+<div :class="classes">
+    {{change}}
+</div>`
 });
+
+app.mount('#app');
+
+window.app = app;

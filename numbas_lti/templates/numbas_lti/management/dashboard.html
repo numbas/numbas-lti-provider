@@ -59,7 +59,7 @@
                     {% endif %}
                 </li>
                 {% endif %}
-                <li><a href="{% url_with_lti 'student_progress' resource.pk %}">{% icon 'user' %} {% translate "View individual student progress and grant access tokens" %}</a></li>
+                <li><a class="button" href="{% url_with_lti 'student_progress' resource.pk %}">{% icon 'user' %} {% translate "View individual student progress and grant access tokens" %}</a></li>
                 <li>
                     <a class="button danger" href="{% url_with_lti 'discount_parts' resource.pk %}">{% icon 'minus-sign' %} {% translate "Discount question parts" %}</a>
                     <span class="help-block">{% translate "You can remark individual attempts on the attempts page." %}</span>

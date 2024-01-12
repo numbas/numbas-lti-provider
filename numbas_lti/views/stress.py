@@ -16,7 +16,7 @@ class StressTestManagementMixin(HelpLinkMixin, PermissionRequiredMixin,Managemen
     helplink = 'admin/stress-tests.html'
 
 def create_stress_test(request):
-    resource = Resource.objects.create(resource_link_id='',title='Stress test')
+    resource = Resource.objects.create(title='Stress test')
     stress_test = StressTest.objects.create(resource=resource)
     return redirect(stress_test.get_absolute_url())
 

@@ -13,17 +13,17 @@
 {%endblock stylesheets %}
 
 {% block attempt_content %}
+    <p><a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
+
+    <p><a class="button link" href="{% url_with_lti 'attempt_scorm_listing' attempt.pk %}">{% icon 'list' %} {% translate "View raw SCORM data for this attempt" %}</a></p>
+
+    <p><a class="button primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
+
     <div class="alert info" id="loading">
         <p>{% translate "Loading attempt data..." %}</p>
     </div>
-    <div id="loaded">
-        <p><a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
-
-        <p><a class="button link" href="{% url_with_lti 'attempt_scorm_listing' attempt.pk %}">{% icon 'list' %} {% translate "View raw SCORM data for this attempt" %}</a></p>
-
-        <p><a class="button primary" href="{% url_with_lti 'attempt_json_dump' attempt.pk %}">{% icon 'save' %} {% translate "Download attempt data in JSON format" %}</a></p>
-
-        <table id="timeline" data-bind="if: grouped_timeline().length">
+    <div id="app">
+        <table id="timeline" v-if="grouped_timeline.length">
             <colgroup>
                 <col style="width: 12em;"/>
                 <col style="width: 2em;"/>
@@ -41,53 +41,37 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- ko foreach: {data: grouped_timeline, afterAdd: scrollIntoView} -->
-                    <!-- ko foreach: items -->
-                    <tr class="item" data-bind="css: css">
-                        <td class="time" data-bind="visible: $index()==0, attr: {rowspan: $parent.items.length}">
+                <template v-for="group in grouped_timeline">
+                    <tr class="item" v-for="(item, index) in group.items" :class="item.css">
+                        <td class="time" :rowspan="group.items.length" v-if="index == 0">
                             <p>
-                                <!-- ko if: $parent.seen_location -->
-                                <a title="View the attempt at this point in time" target="review_attempt" data-bind="attr: {href: $data.review_url}, text: time_string"></a>
-                                <!-- /ko -->
-                                <!-- ko if: !$parent.seen_location -->
-                                <span data-bind="text: time_string"></span>
-                                <!-- /ko -->
+                            <a v-if="group.seen_location" title="{% translate "View the attempt at this point in time" %}" target="review_attempt" :href="item.review_url"><time :datetime="item.time_iso">[[item.time_string]]</time></a>
+                            <span v-else><time :datetime="item.time_iso">[[item.time_string]]</time></span>
                             </p>
-                            <!-- ko if: $parent.remarked_by -->
-                            <p class="remarked-by small">
+                            <p v-if="group.remarked_by" class="remarked-by small">
                                 {% translate "Re-marked by" %}
-                                <span data-bind="text: $parent.remarked_by"></span>
+                                <span>[[group.remarked_by]]</span>
                             </p>
-                            <!-- /ko -->
                         </td>
-                        <td class="icon"><strong class="icon" data-bind="text: icon"></strong><!-- TODO replace with the real icon code --></td>
-                        <td class="message"><span data-bind="html: message"></span></td>
-                        <td class="exam-score raw" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
-                            <!-- ko if: $parent.exam_score_changed -->
-                            <span data-bind="text: $parent.exam_raw_score"></span> / <span data-bind="text: $parent.exam_max_score"></span>
-                            <!-- /ko -->
+                        <td class="icon-cell"><vue-icon :name="item.icon" /><strong class="icon">[[item.icon]]</strong><!-- TODO replace with the real icon code --></td>
+                        <td class="message"><span v-html="item.message"></span></td>
+                        <td class="exam-score raw" v-if="index == 0" :class="{changed: group.exam_score_changed}" :rowspan="group.items.length">
+                            <span v-if="group.exam_score_changed">[[group.exam_raw_score]] / [[group.exam_max_score]]</span>
                         </td>
-                        <td class="exam-score scaled" data-bind="visible: $index()==0, css: {changed: $parent.exam_score_changed}, attr: {rowspan: $parent.items.length}">
-                            <!-- ko if: $parent.exam_score_changed -->
-                            <span data-bind="text: $parent.exam_scaled_score"></span>
-                            <!-- /ko -->
+                        <td class="exam-score scaled" v-if="index == 0" :class="{changed: group.exam_score_changed}" :rowspan="group.items.length">
+                            <span v-if="group.exam_score_changed">[[group.exam_scaled_score]]</span>
                         </td>
                     </tr>
-                    <!-- /ko -->
-                <!-- /ko -->
+                </template>
             </tbody>
         </table>
-        <!-- ko if: !grouped_timeline().length -->
-        <div class="alert warning">
+        <div v-if="!grouped_timeline.length" class="alert warning">
             <p>{% translate "There's no data for this attempt." %}</p>
         </div>
-        <!-- /ko -->
     </div>
 {% endblock attempt_content %}
 
 {% block javascripts %}
-    <script type="text/javascript" src="{% static 'knockout/knockout.js' %}"></script>
-
     {% get_current_language as LANGUAGE_CODE %}
     <script src="{% statici18n LANGUAGE_CODE %}"></script>
 
@@ -104,5 +88,7 @@
         var listener_url = '/websocket/attempt/{{attempt.pk}}/scorm_listing';
     </script>
 
-    <script src="{% static 'attempt_timeline.js' %}"></script>
+    {% include "numbas_lti/icon_vue.html" %}
+
+    <script src="{% static 'attempt_timeline.js' %}" type="module"></script>
 {% endblock javascripts %}

@@ -1,3 +1,8 @@
-#elements tr:not(.first) .key {
-    color: transparent;
+td {
+    vertical-align: top;
+}
+
+code {
+    background: none;
+    padding: 0;
 }

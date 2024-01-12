@@ -1,9 +1,6 @@
-body:not(.loaded) #loaded,
+body:not(.loaded) #app,
 body.loaded #loading {
     display: none;
-}
-#timeline {
-    margin: 2em 0;
 }
 
 #timeline thead th {
@@ -14,6 +11,10 @@ body.loaded #loading {
 
 .item .exam-score {
     text-align: right;
+}
+
+td {
+    vertical-align: top;
 }
 
 .exam-score.changed {
