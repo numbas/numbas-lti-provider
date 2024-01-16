@@ -28,6 +28,7 @@
         {% get_current_timezone as TIME_ZONE %}
 
         <fieldset>
+            <legend>{% translate "About this access change" %}</legend>
             {{form.description.label_tag}}
             {{form.description}}
         </fieldset>

@@ -39,11 +39,10 @@
         </p>
 
         <div class="alert default" v-if="remarking_all">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" :aria-valuenow="$filters.percent(remarking_progress)" aria-valuemin="0" aria-valuemax="100" :style="{width: (100*remarking_progress)+'%'}">
-                    [[$filters.percent(remarking_progress)]]%
-              </div>
-            </div>
+            <label for="remarking-progress">{% translate "Attempts re-marked:" %}</label>&nbsp;
+            <progress id="remarking-progress" min="0" max="100" :value="100*remarking_progress">
+                [[$filters.percent(remarking_progress)]]%
+            </progress>
             <p>{% translate "Time taken:" %} <span v-if="remark_all_time">[[$filters.duration(remark_all_time)]]</span></p>
             <p>{% translate "Estimated end:" %} <span v-if="estimated_end">[[$filters.duration(estimated_end)]]</span></p>
         </div>
@@ -75,79 +74,80 @@
             </select>
         </p>
 
-        <table id="attempts-table">
-            <colgroup>
-                <col class="full-name">
-                <col class="identifier">
-                <col class="completion-status">
-                <col class="score current-score">
-                <col class="score remarked-score">
-                <col class="status">
-                <col class="controls">
-                <col class="save">
-                <col class="views">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>{% translate "Student" %}</th>
-                    <th><!-- identifier --></th>
-                    <th>{% translate "Start time" %}</th>
-                    <th>{% translate "Completion status" %}</th>
-                    <th>{% translate "Original score" %}</th>
-                    <th>{% translate "Saved score" %}</th>
-                    <th>{% translate "Re-marked score" %}</th>
-                    <th>{% translate "Status" %}</th>
-                    <th colspan="3"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="hidden-attempts-count muted" v-if="num_attempts_hidden > 0">
-                    <td colspan="6">
-                        {% translate "Number of hidden attempts:" %} [[num_attempts_hidden]].
-                    </td>
-                </tr>
-                <template v-for="attempt in shown_attempts">
-                <tr class="attempt" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
-                    <td>[[attempt.user.full_name]]</td>
-                    <td>[[attempt.user.identifier]]</td>
-                    <td>[[$filters.datetime(attempt.start_time)]]</td>
-                    <td>[[attempt.completion_status_display]]</td>
-                    <td>
-                        [[$filters.dp(attempt.original_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]
-                        <Score-Change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.original_raw_score" :to="attempt.remarked_raw_score"></Score-Change>
-                    </td>
-                    <td>
-                        [[$filters.dp(attempt.saved_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]
-                        <Score-Change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.saved_raw_score" :to="attempt.remarked_raw_score"></Score-Change>
-                    </td>
-                    <td>
-                        <span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[$filters.dp(attempt.remarked_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]</span>
-                    </td>
-                    <td :class="attempt.score_change_classes">
-                        <div v-if="attempt.status=='error'">{% translate "Error" %}</div>
-                    </td>
-                    <td>
-                        <button class="button default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)">{% icon 'repeat' %} {% translate "Re-mark" %}</button>
-                    </td>
-                    <td>
-                        <button class="button danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)">{% icon 'save' %} {% translate "Save" %}</button>
-                        <span class="success saved">{% translate "Saved" %}</span>
-                        <span class="warning error-saving">{% translate "Saving error" %}</span>
-                    </td>
-                    <td>
-                        <a class="button link" target="review_attempt" :href="attempt.review_url"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
-                        <a class="button link" target="_blank" :href="attempt.timeline_url"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
-                    </td>
-                </tr>
-                <tr v-if="attempt.status=='error'">
-                    <td colspan="9" class="warning">
-                        <p v-if="attempt.remark_error"><em>{% translate "There was an error remarking this attempt:" %}</em> [[attempt.remark_error]]</p>
-                        <p v-if="attempt.fetch_error"><em>{% translate "There was an error fetching data for this attempt:" %}</em> [[attempt.fetch_error]]</p>
-                    </td>
-                </tr>
-                </template>
-            </tbody>
-        </table>
+        <div class="scrolling-table">
+            <table id="attempts-table">
+                <colgroup>
+                    <col class="full-name">
+                    <col class="identifier">
+                    <col class="completion-status">
+                    <col class="score current-score">
+                    <col class="score remarked-score">
+                    <col class="status">
+                    <col class="controls">
+                    <col class="save">
+                    <col class="views">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th colspan="2">{% translate "Student" %}</th>
+                        <th>{% translate "Start time" %}</th>
+                        <th>{% translate "Completion status" %}</th>
+                        <th>{% translate "Original score" %}</th>
+                        <th>{% translate "Saved score" %}</th>
+                        <th>{% translate "Re-marked score" %}</th>
+                        <th>{% translate "Status" %}</th>
+                        <th colspan="3">{% translate "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="hidden-attempts-count muted" v-if="num_attempts_hidden > 0">
+                        <td colspan="6">
+                            {% translate "Number of hidden attempts:" %} [[num_attempts_hidden]].
+                        </td>
+                    </tr>
+                    <template v-for="attempt in shown_attempts">
+                    <tr class="attempt" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
+                        <td>[[attempt.user.full_name]]</td>
+                        <td>[[attempt.user.identifier]]</td>
+                        <td>[[$filters.datetime(attempt.start_time)]]</td>
+                        <td>[[attempt.completion_status_display]]</td>
+                        <td>
+                            [[$filters.dp(attempt.original_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]
+                            <Score-Change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.original_raw_score" :to="attempt.remarked_raw_score"></Score-Change>
+                        </td>
+                        <td>
+                            [[$filters.dp(attempt.saved_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]
+                            <Score-Change v-if="attempt.status!='error' && attempt.remarked_raw_score!==null" :from="attempt.saved_raw_score" :to="attempt.remarked_raw_score"></Score-Change>
+                        </td>
+                        <td>
+                            <span v-if="attempt.status=='remarked' || attempt.status=='saved'">[[$filters.dp(attempt.remarked_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]</span>
+                        </td>
+                        <td :class="attempt.score_change_classes">
+                            <div v-if="attempt.status=='error'">{% translate "Error" %}</div>
+                        </td>
+                        <td>
+                            <button class="button default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)">{% icon 'repeat' %} {% translate "Re-mark" %}</button>
+                        </td>
+                        <td>
+                            <button class="button danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)">{% icon 'save' %} {% translate "Save" %}</button>
+                            <span class="success saved">{% translate "Saved" %}</span>
+                            <span class="warning error-saving">{% translate "Saving error" %}</span>
+                        </td>
+                        <td>
+                            <a class="button link" target="review_attempt" :href="attempt.review_url"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
+                            <a class="button link" target="_blank" :href="attempt.timeline_url"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                        </td>
+                    </tr>
+                    <tr v-if="attempt.status=='error'">
+                        <td colspan="9" class="warning">
+                            <p v-if="attempt.remark_error"><em>{% translate "There was an error remarking this attempt:" %}</em> [[attempt.remark_error]]</p>
+                            <p v-if="attempt.fetch_error"><em>{% translate "There was an error fetching data for this attempt:" %}</em> [[attempt.fetch_error]]</p>
+                        </td>
+                    </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
 
     </section>
 

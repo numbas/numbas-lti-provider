@@ -7,11 +7,11 @@
 {% block content %}
     {% include "numbas_lti/management/nav.html" %}
 
-    {% if page_helplink %}
-        {% helplink page_helplink %}
-    {% endif %}
-
     <header>
+        {% if page_helplink %}
+            {% helplink page_helplink %}
+        {% endif %}
+
         {% block management_header %}{% endblock %}
     </header>
 

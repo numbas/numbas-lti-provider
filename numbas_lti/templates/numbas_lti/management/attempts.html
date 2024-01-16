@@ -26,16 +26,12 @@
             <label for="query">
                 {% translate "Search for a student:" %} 
             </label>
-            <div class="input-group">
-                <input type="hidden" name="userid" value="">
-                <input id="query" name="query" type="search" class="form-control" value="{{query}}">
-                {% if query %}
-                <a class="button default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}">{% icon 'trash' %}<span class="sr-only">{% translate "Clear query" %}</span></a>
-                {% endif %}
-                <div class="input-group-btn">
-                    <button class="button primary" type="submit">{% icon 'search' %}<span class="sr-only">{% translate "Search" %}</span></button>
-                </div>
-            </div>
+            <input type="hidden" name="userid" value="">
+            <input type="search" id="query" name="query" class="form-control" value="{{query}}">
+            {% if query %}
+            <a class="button default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}">{% icon 'trash' %}<span class="sr-only">{% translate "Clear query" %}</span></a>
+            {% endif %}
+            <button class="button primary" type="submit">{% icon 'search' %}{% translate "Search" %}</button>
         </form>
 
         {% if page_obj.has_other_pages %}
@@ -51,56 +47,63 @@
         {% endif %}
 
         {% with identifier_field=resource.context.consumer.identifier_field %}
-        <table id="attempts" class="table-striped">
-            <thead>
-                <tr>
-                    <th>{% translate "Student" %}</th>
-                    {% if identifier_field %}
-                    <th>{{resource.context.consumer.get_identifier_field_display}}</th>
-                    {% endif %}
-                    <th>{% translate "Start time" %}</th>
-                    <th aria-label="{% translate "Controls" %}"></th>
-                    <th>{% translate "Completion status" %}</th>
-                    <th colspan="2">{% translate "Score" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for attempt in attempts %}
-                <tr data-student="{{attempt.user.get_full_name}}">
-                    <td>
-                        <a href="?{% set_query_values page=1 userid=attempt.user.pk %}">
-                            {{attempt.user.get_full_name}}
-                        </a>
-                    </td>
-                    {% if identifier_field %}
-                    <td class="identifier">{{attempt.user_data.identifier}}</td>
-                    {% endif %}
-                    <td>{{attempt.start_time}}</td>
-                    <td>
-                        <a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
-                        <a class="button link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>
-                        <a class="button link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
-                        <a class="button link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="danger">{% icon 'trash' %} {% translate "Delete" %}</span></a>
-                    </td>
-                    <td>
-                        {% if attempt.broken %}<span class="danger">{% translate "Broken" %}</span>{% else %}<span class="{% if attempt.completed %}success{% endif %}">{{attempt.get_completion_status_display}}</span> {% if attempt.completed %}<a class="button link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}">{% translate "(reopen)" %}</a>{% endif %}{% endif %}
-                    </td>
-                    <td class="attempt-score">
-                        {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}
-                    </td>
-                    <td>
-                        <ul class="score-info">
-                            {% for aqs in attempt.question_scores %}
-                            {% if aqs.max_score %}
-                            <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}}; height: {{aqs.scaled_score|percentage:"10"}}" title="{% blocktranslate with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktranslate %} {% if aqs.completion_status == 'not attempted' %}{% translate "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
+        <div class="scrolling-table">
+            <table id="attempts" class="table-striped">
+                <thead>
+                    <tr>
+                        <th>{% translate "Student" %}</th>
+                        {% if identifier_field %}
+                        <th>{{resource.context.consumer.get_identifier_field_display}}</th>
+                        {% endif %}
+                        <th>{% translate "Start time" %}</th>
+                        <th aria-label="{% translate "Controls" %}"></th>
+                        <th>{% translate "Completion status" %}</th>
+                        <th colspan="2">{% translate "Score" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                    <tr data-student="{{attempt.user.get_full_name}}">
+                        <td>
+                            <a href="?{% set_query_values page=1 userid=attempt.user.pk %}">
+                                {{attempt.user.get_full_name}}
+                            </a>
+                        </td>
+                        {% if identifier_field %}
+                        <td class="identifier">{{attempt.user_data.identifier}}</td>
+                        {% endif %}
+                        <td>{{attempt.start_time}}</td>
+                        <td>
+                            <a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
+                            <a class="button link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>
+                            <a class="button link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                            <a class="button link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="danger">{% icon 'trash' %} {% translate "Delete" %}</span></a>
+                        </td>
+                        <td>
+                            {% if attempt.broken %}
+                                <span class="danger">{% translate "Broken" %}</span>
+                            {% else %}
+                                <span class="{% if attempt.completed %}success{% endif %}">{{attempt.get_completion_status_display}}</span>
+                                {% if attempt.completed %}<a class="button link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}"><span class="warning">{% icon 'eye-open' %} {% translate "Reopen" %}</span></a>{% endif %}
                             {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                        <td class="attempt-score">
+                            {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}
+                        </td>
+                        <td>
+                            <ul class="score-info">
+                                {% for aqs in attempt.question_scores %}
+                                {% if aqs.max_score %}
+                                <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}}; height: {{aqs.scaled_score|percentage:"10"}}" title="{% blocktranslate with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktranslate %} {% if aqs.completion_status == 'not attempted' %}{% translate "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% endwith %}
 
     {% else %}

@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 from django.conf import settings
 from django.forms import ModelForm, Form
+import django.forms.renderers
 from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
@@ -37,6 +38,9 @@ class MultipleStringField(forms.MultipleChoiceField):
     def valid_value(self, value):
         return True
 
+class DateTimeInput(forms.DateTimeInput):
+    input_type = 'datetime-local'
+
 class AccessChangeForm(ModelForm):
 
     nrps_applies_to = MultipleStringField(required=False, label=_('Usernames'))
@@ -50,8 +54,8 @@ class AccessChangeForm(ModelForm):
         fields = ['description','resource','available_from', 'available_until', 'max_attempts', 'extend_duration', 'extend_duration_units', 'disable_duration']
         widgets = {
             'description': forms.TextInput(),
-            'available_from': forms.DateTimeInput(format=datetime_format),
-            'available_until': forms.DateTimeInput(format=datetime_format),
+            'available_from': DateTimeInput(format=datetime_format),
+            'available_until': DateTimeInput(format=datetime_format),
             'extend_duration': forms.TextInput(attrs={'class':'form-control'}),
             'extend_duration_units': forms.Select(attrs={'class':'form-control'}),
             'resource': forms.HiddenInput(),
@@ -97,9 +101,9 @@ class ResourceSettingsForm(ModelForm):
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
         widgets = {
-            'allow_review_from': forms.DateTimeInput(format=datetime_format),
-            'available_from': forms.DateTimeInput(format=datetime_format),
-            'available_until': forms.DateTimeInput(format=datetime_format),
+            'allow_review_from': DateTimeInput(format=datetime_format),
+            'available_from': DateTimeInput(format=datetime_format),
+            'available_until': DateTimeInput(format=datetime_format),
             'lockdown_app_password': forms.TextInput(attrs={'class':'form-control', 'placeholder': getattr(settings,'LOCKDOWN_APP',{}).get('password','')}),
         }
 

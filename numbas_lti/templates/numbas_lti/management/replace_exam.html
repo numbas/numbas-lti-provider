@@ -66,16 +66,18 @@
             {% endif %}
 
             {% for field in form.hidden_fields %}
-                {{ field }}
+            <p>{{ field }}
             {% endfor %}
 
             <input type="hidden" name="retrieve_url" value="">
 
             {% for field in form.visible_fields %}
-                {{field.label_tag}}
-                {{field}}
+                <p>
+                    {{field.label_tag}}
+                    {{field}}
+                </p>
             {% endfor %}
-            <button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace" %}</button> 
+            <p><button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace" %}</button></p>
         </form>
     </section>
 

@@ -10,27 +10,28 @@
 
 {% block management_content %}
     <nav>
-        <li><a class="button warning" href="{% url_with_lti 'replace_exam' resource.pk %}">{% icon 'refresh' %} {% translate "Replace exam package" %}</a></li>
+        <a class="button warning" href="{% url_with_lti 'replace_exam' resource.pk %}">{% icon 'refresh' %} {% translate "Replace exam package" %}</a>
+
         {% with edit_url=current_exam.manifest.edit_url %}
-        {% if edit_url %}
-        <li><a class="button primary" href="{{edit_url}}" target="_blank">{% icon 'pencil' %} {% translate "Edit this exam" %}</a></li>
-        {% endif %}
+            {% if edit_url %}
+                <a class="button primary" href="{{edit_url}}" target="_blank">{% icon 'pencil' %} {% translate "Edit this exam" %}</a>
+            {% endif %}
         {% endwith %}
 
-        <li><a class="button info" href="{{resource.exam.package.url}}">{% icon 'save' %} {% translate "Download exam package" %}</a></li>
+        <a class="button info" href="{{resource.exam.package.url}}">{% icon 'save' %} {% translate "Download exam package" %}</a>
     </nav>
 
     <hr>
 
     <section id="settings-form">
-        <form method="POST" action="{% url_with_lti 'resource_settings' resource.pk %}">
+        <form class="big" method="POST" action="{% url_with_lti 'resource_settings' resource.pk %}">
             {% csrf_token %}
             {% get_current_timezone as TIME_ZONE %}
             <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone {{TIME_ZONE}}.{% endblocktranslate %}</p>
 
-            {{form}}
+            {{form.as_p}}
 
-            <p><button class="button primary" type="submit">{% translate "Save" %}</button> <a class="button link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% translate "Cancel" %}</a></p>
+            <p class="submit-buttons"><button class="button primary" type="submit">{% translate "Save" %}</button> <a class="button link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% translate "Cancel" %}</a></p>
         </form>
     </section>
 {% endblock management_content %}
@@ -49,10 +50,7 @@
             Object.entries(lockdown_fields).forEach(([value, fields]) => {
                 for(let f of fields) {
                     const show = shown_fields.indexOf(f) >= 0;
-                    let group = document.getElementById(`id_${f}`);
-                    while(group && !group.classList.contains('form-group')) {
-                        group = group.parentElement;
-                    }
+                    let group = document.getElementById(`id_${f}`).parentElement;
                     group.classList.toggle('hidden',!show);
                 }
             });

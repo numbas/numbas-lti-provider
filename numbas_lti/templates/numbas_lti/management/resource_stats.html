@@ -19,13 +19,19 @@
     <section id="attempt_completion">
         <h3>{% translate "Attempt completion" %}</h3>
         <table id="completion-table">
-            <tbody>
-                {% for label,value,n in completion_counts %}
+            <thead>
                 <tr>
-                    <td>{{label}}</td>
-                    <td class="value" data-value="{{value}}">{{n}}</td>
+                    {% for label,value,n in completion_counts %}
+                    <th>{{label}}</th>
+                    {% endfor %}
                 </tr>
+            </thead>
+            <tbody>
+                <tr>
+                {% for label,value,n in completion_counts %}
+                    <td class="value" data-value="{{value}}">{{n}}</td>
                 {% endfor %}
+                </tr>
             </tbody>
         </table>
     </section>
@@ -34,19 +40,22 @@
 
     <section id="summary_statistics">
         <h3>{% translate "Summary statistics" %}</h3>
-        <table id="summary-stats-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>{% translate "Mean" %}</th>
-                    <th>{% translate "Lower quartile" %}</th>
-                    <th>{% translate "Median" %}</th>
-                    <th>{% translate "Upper quartile" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+
+        <div class="scrolling-table">
+            <table id="summary-stats-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>{% translate "Mean" %}</th>
+                        <th>{% translate "Lower quartile" %}</th>
+                        <th>{% translate "Median" %}</th>
+                        <th>{% translate "Upper quartile" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <section id="stacked_status_chart">
