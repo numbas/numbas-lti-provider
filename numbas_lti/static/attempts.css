@@ -5,13 +5,10 @@
     width: 15em;
     margin: 0;
     display: flex;
-    height: 1.2em;
+    height: 2em;
     padding: 0;
     list-style: none;
-    background: var(--background-color);
     align-items: flex-end;
-    border: 1px solid var(--table-border-color);
-    border-width: 1px 0;
 }
 .score-info .question {
     flex-basis: 3px;
@@ -20,9 +17,9 @@
     margin-left: 2px;
 }
 .score-info .question.not-attempted {
-    background: #ccc;
+    background: var(--muted-color);
 }
 /* generated with http://tristen.ca/hcl-picker/#/hlc/3/1.46/7E4813/4AD269 */
-.scaled_score_0 { background-color: red; color: #fff;}
-.scaled_score_1 { background-color: hsl(120, 40%, 50%); color: #fff;}
-.scaled_score_2 { background-color: lime; color: #000; }
+.scaled_score_0 { background-color: var(--danger-button-bg); color: var(--danger-button-color);}
+.scaled_score_1 { background-color: var(--warning-button-bg); color: var(--warning-button-color);}
+.scaled_score_2 { background-color: var(--success-button-bg); color: var(--success-button-color); }

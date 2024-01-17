@@ -39,7 +39,7 @@
             </thead>
             <tbody>
                 {% for part in parts %}
-                <tr class="part {% if part.p == None %}info{% endif %} {% if part.discount %}discounted{% endif %}{% if part.remark %}remarked{% endif %}{% if part.p and not part.has_gaps %}remarkable{% endif %}">
+                <tr class="part {% if part.p == None %}info{% endif %} {% if part.discount %}discounted{% endif %}{% if part.remark %}remarked{% endif %}{% if part.p and not part.has_gaps %} remarkable{% endif %}">
                     <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}muted not-first-appearance{% endif %}">{{part.q}}</td>
                     <td class="{% if part.p and part.g %}muted not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
                     <td>{% if part.g %}{{part.g}}{% endif %}</td>

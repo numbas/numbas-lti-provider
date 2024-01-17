@@ -11,7 +11,7 @@ h2, h3 {
     font-size: 1em;
 }
 .x-axis .tick line {
-    stroke: #ccc;
+    stroke: var(--muted-color);
     stroke-dasharray: 2 2;
 }
 .question-dot {
@@ -19,8 +19,8 @@ h2, h3 {
 }
 
 .question-bg {
-    fill: hsl(0,0%,95%);
-    stroke: #555;
+    fill: var(--td-bg);
+    stroke: var(--muted-color);
     stroke-width: 1;
     opacity: 0.5;
 }
@@ -32,17 +32,16 @@ section {
 }
 
 .num_not_attempted rect {
-    fill: #eee;
-    stroke: #888;
+    fill: url(#not-attempted-fill);
 }
 .num_incorrect rect {
-    fill: red;
+    fill: url(#incorrect-fill);
 }
 .num_partial rect {
-    fill: hsl(120, 40%, 50%);
+    fill: url(#partial-fill);
 }
 .num_correct rect {
-    fill: lime;
+    fill: url(#correct-fill);
 }
 
 .legend {
@@ -62,19 +61,20 @@ section {
 }
 
 #times circle.start {
-    fill: hsl(240,40%,70%);
+    fill: var(--info-color);
 }
 
 #times circle.end {
-    fill: hsl(120,40%,70%);
+    fill: var(--success-color);
 }
 
 #times line.duration {
-    stroke: hsla(240,0%,70%,0.4);
+    stroke: var(--info-color);
+    stroke-opacity: 0.4;
 }
 
 #times .tip line {
-    stroke: hsl(240,40%,70%);
+    stroke: var(--info-color);
     stroke-dasharray: 8 5;
 }
 
@@ -83,9 +83,9 @@ section {
         r: 3px;
     }
     #times circle.start {
-        fill: hsl(240,70%,50%);
+        fill: var(--info-color);
     }
     #times circle.end {
-        fill: hsl(120,70%,50%);
+        fill: var(--success-color);
     }
 }

@@ -31,11 +31,11 @@
         </form>
     </nav>
 
-    {% if page_helplink %}
-        <p>{% helplink page_helplink %}</p>
-    {% endif %}
-
     <header>
+        {% if page_helplink %}
+            {% helplink page_helplink %}
+        {% endif %}
+
         {% block management_header %}{% endblock management_header %}
     </header>
 

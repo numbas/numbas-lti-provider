@@ -70,57 +70,66 @@
                             <a href="{% url 'attempt_timeline' attempt.pk %}">{% translate "View attempt data" %}</a>
                             {% endif %}
                         </td>
-                        <td>
-                            {% if not no_attempt %}
+                        {% if not no_attempt %}
+                            <td class="success">
                                 {% icon 'ok' %}
                                 <span class="sr-only">{% translate "Matches" %}</span>
-                            {% else %}
+                            </td>
+                        {% else %}
+                            <td class="danger">
                                 {% icon 'not-ok' %}
                                 <span class="sr-only">{% translate "Doesn't match" %}</span>
-                            {% endif %}
-                        </td>
+                            </td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>{% translate "Start time" %}</td>
                         <td>{{summary.start_time}}</td>
                         <td>{{attempt.start_time}}</td>
-                        <td>
-                            {% if summary.start_time == attempt.start_time %}
+                        {% if summary.start_time == attempt.start_time %}
+                            <td class="success">
                                 {% icon 'ok' %}
                                 <span class="sr-only">{% translate "Matches" %}</span>
-                            {% else %}
+                            </td>
+                        {% else %}
+                            <td class="danger">
                                 {% icon 'not-ok' %}
                                 <span class="sr-only">{% translate "Doesn't match" %}</span>
-                            {% endif %}
-                        </td>
+                            </td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>{% translate "End time" %}</td>
                         <td>{{summary.end_time}}</td>
                         <td>{{attempt.end_time}}</td>
-                        <td>
-                            {% if summary.end_time == attempt.end_time %}
+                        {% if summary.end_time == attempt.end_time %}
+                            <td class="success">
                                 {% icon 'ok' %}
                                 <span class="sr-only">{% translate "Matches" %}</span>
-                            {% else %}
+                            </td>
+                        {% else %}
+                            <td class="danger">
                                 {% icon 'not-ok' %}
                                 <span class="sr-only">{% translate "Doesn't match" %}</span>
-                            {% endif %}
-                        </td>
+                            </td>
+                        {% endif %}
                     </tr>
                     {% if "raw_score" in summary %}
                     <tr>
                         <td>{% translate "Score" %}</td>
                         <td>{{summary.raw_score}}</td>
                         <td>{{attempt.raw_score}}</td>
-                        <td>
-                            {% if summary.raw_score == attempt.raw_score %}
+                        {% if summary.raw_score == attempt.raw_score %}
+                            <td class="success">
                                 {% icon 'ok' %}
                                 <span class="sr-only">{% translate "Matches" %}</span>
-                            {% else %}
+                            </td>
+                        {% else %}
+                            <td class="danger">
                                 {% icon 'not-ok' %}
                                 <span class="sr-only">{% translate "Doesn't match" %}</span>
-                            {% endif %}
+                            </td>
+                        {% endif %}
                         </td>
                     </tr>
                     {% endif %}

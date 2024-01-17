@@ -6,7 +6,6 @@ body.loaded #loading {
 #timeline thead th {
   position: sticky;
   top: 0;
-  background: #eee;
 }
 
 .item .exam-score {
@@ -19,8 +18,8 @@ td {
 
 .exam-score.changed {
     position: sticky;
-    top: 4em;
-    background: white;
+    top: 3.4em;
+    background: var(--td-bg);
 }
 
 #timeline .glyphicon {

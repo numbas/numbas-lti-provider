@@ -37,11 +37,11 @@
         {% if page_obj.has_other_pages %}
             <nav class="pager" aria-label="Page navigation">
                 {% if page_obj.has_previous %}
-                <a class="previous" href="?{% set_query_values page=page_obj.previous_page_number %}" aria-label="{% translate "Previous page" %}">{% icon 'arrow-left' %} {% translate "Later" %}</a>
+                <a class="previous button" href="?{% set_query_values page=page_obj.previous_page_number %}" aria-label="{% translate "Previous page" %}">{% icon 'arrow-left' %} {% translate "Later" %}</a>
                 {% endif %}
                 <span class="current-page">{% blocktranslate with start=page_obj.start_index end=page_obj.end_index count count=paginator.count %}Showing the only attempt{% plural %}Showing attempts {{start}} - {{end}} of {{count}}{% endblocktranslate %}</span>
                 {% if page_obj.has_next %}
-                <a class="next" href="?{% set_query_values page=page_obj.next_page_number %}" aria-label="{% translate "Next page" %}">{% translate "Earlier" %} {% icon 'arrow-right' %}</a>
+                <a class="next button" href="?{% set_query_values page=page_obj.next_page_number %}" aria-label="{% translate "Next page" %}">{% translate "Earlier" %} {% icon 'arrow-right' %}</a>
                 {% endif %}
             </nav>
         {% endif %}

@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load icon %}
 
+{% block body_class %}index centered{{block.super}}{% endblock body_class %}
+
 {% block content %}
     <header>
         <h1>{% translate "Numbas LTI provider" %}</h1>
@@ -13,8 +15,6 @@
             The site administrator can create these for you.
             {% endblocktranslate %}
         </p>
-        <p>{% translate "Here is this tool's Launch URL:" %}</p>
-        <pre>{{entry_url}}</pre>
 
         <p><a href="{% url 'list_consumers' %}">{% icon 'list' %} {% translate "Administration (login required)" %}</a></p>
     </main>

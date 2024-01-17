@@ -21,12 +21,17 @@ no_websockets = static_view('numbas_lti/no_websockets.html')
 not_authorized = static_view('numbas_lti/not_authorized.html')
 
 @csrf_exempt
+def css_test(request):
+    if not User.objects.filter(is_superuser=True).exists():
+        return redirect(reverse('create_superuser'))
+    context = {}
+    return render(request,'numbas_lti/css_test.html',context)
+
+@csrf_exempt
 def index(request):
     if not User.objects.filter(is_superuser=True).exists():
         return redirect(reverse('create_superuser'))
-    context = {
-        'entry_url': get_lti_entry_url(request),
-    }
+    context = {}
     return render(request,'numbas_lti/index.html',context)
 
 @csrf_exempt

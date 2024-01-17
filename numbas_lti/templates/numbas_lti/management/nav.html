@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load icon %}
 {% load querystring %}
-<nav id="top-nav">
+<nav id="top-nav" class="no-print">
     <a class="navbar-brand" href="{% url_with_lti 'resource_dashboard' resource.pk %}">
         {% block nav_title %}
             {% if resource.context %}<small class="context-name">{{resource.context.name}}</small><br/>{% endif %}

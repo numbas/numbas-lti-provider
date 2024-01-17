@@ -66,4 +66,6 @@
     </table>
 
     <a class="button default" href="{% url 'consumer_manage_time_periods' consumer.pk %}">{% icon 'calendar' %} Manage time periods</a>
+    <br>
+    <a href="{% url 'delete_consumer' consumer.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</a>
 {% endblock management_content %}

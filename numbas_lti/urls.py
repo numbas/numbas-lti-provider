@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     # Top-level views: no authentication required
     path('', views.entry.index, name='index'),
+    path('css-test', views.entry.css_test, name='css_test'),
     path('config.xml', views.entry.config_xml, name='config_xml'),
 
     # Admin views: should be locally authenticated as a superuser

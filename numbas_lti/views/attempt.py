@@ -229,7 +229,7 @@ def new_attempt(request):
         exam = request.resource.exam,
         user = request.user
     )
-    return redirect(reverse_with_lti('run_attempt',args=(attempt.pk,)))
+    return redirect(reverse_with_lti(request, 'run_attempt',args=(attempt.pk,)))
 
 class BrokenAttemptException(Exception):
     def __init__(self,attempt):

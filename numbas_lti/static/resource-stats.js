@@ -193,8 +193,8 @@ function update_question_scores_chart() {
     }
     allDensity.push({key: _('Total'), density: cumulative_path(attempts.map(function(a) { return a.scaled_score; }))});
 
-    var question_colour = function(d) { return d.key==_('Total') ? '#eee' : d3.schemeCategory10[d.number%10]; }
-    var circle_colour = function(d) { return d.key==_('Total') ? '#555' : d3.schemeCategory10[d.number%10]; }
+    var question_colour = function(d) { return d.key==_('Total') ? 'var(--td-bg)' : 'var(--info-color)'; }
+    var circle_colour = function(d) { return d.key==_('Total') ? 'var(--td-bg)' : 'var(--info-color)'; }
 
     var bgs = question_scores_g.selectAll('.question-bg').data(allDensity);
     bgs.enter()
@@ -220,7 +220,7 @@ function update_question_scores_chart() {
         .attr("transform", function(d){return "translate(0," + yName(d.key) +")" })
         .attr("fill", question_colour)
         .datum(function(d){return(d.density)})
-        .attr("stroke", "#000")
+        .attr("stroke", 'var(--text-color)')
         .attr("stroke-width", 2)
         .attr("d",  d3.line()
             .x(function(d) { return x(d[0]); })
@@ -556,8 +556,8 @@ function update_time_spent_chart() {
     var allDensity = [];
     var density = cumulative_path(times);
 
-    var question_colour = '#eee';
-    var circle_colour = '#555';
+    var question_colour = 'var(--td-bg)';
+    var circle_colour = 'var(--text-color)';
 
     var bg = time_spent_g
         .append('rect')
@@ -577,7 +577,7 @@ function update_time_spent_chart() {
         .append("path")
         .attr('class','question-curve')
         .attr("fill", question_colour)
-        .attr("stroke", "#000")
+        .attr("stroke", "var(--text-color)")
         .attr("stroke-width", 2)
     ;
 

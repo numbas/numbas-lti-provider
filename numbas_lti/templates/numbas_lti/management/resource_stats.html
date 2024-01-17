@@ -11,7 +11,7 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    <button type="button" onclick="window.print()" class="hidden-print button info">
+    <button type="button" onclick="window.print()" class="no-print button info">
         {% icon 'print' %}
         {% translate "Print this page" %}
     </button>
@@ -61,19 +61,52 @@
     <section id="stacked_status_chart">
         <div class="legend">
             <span class="num_not_attempted">
-                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="not-attempted-fill" x="0" y="0" width="25" height="25">
+                            <rect width="100%" height="100%" style="fill: var(--muted-color)"></rect>
+                            <circle cx="50%" cy="50%" r="5" style="fill: var(--background-color)"></circle>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
                 {% translate "Not attempted" %}
             </span>
+
             <span class="num_incorrect">
-                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="incorrect-fill" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                            <rect width="100%" height="100%" style="fill: var(--danger-color)"></rect>
+                            <line x1="0" y1="0" x2="100%" y2="100%" stroke-width="3" style="stroke: var(--background-color)"></line>
+                            <line x1="0" y1="100%" x2="100%" y2="0" stroke-width="3" style="stroke: var(--background-color)"></line>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
                 {% translate "Incorrect" %}
             </span>
             <span class="num_partial">
-                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="partial-fill" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                            <rect width="100%" height="100%" style="fill: var(--warning-color)"></rect>
+                            <line x1="0" y1="100%" x2="100%" y2="0" stroke-width="3" style="stroke: var(--background-color)"></line>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
                 {% translate "Partially correct" %}
             </span>
             <span class="num_correct">
-                <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="correct-fill" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                            <rect width="100%" height="100%" style="fill: var(--success-color)"></rect>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
                 {% translate "Correct" %}
             </span>
         </div>

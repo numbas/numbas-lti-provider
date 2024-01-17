@@ -5,9 +5,6 @@ table#parts .question-id {
     font-size: 1.2em;
     font-weight: bold;
 }
-table#parts .not-first-appearance {
-    color: #ccc;
-}
 
 .control form {
     display: inline-block;
