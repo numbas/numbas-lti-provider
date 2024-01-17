@@ -21,13 +21,17 @@
         {% if num_results > 0 %}
         <nav class="pager" aria-label="Page navigation">
             {% if has_prev_page %}
-                <a class="previous" href="?query={{global_search_query}}&model={{global_search_model}}&page={{page|add:"-1"}}">{% icon 'arrow-left' %} {% translate "Previous page" %}</a>
+                <a class="previous button" href="?query={{global_search_query}}&model={{global_search_model}}&page={{page|add:"-1"}}">{% icon 'arrow-left' %} {% translate "Previous page" %}</a>
+            {% else %}
+                <span class="previous"></span>
             {% endif %}
 
             <span class="current-page">{% blocktranslate with model=single_model models=models start=start end=end count count=num_results %}Showing the only {{model}}.{% plural %}Showing {{models}} {{start}} - {{end}} of {{count}}.{% endblocktranslate %}</span>
 
             {% if has_next_page %}
-                <a class="next" href="?query={{global_search_query}}&model={{global_search_model}}&page={{page|add:"1"}}">{% translate "Next page" %} {% icon 'arrow-right' %}></a>
+                <a class="next button" href="?query={{global_search_query}}&model={{global_search_model}}&page={{page|add:"1"}}">{% translate "Next page" %} {% icon 'arrow-right' %}</a>
+            {% else %}
+                <span class="next"></span>
             {% endif %}
         </nav>
 

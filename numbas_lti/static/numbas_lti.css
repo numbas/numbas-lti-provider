@@ -375,6 +375,10 @@ body.centered :is(header, main) {
     }
 }
 
+body.resource-management #top-nav .navbar-brand {
+    grid-column: 1/-1;
+}
+
 body.dashboard ul.actions li ~ li {
     border-top: 1px solid #ccc;
 }
@@ -382,12 +386,7 @@ body.dashboard ul.actions li {
     padding: 1em 0;
 }
 
-.navbar-default.resource-management-navbar .navbar-brand {
-    padding-top: 5px;
-    padding-bottom: 5px;
-}
-
-.resource-management-navbar .navbar-brand .context-name {
+#top-nav .navbar-brand .context-name {
     font-style: italic;
 }
 

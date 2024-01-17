@@ -43,7 +43,7 @@
         <tbody>
         {% for attempt in user.attempts.all|slice:":10" %}
         <tr>
-            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="muted">{{attempt.resource.context.name}}</span></td>
+            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="muted">{{attempt.resource.lti_contexts.first.name}}</span></td>
             <td>{{attempt.start_time}}</td>
             <td>
                 <a class="button link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
@@ -74,7 +74,7 @@
                     {% if launch.attempt.deleted %}
                     {{launch.attempt.resource.title}} <em>(deleted)</em>
                     {% else %}
-                    <a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a>
+                    <a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a> - <span class="muted">{{launch.attempt.resource.lti_contexts.first.name}}</span>
                     {% endif %}
                 </td>
                 <td>{{launch.time}}</td>
@@ -97,7 +97,7 @@
         <tbody>
             {% for launch in user.lti_launches.all|slice:":10" %}
             <tr>
-                <td><a href="{% url 'manage_attempts' launch.resource.pk %}?userid={{user.username}}">{{launch.resource.title}} ({{launch.resource.lti_contexts.first.name}})</a></td>
+                <td><a href="{% url 'manage_attempts' launch.resource.pk %}?userid={{user.username}}">{{launch.resource.title}}</a> - <span class="muted">{{launch.resource.lti_contexts.first.name}}</span></td>
                 <td>{{launch.time}}</td>
                 <td>{{launch.ip_address}}</td>
                 <td class="monospace">{{launch.user_agent}}</td>

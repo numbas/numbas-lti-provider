@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load helplink %}
 
+{% block body_class %}resource-management {{block.super}}{% endblock body_class %}
+
 {% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
 
 {% block content %}

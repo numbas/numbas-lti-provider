@@ -6,30 +6,32 @@
 {% block management_header %}
     <h1>
         {% blocktranslate with resource_name=resource.title %}Reports for <strong>{{resource_name}}</strong>{% endblocktranslate %}
-        <br>
-        <small>{{resource.context.name}}</small>
     </h1>
 {% endblock management_header %}
 
 {% block management_content %}
-    <table>
-        <thead>
-            <tr>
-                <th>{% translate "File" %}</th>
-                <th>{% translate "Status" %}</th>
-                <th>{% translate "Date created" %}</th>
-                <th>{% translate "Expiry date" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for report in resource.file_reports.all %}
-            <tr>
-                <td>{% if report.status == 'complete' %}<a download href="{{ report.outfile.url }}">{{report.name}}</a>{% else %}{{report.name}}{% endif %}</td>
-                <td>{{report.get_status_display}}</td>
-                <td>{{report.creation_time}}</td>
-                <td>{{report.expiry_date}}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% if resource.file_reports.exists %}
+        <table>
+            <thead>
+                <tr>
+                    <th>{% translate "File" %}</th>
+                    <th>{% translate "Status" %}</th>
+                    <th>{% translate "Date created" %}</th>
+                    <th>{% translate "Expiry date" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in resource.file_reports.all %}
+                <tr>
+                    <td>{% if report.status == 'complete' %}<a download href="{{ report.outfile.url }}">{{report.name}}</a>{% else %}{{report.name}}{% endif %}</td>
+                    <td>{{report.get_status_display}}</td>
+                    <td>{{report.creation_time}}</td>
+                    <td>{{report.expiry_date}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="nothing-here">{% translate "No report files have been created yet." %}</p>
+    {% endif %}
 {% endblock %}
