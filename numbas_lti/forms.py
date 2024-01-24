@@ -7,6 +7,7 @@ import django.forms.renderers
 from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
+from . import requests_session
 from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink
 from .test_exam import test_zipfile, ExamTestException
 
@@ -203,7 +204,7 @@ class CreateExamForm(ModelForm):
             query = parse_qs(qs)
             query.setdefault('scorm','')
             retrieve_url = urlunparse((scheme, netloc, path, params, urlencode(query,True), fragment))
-            package_bytes = requests.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
+            package_bytes = requests_session.get_session().get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
             cleaned_data['package'] = File(BytesIO(package_bytes),name='exam.zip')
 
         if getattr(settings,'TEST_UPLOADED_EXAMS',False) and hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
@@ -243,7 +244,7 @@ class CreateEditorLinkForm(ModelForm):
     def clean_url(self):
         url = self.cleaned_data['url']
         try:
-            response = requests.get('{}/api/handshake'.format(url), timeout=getattr(settings,'REQUEST_TIMEOUT',60))
+            response = requests_session.get_session().get('{}/api/handshake'.format(url), timeout=getattr(settings,'REQUEST_TIMEOUT',60))
             if response.status_code != 200:
                 raise Exception(_("Request returned HTTP status code") + " {}.".format(response.status_code))
             data = response.json()

@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django_auth_lti.verification import is_allowed
 from functools import wraps
-from numbas_lti import lockdown_app
+from numbas_lti import lockdown_app, requests_session
 from numbas_lti.models import Resource, Exam, LTIContext
 from numbas_lti.middleware import get_lti_13_context
 import pylti1p3.roles
@@ -87,7 +87,7 @@ class LTI_13_Mixin:
 
     def get_message_launch(self):
         if not hasattr(self.request, 'lti_13_message_launch'):
-            message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage)
+            message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage, requests_session=requests_session.get_session())
             try:
                 message_launch.validate()
                 self.request.lti_13_message_launch = message_launch

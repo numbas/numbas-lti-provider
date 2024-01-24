@@ -270,3 +270,6 @@ LOCKDOWN_APP = {
     # The URL to download the Safe Exam Browser app from.
     'seb_install_url': 'https://safeexambrowser.org/download_en.html',
 }
+
+# The User-Agent header string to use for any requests made by this tool. The version of the software is appended to the string given here.
+REQUESTS_USER_AGENT = 'Numbas LTI provider'

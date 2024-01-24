@@ -2,6 +2,7 @@ import logging
 from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 
+from . import requests_session
 from .models import Resource, LTIContext, LTI_13_Context, LTIConsumer, LTI_11_ResourceLink, LtiTool, LTI_13_ResourceLink
 
 logger = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ def get_lti_13_launch_id(request, launch_id_param='lti_13_launch_id'):
 
 def get_cached_lti_13_message_launch(request, launch_id, tool_conf, launch_data_storage):
     if not hasattr(request, 'lti_13_message_launch'):
-        request.lti_13_message_launch = DjangoMessageLaunch.from_cache(launch_id, request, tool_conf, launch_data_storage=launch_data_storage)
+        request.lti_13_message_launch = DjangoMessageLaunch.from_cache(launch_id, request, tool_conf, launch_data_storage=launch_data_storage, requests_session=requests_session.get_session())
 
     return request.lti_13_message_launch
 

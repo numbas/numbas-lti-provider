@@ -27,16 +27,19 @@ from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
 from pylti1p3.lineitem import LineItem
 from pylti1p3.service_connector import ServiceConnector, REQUESTS_USER_AGENT
 import re
-import requests
 import shutil
 import time
 import uuid
 from zipfile import ZipFile
 
+from . import requests_session
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
 from .util import parse_scorm_timeinterval
+
+
+requests = requests_session.get_session()
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -296,10 +299,7 @@ class LTI_13_Context(models.Model):
 
         registration = self.tool_conf.find_registration_by_params(iss=tool.issuer, client_id=tool.client_id)
 
-        requests_session = requests.Session()
-        requests_session.headers['User-Agent'] = REQUESTS_USER_AGENT
-
-        service_connector = ServiceConnector(registration, requests_session)
+        service_connector = ServiceConnector(registration, requests_session.get_session())
 
         service_data = self.ags_data
 

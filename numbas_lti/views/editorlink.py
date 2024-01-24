@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django_auth_lti.patch_reverse import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
-from numbas_lti import forms
+from numbas_lti import forms, requests_session
 from numbas_lti.models import EditorLink, EditorLinkProject
 import json
 import requests
@@ -51,7 +51,7 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
     def get_projects_data(self):
         try:
             link = self.get_object()
-            projects_data = requests.get('{}/api/projects'.format(link.url), timeout=getattr(settings,'REQUEST_TIMEOUT',60)).json()
+            projects_data = requests_session.get_session().get('{}/api/projects'.format(link.url), timeout=getattr(settings,'REQUEST_TIMEOUT',60)).json()
             return projects_data
         except (json.JSONDecodeError, requests.exceptions.RequestException) as e:
             raise GettingProjectDataException(str(e))

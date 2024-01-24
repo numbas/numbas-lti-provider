@@ -1,5 +1,6 @@
-from requests_oauthlib import OAuth1
+from . import requests_session
 import requests
+from requests_oauthlib import OAuth1
 import uuid
 from django.utils.translation import gettext as _
 from django.conf import settings
@@ -146,7 +147,7 @@ def report_outcome_lti_11(resource,user_data):
     result = resource.grade_user(user)
 
     if user_data.lis_result_sourcedid:
-        r = requests.post(
+        r = requests_session.get_session().post(
                 user_data.lis_outcome_service_url,
                 data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
                 auth=OAuth1(user_data.consumer.lti_11.key, user_data.consumer.lti_11.secret, signature_type='auth_header', client_class=Client, force_include_body=True),
