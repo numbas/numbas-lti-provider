@@ -179,8 +179,6 @@ class ResourceManagementViewMixin(ManagementViewMixin):
 
     def dispatch(self,*args,**kwargs):
         self.resource = self.get_resource()
-        if not hasattr(self.request,'resource') or self.request.resource is None:
-            self.request.resource = self.resource
 
         return super(ResourceManagementViewMixin,self).dispatch(*args,**kwargs)
 
