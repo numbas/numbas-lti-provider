@@ -31,7 +31,7 @@
 
 {% if user.attempts.exists %}
 <section id="recent-attempts">
-    <h2>Recent attempts</h2>
+    <h2>{% translate "Recent attempts" %}</h2>
     <table>
         <thead>
             <tr>
@@ -57,6 +57,7 @@
 
 <section>
     <h2>{% translate "Recent launches" %}</h2>
+
     <h3>{% translate "Attempts" %}</h3>
     <table>
         <thead>
@@ -72,7 +73,7 @@
             <tr>
                 <td>
                     {% if launch.attempt.deleted %}
-                    {{launch.attempt.resource.title}} <em>(deleted)</em>
+                    {{launch.attempt.resource.title}} <em>({% translate "deleted" %})</em>
                     {% else %}
                     <a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a> - <span class="muted">{{launch.attempt.resource.lti_contexts.first.name}}</span>
                     {% endif %}
@@ -84,6 +85,7 @@
             {% endfor %}
         </tbody>
     </table>
+
     <h3>{% translate "Resources" %}</h3>
     <table>
         <thead>

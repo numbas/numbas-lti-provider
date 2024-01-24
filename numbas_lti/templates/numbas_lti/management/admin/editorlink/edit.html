@@ -37,15 +37,13 @@
                 <tr class="project">
                     <td>{{pform.use}}</td>
                     <td>
-                        <h3>
-                            <a class="project-name" target="_blank" href="{{pform.homepage.value}}">{{pform.name.value}}</a>
-                            <small class="project-owner">
-                                {% translate "by" %} <a href="{{project.owner.profile}}" target="_blank">
-                                    {% if project.owner.avatar %}<img alt="picture of {{project.owner.full_name}}" src="{{project.owner.avatar.40x40}}" class="avatar"> {% endif %}
-                                    {{project.owner.full_name}}
-                                </a>
-                            </small>
-                        </h3>
+                        <a class="project-name" target="_blank" href="{{pform.homepage.value}}">{{pform.name.value}}</a>
+                        <small class="project-owner">
+                            {% translate "by" %} <a href="{{project.owner.profile}}" target="_blank">
+                                {% if project.owner.avatar %}<img alt="picture of {{project.owner.full_name}}" src="{{project.owner.avatar.40x40}}" class="avatar"> {% endif %}
+                                {{project.owner.full_name}}
+                            </a>
+                        </small>
                         <div class="project-description">{{pform.description.value|safe}}</div>
                         {{pform.errors}}
                     </td>

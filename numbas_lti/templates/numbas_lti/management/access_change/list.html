@@ -19,7 +19,7 @@
             {% for ac in resource.access_changes.all %}
                 <article class="access-change">
                     <header>
-                        <h2 class="panel-heading">{{ac.description}}</h2>
+                        {{ac.description}}
                     </header>
 
                     <dl>

@@ -7,3 +7,8 @@
 #access-changes li {
   flex-basis: 30em;
 }
+
+.access-change > header {
+    font-size: 1.2em;
+    font-weight: bold;
+}

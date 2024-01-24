@@ -36,36 +36,37 @@
 
     {% if not consumer.contexts.count %}
         <p>{% translate "This consumer has not created any resources yet." %}</p>
+    {% else %}
+        <table class="periods">
+            <colgroup>
+                <col style="width: 10em;"/>
+                <col/>
+                <col style="width: 4em;"/>
+                <col style="width: 4em;"/>
+            </colgroup>
+            <thead>
+                <th>{% translate "Time period" %}</th>
+                <th>{% translate "Context" %}</th>
+                <th>{% translate "Resources" %}</th>
+                <th>{% translate "Attempts" %}</th>
+            </thead>
+            <tbody>
+            {% for period,contexts in period_groups %}
+                {% for context in contexts %}
+                <tr>
+                    {% if forloop.first %}<td rowspan="{{contexts|length}}">{% if period %}{{period.name}}{% else %}{% translate "Not in a defined time period" %}{% endif %}</td>{% endif %}
+                    <td><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></td>
+                    <td class="number">{{context.resources.count}}</td>
+                    <td class="number">{{context.num_attempts}}</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <a class="button default" href="{% url 'consumer_manage_time_periods' consumer.pk %}">{% icon 'calendar' %} Manage time periods</a>
     {% endif %}
 
-    <table class="periods">
-        <colgroup>
-            <col style="width: 10em;"/>
-            <col/>
-            <col style="width: 4em;"/>
-            <col style="width: 4em;"/>
-        </colgroup>
-        <thead>
-            <th>{% translate "Time period" %}</th>
-            <th>{% translate "Context" %}</th>
-            <th>{% translate "Resources" %}</th>
-            <th>{% translate "Attempts" %}</th>
-        </thead>
-        <tbody>
-        {% for period,contexts in period_groups %}
-            {% for context in contexts %}
-            <tr>
-                {% if forloop.first %}<td rowspan="{{contexts|length}}">{% if period %}{{period.name}}{% else %}{% translate "Not in a defined time period" %}{% endif %}</td>{% endif %}
-                <td><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></td>
-                <td class="number">{{context.resources.count}}</td>
-                <td class="number">{{context.num_attempts}}</td>
-            </tr>
-            {% endfor %}
-        {% endfor %}
-        </tbody>
-    </table>
-
-    <a class="button default" href="{% url 'consumer_manage_time_periods' consumer.pk %}">{% icon 'calendar' %} Manage time periods</a>
     <br>
     <a href="{% url 'delete_consumer' consumer.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</a>
 {% endblock management_content %}

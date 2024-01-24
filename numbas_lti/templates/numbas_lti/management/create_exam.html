@@ -27,7 +27,7 @@
     <main>
         <section id="upload-exam">
             <header>
-                <h2 class="panel-title">{% icon 'upload' %} {% translate "Upload an exam package" %}</h2>
+                <h2>{% icon 'upload' %} {% translate "Upload an exam package" %}</h2>
             </header>
             <form method="POST" enctype="multipart/form-data">
                 <p>{% blocktranslate %}To obtain an exam package, find your exam in the Numbas editor and click <em>"Download SCORM package"</em>.{% endblocktranslate %}</p>
@@ -42,7 +42,7 @@
         {% if exams %}
         <section id="ready-made-exams">
             <header>
-                <h2 class="panel-title">{% icon 'transfer' %} {% translate "Select a ready-made exam" %}</h2>
+                <h2>{% icon 'transfer' %} {% translate "Select a ready-made exam" %}</h2>
             </header>
             <form>
                 <label for="exam-search">

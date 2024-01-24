@@ -15,8 +15,8 @@
     <p><a href="{% url 'delete_context' context.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this context" %}</a></p>
 
     <section id="resources">
-        {% if context.resources.exists %}
         <h2>{% translate "Resources" %}</h2>
+        {% if context.resources.exists %}
         <table>
             {% for resource in context.resources.all %}
             <tr class="resource{% if resource.is_old %} old{% endif %}{% if resource.is_new %} new warning{% endif %}">
@@ -44,4 +44,5 @@
         {% else %}
             <p>{% translate "This context is not associated with any resources." %}</p>
         {% endif %}
+    </section>
 {% endblock management_content %}
