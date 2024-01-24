@@ -3,6 +3,7 @@
 
 {% block body_class %}{{block.super}} launch-error not-post{% endblock %}
 
+{% block title %}{% translate "Incorrect access" %} - {{block.super}}{% endblock %}
 {% block header_message %}{% translate "Incorrect access" %}{% endblock %}
 
 {% block main %}

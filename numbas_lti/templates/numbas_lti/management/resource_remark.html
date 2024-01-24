@@ -5,6 +5,8 @@
 {% load static %}
 {% load statici18n %}
 
+{% block title %}{% translate "Re-mark" %} - {{block.super}}{% endblock title %}
+
 {% block management_header %}
     <h1>
         {% blocktranslate with resource_name=resource.title %}Re-mark <strong>{{resource_name}}</strong>{% endblocktranslate %}

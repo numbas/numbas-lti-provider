@@ -3,6 +3,7 @@
 
 {% block body_class %}{{block.super}} launch-error authentication-failed{% endblock %}
 
+{% block title %}{% translate "Authentication failed" %} - {{block.super}}{% endblock %}
 {% block header_message %}{% translate "Authentication failed" %}{% endblock %}
 
 {% block main %}

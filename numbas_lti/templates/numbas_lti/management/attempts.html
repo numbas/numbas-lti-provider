@@ -5,6 +5,8 @@
 {% load querystring %}
 {% load static %}
 
+{% block title %}{% translate "Attempts" %} - {{block.super}}{% endblock %}
+
 {% block stylesheets %}
     {{block.super}}
     <link rel="stylesheet" href="{% static "attempts.css" %}">

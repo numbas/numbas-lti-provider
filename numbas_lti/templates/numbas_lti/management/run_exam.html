@@ -1,5 +1,8 @@
 {% extends "numbas_lti/base.html" %}
+{% load i18n %}
 {% load static %}
+
+{% block title %}{% blocktranslate with name=exam.title %}Test Run {{name}} {% endblocktranslate %} - {{block.super}}{% endblock title %}
 
 {% block stylesheets %}
     {{block.super}}

@@ -5,6 +5,8 @@
 {% load static %}
 {% load tz %}
 
+{% block title %}{% if create %}{% translate "Create an access change" %}{% else %}{% translate "Edit an access change" %}{% endif %} - {{block.super}}{% endblock title %}
+
 {% block management_header %}
     <h1>{% if create %}{% translate "Create an access change" %}{% else %}{% translate "Edit an access change" %}{% endif %}</h1>
 {% endblock management_header %}

@@ -4,6 +4,8 @@
 {% load percentage %}
 {% load querystring %}
 
+{% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
+
 {% block content %}
     <header>
         <h1>

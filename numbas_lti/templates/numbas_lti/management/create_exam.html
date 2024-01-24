@@ -5,6 +5,8 @@
 {% load querystring %}
 {% load static %}
 
+{% block title %}{% translate "New Numbas activity" %} - {{block.super}}{% endblock title %}
+
 {% block body_class %}{{block.super}} create-exam {% if exams %}has-ready-made-exams{% endif %}{% endblock %}
 
 {% block javascripts %}

@@ -3,6 +3,7 @@
 
 {% block body_class %}{{block.super}} launch-error unrecognised-lti-message-type{% endblock %}
 
+{% block title %}{% translate "Unrecognised LTI launch type" %} - {{block.super}}{% endblock %}
 {% block header_message %}{% translate "Unrecognised LTI launch type" %}{% endblock %}
 
 {% block main %}

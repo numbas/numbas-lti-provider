@@ -7,6 +7,8 @@
     <meta http-equiv="refresh" content="0;URL='{{lockdown_url}}'" />
 {% endblock meta %}
 
+{% block title %}{{request.resource.title}} - {{block.super}}{% endblock title %}
+
 {% block content %}
     <header>
         <h1>

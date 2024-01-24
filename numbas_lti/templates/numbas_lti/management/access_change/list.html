@@ -5,6 +5,8 @@
 {% load tz %}
 {% load static %}
 
+{% block title %}{% translate "Access changes" %} - {{block.super}}{% endblock title %}
+
 {% block management_header %}
     <h1>{% translate "Access changes" %}</h1>
 {% endblock management_header %}

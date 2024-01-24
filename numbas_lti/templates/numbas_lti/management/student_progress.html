@@ -4,6 +4,8 @@
 {% load percentage %}
 {% load querystring %}
 
+{% block title %}{% translate "Student progress" %} - {{block.super}}{% endblock title %}
+
 {% block management_header %}
     <h1>{% translate "Student progress" %}</h1>
 {% endblock management_header %}

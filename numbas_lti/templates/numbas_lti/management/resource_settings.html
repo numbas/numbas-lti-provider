@@ -4,6 +4,8 @@
 {% load tz %}
 {% load querystring %}
 
+{% block title %}{% translate "Settings" %} - {{block.super}}{% endblock title %}
+
 {% block management_header %}
     <h1>{% translate "Settings" %}</h1>
 {% endblock management_header %}

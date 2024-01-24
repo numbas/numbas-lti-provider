@@ -4,6 +4,8 @@
 {% load static %}
 {% load statici18n %}
 
+{% block title %}{% translate "Discount question parts" %} - {{block.super}}{% endblock title %}
+
 {% block stylesheets %}
 {{block.super}}
 <link rel="stylesheet" href="{% static "resource_discount.css" %}">
