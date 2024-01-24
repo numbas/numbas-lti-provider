@@ -4,6 +4,8 @@
 
 {% block title %}{% blocktranslate with name=exam.title %}Test Run {{name}} {% endblocktranslate %} - {{block.super}}{% endblock title %}
 
+{% block body_class %}test-run {{block.super}}{% endblock %}
+
 {% block stylesheets %}
     {{block.super}}
     <style>
@@ -15,7 +17,7 @@
         #scorm-player {
             border: none;
         }
-        .navbar {
+        #top-nav {
             margin-bottom: 0;
         }
     </style>
