@@ -3,6 +3,7 @@
 {% load icon %}
 {% load percentage %}
 {% load querystring %}
+{% load time_tag %}
 
 {% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
 
@@ -52,7 +53,7 @@
                 {% endif %}
                 {% for attempt in object_list %}
                 <tr>
-                    <td>{{attempt.start_time}}</td>
+                    <td>{% time_tag attempt.start_time %}</td>
                     <td>
                         {% if attempt.should_show_scores %}
                             {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})
@@ -64,26 +65,26 @@
                             {% endif %}
                         {% endif %}
                         {% if attempt.is_remarked %}
-                        <br>
-                        <small>{% translate "This score has been manually changed by an instructor." %}</small>
+                            <br>
+                            <small>{% translate "This score has been manually changed by an instructor." %}</small>
                         {% endif %}
                     </td>
                     <td>
                         {% if attempt.completed %}
                             {% if attempt.review_allowed %}
-                            <a class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
-                                {% icon 'play' %} {% translate "Review this attempt" %}
-                            </a>
+                                <a class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                                    {% icon 'play' %} {% translate "Review this attempt" %}
+                                </a>
                             {% else %}
                                 {% if attempt.resource.allow_review_from %}
-                                    {% blocktranslate with time=attempt.resource.allow_review_from %}Review will be available from {{time}}{% endblocktranslate %}
+                                    <span class="warning">{% blocktranslate with time_iso=attempt.resource.allow_review_from|date:"c" time=attempt.resource.allow_review_from %}Review will be available from <time datetime="{{time_iso}}">{{time}}</time>{% endblocktranslate %}</span>
                                 {% endif %}
                             {% endif %}
                         {% else %}
                             {% if attempt.resume_allowed %}
-                            <a class="btn {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
-                                {% icon 'play' %} {% translate "Continue" %}
-                            </a>
+                                <a class="button {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                                    {% icon 'play' %} {% translate "Continue" %}
+                                </a>
                             {% endif %}
                         {% endif %}
                     </td>

@@ -3,6 +3,7 @@
 {% load icon %}
 {% load percentage %}
 {% load querystring %}
+{% load time_tag %}
 
 {% block body_class %}{{block.super}} dashboard{% endblock %}
 
@@ -188,15 +189,15 @@
                     <td>{% blocktranslate %}Students may attempt the exam{% endblocktranslate %}</td>
                     <td>
                         {% if resource.available_from == None %}
-                            {% if resource.available_until == None %}{% translate "any time" %}{% else %}{% blocktranslate with available_until=resource.available_until %}until {{available_until}}{% endblocktranslate %}{% endif %}
+                        {% if resource.available_until == None %}{% translate "any time" %}{% else %}{% blocktranslate with available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}until <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}{% endif %}
                         {% else %}
                             {% if resource.available_until == None %}
-                                {% blocktranslate with available_from=resource.available_from %}from {{available_from}}{% endblocktranslate %}
+                                {% blocktranslate with available_from=resource.available_from available_from_iso=resource.available_from|date:"c" %}from <time datetime="{{available_from_iso}}">{{available_from}}</time>{% endblocktranslate %}
                             {% else %}
                                 {% if resource.available_from < resource.available_until %}
-                                    {% blocktranslate with available_from=resource.available_from available_until=resource.available_until %}between {{available_from}} and {{available_until}}{% endblocktranslate %}
+                                    {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}between <time datetime="{{available_from_iso}}">{{available_from}}</time> and <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
                                 {% else %}
-                                    {% blocktranslate with available_from=resource.available_from available_until=resource.available_until %}before {{available_from}}, or after {{available_until}}{% endblocktranslate %}
+                                    {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}before <time datetime="{{available_from_iso}}">{{available_from}}</time>, or after <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
                                 {% endif %}
                             {% endif %}
                         {% endif %}
@@ -204,7 +205,7 @@
                 </tr>
                 <tr>
                     <td>{% translate "Students may review their attempts" %}</td>
-                    <td>{% if resource.allow_review_from == None %}{% translate "immediately after finishing an attempt" %}{% else %}{% blocktranslate with allow_review_from=resource.allow_review_from %}from {{allow_review_from}}{% endblocktranslate %}{% endif %}</td>
+                    <td>{% if resource.allow_review_from == None %}{% translate "immediately after finishing an attempt" %}{% else %}{% translate "from" %} {% time_tag resource.allow_review_from %}{% endif %}</td>
                 </tr>
                 <tr>
                     <td>{% blocktranslate %}Each student's score will be reported back to the consumer{% endblocktranslate %}</td>

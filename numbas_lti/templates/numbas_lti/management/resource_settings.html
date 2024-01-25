@@ -29,7 +29,7 @@
         <form class="big" method="POST" action="{% url_with_lti 'resource_settings' resource.pk %}">
             {% csrf_token %}
             {% get_current_timezone as TIME_ZONE %}
-            <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone {{TIME_ZONE}}.{% endblocktranslate %}</p>
+            <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone <strong>{{TIME_ZONE}}</strong>.{% endblocktranslate %}</p>
 
             {{form.as_p}}
 

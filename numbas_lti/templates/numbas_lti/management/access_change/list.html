@@ -4,6 +4,7 @@
 {% load querystring %}
 {% load tz %}
 {% load static %}
+{% load time_tag %}
 
 {% block title %}{% translate "Access changes" %} - {{block.super}}{% endblock title %}
 
@@ -27,12 +28,12 @@
                     <dl>
                         {% if ac.available_from is not None %}
                         <dt>{% translate "Available from" %}</dt>
-                        <dd>{{ac.available_from}}</dd>
+                        <dd>{% time_tag ac.available_from %}</dd>
                         {% endif %}
 
                         {% if ac.available_until is not None %}
                         <dt>{% translate "Available until" %}</dt>
-                        <dd>{{ac.available_until}}</dd>
+                        <dd>{% time_tag ac.available_until %}</dd>
                         {% endif %}
 
                         {% if ac.extend_deadline is not None %}

@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load icon %}
 {% load percentage %}
+{% load time_tag %}
 
 {% block title %}{% translate "Validate a receipt code" %} - {{block.super}}{% endblock title %}
 
@@ -86,8 +87,8 @@
                     </tr>
                     <tr>
                         <td>{% translate "Start time" %}</td>
-                        <td>{{summary.start_time}}</td>
-                        <td>{{attempt.start_time}}</td>
+                        <td>{% time_tag summary.start_time %}</td>
+                        <td>{% time_tag attempt.start_time %}</td>
                         {% if summary.start_time == attempt.start_time %}
                             <td class="success">
                                 {% icon 'ok' %}
@@ -102,8 +103,8 @@
                     </tr>
                     <tr>
                         <td>{% translate "End time" %}</td>
-                        <td>{{summary.end_time}}</td>
-                        <td>{{attempt.end_time}}</td>
+                        <td>{% time_tag summary.end_time %}</td>
+                        <td>{% time_tag attempt.end_time %}</td>
                         {% if summary.end_time == attempt.end_time %}
                             <td class="success">
                                 {% icon 'ok' %}

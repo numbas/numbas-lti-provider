@@ -4,6 +4,7 @@
 {% load percentage %}
 {% load querystring %}
 {% load static %}
+{% load time_tag %}
 
 {% block title %}{% translate "Attempts" %} - {{block.super}}{% endblock %}
 
@@ -74,7 +75,7 @@
                         {% if identifier_field %}
                         <td class="identifier">{{attempt.user_data.identifier}}</td>
                         {% endif %}
-                        <td>{{attempt.start_time}}</td>
+                        <td>{% time_tag attempt.start_time %}</td>
                         <td>
                             <a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
                             <a class="button link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>

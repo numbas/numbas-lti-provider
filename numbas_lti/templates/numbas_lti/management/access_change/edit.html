@@ -3,6 +3,7 @@
 {% load icon %}
 {% load querystring %}
 {% load static %}
+{% load time_tag %}
 {% load tz %}
 
 {% block title %}{% if create %}{% translate "Create an access change" %}{% else %}{% translate "Edit an access change" %}{% endif %} - {{block.super}}{% endblock title %}
@@ -37,18 +38,18 @@
 
         <fieldset>
             <legend>{% translate "Availability dates" %}</legend>
-            <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone {{TIME_ZONE}}.{% endblocktranslate %}</p>
+            <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone <strong>{{TIME_ZONE}}</strong>.{% endblocktranslate %}</p>
             <div class="row">
                 <div class="col-sm-6">
                     {{form.available_from}}
                     <p class="help-block">
-                        {% blocktranslate with value=resource.available_from %}Instead of {{value}}.{% endblocktranslate %}
+                        {% translate "Instead of" %} {% time_tag resource.available_from %}.
                     </p>
                 </div>
                 <div class="col-sm-6">
                     {{form.available_until}}
                     <p class="help-block">
-                        {% blocktranslate with value=resource.available_until %}Instead of {{value}}.{% endblocktranslate %}
+                        {% translate "Instead of" %} {% time_tag resource.available_until %}.
                     </p>
                 </div>
             </div>

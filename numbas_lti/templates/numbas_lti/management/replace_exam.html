@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load icon %}
 {% load querystring %}
+{% load time_tag %}
 
 {% block title %}{% translate "Replace the exam package" %} - {{block.super}}{% endblock title %}
 
@@ -26,32 +27,17 @@
         <form method="POST" action="{% url_with_lti 'replace_exam' resource.pk %}">
             {% csrf_token %}
 
-            {% if form.errors %}
-                <div class="alert danger">
-                    <a class="close" data-dismiss="alert">&times;</a>
-                    {% for field in form %}
-                        {% if field.errors %}
-                        <p><strong>{{field.label}}</strong>:
-                        {% for error in field.errors %}
-                             {{ error|safe }}
-                        {% endfor %}
-                        </p>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            {% endif %}
-
             <input type="hidden" name="retrieve_url" value="{{current_exam.retrieve_url}}">
             <input type="hidden" name="rest_url" value="{{current_exam.rest_url}}">
             {{form.safe_replacement.label_tag}}
             {{form.safe_replacement}}
             <p><button class="button danger" type="submit">{% icon 'refresh' %} {% translate "Update from editor" %}</button></p>
         </form>
-        {% blocktranslate %}
-        <p>Alternately, you can upload a new exam package below.</p>
-        <hr>
-        {% endblocktranslate %}
+        
+        <p>{% translate "Alternately, you can upload a new exam package below." %}</p>
     </section>
+
+    <hr>
     {% endif %}
 
 
@@ -60,7 +46,6 @@
             {% csrf_token %}
             {% if form.non_field_errors %}
                 <div class="alert danger">
-                    <a class="close" data-dismiss="alert">&times;</a>
                     {% for non_field_error in form.non_field_errors %}
                          {{ non_field_error|safe }}
                     {% endfor %}
@@ -84,6 +69,7 @@
     </section>
 
     <hr>
+
     <section id="versions">
         <h2>{% translate "All versions of this exam" %}</h2>
 
@@ -127,7 +113,7 @@
                         <a href="{{exam.package.url}}">{% icon 'save' %} {% translate "Download" %}</a>
                     </td>
                     <td>{{exam.title}}</td>
-                    <td>{{exam.creation_time}}</td>
+                    <td>{% time_tag exam.creation_time %}</td>
                     <td>{{num_attempts}}</td>
                     <td>
                         {% if not exam.is_active %}
@@ -147,5 +133,6 @@
     </section>
 
     <hr>
+
     <p><a class="button link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% icon 'arrow-left' %} {% translate "Cancel" %}</a></p>
 {% endblock management_content %}

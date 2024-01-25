@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load icon %}
 {% load static %}
+{% load time_tag %}
 
 {% block title %}{{user.get_full_name}} - {{block.super}}{% endblock %}
 
@@ -44,7 +45,7 @@
         {% for attempt in user.attempts.all|slice:":10" %}
         <tr>
             <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="muted">{{attempt.resource.lti_contexts.first.name}}</span></td>
-            <td>{{attempt.start_time}}</td>
+            <td>{% time_tag attempt.start_time %}</td>
             <td>
                 <a class="button link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
             </td>
@@ -78,8 +79,8 @@
                     <a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a> - <span class="muted">{{launch.attempt.resource.lti_contexts.first.name}}</span>
                     {% endif %}
                 </td>
-                <td>{{launch.time}}</td>
-                <td>{{launch.attempt.start_time}}</td>
+                <td>{% time_tag launch.time %}</td>
+                <td>{% time_tag launch.attempt.start_time %}</td>
                 <td>{{launch.mode}}</td>
             </tr>
             {% endfor %}
@@ -100,7 +101,7 @@
             {% for launch in user.lti_launches.all|slice:":10" %}
             <tr>
                 <td><a href="{% url 'manage_attempts' launch.resource.pk %}?userid={{user.username}}">{{launch.resource.title}}</a> - <span class="muted">{{launch.resource.lti_contexts.first.name}}</span></td>
-                <td>{{launch.time}}</td>
+                <td>{% time_tag launch.time %}</td>
                 <td>{{launch.ip_address}}</td>
                 <td class="monospace">{{launch.user_agent}}</td>
             </tr>

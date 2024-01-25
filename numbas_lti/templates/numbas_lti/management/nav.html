@@ -12,8 +12,8 @@
     <a {% if management_tab == 'attempts' %}aria-current="page"{% endif %} href="{% url_with_lti 'manage_attempts' resource.pk %}">{% icon 'stats' %} {% translate "Attempts" %}</a>
     <a {% if management_tab == 'stats' %}aria-current="page"{% endif %} href="{% url_with_lti 'resource_stats' resource.pk %}">{% icon 'stats' %} {% translate "Statistics" %}</a>
     <a {% if management_tab == 'remark' %}aria-current="page"{% endif %} href="{% url_with_lti 'resource_remark' resource.pk %}">{% icon 'pencil' %} {% translate "Re-mark" %}</a>
-    <a {% if management_tab == 'settings' %}aria-current="page"{% endif %} href="{% url_with_lti 'resource_settings' resource.pk %}">{% icon 'cog' %} {% translate "Settings" %}</a>
     <a {% if management_tab == 'access-changes' %}aria-current="page"{% endif %} href="{% url_with_lti 'resource_access_changes' resource.pk %}">{% icon 'time' %} {% translate "Access changes" %}</a>
     <a {% if management_tab == 'reports' %}aria-current="page"{% endif %} href="{% url_with_lti 'resource_reports' resource.pk %}">{% icon 'file' %} {% translate "Reports" %}</a>
+    <a {% if management_tab == 'settings' %}aria-current="page"{% endif %} href="{% url_with_lti 'resource_settings' resource.pk %}">{% icon 'cog' %} {% translate "Settings" %}</a>
     <a {% if management_tab == 'test_run' %}aria-current="page"{% endif %} href="{% url_with_lti 'run_exam' resource.exam.pk %}">{% icon 'play' %} {% translate "Test run" %}</a>
 </nav>

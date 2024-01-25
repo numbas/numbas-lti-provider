@@ -1,6 +1,7 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
 {% load icon %}
+{% load time_tag %}
 
 {% block title %}{{context.name|default:"Unnamed course"}} - {{block.super}}{% endblock %}
 
@@ -29,7 +30,7 @@
                     {% else %}
                     <span class="muted">{% icon 'eye-close' %} {% translate "Closed" %}</span>
                     {% endif %}</td>
-                <td>{% translate "Created" %} {{resource.creation_time}}</td>
+                <td>{% translate "Created" %} {% time_tag resource.creation_time %}</td>
                 <td>
                     {% blocktranslate count num_attempts=resource.unbroken_attempts.count %}
                     1 attempt.

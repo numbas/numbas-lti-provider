@@ -111,7 +111,7 @@
                     <tr class="attempt" :class="{saved: attempt.status=='saved', 'error-saving': attempt.status=='error saving'}">
                         <td>[[attempt.user.full_name]]</td>
                         <td>[[attempt.user.identifier]]</td>
-                        <td>[[$filters.datetime(attempt.start_time)]]</td>
+                        <td><time :datetime="attempt.start_time.toISO()">[[$filters.datetime(attempt.start_time)]]</time></td>
                         <td>[[attempt.completion_status_display]]</td>
                         <td>
                             [[$filters.dp(attempt.original_raw_score, 3)]]/[[$filters.dp(attempt.max_score, 3)]]
