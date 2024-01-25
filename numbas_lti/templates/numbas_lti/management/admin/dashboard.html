@@ -16,7 +16,6 @@
                 <th scope="col">{% translate "Resource" %}</th>
                 <th scope="col">{% translate "Launches today" %}</th>
                 <th scope="col">{% translate "Attempts completed today" %}</th>
-                <th scope="col"><span class="sr-only">{% translate "Statistics" %}</span></th>
             </tr>
         </thead>
         <tbody>
@@ -29,7 +28,6 @@
                 </td>
                 <td>{{resource.recent_launches}}</td>
                 <td>{{resource.recent_completions}}</td>
-                <td><a href="{% url 'resource_stats' resource.pk %}" target="_blank">{% icon 'stats' %} {% translate "Statistics" %}</a></td>
             </tr>
             {% endfor %}
         </tbody>

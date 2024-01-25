@@ -44,7 +44,7 @@
                     </td>
                     <td>
                         <a class="button primary" href="{% url 'edit_editorlink' link.pk %}">{% icon 'cog' %} {% translate "Edit" %}</a>
-                        <a class="button danger" href="{% url 'delete_editorlink' link.pk %}" title="{% translate "Delete this connection" %}">{% icon 'trash' %} <span class="sr-only">{% translate "Delete this connection" %}</span></a>
+                        <a class="button danger" href="{% url 'delete_editorlink' link.pk %}">{% icon 'trash' %} {% translate "Delete" %}</a>
                     </td>
                 </tr>
                 {% endfor %}
