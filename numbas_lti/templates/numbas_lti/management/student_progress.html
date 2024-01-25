@@ -19,11 +19,11 @@
         <table id="students">
             <thead>
                 <tr>
-                    <th>{% translate "Name" %}</th>
-                    <th>{% translate "Score" %}</th>
-                    <th>{% translate "Attempts" %}</th>
+                    <th scope="col">{% translate "Name" %}</th>
+                    <th scope="col">{% translate "Score" %}</th>
+                    <th scope="col">{% translate "Attempts" %}</th>
                     {% if not unlimited_attempts %}
-                    <th colspan="2">{% translate "Access tokens" %}</th>
+                    <th scope="col" colspan="2">{% translate "Access tokens" %}</th>
                     {% endif %}
                 </tr>
             </thead>

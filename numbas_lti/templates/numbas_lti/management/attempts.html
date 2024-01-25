@@ -53,14 +53,14 @@
             <table id="attempts" class="table-striped">
                 <thead>
                     <tr>
-                        <th>{% translate "Student" %}</th>
+                        <th scope="col">{% translate "Student" %}</th>
                         {% if identifier_field %}
-                        <th>{{resource.context.consumer.get_identifier_field_display}}</th>
+                        <th scope="col">{{resource.context.consumer.get_identifier_field_display}}</th>
                         {% endif %}
-                        <th>{% translate "Start time" %}</th>
-                        <th aria-label="{% translate "Controls" %}"></th>
-                        <th>{% translate "Completion status" %}</th>
-                        <th colspan="2">{% translate "Score" %}</th>
+                        <th scope="col">{% translate "Start time" %}</th>
+                        <th scope="col" aria-label="{% translate "Controls" %}"></th>
+                        <th scope="col">{% translate "Completion status" %}</th>
+                        <th scope="col" colspan="2">{% translate "Score" %}</th>
                     </tr>
                 </thead>
                 <tbody>

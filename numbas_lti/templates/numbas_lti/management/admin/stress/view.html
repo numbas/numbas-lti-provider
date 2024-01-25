@@ -25,11 +25,11 @@
         <table>
             <thead>
                 <tr>
-                    <th>{{attempts.length}} {{$filters.pluralize(attempts.length, 'attempt')}}.</th>
-                    <th>{{num_attempts_waiting_to_start}} waiting to start.</th>
-                    <th>{{num_attempts_without_socket}} without websocket.</th>
-                    <th>{{num_attempts_queued}} with unsaved data.</th>
-                    <th colspan="2">{{num_attempts_waiting_for_ajax}} waiting for AJAX.</th>
+                    <th scope="col">{{attempts.length}} {{$filters.pluralize(attempts.length, 'attempt')}}.</th>
+                    <th scope="col">{{num_attempts_waiting_to_start}} waiting to start.</th>
+                    <th scope="col">{{num_attempts_without_socket}} without websocket.</th>
+                    <th scope="col">{{num_attempts_queued}} with unsaved data.</th>
+                    <th scope="col" colspan="2">{{num_attempts_waiting_for_ajax}} waiting for AJAX.</th>
                 </tr>
             </thead>
             <tbody>

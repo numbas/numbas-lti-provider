@@ -99,50 +99,50 @@
             <thead>
                 <tr>
                     <td class="empty"></td>
-                    <th>{% translate "During an attempt" %}</th>
-                    <th>{% translate "Immediately after finishing an attempt" %}</th>
-                    <th>{% translate "When viewing an attempt in review mode" %}</th>
+                    <th scope="col">{% translate "During an attempt" %}</th>
+                    <th scope="col">{% translate "Immediately after finishing an attempt" %}</th>
+                    <th scope="col">{% translate "When viewing an attempt in review mode" %}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <th>{% translate "Total awarded scores for each attempt" %}</th>
+                    <th scope="row">{% translate "Total awarded scores for each attempt" %}</th>
                     {% if resource.show_marks_when == 'always' %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if resource.show_marks_when == 'always' or resource.show_marks_when == 'complete' %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if resource.show_marks_when != 'never' %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% translate "Part and question maximum scores" %}</th>
+                    <th scope="row">{% translate "Part and question maximum scores" %}</th>
                     {% if exam_info.showTotalMark %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.showTotalMark or exam_info.completionShowResultsPage %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.showTotalMark or exam_info.reviewShowResultsPage %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% translate "Awarded scores" %}</th>
+                    <th scope="row">{% translate "Awarded scores" %}</th>
                     {% if exam_info.showActualMark %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.showActualMark or exam_info.completionShowResultsPage %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.showActualMark or exam_info.reviewShowScore %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% translate "Expected answers" %}</th>
+                    <th scope="row">{% translate "Expected answers" %}</th>
                     {% if exam_info.allowRevealAnswer %}<td class="success">{% translate "Available" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.completionShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.reviewShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% translate "Question advice" %}</th>
+                    <th scope="row">{% translate "Question advice" %}</th>
                     {% if exam_info.allowRevealAnswer %}<td class="success">{% translate "Available" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.completionShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.reviewShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% translate "Part feedback" %}</th>
+                    <th scope="row">{% translate "Part feedback" %}</th>
                     {% if exam_info.showAnswerState %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.showAnswerState or exam_info.completionShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                     {% if exam_info.showAnswerState or exam_info.reviewShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% translate "Print a transcript" %}</th>
+                    <th scope="row">{% translate "Print a transcript" %}</th>
                     {% if exam_info.allowPrinting %}<td class="success">{% translate "Allowed" %}</td>{% else %}<td class="danger">{% translate "Not allowed" %}</td>{% endif %}
                     {% if exam_info.allowPrinting %}<td class="success">{% translate "Allowed" %}</td>{% else %}<td class="danger">{% translate "Not allowed" %}</td>{% endif %}
                     {% if exam_info.allowPrinting %}<td class="success">{% translate "Allowed" %}</td>{% else %}<td class="danger">{% translate "Not allowed" %}</td>{% endif %}
@@ -179,8 +179,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>{% translate "This will happen" %}</th>
-                    <th>{% translate "When" %}</th>
+                    <th scope="col">{% translate "This will happen" %}</th>
+                    <th scope="col">{% translate "When" %}</th>
                 </tr>
             </thead>
             <tbody>

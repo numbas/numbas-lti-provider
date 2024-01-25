@@ -39,18 +39,18 @@
             <thead>
                 <tr>
                     {% if global_search_model == 'users' %}
-                    <th>{% translate "User" %}</th>
-                    <th>{% translate "Username" %}</th>
-                    <th>{% translate "Email address" %}</th>
+                    <th scope="col">{% translate "User" %}</th>
+                    <th scope="col">{% translate "Username" %}</th>
+                    <th scope="col">{% translate "Email address" %}</th>
                     {% endif %}
 
                     {% if global_search_model == 'contexts' %}
-                    <th>{% translate "Context" %}</th>
+                    <th scope="col">{% translate "Context" %}</th>
                     {% endif %}
 
                     {% if global_search_model == 'resources' %}
-                    <th>{% translate "Resource" %}</th>
-                    <th>{% translate "Context" %}</th>
+                    <th scope="col">{% translate "Resource" %}</th>
+                    <th scope="col">{% translate "Context" %}</th>
                     {% endif %}
             </thead>
             <tbody>

@@ -24,7 +24,7 @@
             <thead>
                 <tr>
                     {% for label,value,n in completion_counts %}
-                    <th>{{label}}</th>
+                    <th scope="col">{{label}}</th>
                     {% endfor %}
                 </tr>
             </thead>
@@ -47,11 +47,11 @@
             <table id="summary-stats-table">
                 <thead>
                     <tr>
-                        <th></th>
-                        <th>{% translate "Mean" %}</th>
-                        <th>{% translate "Lower quartile" %}</th>
-                        <th>{% translate "Median" %}</th>
-                        <th>{% translate "Upper quartile" %}</th>
+                        <th scope="col"></th>
+                        <th scope="col">{% translate "Mean" %}</th>
+                        <th scope="col">{% translate "Lower quartile" %}</th>
+                        <th scope="col">{% translate "Median" %}</th>
+                        <th scope="col">{% translate "Upper quartile" %}</th>
                     </tr>
                 </thead>
                 <tbody>
