@@ -45,7 +45,7 @@
                     <td>{% if part.g %}{{part.g}}{% endif %}</td>
                     <td class="part-control">
                         {% if part.p %}
-                        <select class="form-control" name="discount-{{part.path}}">
+                        <select name="discount-{{part.path}}">
                             <option value=""></option>
                             {% for value,label in discount_behaviours %}
                             <option value="{{value}}" {% if part.discount and part.discount.behaviour == value %}selected="selected"{% endif %}>{{label}}</option>

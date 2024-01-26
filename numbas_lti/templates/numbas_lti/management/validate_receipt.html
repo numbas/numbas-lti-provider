@@ -16,9 +16,10 @@
 
     <form method="POST" action="">
         {% csrf_token %}
-        <div class="form-group">
-            {{form.code}}
-        </div>
+        {{form.code.label_tag}}
+        <br>
+        {{form.code}}
+        <br>
         <button type="submit" class="button primary">
             {% icon 'ok' %}
             {% translate "Validate this code" %}

@@ -20,7 +20,7 @@
 
     <div id="app">
         <div class="search">
-            <label>{% translate "Search for an element:" %} <input class="form-control" id="query" type="text" v-model="query"></label>
+            <label for="query">{% translate "Search for an element:" %}</label> <input id="query" type="text" v-model="query">
             <button class="button default quick-query" @click="set_query('learner_response|correct_responses')">{% translate "Answers" %}</button>
             <button class="button default quick-query" @click="set_query('(result|weighting)$')">{% translate "Part scores" %}</button>
             <button class="button default quick-query" @click="set_query('score.(raw|max)')">{% translate "Question scores" %}</button>

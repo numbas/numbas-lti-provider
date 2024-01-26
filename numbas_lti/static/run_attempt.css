@@ -35,9 +35,6 @@ body.ended #scorm-player {
 #status-display:not(.localstorage-used) .text-localstorage-used {
     display: none;
 }
-body.terminated #status-display .symbol, #status-display .symbol {
-    display: none;
-}
 #status-display.disconnected .text-disconnected,
 #status-display.ended .text-ended,
 #status-display.ok .text-ok,

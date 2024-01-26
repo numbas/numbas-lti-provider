@@ -29,8 +29,8 @@
             <label for="query">
                 {% translate "Search for a student:" %} 
             </label>
+            <input type="search" id="query" name="query" value="{{query}}">
             <input type="hidden" name="userid" value="">
-            <input type="search" id="query" name="query" class="form-control" value="{{query}}">
             {% if query %}
             <a class="button default input-group-addon" href="?{% set_query_values page=1 query="" userid="" %}">{% icon 'trash' %}<span class="sr-only">{% translate "Clear query" %}</span></a>
             {% endif %}

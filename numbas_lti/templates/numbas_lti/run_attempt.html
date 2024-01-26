@@ -12,49 +12,34 @@
 <body>
     {% include "numbas_lti/csrf_token_form.html" %}
 <div id="status-display" tabindex="1" class="ok">
-    <span class="symbol">!</span>
     <span class="status-message text-unavailable-at">
-        <div class="text">
-            <p>{% blocktranslate with available_until=available_until|date:"r" %}This attempt will automatically close at <span class="available-until">{{available_until}}</span>, if not already closed. {% endblocktranslate %}</p>
-        </div>
+        <p>{% blocktranslate with available_until=available_until|date:"r" %}This attempt will automatically close at <span class="available-until">{{available_until}}</span>, if not already closed. {% endblocktranslate %}</p>
     </span>
     <span class="status-message text-ended">
-        <div class="text">
-            <p>{% blocktranslate with available_until=available_until|date:"r" %}This attempt automatically closed at <span class="available-until">{{available_until}}</span>{% endblocktranslate %}</p>
-        </div>
+        <p>{% blocktranslate with available_until=available_until|date:"r" %}This attempt automatically closed at <span class="available-until">{{available_until}}</span>{% endblocktranslate %}</p>
     </span>
     <span class="status-message text-terminated">
-        <div class="text">
-            <p>{% translate "Attempt data is being saved to the database. Please wait." %}</p>
-        </div>
+        <p>{% translate "Attempt data is being saved to the database. Please wait." %}</p>
     </span>
     <span class="status-message text-ok">
-        <div class="text">
-            <p>{% translate "All attempt data has been saved to the database. You may now close this window." %}</p>
-            {% if attempt.resource.require_lockdown_app == 'seb' %}
-            <p><a href="{{SEB_QUIT_LINK}}">{% translate "Close the window" %}</a></p>
-            {% endif %}
-        </div>
+        <p>{% translate "All attempt data has been saved to the database. You may now close this window." %}</p>
+        {% if attempt.resource.require_lockdown_app == 'seb' %}
+        <p><a href="{{SEB_QUIT_LINK}}">{% translate "Close the window" %}</a></p>
+        {% endif %}
     </span>
     <span class="status-message text-disconnected">
-        <div class="text">
-            <p>{% translate "There is currently no connection to the server - your attempt data can not be saved to the database." %}</p>
-            <p>{% translate "When the connection is restored, data will be saved to the database." %}</p>
-            <p class="text-localstorage-used">{% translate "Data is being saved locally, so you'll be able to resume this attempt <strong>from this device</strong> when the connection is restored." %}</p>
-            {% if support_name %}<p>{% translate "If this warning remains visible for a long time, please contact " %}{% if support_url %}<a href="{{support_url}}">{% endif %}{{support_name}}{% if support_url %}</a>{% endif %}.</p>{% endif %}
-        </div>
+        <p>{% translate "There is currently no connection to the server - your attempt data can not be saved to the database." %}</p>
+        <p>{% translate "When the connection is restored, data will be saved to the database." %}</p>
+        <p class="text-localstorage-used">{% translate "Data is being saved locally, so you'll be able to resume this attempt <strong>from this device</strong> when the connection is restored." %}</p>
+        {% if support_name %}<p>{% translate "If this warning remains visible for a long time, please contact " %}{% if support_url %}<a href="{{support_url}}">{% endif %}{{support_name}}{% if support_url %}</a>{% endif %}.</p>{% endif %}
     </span>
     <span class="status-message text-confirmation">
-        <div class="text">
-            <p>{% translate "The following code can be used by your instructor to verify the information in this receipt:" %}</p>
-            <pre id="receipt-code"></pre>
-        </div>
+        <p>{% translate "The following code can be used by your instructor to verify the information in this receipt:" %}</p>
+        <pre id="receipt-code"></pre>
     </span>
     <span class="status-message text-failed-final-ajax">
-        <div class="text">
-            <p>{% translate "There was an error closing this attempt. Please ask your instructor to check that your data has been saved correctly." %}</p>
-            <button type="button" id="try-final-ajax-again">{% translate "Try again" %}</button>
-        </div>
+        <p>{% translate "There was an error closing this attempt. Please ask your instructor to check that your data has been saved correctly." %}</p>
+        <button type="button" id="try-final-ajax-again">{% translate "Try again" %}</button>
     </span>
 </div>
 <div id="deadline-change-display" tabindex="1">

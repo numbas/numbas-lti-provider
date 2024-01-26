@@ -14,11 +14,11 @@
 
 {% block management_content %}
     <section>
+        <p>
+            <a href="{% url_with_lti 'create_access_change' resource.pk %}" class="button primary">{% icon 'plus' %} Add an access change</a>
+        </p>
         {% if resource.access_changes.exists %}
         <section id="access-changes">
-            <p>
-                <a href="{% url_with_lti 'create_access_change' resource.pk %}" class="button primary">{% icon 'plus' %} Add an access change</a>
-            </p>
             {% for ac in resource.access_changes.all %}
                 <article class="access-change">
                     <header>

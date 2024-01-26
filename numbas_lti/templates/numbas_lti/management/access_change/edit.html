@@ -21,9 +21,7 @@
         </p>
     </form>
     {% endif %}
-    <div class="help-block">
-        <p>{% blocktranslate %}Only fill in the fields you wish to change. Fields left blank will not override the resource's normal settings.{% endblocktranslate %}</p>
-    </div>
+    <p class="help-block">{% blocktranslate %}Only fill in the fields you wish to change. Fields left blank will not override the resource's normal settings.{% endblocktranslate %}</p>
 
     <form method="POST" action="{% if create %}{% url_with_lti 'create_access_change' resource.pk %}{% else %}{% url_with_lti 'update_access_change' object.pk %}{% endif %}">
         {{form.resource}}
@@ -39,59 +37,52 @@
         <fieldset>
             <legend>{% translate "Availability dates" %}</legend>
             <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone <strong>{{TIME_ZONE}}</strong>.{% endblocktranslate %}</p>
-            <div class="row">
-                <div class="col-sm-6">
-                    {{form.available_from}}
-                    <p class="help-block">
-                        {% translate "Instead of" %} {% time_tag resource.available_from %}.
-                    </p>
-                </div>
-                <div class="col-sm-6">
-                    {{form.available_until}}
-                    <p class="help-block">
-                        {% translate "Instead of" %} {% time_tag resource.available_until %}.
-                    </p>
-                </div>
-            </div>
-            <div class="form-inline">
-                <label>
-                {% translate "Extend the deadline by" %}
-                </label>
-                <div class="form-group">
-                   {{form.extend_deadline_days}}
-                   <label for="{{form.extend_deadline_days.auto_id}}">{{form.extend_deadline_days.label}}</label>
-                </div>
-                {% translate "and" %}
-                <div class="form-group">
-                    {{form.extend_deadline_minutes}}
-                   <label for="{{form.extend_deadline_minutes.auto_id}}">{{form.extend_deadline_minutes.label}}</label>
-                </div>
-                <p class="help-block">
-                    {% blocktranslate %}Use "Extend the deadline by" to move the resource's normal "Available until" date.{% endblocktranslate %}
-                </p>
-            </div>
+
+            {{form.available_from.label_tag}}
+            {{form.available_from}}
+            <p class="help-block">
+                {% translate "Instead of" %} {% time_tag resource.available_from %}.
+            </p>
+
+            {{form.available_until.label_tag}}
+            {{form.available_until}}
+            <p class="help-block">
+                {% translate "Instead of" %} {% time_tag resource.available_until %}.
+            </p>
+
+            <label>{% translate "Extend the deadline by" %}</label>
+            {{form.extend_deadline_days}}
+            <label for="{{form.extend_deadline_days.auto_id}}">{{form.extend_deadline_days.label}}</label>
+            {% translate "and" %}
+            {{form.extend_deadline_minutes}}
+            <label for="{{form.extend_deadline_minutes.auto_id}}">{{form.extend_deadline_minutes.label}}</label>
+
+            <p class="help-block">
+                {% blocktranslate %}Use "Extend the deadline by" to move the resource's normal "Available until" date.{% endblocktranslate %}
+            </p>
         </fieldset>
+
         {% if resource.exam.has_duration %}
         <fieldset>
             <legend>{% translate "Exam duration" %}</legend>
-            <div class="form-inline">
-                <p>
-                    <label for="{{form.extend_duration.id_for_label}}">{{form.extend_duration.label}}</label>
-                    {{form.extend_duration}}
-                    {{form.extend_duration_units}}
-                </p>
-                <p>
-                    <label for="{{form.disable_duration.id_for_label}}">{{form.disable_duration.label}}</label>
-                    {{form.disable_duration}}
-                </p>
-                <p class="help-block">
-                    {% blocktranslate %}Change the length of time the student has to complete an attempt after starting it.{% endblocktranslate %}
-                </p>
-            </div>
+            <p>
+                <label for="{{form.extend_duration.id_for_label}}">{{form.extend_duration.label}}</label>
+                {{form.extend_duration}}
+                {{form.extend_duration_units}}
+            </p>
+            <p>
+                <label for="{{form.disable_duration.id_for_label}}">{{form.disable_duration.label}}</label>
+                {{form.disable_duration}}
+            </p>
+            <p class="help-block">
+                {% blocktranslate %}Change the length of time the student has to complete an attempt after starting it.{% endblocktranslate %}
+            </p>
         </fieldset>
         {% endif %}
         <fieldset>
             <legend>{% translate "Number of attempts" %}</legend>
+
+            {{form.max_attempts.label_tag}}
             {{form.max_attempts}}
             <p class="help-block">
                 {% blocktranslate with value=resource.max_attempts %}Instead of {{value}}.{% endblocktranslate %}
