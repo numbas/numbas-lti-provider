@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load icon %}
 
+{% block body_class %}login centered{{block.super}}{% endblock body_class %}
+
 {% block content %}
     <header>
         <h1>Log in</h1>
@@ -14,4 +16,6 @@
             <button type="submit" class="button primary">{% icon 'log-in' %} {% translate "Log in" %}</button>
         </form>
     </main>
+
+    {% include "numbas_lti/management/footer.html" %}
 {% endblock content %}
