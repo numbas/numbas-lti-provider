@@ -748,7 +748,7 @@ SCORM_API.prototype = {
         /** Do one last send over HTTP, to make sure any remaining data is saved straight away.
          */
         this.send_queue_socket();
-        this.send_ajax(true);
+        setTimeout(() => this.send_ajax(true), 100);
 
 		return true;
 	},
