@@ -118,6 +118,7 @@ input:not([type="hidden"]), select, textarea {
     color: var(--text-color);
     background-color: var(--input-bg);
     border: 1px solid var(--button-border-color);
+    margin: var(--spacing) 0;
 }
 
 :is(input:not([type="hidden"]), select, textarea) ~ :is(button,.button) {
