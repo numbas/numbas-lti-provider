@@ -170,7 +170,7 @@
         <p>{% blocktranslate %}During an attempt, students:{% endblocktranslate %}</p>
         <ul>
             <li>{% if exam_info.allowRegen %}{% blocktranslate %}<strong>may</strong> regenerate questions.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> regenerate questions.{% endblocktranslate %}{% endif %}</li>
-            <li>{% if exam_info.allowBrowse %}{% blocktranslate %}may move freely between questions.{% endblocktranslate %}{% else %}{% if exam_info.allowReverse %}{% blocktranslate %}may move to the next question or previous questions.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> return to questions.{% endblocktranslate %}{% endif %}{% endif %}</li>
+            <li>{% if exam_info.allowBrowse %}{% blocktranslate %}may <strong>move freely between questions</strong>.{% endblocktranslate %}{% else %}{% if exam_info.allowReverse %}{% blocktranslate %}may <strong>move to the next question or previous questions</strong>.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> return to questions.{% endblocktranslate %}{% endif %}{% endif %}</li>
             {% if exam_info.hasTimeLimit %}
             <li>{% if exam_info.allowPause %}{% blocktranslate %}<strong>may</strong> pause the timer.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> pause the timer.{% endblocktranslate %}{% endif %}</li>
             {% endif %}

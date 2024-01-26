@@ -688,6 +688,7 @@ class AccessChangeEditView:
                     'student': StudentRole({"https://purl.imsglobal.org/spec/lti/claim/roles": m['roles']}).check(),
                     'user_id': m['user_id'],
                     'ext_user_username': m['ext_user_username'],
+                    'email': m['email'],
                 }
                 for m in sorted(members, key=lambda x: (x['family_name'], x['given_name']))
             ]

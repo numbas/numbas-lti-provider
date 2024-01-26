@@ -108,7 +108,12 @@
                     <tr>
                         <td><input id="{{id}}" type="checkbox" name="nrps_applies_to" value="{{member.user_id}}" {% if member.user_id in form.nrps_applies_to.value %}checked{% endif %}></td>
                         <td><label for="{{id}}">{{member.name}}</label></td>
+                        {% if member.ext_user_username %}
                         <td><code>{{member.ext_user_username}}</code></td>
+                        {% endif %}
+                        {% if member.email %}
+                        <td><code>{{member.email}}</code></td>
+                        {% endif %}
                     </li>
                     {% endwith %}
                     {% endif %}
