@@ -4,9 +4,11 @@
 
 {% block body_class %}login centered{{block.super}}{% endblock body_class %}
 
+{% block title %}{% translate "Log in as an administrator" %} - {{block.super}}{% endblock %}
+
 {% block content %}
     <header>
-        <h1>Log in</h1>
+        <h1>{% translate "Log in as an administrator" %}</h1>
     </header>
 
     <main>
