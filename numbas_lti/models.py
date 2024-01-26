@@ -139,7 +139,7 @@ class LTI_13_Consumer(models.Model):
 class LTI_13_UserAlias(models.Model):
     consumer = models.ForeignKey(LTIConsumer, related_name='lti_13_user_aliases', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='lti_13_aliases', on_delete=models.CASCADE)
-    sub = models.CharField(max_length=255)
+    sub = models.CharField(max_length=255) # The platform's identifier for the user
 
     full_name = models.CharField(max_length=1000, blank=True, default='')
     given_name = models.CharField(max_length=1000, blank=True, default='')
@@ -216,7 +216,7 @@ class Exam(ExtractPackage):
                 content = json.loads(re.sub(r'^// Numbas version: .*\n','',f.read()))
                 return content
         except (FileNotFoundError,json.JSONDecodeError):
-            return
+            return {}
 
     def has_duration(self):
         source = self.source()
@@ -407,7 +407,7 @@ class Resource(models.Model):
         return attempt
 
     def students(self):
-        return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
+        return User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct().order_by('last_name','first_name')
 
     def available_for_user(self,user=None):
         afrom = self.available_from

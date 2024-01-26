@@ -18,6 +18,7 @@
                 <tr>
                     <th scope="col">{% translate "Name" %}</th>
                     <th scope="col">{% translate "Score" %}</th>
+                    <th scope="col">{% translate "Score reported to VLE" %}</th>
                     <th scope="col">{% translate "Attempts" %}</th>
                     {% if not unlimited_attempts %}
                     <th scope="col" colspan="2">{% translate "Access tokens" %}</th>
@@ -25,21 +26,32 @@
                 </tr>
             </thead>
             <tbody>
-                {% for student,score,lti_data,attempts,access_tokens in student_summary %}
-                <tr data-student="{{student.get_full_name}}">
-                    <td>{{student.get_full_name}}</td>
+                {% for data in student_summary %}
+                <tr data-student="{{data.full_name}}">
+                    <td>{{data.full_name}}</td>
+                    {% if data.attempts > 0 %}
                     <td>
-                        {{score|percentage}}
-                        {% if lti_data.last_reported_score != score %}
+                        {{data.score|percentage}}
+                    </td>
+                    <td class="{% if data.reported_score != data.score %}warning{% endif %}">
+                        {% if data.reported_score is not None %}
+                            {{data.reported_score|percentage}}
+                        {% endif %}
+                        {% if data.reported_score != data.score %}
                         {% icon 'warning-sign' %} <span class="sr-only">{% translate "This score has not been reported to the grade book yet." %}</span>
                         {% endif %}
                     </td>
-                    <td>{{attempts}}</td>
+                    {% else %}
+                    <td colspan="2">
+                        {% translate "Not attempted" %}
+                    </td>
+                    {% endif %}
+                    <td>{{data.attempts}}</td>
                     {% if not unlimited_attempts %}
-                    <td>{{access_tokens}}</td>
+                    <td>{{data.access_tokens}}</td>
                     <td>
-                        <a class="button warning small" href="{% url_with_lti 'grant_access_token' resource.pk student.pk %}" title="{% translate "Grant an access token" %}">{% icon 'plus' %}</a>
-                        {% if access_tokens %}<a class="button danger small" href="{% url_with_lti 'remove_access_token' resource.pk student.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
+                        <a class="button warning small" href="{% url_with_lti 'grant_access_token' resource.pk data.student.pk %}" title="{% translate "Grant an access token" %}">{% icon 'plus' %}</a>
+                        {% if data.access_tokens %}<a class="button danger small" href="{% url_with_lti 'remove_access_token' resource.pk data.student.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
                     </td>
                     {% endif %}
                 </tr>

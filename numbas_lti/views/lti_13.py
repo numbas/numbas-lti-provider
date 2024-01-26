@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _, gettext
 from . import mixins, resource
 from numbas_lti.backends import new_lti_user
-from numbas_lti.models import LTI_13_UserAlias, LTI_13_Consumer, LTIConsumer, LTIContext, Resource, LTI_13_ResourceLink, LTIUserData, LTI_13_Context
+from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTIUserData
 import numbas_lti.forms
 import numbas_lti.views.entry
 from pathlib import PurePath

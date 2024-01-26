@@ -111,6 +111,27 @@ class LTI_13_Mixin:
     def reverse_with_lti(self, *args, **kwargs):
         return reverse_with_lti(self.request, *args, **kwargs)
 
+
+    def get_nrps_members(self):
+        message_launch = self.get_message_launch()
+        if message_launch:
+            nrps = message_launch.get_nrps()
+            members = nrps.get_members()
+            members = [
+                {
+                    'name': m['name'],
+                    'given_name': m['given_name'],
+                    'family_name': m['family_name'],
+                    'active': m['status'] == 'Active',
+                    'student': pylti1p3.roles.StudentRole({"https://purl.imsglobal.org/spec/lti/claim/roles": m['roles']}).check(),
+                    'user_id': m['user_id'],
+                    'ext_user_username': m['ext_user_username'],
+                    'email': m['email'],
+                }
+                for m in sorted(members, key=lambda x: (x['family_name'], x['given_name']))
+            ]
+            return members
+
 class LTIRoleOrSuperuserMixin(LTI_13_Mixin, LTIRoleRestrictionMixin):
     raise_exception = False
 

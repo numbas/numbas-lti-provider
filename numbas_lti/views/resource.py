@@ -24,7 +24,6 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required
-from pylti1p3.roles import StudentRole
 from pathlib import Path
 import csv
 import datetime
@@ -217,29 +216,62 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
 
         context['unlimited_attempts'] = resource.max_attempts == 0
 
-        def get_score(student):
-            attempt = resource.grade_user(student)
-            if attempt:
-                return attempt.scaled_score
-            else:
-                return 0
+        students = resource.students().all()
 
-        context['student_summary'] = [
-            (
-                student,
-                get_score(student),
-                student.lti_data.filter(resource=resource).last(),
-                Attempt.objects.filter(user=student,resource=resource).exclude(broken=True).count(),
-                AccessToken.objects.filter(user=student,resource=resource).count(),
-            ) 
-            for student in resource.students().all()
-        ]
+        def summarise_extra_student(student):
+            return {
+                'last_name': student['family_name'],
+                'first_name': student['given_name'],
+                'full_name': student['name'],
+                'reported_score': 0,
+                'score': 0,
+                'lti_data': None,
+                'attempts': 0,
+                'access_tokens': 0,
+            }
+
+        def summarise_student(student):
+            attempt = resource.grade_user(student)
+            score = attempt.scaled_score if attempt else 0
+            lti_data = student.lti_data.filter(resource=resource).last()
+
+            if is_lti_13:
+                subs = student.lti_13_aliases.all().values_list('sub', flat=True)
+                grades = [g for g in ags_grades if g['userId'] in subs]
+                grade = grades[0] if grades else None
+                reported_score = (grade['resultScore'] / grade['resultMaximum']) if grade else None
+                score_not_reported = reported_score != score
+            else:
+                reported_score = lti_data.last_reported_score
+
+            return {
+                'last_name': student.last_name,
+                'first_name': student.first_name,
+                'full_name': student.get_full_name(),
+                'reported_score': reported_score,
+                'score': score,
+                'lti_data': lti_data,
+                'attempts': Attempt.objects.filter(user=student,resource=resource).exclude(broken=True).count(),
+                'access_tokens': AccessToken.objects.filter(user=student,resource=resource).count(),
+            }
 
         message_launch = self.get_message_launch()
         if message_launch:
             ags = self.get_message_launch().get_ags()
             lineitem = resource.get_lti_13_lineitem(ags)
-            context['grades'] = ags.get_grades(lineitem)
+            ags_grades = context['grades'] = ags.get_grades(lineitem)
+            is_lti_13 = context['is_lti_13'] = True
+            nrps_members = [m for m in self.get_nrps_members() if m['student']]
+            got_ids = [s for student in students for s in student.lti_13_aliases.all().values_list('sub', flat=True)]
+            extra_students = [summarise_extra_student(m) for m in nrps_members if m['user_id'] not in got_ids]
+        else:
+            is_lti_13 = context['is_lti_13'] = False
+            extra_students = []
+
+        summaries = [summarise_student(student) for student in students] + extra_students
+
+        context['student_summary'] = sorted(summaries, key=lambda x: (x['last_name'], x['first_name']))
+
 
         return context
 
@@ -673,30 +705,15 @@ class AccessChangesView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstruc
     resource_pk_url_kwarg = 'resource_id'
     helplink = 'instructor/resources.html#access-changes'
     
-class AccessChangeEditView:
+class AccessChangeEditView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        message_launch = self.get_message_launch()
-        if message_launch:
-            nrps = message_launch.get_nrps()
-            members = nrps.get_members()
-            members = [
-                {
-                    'name': m['name'],
-                    'active': m['status'] == 'Active',
-                    'student': StudentRole({"https://purl.imsglobal.org/spec/lti/claim/roles": m['roles']}).check(),
-                    'user_id': m['user_id'],
-                    'ext_user_username': m['ext_user_username'],
-                    'email': m['email'],
-                }
-                for m in sorted(members, key=lambda x: (x['family_name'], x['given_name']))
-            ]
-            context['nrps_members'] = members
+        context['nrps_members'] = self.get_nrps_members()
 
         return context
 
-class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, AccessChangeEditView, generic.CreateView):
+class CreateAccessChangeView(AccessChangeEditView, generic.CreateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     template_name = 'numbas_lti/management/access_change/edit.html'
@@ -717,7 +734,7 @@ class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
     def get_success_url(self):
         return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
 
-class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, AccessChangeEditView, generic.UpdateView):
+class UpdateAccessChangeView(AccessChangeEditView, generic.UpdateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     management_tab = 'access-changes'
