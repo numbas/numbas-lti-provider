@@ -45,6 +45,7 @@ def get_lti_13_context(message_launch):
             context=lti_context,
             defaults = {
                 "ags_data": message_launch._get_jwt_body().get("https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"),
+                "nrps_data": message_launch._get_jwt_body().get("https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice"),
             }
         )
 

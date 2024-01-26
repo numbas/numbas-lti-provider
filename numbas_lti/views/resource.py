@@ -5,7 +5,7 @@ from numbas_lti.models import \
         Resource, LTI_13_ResourceLink, AccessToken, Exam, Attempt, \
         ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, \
         LTIUserData, ScormElement, RemarkedScormElement, AccessChange, \
-        DISCOUNT_BEHAVIOURS
+        DISCOUNT_BEHAVIOURS, LTIContext
 from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
@@ -235,7 +235,7 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
             score = attempt.scaled_score if attempt else 0
             lti_data = student.lti_data.filter(resource=resource).last()
 
-            if is_lti_13:
+            if ags_grades is not None:
                 subs = student.lti_13_aliases.all().values_list('sub', flat=True)
                 grades = [g for g in ags_grades if g['userId'] in subs]
                 grade = grades[0] if grades else None
@@ -257,16 +257,22 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
 
         message_launch = self.get_message_launch()
         if message_launch:
-            ags = self.get_message_launch().get_ags()
-            lineitem = resource.get_lti_13_lineitem(ags)
-            ags_grades = context['grades'] = ags.get_grades(lineitem)
             is_lti_13 = context['is_lti_13'] = True
-            nrps_members = [m for m in self.get_nrps_members() if m['student']]
-            got_ids = [s for student in students for s in student.lti_13_aliases.all().values_list('sub', flat=True)]
-            extra_students = [summarise_extra_student(m) for m in nrps_members if m['user_id'] not in got_ids]
         else:
             is_lti_13 = context['is_lti_13'] = False
-            extra_students = []
+
+        extra_students = []
+        ags_grades = None
+        lti_context = resource.lti_13_contexts().first()
+        if lti_context:
+            ags = lti_context.get_ags()
+            lineitem = resource.get_lti_13_lineitem(ags)
+            ags_grades = context['grades'] = ags.get_grades(lineitem)
+            nrps_members = [m for m in lti_context.nrps_members() if m['student']]
+            if nrps_members:
+                got_ids = [s for student in students for s in student.lti_13_aliases.all().values_list('sub', flat=True)]
+                extra_students = [summarise_extra_student(m) for m in nrps_members if m['user_id'] not in got_ids]
+
 
         summaries = [summarise_student(student) for student in students] + extra_students
 
@@ -709,7 +715,8 @@ class AccessChangeEditView(HelpLinkMixin, ResourceManagementViewMixin, MustBeIns
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        context['nrps_members'] = self.get_nrps_members()
+        lti_context = self.get_resource().lti_13_contexts().first()
+        context['nrps_members'] = lti_context.nrps_members()
 
         return context
 

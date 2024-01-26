@@ -101,6 +101,12 @@
                 </datalist>
 
                 <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">{% translate "Apply?" %}</th>
+                            <th scope="col">{% translate "Name" %}</th>
+                            <th scope="col">{% translate "Username" %}</th>
+                            <th scope="col">{% translate "Email address" %}</th>
                     <tbody>
                     {% for member in nrps_members %}
                     {% if member.student %}

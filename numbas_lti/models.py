@@ -4,6 +4,7 @@ from collections import defaultdict
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import signing
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.core.mail import send_mail
@@ -22,6 +23,7 @@ from lxml import etree
 import os
 from pathlib import Path
 from pylti1p3.assignments_grades import AssignmentsGradesService
+from pylti1p3.names_roles import NamesRolesProvisioningService
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
 from pylti1p3.lineitem import LineItem
@@ -290,22 +292,58 @@ class LTI_13_Context(models.Model):
 
     context = models.OneToOneField(LTIContext, on_delete=models.CASCADE, related_name='lti_13')
     ags_data = models.JSONField(blank=True, default=dict, null=True)
+    nrps_data = models.JSONField(blank=True, default=dict, null=True)
 
-    def get_ags(self):
-        """
-            Get the Assignments and Grades Service controller for this context.
-        """
+    def get_service_connector(self):
         tool = self.context.consumer.lti_13.tool
 
         registration = self.tool_conf.find_registration_by_params(iss=tool.issuer, client_id=tool.client_id)
 
         service_connector = ServiceConnector(registration, requests_session.get_session())
+    
+        return service_connector
 
-        service_data = self.ags_data
+    def get_ags(self):
+        """
+            Get the Assignments and Grades Service controller for this context.
+        """
+        if self.ags_data:
+            return AssignmentsGradesService(self.get_service_connector(), self.ags_data)
 
-        ags = AssignmentsGradesService(service_connector, service_data)
+    def get_nrps(self):
+        """
+            Get the Names and Roles Provisioning Service controller for this context.
+        """
 
-        return ags
+        if self.nrps_data:
+            return NamesRolesProvisioningService(self.get_service_connector(), self.nrps_data)
+
+    def nrps_members(self):
+        cache_key = f'nrps_members-{self.pk}'
+
+        members = cache.get(cache_key)
+        if members is not None:
+            return members
+
+        nrps = self.get_nrps()
+        raw_members = nrps.get_members()
+        members = [
+            {
+                'name': m['name'],
+                'given_name': m['given_name'],
+                'family_name': m['family_name'],
+                'active': m['status'] == 'Active',
+                'student': pylti1p3.roles.StudentRole({"https://purl.imsglobal.org/spec/lti/claim/roles": m['roles']}).check(),
+                'user_id': m['user_id'],
+                'ext_user_username': m['ext_user_username'],
+                'email': m['email'],
+            }
+            for m in sorted(raw_members, key=lambda x: (x['family_name'], x['given_name']))
+        ]
+        cache.set(cache_key, members, 60)
+
+        return members
+
 
 REQUIRE_LOCKDOWN_APP_CHOICES = [
     ('', _('No')),
@@ -657,7 +695,6 @@ class Resource(models.Model):
             "label": self.title,
             "resourceId": f"resource-{self.pk}",
         })
-        print(lineitem.get_value())
 
         if self.available_from is not None:
             lineitem.set_start_date_time(self.available_from.isoformat())
