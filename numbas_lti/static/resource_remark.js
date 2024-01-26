@@ -80,7 +80,7 @@ if(location.search) {
     const bits = location.search.slice(1).split('&');
     bits.forEach(bit => {
         const [k,v] = bit.split('=');
-        if(k=='resource_link_id') {
+        if(k=='resource_link_id' || k=='lti_13_launch_id') {
             resource_link_id = bit;
         }
     });
