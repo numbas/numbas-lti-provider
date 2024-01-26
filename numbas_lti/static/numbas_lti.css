@@ -139,13 +139,20 @@ button, .button {
     background-color: var(--button-bg);
     border: 1px solid var(--button-border-color);
 }
+button[disabled] {
+    cursor: not-allowed;
+}
 :is(button, .button).small {
     padding: 0 var(--half-space);
 }
-:is(button, .button):is(:hover,:focus) {
+button[disabled] {
+    opacity: 0.3;
+}
+
+:is(button, .button):not([disabled]):is(:hover,:focus) {
     --button-bg: var(--button-hover-bg);
 }
-:is(button, .button):active {
+:is(button, .button):not([disabled]):active {
     --button-bg: var(--button-active-bg);
 }
 
@@ -208,7 +215,7 @@ table.fixed {
 
 td, th {
     padding: var(--spacing);
-    border-bottom: 1px solid var(--table-border-color);
+    border: 1px solid var(--table-border-color);
 }
 
 th {
@@ -217,10 +224,6 @@ th {
 
 td {
     background: var(--td-bg);
-}
-
-* ~ th, * ~ td {
-    border-left: 1px solid var(--table-border-color);
 }
 
 td.empty {
