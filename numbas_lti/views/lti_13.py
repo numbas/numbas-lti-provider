@@ -204,8 +204,7 @@ class ResourceLaunchView(mixins.LTI_13_Mixin):
         except LTI_13_ResourceLink.DoesNotExist:
             return None
 
-class TeacherLaunchView(ResourceLaunchView, TemplateView):
-    template_name ='numbas_lti/lti_13/teacher_launch.html'
+class TeacherLaunchView(ResourceLaunchView, View):
 
     def get(self, request, *args, **kwargs):
         resource_link = self.get_resource_link()
@@ -213,9 +212,9 @@ class TeacherLaunchView(ResourceLaunchView, TemplateView):
         if resource_link:
             self.record_user_data(resource_link)
             numbas_lti.views.entry.record_launch(request, role='teacher', lti_13_resource_link=resource_link)
-            return redirect(self.reverse_with_lti('resource_grades', args=(resource_link.resource.pk,)))
+            return redirect(self.reverse_with_lti('resource_dashboard', args=(resource_link.resource.pk,)))
         else:
-            return super().get(request, *args, **kwargs)
+            raise SuspiciousOperation(_("This LTI launch does not have a resource associated with it."))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
