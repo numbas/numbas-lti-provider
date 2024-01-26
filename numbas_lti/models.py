@@ -1553,7 +1553,7 @@ class EditorLink(models.Model):
 
         if self.projects.exists():
             project_pks = [str(p.remote_id) for p in self.projects.all()]
-            r = requests.get('{}/api/available-exams'.format(self.url),{'projects':project_pks})
+            r = requests.get('{}/api/available-exams'.format(self.url), params={'projects':project_pks})
 
             self.cached_available_exams = r.text
         else:
