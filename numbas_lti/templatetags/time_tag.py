@@ -3,8 +3,6 @@ from django.template.loader import get_template
 
 register = Library()
 
-print("<<<<<<<<<<<<< HEY")
-
 @register.inclusion_tag('numbas_lti/datetime.html')
 def time_tag(t, **kwargs):
     return {
