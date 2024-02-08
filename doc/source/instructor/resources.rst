@@ -513,6 +513,28 @@ The student is allowed whichever is the greatest of the resource's normal maximu
 
 A value of zero in this field does not mean "no change", it means that the affected students are allowed to start as many attempts as they like.
 
+Lockdown app
+^^^^^^^^^^^^
+
+The :guilabel:`Require a lockdown app?` field override the resource's :ref:`require-lockdown-app` field.
+
+The settings behave as follows:
+
+Unchanged
+    The resource's settings will be used.
+
+No
+    Students affected by this access change will not be required to use a lockdown app.
+
+Numbas
+    Students affected by this access change will be required to use the Numbas lockdown app.
+    You can change the password with the :guilabel:`Password for the Numbas lockdown app` field.
+    If you leave it empty, the password defined by the resource's settings will be used.
+
+Safe Exam Browser
+    Students affected by this access change will be required to use the Numbas lockdown app.
+    You can change the SEB settings file to use with the :guilabel:`SEB settings` field.
+
 Applies to
 ^^^^^^^^^^
 

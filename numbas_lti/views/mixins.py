@@ -107,7 +107,8 @@ def needs_lockdown_app(request):
     if request_is_instructor(request):
         return False
 
-    return request.resource.require_lockdown_app != ''
+    require_lockdown_app, _, _ = request.resource.require_lockdown_app_for_user(request.user)
+    return require_lockdown_app != ''
 
 class RequireLockdownAppMixin(object):
     def dispatch(self,*args,**kwargs):

@@ -138,10 +138,11 @@ def basic_lti_launch(request):
         else:
             return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
     else:
-        if request.resource.require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
+        require_lockdown_app, _, _ = request.resource.require_lockdown_app_for_user(request.user)
+        if require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
             return show_lockdown_app(request)
 
-        if request.resource.require_lockdown_app=='seb' and not lockdown_app.is_seb(request):
+        if require_lockdown_app=='seb' and not lockdown_app.is_seb(request):
             return show_seb_link(request)
 
         if not request.resource.exam:
@@ -151,7 +152,16 @@ def basic_lti_launch(request):
 
 def show_lockdown_app(request):
     lockdown_url = lockdown_app.make_link(request)
-    return render(request, 'numbas_lti/lockdown_launch/numbas_app_link.html', {'lockdown_url': lockdown_url, 'install_url': settings.LOCKDOWN_APP.get('install_url')})
+    password = request.resource.get_lockdown_app_password(user=request.user)
+    return render(
+        request,
+        'numbas_lti/lockdown_launch/numbas_app_link.html', 
+        {
+            'lockdown_url': lockdown_url,
+            'install_url': settings.LOCKDOWN_APP.get('install_url'),
+            'password': password,
+        }
+    )
 
 def lockdown_launch(request):
     session_key = request.GET.get('session_key')
@@ -160,7 +170,16 @@ def lockdown_launch(request):
 
 def show_seb_link(request):
     seb_url = lockdown_app.make_seb_link(request)
-    return render(request, 'numbas_lti/lockdown_launch/seb_link.html', {'seb_url': seb_url, 'install_url': settings.LOCKDOWN_APP.get('seb_install_url')})
+    password = request.resource.get_lockdown_app_password(user=request.user)
+    return render(
+        request,
+        'numbas_lti/lockdown_launch/seb_link.html',
+        {
+            'seb_url': seb_url,
+            'install_url': settings.LOCKDOWN_APP.get('seb_install_url'),
+            'password': password,
+        }
+    )
 
 def seb_launch(request):
     session_key = request.GET.get('session_key')

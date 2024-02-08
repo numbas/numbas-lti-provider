@@ -62,7 +62,19 @@ class AccessChangeForm(ModelForm):
 
     class Meta:
         model = AccessChange
-        fields = ['description','resource','available_from', 'available_until', 'max_attempts', 'extend_duration', 'extend_duration_units', 'disable_duration']
+        fields = [
+            'description',
+            'resource',
+            'available_from',
+            'available_until',
+            'max_attempts',
+            'extend_duration',
+            'extend_duration_units',
+            'disable_duration',
+            'require_lockdown_app',
+            'lockdown_app_password',
+            'seb_settings',
+        ]
         widgets = {
             'description': forms.TextInput(),
             'available_from': DateTimePickerInput(format=datetime_format),

@@ -543,20 +543,36 @@ class Resource(models.Model):
         from . import tasks
         tasks.resource_report_scores(self)
 
-    def get_lockdown_app_password(self):
-        if self.require_lockdown_app == 'numbas':
-            if self.lockdown_app_password:
-                return self.lockdown_app_password
+    def require_lockdown_app_for_user(self, user=None):
+        require_lockdown_app = self.require_lockdown_app
+        seb_settings = self.seb_settings
+        lockdown_app_password = self.lockdown_app_password
+        if user is not None:
+            change = self.access_changes.for_user(user).exclude(require_lockdown_app='unchanged').last()
+            if change is not None:
+                require_lockdown_app = change.require_lockdown_app
+                seb_settings = change.seb_settings
+                if require_lockdown_app == 'numbas':
+                    if change.lockdown_app_password:
+                        lockdown_app_password = change.lockdown_app_password
+                elif require_lockdown_app == 'seb':
+                    lockdown_app_password = change.seb_settings.password
 
-            return settings.LOCKDOWN_APP.get('password')
+        if require_lockdown_app == 'numbas':
+            if not lockdown_app_password:
+                lockdown_app_password = settings.LOCKDOWN_APP.get('password')
         
-        if self.require_lockdown_app == 'seb':
+        if require_lockdown_app == 'seb':
             try:
-                return self.seb_settings.password
-            except SebSettings.DoesNotExist:
-                return None
+                lockdown_app_password = seb_settings.password
+            except (SebSettings.DoesNotExist, AttributeError):
+                lockdown_app_password = None
 
-        return None
+        return (require_lockdown_app, lockdown_app_password, seb_settings)
+
+    def get_lockdown_app_password(self, user=None):
+        _, lockdown_app_password, _ = self.require_lockdown_app_for_user(user)
+        return lockdown_app_password
 
 
 class ReportProcess(models.Model):
@@ -607,6 +623,10 @@ class AccessChange(models.Model):
     extend_duration = models.FloatField(blank=True, null=True, verbose_name=_('Extend exam duration by'))
     extend_duration_units = models.CharField(max_length=10, blank=True, null=True, default='percent', choices=EXTEND_DURATION_UNITS)
     disable_duration = models.BooleanField(default=False, verbose_name=_('Disable time limit?'))
+    
+    require_lockdown_app = models.CharField(max_length=20, default='unchanged', blank=True, choices = [('unchanged', _('Unchanged'))] + REQUIRE_LOCKDOWN_APP_CHOICES, verbose_name=_("Require a lockdown app?"))
+    lockdown_app_password = models.CharField(max_length=30, blank=True, verbose_name=_('Password for the Numbas lockdown app'))
+    seb_settings = models.ForeignKey(SebSettings, blank=True, null=True, on_delete=models.SET_NULL, related_name='access_changes')
 
     users = models.ManyToManyField(User, blank=True, related_name='access_changes')
 

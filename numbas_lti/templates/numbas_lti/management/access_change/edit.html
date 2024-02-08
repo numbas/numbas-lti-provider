@@ -90,6 +90,14 @@
         </p>
     </fieldset>
     <fieldset>
+        <legend>{% trans "Lockdown app" %}</legend>
+        {{form.require_lockdown_app|bootstrap}}
+        {{form.lockdown_app_password|bootstrap}}
+        <div class="form-group">
+            {{form.seb_settings|bootstrap}}
+        </div>
+    </fieldset>
+    <fieldset>
         <legend>{% trans "Applies to" %}</legend>
         {{form.usernames|bootstrap}}
         <p class="help-block">
@@ -111,6 +119,7 @@
 {% block javascripts %}
 {{block.super}}
 {{form.media}}
+<script src="{% static 'lockdown_settings_form.js' %}" defer></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

@@ -45,7 +45,7 @@ def make_link(request):
         'token': token,
     }
 
-    password = request.resource.get_lockdown_app_password()
+    password = request.resource.get_lockdown_app_password(user=request.user)
 
     iv, encrypted = encrypt(password, json.dumps(link_settings))
     url = f'numbas://{request.get_host()}/'+binascii.hexlify(iv+encrypted).decode('ascii')
@@ -62,7 +62,7 @@ def validate_token(request, token):
     return isinstance(d,dict) and d.get('resource') == request.resource.pk and d.get('user') == request.user.pk
 
 def is_lockdown_app(request):
-    required = request.resource.require_lockdown_app
+    required, lockdown_app_password, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
 
     checker = {
         'numbas': is_numbas_lockdown_app,
@@ -74,9 +74,9 @@ def is_lockdown_app(request):
     except KeyError:
         return False
 
-    return fn(request)
+    return fn(request, lockdown_app_password=lockdown_app_password, seb_settings=seb_settings)
 
-def is_numbas_lockdown_app(request):
+def is_numbas_lockdown_app(request, **kwargs):
     header = request.META.get('HTTP_AUTHORIZATION')
     if header is None:
         return False
@@ -102,13 +102,14 @@ def make_seb_link(request):
 
     query = '&'.join(f'{k}={urllib.parse.quote(v)}' for k,v in query_args.items())
 
-    settings_url = request.resource.seb_settings.settings_file.url
+    _, _, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
+    settings_url = seb_settings.settings_file.url
 
     scheme = 'sebs' if request.is_secure() else 'seb'
     url = urllib.parse.urlunparse((scheme, request.get_host(), settings_url, '', '', ''))+'??'+query
     return url
 
-def is_seb(request):
+def is_seb(request, seb_settings=None, **kwargs):
     """
         Check that the request has come from SEB.
         The Mac and iOS apps don't send this header any more, so this only works for Windows SEB.
@@ -116,9 +117,7 @@ def is_seb(request):
         There's a description of how this is supposed to work at https://safeexambrowser.org/developer/seb-config-key.html
     """
 
-    try:
-        seb_settings = request.resource.seb_settings
-    except AttributeError:
+    if seb_settings is None:
         return False
 
     header_hash = request.headers.get('X-Safeexambrowser-Configkeyhash')
