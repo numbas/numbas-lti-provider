@@ -187,7 +187,6 @@ def seb_launch(request):
 
     if session_key is None or resource_link_id is None:
         if request.headers.get('X-Safeexambrowser-Configkeyhash'):
-            # TODO - make this error message: SEB launched without GET parameters, probably because it had this config saved
             return render(request, 'numbas_lti/launch_errors/seb_launch_without_params.html')
 
         return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
