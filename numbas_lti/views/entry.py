@@ -138,11 +138,11 @@ def basic_lti_launch(request):
         else:
             return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
     else:
-        require_lockdown_app, _, _ = request.resource.require_lockdown_app_for_user(request.user)
+        require_lockdown_app, _, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
         if require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
             return show_lockdown_app(request)
 
-        if require_lockdown_app=='seb' and not lockdown_app.is_seb(request):
+        if require_lockdown_app=='seb' and not lockdown_app.is_seb(request, seb_settings):
             return show_seb_link(request)
 
         if not request.resource.exam:
@@ -186,6 +186,10 @@ def seb_launch(request):
     resource_link_id = request.GET.get('resource_link_id')
 
     if session_key is None or resource_link_id is None:
+        if request.headers.get('X-Safeexambrowser-Configkeyhash'):
+            # TODO - make this error message: SEB launched without GET parameters, probably because it had this config saved
+            return render(request, 'numbas_lti/launch_errors/seb_launch_without_params.html')
+
         return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
 
     return redirect(add_query_param(reverse('set_cookie_entry'), {'resource_link_id': resource_link_id, 'session_key': session_key}))

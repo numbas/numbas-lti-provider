@@ -1,0 +1,15 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>{% translate "Invalid Safe Exam Browser launch" %}</h1>
+    </header>
+    <main>
+        <p>{% blocktranslate %}You have opened Safe Exam Browser, but it hasn't said which resource it wants to load.{% endblocktranslate %}</p>
+        <p>{% blocktranslate %}This can happen if you open Safe Exam Browser and it uses a previously-set configuration. If that's the case, please close Safe Exam Browser now.{% endblocktranslate %}</p>
+        <p><a class="btn btn-lg btn-primary" href="{% url 'seb_quit' %}">Quit Safe Exam Browser</a></p>
+    </main>
+</div>
+{% endblock content %}
