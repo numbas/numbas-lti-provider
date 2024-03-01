@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect
+from django.templatetags.static import static
 from django.views import View
 from django.views.generic import TemplateView, FormView, RedirectView
 from django.views.decorators.csrf import csrf_exempt
@@ -21,6 +22,7 @@ from pylti1p3.deep_link_resource import DeepLinkResource
 from pylti1p3.contrib.django import DjangoOIDCLogin
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.dynamic_registration import DjangoDynamicRegistration
+import urllib.parse
 
 INSTANCE_NAME = settings.INSTANCE_NAME
 PAGE_TITLE = gettext('{INSTANCE_NAME} Numbas').format(INSTANCE_NAME=INSTANCE_NAME)
@@ -35,6 +37,62 @@ class RegisterView(TemplateView):
         context['register_url'] = self.request.build_absolute_uri(reverse('lti_13:dynamic_registration'))
 
         return context
+
+def canvas_config_json(request):
+    icon_url = request.build_absolute_uri(static("icon.png"))
+
+    iss = request.GET.get('iss','https://canvas.instructure.com')
+    platform = urllib.parse.urlparse(iss).netloc
+    iss = urllib.parse.quote_plus(iss)
+
+    config = {
+        "title": "Numbas",
+        "description": "Numbas assessments",
+        "oidc_initiation_url": request.build_absolute_uri(reverse('lti_13:login')),
+        "target_link_uri": request.build_absolute_uri(reverse('lti_13:launch')),
+        "custom_fields": {},
+        "scopes": [
+            'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly',
+            'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem',
+            'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly',
+            'https://purl.imsglobal.org/spec/lti-ags/scope/score'
+        ],
+        "extensions": [
+            {
+                "domain": request.get_host(),
+                "tool_id": "numbas_lti_13",
+                "platform": platform,
+                "settings": {
+                    "text": "Numbas",
+                    "icon_url": icon_url,
+                    "platform": platform,
+                    "placements":[
+                        {
+                            "text": "Numbas",
+                            "enabled": True,
+                            "icon_url": icon_url,
+                            "placement": "editor_button",
+                            "message_type": "LtiDeepLinkingRequest",
+                            "target_link_uri": request.build_absolute_uri(reverse('lti_13:launch')),
+                            "canvas_icon_class": "icon-lti"
+                        },
+                        {
+                            "text": "Numbas",
+                            "enabled": True,
+                            "icon_url": icon_url,
+                            "placement": "link_selection",
+                            "message_type": "LtiDeepLinkingRequest",
+                            "target_link_uri": request.build_absolute_uri(reverse('lti_13:launch')),
+                            "canvas_icon_class": "icon-lti"
+                        }
+                    ]
+                }
+            }
+        ],
+        "public_jwk_url": request.build_absolute_uri(reverse('lti_13:jwks'))+"?iss="+iss,
+        "public_jwk": {},
+    }
+    return JsonResponse(config)
 
 class LoginView(mixins.LTI_13_Mixin, View):
     """
