@@ -14,57 +14,53 @@
         <section id="consumers">
             <p>{% translate "The configured LTI consumers are listed below. To access this tool, use the configuration URL below, and the corresponding consumer key and consumer secret." %}</p>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th scope="col">{% translate "Consumer" %}</th>
-                        <th scope="col">{% translate "Summary" %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for consumer in object_list %}
-                    <tr>
-                        <td>
+            <ul id="consumer-list" class="card-list">
+                {% for consumer in object_list %}
+                    <li class="consumer card">
+                        <header>
                             <h2>
                                 <a href="{% url 'view_consumer' consumer.pk %}">{{consumer.title}}</a>
                             </h2>
-                            {% if consumer.lti_11 %}
-                                <dl>
-                                    <dt>{% translate "LTI version" %}</dt>
-                                    <dd>1.1</dd>
+                        </header>
+                        {% if consumer.lti_11 %}
+                            <dl>
+                                <dt>{% translate "LTI version" %}</dt>
+                                <dd>1.1</dd>
 
-                                    <dt>{% translate "Consumer key" %}</dt>
-                                    <dd><code>{{consumer.lti_11.key}}</code></dd>
+                                <dt>{% translate "Consumer key" %}</dt>
+                                <dd><code>{{consumer.lti_11.key}}</code></dd>
 
-                                    <dt>{% translate "Shared secret" %}</dt>
-                                    <dd><code>{{consumer.lti_11.secret}}</code></dd>
-                                </dl>
-                            {% endif %}
-                            {% if consumer.lti_13 %}
-                                <dl>
-                                    <dt>{% translate "LTI version" %}</dt>
-                                    <dd>1.3</dd>
+                                <dt>{% translate "Shared secret" %}</dt>
+                                <dd><code>{{consumer.lti_11.secret}}</code></dd>
+                            </dl>
+                        {% endif %}
+                        {% if consumer.lti_13 %}
+                            <dl>
+                                <dt>{% translate "LTI version" %}</dt>
+                                <dd>1.3</dd>
 
-                                    <dt>{% translate "Name" %}</dt>
-                                    <dd>{{consumer.lti_13.tool.title}}</dd>
+                                <dt>{% translate "Name" %}</dt>
+                                <dd>{{consumer.lti_13.tool.title}}</dd>
 
-                                    <dt>{% translate "Issuer" %}</dt>
-                                    <dd><code>{{consumer.lti_13.tool.issuer}}</code></dd>
-                                </dl>
-                            {% endif %}
-                        </td>
-                        <td>
+                                <dt>{% translate "Issuer" %}</dt>
+                                <dd><code>{{consumer.lti_13.tool.issuer}}</code></dd>
+                            </dl>
+                        {% endif %}
+                        <p>
                             {% blocktranslate count num_resources=consumer.resources.count %}
                             1 resource.
                             {% plural %}
                             {{num_resources}} resources.
                             {% endblocktranslate %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <p><a href="{% url 'create_consumer' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI consumer" %}</a></p>
+                        </p>
+                    </li>
+                {% endfor %}
+
+                <li>
+                    <p><a href="{% url 'create_consumer' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI 1.1 consumer" %}</a></p>
+                    <p>
+                </li>
+            </ul>
         </section>
 
         <section>

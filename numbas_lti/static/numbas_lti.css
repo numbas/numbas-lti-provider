@@ -9,8 +9,11 @@
     text-decoration-line: underline;
     text-decoration-thickness: 0.1em;
 }
+:is(:any-link, a, .link):hover {
+    --link-color: var(--link-hover-color);
+}
 :is(:any-link, a, .link):active {
-    color: var(--link-active-color);
+    --link-color: var(--link-active-color);
 }
 
 .hidden {
@@ -254,6 +257,8 @@ hr {
 
 form label {
     font-weight: bold;
+    display: block;
+    margin-top: var(--double-space);
 }
 
 fieldset {
@@ -432,4 +437,25 @@ body.edit-editor-link .project h3 {
 }
 body.edit-editor-link .question.getPart(avatar ){
     width: 2em;
+}
+
+.card-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--quad-space);
+    list-style: none;
+    padding: 0);
+}
+
+.card {
+    border: thin solid;
+    padding: var(--spacing);
+    background: var(--td-bg);
+}
+
+.card-list .card > header h2 {
+    background: var(--th-bg);
+    padding: var(--double-space);
+    margin: calc(-1 * var(--spacing));
+    margin-bottom: var(--double-space);
 }
