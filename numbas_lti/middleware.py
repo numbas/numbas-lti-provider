@@ -26,6 +26,10 @@ def get_lti_13_context(message_launch):
 
         consumer = lti_tool.numbas.consumer
 
+        instance_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/tool_platform', {})
+
+        instance_guid = instance_claim.get('guid')
+
         context_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/context',{})
 
         context_id = str(context_claim.get('id',''))
@@ -34,6 +38,7 @@ def get_lti_13_context(message_launch):
 
         lti_context, _ = LTIContext.objects.get_or_create(
             context_id=context_id,
+            instance_guid=instance_guid,
             consumer=consumer,
             defaults = {
                 'name': context_title,

@@ -74,6 +74,9 @@ class LTIConsumer(models.Model):
     def __str__(self):
         return f'Consumer {self.url} (ID: {self.pk})'
 
+    def get_absolute_url(self):
+        return reverse('view_consumer', args=(self.pk,))
+
     @property
     def title(self):
         if hasattr(self, 'lti_11'):
