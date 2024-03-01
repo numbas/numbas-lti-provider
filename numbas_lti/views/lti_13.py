@@ -47,7 +47,7 @@ def canvas_config_json(request):
 
     config = {
         "title": "Numbas",
-        "description": "Numbas assessments",
+        "description": _("Numbas assessments"),
         "oidc_initiation_url": request.build_absolute_uri(reverse('lti_13:login')),
         "target_link_uri": request.build_absolute_uri(reverse('lti_13:launch')),
         "custom_fields": {},
