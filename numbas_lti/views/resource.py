@@ -115,45 +115,50 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
 
     def get_exam_info(self):
         content = self.get_object().exam.source()
+
         if content is None:
             return
-        nav = content.get('navigation',{})
-        timing = content.get('timing',{})
-        feedback = content.get('feedback',{})
 
-        showResultsPage =nav.get('showresultspage')
-        duration = content.get('duration')
-        percentPass = content.get('percentPass')
+        def get(node, attr, default=None):
+            return node.get(attr, node.get(attr.lower(), default))
+
+        nav = get(content,'navigation',{})
+        timing = get(content,'timing',{})
+        feedback = get(content,'feedback',{})
+
+        showResultsPage = get(nav,'showResultsPage', 'oncompletion')
+        duration = get(content,'duration', 0)
+        percentPass = get(content,'percentPass', 0)
         info = {
             'hasPercentPass': percentPass and percentPass != '0',
             'percentPass':  percentPass,
             'hasTimeLimit': duration and duration != '0',
             'duration':  int(duration)/60 if duration else None,
-            'allowPrinting':  content.get('allowPrinting'),
+            'allowPrinting':  get(content,'allowPrinting', True),
 
-            'allowRegen':  nav.get('allowregen'),
-            'allowReverse':  nav.get('reverse'),
-            'allowBrowse':  nav.get('browse'),
-            'allowSteps':  nav.get('allowsteps'),
+            'allowRegen':  get(nav,'allowRegen', False),
+            'allowReverse':  get(nav,'reverse', False),
+            'allowBrowse':  get(nav,'browse', False),
+            'allowSteps':  get(nav,'allowSteps', True),
 
             'completionShowResultsPage': showResultsPage == 'oncompletion',
             'reviewShowResultsPage': showResultsPage == 'oncompletion' or showResultsPage == 'review',
 
-            'leaveUnattempted': nav.get('onleave',{}).get('action') != 'preventifunattempted',
+            'leaveUnattempted': get(nav,'onleave',{}).get('action', 'none') != 'preventifunattempted',
             
-            'navigateMode':  nav.get('navigatemode'),
-            'startPassword':  nav.get('startpassword'),
+            'navigateMode':  get(nav,'navigateMode', 'menu'),
+            'startPassword':  get(nav,'startPassword', ''),
 
-            'allowPause':  timing.get('allowPause'),
+            'allowPause':  get(timing,'allowPause', False),
 
-            'showActualMark':  feedback.get('showactualmark'),
-            'showTotalMark':  feedback.get('showTotalMark'),
-            'showAnswerState':  feedback.get('showanswerstate'),
-            'allowRevealAnswer':  feedback.get('allowrevealanswer'),
-            'reviewShowScore':  feedback.get('reviewshowscore'),
-            'reviewShowFeedback':  feedback.get('reviewshowfeedback'),
-            'reviewShowAdvice':  feedback.get('reviewshowadvice'),
-            'reviewShowExpectedAnswer': feedback.get('reviewshowexpectedanswer'),
+            'showActualMark':  get(feedback,'showActualMark', False),
+            'showTotalMark':  get(feedback,'showTotalMark', False),
+            'showAnswerState':  get(feedback,'showAnswerState', False),
+            'allowRevealAnswer':  get(feedback,'allowRevealAnswer', False),
+            'reviewShowScore':  get(feedback,'reviewShowScore', True),
+            'reviewShowFeedback':  get(feedback,'reviewShowFeedback', True),
+            'reviewShowAdvice':  get(feedback,'reviewShowAdvice', True),
+            'reviewShowExpectedAnswer': get(feedback,'reviewShowExpectedAnswer', True),
         }
         return info
 

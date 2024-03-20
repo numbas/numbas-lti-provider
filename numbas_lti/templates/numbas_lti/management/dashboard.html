@@ -160,7 +160,7 @@
         <p>{% blocktrans %}During an attempt, students:{% endblocktrans %}</p>
         <ul>
             <li>{% if exam_info.allowRegen %}{% blocktrans %}<strong>may</strong> regenerate questions.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> regenerate questions.{% endblocktrans %}{% endif %}</li>
-            <li>{% if exam_info.allowBrowse %}{% blocktrans %}may move freely between questions.{% endblocktrans %}{% else %}{% if exam_info.allowReverse %}{% blocktrans %}may move to the next question or previous questions.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> return to questions.{% endblocktrans %}{% endif %}{% endif %}</li>
+            <li>{% if exam_info.allowBrowse %}{% blocktrans %}<strong>may</strong> move freely between questions.{% endblocktrans %}{% else %}{% if exam_info.allowReverse %}{% blocktrans %}<strong>may</strong> move to the next question or previous questions.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> return to questions.{% endblocktrans %}{% endif %}{% endif %}</li>
             {% if exam_info.hasTimeLimit %}
             <li>{% if exam_info.allowPause %}{% blocktrans %}<strong>may</strong> pause the timer.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> pause the timer.{% endblocktrans %}{% endif %}</li>
             {% endif %}
