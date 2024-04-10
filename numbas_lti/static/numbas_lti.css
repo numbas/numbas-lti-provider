@@ -120,7 +120,7 @@ input:not([type="hidden"]), select, textarea {
     border-radius: var(--button-radius);
     color: var(--text-color);
     background-color: var(--input-bg);
-    border: 1px solid var(--button-border-color);
+    border: thin solid var(--button-border-color);
     margin: var(--spacing) 0;
 }
 
@@ -141,7 +141,7 @@ button, .button {
     border-radius: var(--button-radius);
     color: var(--button-color);
     background-color: var(--button-bg);
-    border: 1px solid var(--button-border-color);
+    border: thin solid var(--button-border-color);
 }
 button[disabled] {
     cursor: not-allowed;
@@ -194,7 +194,7 @@ a.button:not(:hover, :focus) {
     background: var(--alert-bg);
     padding: var(--double-space);
     margin: var(--quad-space) 0;
-    border: 1px solid var(--alert-color);
+    border: thin solid var(--alert-color);
 }
 
 table {
@@ -219,7 +219,7 @@ table.fixed {
 
 td, th {
     padding: var(--spacing);
-    border: 1px solid var(--table-border-color);
+    border: thin solid var(--table-border-color);
 }
 
 th {
@@ -262,7 +262,7 @@ form label {
 }
 
 fieldset {
-    border: 1px solid;
+    border: thin solid;
 }
 
 form.big {
