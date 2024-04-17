@@ -86,7 +86,7 @@ class NumbasLTIResourceMiddleware(object):
             return
 
         resource_link_id = request.LTI.get('resource_link_id')
-        if resource_link_id is not None and tool_consumer_instance_guid is not None:
+        if resource_link_id is not None:
             context_id = request.LTI.get('context_id')
             context_id = context_id if context_id is not None else resource_link_id
             name = request.LTI.get('context_title')
@@ -119,17 +119,19 @@ class NumbasLTIResourceMiddleware(object):
 
             try:
                 resource_link = LTI_11_ResourceLink.objects.filter(context=context, resource_link_id=resource_link_id).last()
+                if resource_link is None:
+                    raise LTI_11_ResourceLink.DoesNotExist
                 resource = resource_link.resource
             except LTI_11_ResourceLink.DoesNotExist:
                 resource = Resource.objects.create(title=title, description=description)
                 resource_link = LTI_11_ResourceLink.objects.create(resource=resource, context=context, resource_link_id=resource_link_id)
-            finally:
-                if (title,description) != (resource.title, resource.description):
-                    resource.title = title
-                    resource.description = description
-                    resource.save(update_fields=('title', 'description'))
-                request.resource = resource
-                request.lti_11_resource_link = resource_link
+
+            if (title,description) != (resource.title, resource.description):
+                resource.title = title
+                resource.description = description
+                resource.save(update_fields=('title', 'description'))
+            request.resource = resource
+            request.lti_11_resource_link = resource_link
 
     def get_lti_13_resource_link(self, request):
         launch_id = get_lti_13_launch_id(request)
