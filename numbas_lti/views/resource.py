@@ -102,9 +102,12 @@ class ReplaceExamView(CreateExamView):
     def form_valid(self,form):
         resource = self.get_resource()
         old_exam = resource.exam
-        exam = self.object = form.save(commit=False)
-        exam.resource = resource
-        exam.save()
+        new_exam = self.object = form.save(commit=False)
+        new_exam.resource = resource
+        new_exam.save()
+
+        resource.exam = new_exam
+        resource.save(update_fields=['exam'])
 
         if form.cleaned_data['safe_replacement']:
             resource.attempts.filter(exam=old_exam).update(exam=new_exam)
