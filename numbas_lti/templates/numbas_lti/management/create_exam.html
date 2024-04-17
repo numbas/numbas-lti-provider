@@ -16,15 +16,17 @@
 
 {% block content %}
     <header>
-            <h1>{% translate "New Numbas activity" %}</h1>
-            <p>{% translate "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
-            {% if editor_links.exists %}
-                <p>{% translate "Please upload one now or select from the list of ready-to-use exams." %}</p>
-            {% else %}
-                <p>{% translate "Please upload one now." %}
-            {% endif %}
-            {% helplink page_helplink %}
+        <h1>{% translate "New Numbas activity" %}</h1>
+        <p>{% translate "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
+        {% if editor_links.exists %}
+            <p>{% translate "Please upload one now or select from the list of ready-to-use exams." %}</p>
+        {% else %}
+            <p>{% translate "Please upload one now." %}
+        {% endif %}
+        {% helplink page_helplink %}
     </header>
+
+    <hr>
 
     <main>
         <section id="upload-exam">
@@ -41,7 +43,11 @@
                 <button type="submit" class="button large primary">{% icon 'upload' %} {% translate "Submit" %}</button>
             </form>
         </section>
+
         {% if exams %}
+
+        <hr>
+
         <section id="ready-made-exams">
             <header>
                 <h2>{% icon 'transfer' %} {% translate "Select a ready-made exam" %}</h2>
