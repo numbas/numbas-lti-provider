@@ -427,6 +427,9 @@ class Resource(models.Model):
     def lti_13_contexts(self):
         return LTI_13_Context.objects.filter(context__lti_13_resource_links__resource=self).distinct()
 
+    def lti_11_contexts(self):
+        return LTIContext.objects.filter(lti_11_resource_links__resource=self)
+
     def unbroken_attempts(self):
         return self.attempts.filter(broken=False)
 

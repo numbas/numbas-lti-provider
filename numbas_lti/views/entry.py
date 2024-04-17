@@ -53,7 +53,6 @@ def lti_entry(request):
     if request.session.session_key is None:
         request.session.save()
     session_key = request.session.session_key
-    return render(request, 'numbas_lti/debug.html', {})
     return redirect(add_query_param(reverse('check_cookie_entry'),{'session_key':session_key}))
 
 def do_lti_entry(request):
@@ -105,7 +104,7 @@ def basic_lti_11_launch(request):
     except AttributeError:
         return no_resource(request)
 
-    consumer = request.resource.context.consumer
+    consumer = request.resource.lti_11_contexts().first().consumer
 
     is_instructor = request_is_instructor(request)
 
@@ -117,7 +116,12 @@ def basic_lti_11_launch(request):
         'consumer': consumer, 
         'consumer_user_id': user_id,
     }
-    user_data, _ = LTIUserData.objects.update_or_create(**user_data_args, defaults={"is_instructor": is_instructor})
+    user_data, _ = LTIUserData.objects.update_or_create(
+        **user_data_args,
+        defaults = {
+            "is_instructor": is_instructor
+        }
+    )
 
     lti_11_data, _ = LTI_11_UserData.objects.update_or_create(
         user_data=user_data,
@@ -125,7 +129,6 @@ def basic_lti_11_launch(request):
             "lis_result_sourcedid": request.LTI.get('lis_result_sourcedid'),
             "lis_person_sourcedid": request.LTI.get('lis_person_sourcedid',''),
             "lis_outcome_service_url": request.LTI.get('lis_outcome_service_url'),
-            "is_instructor": is_instructor,
         }
     )
 

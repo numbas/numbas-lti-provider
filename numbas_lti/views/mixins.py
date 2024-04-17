@@ -19,6 +19,7 @@ from numbas_lti.middleware import get_lti_13_context
 import pylti1p3.roles
 from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
+from pylti1p3.exception import LtiException
 import urllib.parse
 
 INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES', {})
@@ -130,7 +131,7 @@ class LTIRoleOrSuperuserMixin(LTI_13_Mixin, LTIRoleRestrictionMixin):
                 for role in self.allowed_roles['lti_13']:
                     if role(jwt_body).check():
                         return True
-            except AttributeError:
+            except (AttributeError, LtiException):
                 if is_allowed(request, self.allowed_roles['lti_11'], raise_exception=False):
                     return True
 
