@@ -10,7 +10,7 @@ from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
-from django.db.models import Min, Count, Q, Subquery, OuterRef
+from django.db.models import Min, Count, Q, Subquery, OuterRef, Func, F
 from django.template.loader import get_template
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _, gettext, ngettext
@@ -90,7 +90,7 @@ class LTIConsumer(models.Model):
 
     def contexts_grouped_by_period(self):
         resources = Resource.objects.filter(Q(lti_13_links__context=OuterRef('pk')) | Q(lti_11_links__context=OuterRef('pk')))
-        contexts = self.contexts.exclude(name='').annotate(creation=Min(Subquery(resources.values('creation_time'))),num_attempts=Count(Subquery(resources.values('attempts')))).order_by('-creation')
+        contexts = self.contexts.exclude(name='').annotate(creation=Subquery(resources.order_by('creation_time').values('creation_time')[:1]),num_attempts=resources.annotate(n=Func(F('attempts'), function='COUNT')).values('n')).order_by('-creation')
         if not self.time_periods.exists():
             return [(None,contexts)]
         it = iter(self.time_periods.order_by('-end'))
