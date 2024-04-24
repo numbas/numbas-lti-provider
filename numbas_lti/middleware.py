@@ -62,7 +62,7 @@ def get_lti_13_context(message_launch):
 
         return lti_context, resource_link_id
 
-    except (LTI_13_ResourceLink.DoesNotExist, LtiTool.DoesNotExist):
+    except LtiTool.DoesNotExist:
         return (None, None)
 
 class NumbasLTIResourceMiddleware(object):

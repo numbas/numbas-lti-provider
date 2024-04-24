@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _, gettext
 from . import mixins, resource
 from numbas_lti.backends import new_lti_user
-from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTIUserData
+from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData
 import numbas_lti.forms
 import numbas_lti.views.entry
 from pathlib import PurePath
@@ -254,12 +254,26 @@ class ResourceLaunchView(mixins.LTI_13_Mixin):
 
 
     def get_resource_link(self):
+        message_launch = self.get_message_launch()
+        message_launch_data = message_launch.get_launch_data()
+        lti_context, resource_link_id = self.get_lti_context()
+        lti_13_resource_link = LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
+        if lti_13_resource_link is not None:
+            return lti_13_resource_link
+
         try:
-            message_launch = self.get_message_launch()
-            message_launch_data = message_launch.get_launch_data()
-            lti_context, resource_link_id = self.get_lti_context()
-            return LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
-        except LTI_13_ResourceLink.DoesNotExist:
+            # See if this is an  LTI link that has been upgraded to LTI 1.3.
+            # If so, create a new LTI_13_ResourceLink object.
+            lti_11_resource_link = LTI_11_ResourceLink.objects.get(resource_link_id=resource_link_id, context__context_id=lti_context.context_id)
+            resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
+            resource_link = LTI_13_ResourceLink.objects.create(
+                resource = lti_11_resource_link.resource,
+                resource_link_id = resource_link_id,
+                title = resource_link_claim.get('title'),
+                context = lti_context
+            )
+            return resource_link
+        except LTI_11_ResourceLink.DoesNotExist:
             return None
 
 class TeacherLaunchView(ResourceLaunchView, View):
