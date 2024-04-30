@@ -719,7 +719,8 @@ class AccessChangeEditView(HelpLinkMixin, ResourceManagementViewMixin, MustBeIns
         context = super().get_context_data(*args, **kwargs)
 
         lti_context = self.get_resource().lti_13_contexts().first()
-        context['nrps_members'] = lti_context.nrps_members()
+        if lti_context:
+            context['nrps_members'] = lti_context.nrps_members()
 
         return context
 
