@@ -4,7 +4,7 @@
 <nav id="top-nav" class="no-print">
     <a class="navbar-brand" href="{% url_with_lti 'resource_dashboard' resource.pk %}">
         {% block nav_title %}
-            {{resource.title}}{% if resource.exam.title != resource.title %} <em class="eaxm-title muted">({{resource.exam.title}})</em>{% endif %}
+            {{resource.title}}{% if resource.exam.title != resource.title %} <em class="exam-title muted">({{resource.exam.title}})</em>{% endif %}
             {% if resource.lti_contexts.first %} <span class="muted">·</span> <small class="context-name">{{resource.lti_contexts.first.name}}</small>{% endif %}
         {% endblock %}
     </a>

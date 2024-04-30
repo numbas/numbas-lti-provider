@@ -304,6 +304,7 @@ code {
     justify-items: center;
     align-items: baseline;
     color: var(--top-nav-color);
+    --muted-color: var(--top-nav-muted-color);
     background: var(--top-nav-bg);
     border-bottom: var(--spacing) solid var(--top-nav-border);
     grid-template-columns: repeat(auto-fill,10em) [last-start] 10em [last-end];
@@ -409,6 +410,7 @@ body.dashboard ul.actions li {
     border-top: var(--spacing) solid var(--top-nav-border);
     background: var(--top-nav-bg);
     color: var(--top-nav-color);
+    --muted-color: var(--top-nav-muted-color);
 }
 
 .helplink {
