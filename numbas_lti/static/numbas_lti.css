@@ -321,7 +321,7 @@ code {
     grid-area: top-nav;
 }
 
-body:not(.resource-management) > header {
+body:not(.admin, .resource-management) > header {
     margin-top: 0;
     color: var(--top-nav-color);
     --muted-color: var(--top-nav-muted-color);
