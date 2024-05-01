@@ -13,4 +13,4 @@ simplejson==3.17.5
 huey==2.4.1
 pycryptodome==3.14.1
 diff-match-patch==20200713
-git+https://github.com/christianp/pylti1.3@dynamic-registration#egg=pylti1p3
+git+https://github.com/christianp/pylti1.3@numbas#egg=pylti1p3
