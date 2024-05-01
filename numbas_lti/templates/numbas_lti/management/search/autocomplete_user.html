@@ -1,1 +1,1 @@
-{% load i18n %}{% translate "User:" %} {{user.get_full_name}} ({{user.username}} / {{user.email}}) {% for consumer in consumers %}<code>{{consumer.title}}</code>{% endfor %}
+{% load i18n %}{% translate "User:" %} {{user.get_full_name}} ({{user.username}} / {{user.email}}) {% if consumers %}in {{consumers|join:", "}}{% endif %}

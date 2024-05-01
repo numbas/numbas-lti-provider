@@ -10,6 +10,8 @@
     {% include "numbas_lti/management/nav.html" %}
 
     <header>
+        <a id="skip-to-nav" href="#top-nav">{% translate "Skip to menu" %}</a>
+
         {% if page_helplink %}
             {% helplink page_helplink %}
         {% endif %}
@@ -26,5 +28,5 @@
 
         {% block management_content %}{% endblock %}
     </main>
-    {% include "numbas_lti/management/footer.html" %}
+    {% include "numbas_lti/footer.html" %}
 {% endblock content %}

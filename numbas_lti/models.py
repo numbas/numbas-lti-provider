@@ -27,6 +27,7 @@ from pylti1p3.names_roles import NamesRolesProvisioningService
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
 from pylti1p3.lineitem import LineItem
+import pylti1p3.roles
 from pylti1p3.service_connector import ServiceConnector, REQUESTS_USER_AGENT
 import re
 import shutil
@@ -859,7 +860,7 @@ class LTIUserData(models.Model):
         verbose_name_plural = _('LTI user data')
 
     def get_source_id(self):
-        if self.lis_person_sourcedid:
+        if self.lti_11 and self.lti_11.lis_person_sourcedid:
             return self.lis_person_sourcedid
         else:
             return self.consumer_user_id

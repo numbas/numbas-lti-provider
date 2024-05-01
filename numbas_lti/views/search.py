@@ -16,7 +16,7 @@ def user_json(user):
     return {
         'model': 'user',
         'id': user.pk,
-        'label': get_template('numbas_lti/management/search/autocomplete_user.html').render({'user': user, 'consumers': consumers}),
+        'label': get_template('numbas_lti/management/search/autocomplete_user.html').render({'user': user, 'consumers': [c.title for c in consumers]}),
         'url': reverse('global_user_info', args=(user.pk,)),
     }
 

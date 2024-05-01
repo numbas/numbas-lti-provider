@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.http import QueryDict
 from django.templatetags.static import static
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django_auth_lti.patch_reverse import reverse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -86,6 +86,26 @@ class LTI_13_Mixin:
 
     message_launch_cls = DjangoMessageLaunch
 
+    must_have_message_launch = False    # If True, then an error will be shown if no LTI launch data can be found for this request.
+
+    launch_error_template = 'numbas_lti/launch_errors/not_an_lti_launch.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.check_message_launch()
+        except Exception as exception:
+            return render(self.request, self.launch_error_template, {'exception': exception, 'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def check_message_launch(self):
+        if not self.must_have_message_launch:
+            return
+
+        message_launch = self.get_message_launch()
+        if self.must_have_message_launch and not message_launch:
+            raise SuspiciousOperation(_("This URL is supposed to be used to launch an LTI activity, but no LTI data was found."))
+
     def get_message_launch(self):
         if not hasattr(self.request, 'lti_13_message_launch'):
             message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage, requests_session=requests_session.get_session())
@@ -93,7 +113,7 @@ class LTI_13_Mixin:
                 message_launch.validate()
                 self.request.lti_13_message_launch = message_launch
             except Exception:
-                return
+                self.request.lti_13_message_launch = None
 
         return self.request.lti_13_message_launch
 

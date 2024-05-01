@@ -30,16 +30,6 @@ import datetime
 import json
 import itertools
 
-class LTI_13_CreateResourceView(MustBeInstructorMixin, generic.edit.CreateView):
-    model = LTI_13_ResourceLink
-    management_tab = 'create_resource'
-    http_methods = ['post']
-    form_class = forms.LTI_13_LinkResourceForm
-    template_name = 'numbas_lti/management/create_resource.html'
-
-    def get_success_url(self):
-        return self.reverse_with_lti('create_exam', args=(self.object.resource.pk,))
-
 class CreateExamView(HelpLinkMixin, MustBeInstructorMixin, generic.edit.CreateView):
     model = Exam
     management_tab = 'create_exam'

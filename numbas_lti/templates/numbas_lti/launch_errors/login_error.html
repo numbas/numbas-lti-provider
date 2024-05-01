@@ -1,0 +1,15 @@
+{% extends "numbas_lti/error_message.html" %}
+{% load i18n %}
+
+{% block body_class %}{{block.super}} launch-error login-error{% endblock %}
+
+{% block title %}{% translate "Login failed" %} - {{block.super}}{% endblock %}
+{% block header_message %}{% translate "Login failed" %}{% endblock %}
+
+{% block main %}
+    <p>{% translate "There was an error and you could not be logged in:" %}</p>
+
+    <blockquote>
+        {{error}}
+    </blockquote>
+{% endblock main %}

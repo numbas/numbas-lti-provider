@@ -146,10 +146,10 @@ def report_outcome_lti_11(resource,user_data):
     message_identifier = uuid.uuid4().int & (1<<64)-1
     result = resource.grade_user(user)
 
-    if user_data.lis_result_sourcedid:
+    if user_data.lti_11.lis_result_sourcedid:
         r = requests_session.get_session().post(
-                user_data.lis_outcome_service_url,
-                data = template.format(message_identifier=message_identifier,sourcedId=user_data.lis_result_sourcedid,result=result),
+                user_data.lti_11.lis_outcome_service_url,
+                data = template.format(message_identifier=message_identifier,sourcedId=user_data.lti_11.lis_result_sourcedid,result=result),
                 auth=OAuth1(user_data.consumer.lti_11.key, user_data.consumer.lti_11.secret, signature_type='auth_header', client_class=Client, force_include_body=True),
                 headers={'Content-Type': 'application/xml'},
                 timeout = getattr(settings,'REQUEST_TIMEOUT',60)

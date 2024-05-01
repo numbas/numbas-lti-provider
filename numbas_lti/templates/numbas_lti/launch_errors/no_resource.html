@@ -1,25 +1,11 @@
 {% extends "numbas_lti/error_message.html" %}
 {% load i18n %}
 
-{% block body_class %}{{block.super}} launch-error authentication-failed{% endblock %}
+{% block body_class %}{{block.super}} launch-error no-resource{% endblock %}
 
-{% block title %}{% translate "Authentication failed" %} - {{block.super}}{% endblock %}
-{% block header_message %}{% translate "Authentication failed" %}{% endblock %}
+{% block title %}{% translate "No resource found" %} - {{block.super}}{% endblock %}
+{% block header_message %}{% translate "No resource found" %}{% endblock %}
 
 {% block main %}
-    <p>{% translate "The most likely cause is a misconfiguration of your LTI tool." %}</p>
-
-    {% if debug %}
-    <h2>POST data</h2>
-    <table>
-        <thead>
-            <tr><th scope="col">{% translate "Key" %}</th><th scope="col">{% translate "Value" %}</th></tr>
-        </thead>
-        <tbody>
-            {% for key,value in post_data %}
-            <tr><td><code>{{key}}</code></td><td><code>{{value}}</code></td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endif %}
+    <p>{% translate "The requested resource was not found. It may have been deleted, or the reference may be invalid." %}</p>
 {% endblock main %}

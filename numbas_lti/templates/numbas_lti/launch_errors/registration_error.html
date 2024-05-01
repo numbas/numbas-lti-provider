@@ -1,0 +1,15 @@
+{% extends "numbas_lti/error_message.html" %}
+{% load i18n %}
+
+{% block body_class %}{{block.super}} launch-error registration-error{% endblock %}
+
+{% block title %}{% translate "Registration failed" %} - {{block.super}}{% endblock %}
+{% block header_message %}{% translate "Registration failed" %}{% endblock %}
+
+{% block main %}
+    <p>{% translate "There was an error during registration:" %}</p>
+
+    <blockquote>
+        {{error}}
+    </blockquote>
+{% endblock main %}

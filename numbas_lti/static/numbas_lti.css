@@ -56,6 +56,9 @@ body {
     background: var(--background-color);
     color: var(--text-color);
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
 }
 * {
     line-height: 1.5em;
@@ -124,6 +127,11 @@ input:not([type="hidden"]), select, textarea {
     background-color: var(--input-bg);
     border: thin solid var(--button-border-color);
     margin: var(--spacing) 0;
+    width: 100%;
+}
+
+textarea {
+    resize: vertical;
 }
 
 :is(input:not([type="hidden"]), select, textarea) ~ :is(button,.button) {
@@ -217,6 +225,8 @@ table.fixed {
 .scrolling-table table {
     table-layout: auto;
     width: auto;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 td, th {
@@ -301,13 +311,21 @@ code {
     display: grid;
     gap: var(--double-space);
     justify-content: space-between;
-    justify-items: center;
+    justify-items: start;
     align-items: baseline;
     color: var(--top-nav-color);
     --muted-color: var(--top-nav-muted-color);
     background: var(--top-nav-bg);
     border-bottom: var(--spacing) solid var(--top-nav-border);
     grid-template-columns: repeat(auto-fill,10em) [last-start] 10em [last-end];
+    grid-area: top-nav;
+}
+
+body:not(.resource-management) > header {
+    margin-top: 0;
+    color: var(--top-nav-color);
+    --muted-color: var(--top-nav-muted-color);
+    background: var(--top-nav-bg);
 }
 
 #top-nav > .navbar-brand {
@@ -319,11 +337,13 @@ code {
     display: flex;
     justify-content: end;
     justify-self: stretch;
+    align-items: center;
 }
 #top-nav > #search-form > input[type="search"] {
     flex-grow: 1;
     margin-right: 0;
     max-width: 40em;
+    width: 100%;
 }
 #top-nav > #search-form > button {
     margin: 0;
@@ -373,6 +393,7 @@ body > header > h1:not(:last-child) {
 
 body > main {
     padding: var(--spacing);
+    flex-grow: 1;
 }
 
 body.centered :is(header, main) {
@@ -398,6 +419,10 @@ body.dashboard ul.actions li {
     padding: 1em 0;
 }
 
+body.error-message main {
+    margin: 0 auto;
+}
+
 #top-nav .navbar-brand .context-name {
     font-style: italic;
 }
@@ -414,7 +439,6 @@ body.dashboard ul.actions li {
 }
 
 .helplink {
-    font-size: 1.1em;
     margin: 0 var(--spacing) var(--double-space) var(--double-space);
     text-align: right;
     float: right;
@@ -465,10 +489,31 @@ body.edit-editor-link .question.getPart(avatar ){
     margin-bottom: var(--double-space);
 }
 
+#skip-to-nav {
+    display: none;
+}
+
 @media (max-width: 30rem) {
+    body {
+        display: grid;
+        grid-template:
+            "header" auto "main" auto "top-nav" 1fr "footer" auto / 100svw;
+        max-width: 100svw;
+    }
+    #skip-to-nav {
+        display: revert;
+    }
     #top-nav {
         grid-template-columns: 1fr;
         grid-auto-flow: row;
+        margin: calc(8 * var(--spacing)) 0 0 0;
+        width: 100%;
+        border-top: var(--spacing) solid var(--top-nav-border);
+        border-bottom: none;
+    }
+    .management-footer {
+        margin-top: 0;
+        border-top: none;
     }
     #top-nav > #admin-link {
         grid-column: 1;

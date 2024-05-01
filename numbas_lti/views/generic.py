@@ -45,7 +45,7 @@ class CreateFileReportView(object):
         fr.outfile.save(filename, ContentFile(''))
         self.report_task(fr, **self.get_task_kwargs())
         template = get_template('numbas_lti/management/file_report_created.html')
-        message = template.render({'report':fr})
+        message = template.render({'report':fr}, request=request)
         messages.add_message(self.request, messages.INFO, message)
 
         return HttpResponseRedirect(self.get_success_url())

@@ -7,11 +7,15 @@
 {% block header_message %}{% translate "Not an LTI launch" %}{% endblock %}
 
 {% block main %}
-    <p>{% translate "This URL is supposed to be used to launch an LTI activity." %}</p>
+    {% if exception %}
+        <p>{{exception}}</p>
+    {% else %}
+        <p>{% translate "This URL is supposed to be used to launch an LTI activity." %}</p>
+    {% endif %}
 
     {% if debug %}
     <h2>POST data</h2>
-    <p>{% blocktranslate %}You should see some LTI-related items in the table below, such as <code>lti_message_type</code> and <code>lti_version</code>." {% endblocktranslate %}</p>
+    <p>{% blocktranslate %}You should see some LTI-related items in the table below, such as <code>lti_message_type</code> and <code>lti_version</code>. {% endblocktranslate %}</p>
     <p>{% translate "If those aren't present, it's likely that you haven't arrived via an LTI launch." %}</p>
     <table>
         <thead>

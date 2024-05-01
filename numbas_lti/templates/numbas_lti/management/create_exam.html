@@ -16,19 +16,27 @@
 
 {% block content %}
     <header>
-        <h1>{% translate "New Numbas activity" %}</h1>
-        <p>{% translate "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
-        {% if editor_links.exists %}
-            <p>{% translate "Please upload one now or select from the list of ready-to-use exams." %}</p>
-        {% else %}
-            <p>{% translate "Please upload one now." %}
-        {% endif %}
         {% helplink page_helplink %}
+        <h1>{% translate "New Numbas activity" %}</h1>
     </header>
 
-    <hr>
-
     <main>
+        <section id="introduction">
+            <p>{% translate "This resource doesn't have a Numbas exam package associated with it yet." %}</p>
+            {% if editor_links.exists %}
+                <p>{% translate "Please upload one now or select from the list of ready-to-use exams." %}</p>
+
+                <ul id="table-of-contents">
+                    <li><a href="#upload-exam">{% translate "Upload an exam package" %}</a></li>
+                    <li><a href="#ready-made-exams">{% translate "Select a ready-made exam" %}</a></li>
+                </ul>
+            {% else %}
+                <p>{% translate "Please upload one now." %}
+            {% endif %}
+        </section>
+
+        <hr/>
+
         <section id="upload-exam">
             <header>
                 <h2>{% icon 'upload' %} {% translate "Upload an exam package" %}</h2>
@@ -50,7 +58,7 @@
 
         <section id="ready-made-exams">
             <header>
-                <h2>{% icon 'transfer' %} {% translate "Select a ready-made exam" %}</h2>
+                <h2>{% icon 'search' %} {% translate "Select a ready-made exam" %}</h2>
             </header>
             <form>
                 <label for="exam-search">
@@ -89,4 +97,6 @@
         </section>
         {% endif %}
     </main>
+
+    {% include "numbas_lti/footer.html" %}
 {% endblock content %}

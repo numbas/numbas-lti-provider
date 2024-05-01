@@ -66,7 +66,7 @@ def url_with_lti(context, view_name, *args, **kwargs):
 
     query_dict = QueryDict(mutable=True)
 
-    if hasattr(context.request, 'lti_13_message_launch'):
+    if hasattr(context.request, 'lti_13_message_launch') and context.request.lti_13_message_launch is not None:
         query_dict['lti_13_launch_id'] = context.request.lti_13_message_launch.get_launch_id()
 
     query = query_dict.urlencode()

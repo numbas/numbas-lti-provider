@@ -1,0 +1,15 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load percentage %}
+{% load i18n %}
+{% load querystring %}
+
+{% block body_class %}dashboard{% endblock %}
+
+{% block management_content %}
+<h2>Grades</h2>
+<ul>
+    {% for grade in grades %}
+    <li>{{grade}}</li>
+    {% endfor %}
+</ul>
+{% endblock management_content %}

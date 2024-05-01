@@ -2,8 +2,9 @@ from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.core.exceptions import SuspiciousOperation
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, JsonResponse, HttpResponseNotAllowed
 from django.shortcuts import render, redirect
+from django.template import loader
 from django.templatetags.static import static
 from django.views import View
 from django.views.generic import TemplateView, FormView, RedirectView
@@ -22,6 +23,7 @@ from pylti1p3.deep_link_resource import DeepLinkResource
 from pylti1p3.contrib.django import DjangoOIDCLogin
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.dynamic_registration import DjangoDynamicRegistration
+from pylti1p3.exception import LtiException
 import urllib.parse
 
 INSTANCE_NAME = settings.INSTANCE_NAME
@@ -108,16 +110,19 @@ class LoginView(mixins.LTI_13_Mixin, View):
 
         target_link_uri = self.request.POST.get('target_link_uri', self.request.GET.get('target_link_uri'))
         if not target_link_uri:
-            raise Exception('Missing "target_link_uri" param')
+            raise Exception('The "target_link_uri" parameter is missing.')
         return target_link_uri
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
-        oidc_login = DjangoOIDCLogin(request, self.tool_conf, launch_data_storage = self.launch_data_storage)
-        target_link_uri = self.get_launch_url()
-        return oidc_login\
-            .enable_check_cookies()\
-            .redirect(target_link_uri)
+        try:
+            oidc_login = DjangoOIDCLogin(request, self.tool_conf, launch_data_storage = self.launch_data_storage)
+            target_link_uri = self.get_launch_url()
+            return oidc_login\
+                .enable_check_cookies()\
+                .redirect(target_link_uri)
+        except Exception as e:
+            return render(request, 'numbas_lti/launch_errors/login_error.html', {'error': e})
 
 class LaunchView(mixins.LTI_13_Mixin, TemplateView):
     """
@@ -127,19 +132,28 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
     """
     http_method_names = ['post']
 
+    must_have_message_launch = True
+
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
+    def http_method_not_allowed(self, request, *args, **kwargs):
+        return render(request, '405.html', {'allowed_methods': self.http_method_names}, status=405)
+
     def authenticate_user(self):
         user = auth.authenticate(self.request)
         if not user:
-            raise Exception("Couldn't authenticate?!!")
+            raise Exception(_("Your login credentials were not valid."))
 
         auth.login(self.request, user)
 
     def post(self, request, *args, **kwargs):
-        self.authenticate_user()
+        try:
+            self.authenticate_user()
+        except Exception as e:
+            return render(self.request, 'numbas_lti/launch_errors/login_error.html', {'error': e})
+
         lti_context, resource_link_id = self.get_lti_context()
 
         message_launch = self.get_message_launch()
@@ -222,9 +236,13 @@ def register_dynamic(request):
         Returns a page which does a JavaScript postMessage call to the platform to tell it that registration is complete.
     """
 
-    registration = DynamicRegistration(request)
+    try:
+        registration = DynamicRegistration(request)
 
-    lti_tool = registration.register()
+        lti_tool = registration.register()
+
+    except LtiException as e:
+        return render(request,'numbas_lti/launch_errors/registration_error.html',{'error': e})
 
     consumer = LTIConsumer.objects.create()
 
@@ -233,6 +251,7 @@ def register_dynamic(request):
     return HttpResponse(registration.complete_html())
 
 class ResourceLaunchView(mixins.LTI_13_Mixin):
+    must_have_message_launch = True
 
     def record_user_data(self, resource_link):
         user = self.request.user
@@ -286,7 +305,7 @@ class TeacherLaunchView(ResourceLaunchView, View):
             numbas_lti.views.entry.record_launch(request, role='teacher', lti_13_resource_link=resource_link)
             return redirect(self.reverse_with_lti('resource_dashboard', args=(resource_link.resource.pk,)))
         else:
-            raise SuspiciousOperation(_("This LTI launch does not have a resource associated with it."))
+            return render(self.request, 'numbas_lti/launch_errors/no_resource.html', status=404)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -316,12 +335,14 @@ class StudentLaunchView(ResourceLaunchView, View):
         return numbas_lti.views.entry.student_launch(request, resource_link.resource)
 
 class MustBeDeepLinkMixin(mixins.LTI_13_Mixin):
-    def dispatch(self, request, *args, **kwargs):
+    must_have_message_launch = True
+
+    def check_message_launch(self):
+        super().check_message_launch()
         message_launch = self.get_message_launch()
+
         if not message_launch.is_deep_link_launch():
             raise SuspiciousOperation(_("This action can only be performed as part of a deep-link launch."))
-
-        return super().dispatch(request, *args, **kwargs)
 
 class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
     template_name = "numbas_lti/lti_13/deep_link.html"

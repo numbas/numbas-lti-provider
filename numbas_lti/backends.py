@@ -163,7 +163,7 @@ class LTI_13_AuthBackend(ModelBackend):
         try:
             lti_tool = self.get_lti_tool(request)
             launch_data = self.message_launch.get_launch_data()
-        except LtiException:
+        except LtiException as e:
             return
 
         sub = launch_data.get('sub')
