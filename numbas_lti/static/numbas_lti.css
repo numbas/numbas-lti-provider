@@ -115,6 +115,7 @@ body {
 :is(button,.button).link {
     background: none;
     border: none;
+    color: var(--link-color);
 }
 
 input:not([type="hidden"]), select, textarea {
@@ -134,7 +135,12 @@ textarea {
     resize: vertical;
 }
 
-:is(input:not([type="hidden"]), select, textarea) ~ :is(button,.button) {
+.form-inline :is(input:not([type="hidden"]), select, textarea) {
+    width: revert;
+    margin: var(--spacing);
+}
+
+:is(input:not([type="hidden"]), select, textarea) + :is(button,.button) {
     margin-left: 0;
     margin-right: 0;
 }
@@ -207,6 +213,11 @@ a.button:not(:hover, :focus) {
     border: thin solid var(--alert-color);
 }
 
+.alert > :is(h1,h2,h3,h4,h5,h6) {
+    margin-top: 0;
+    margin-bottom: var(--spacing);
+}
+
 table {
     margin: var(--double-space) auto;
     border-collapse: collapse;
@@ -227,6 +238,9 @@ table.fixed {
     width: auto;
     margin-left: 0;
     margin-right: 0;
+}
+.scrolling-table table.full-width {
+    width: 100%;
 }
 
 td, th {
@@ -273,6 +287,10 @@ form label {
     margin-top: var(--double-space);
 }
 
+.form-inline label {
+    display: revert;
+}
+
 fieldset {
     border: thin solid;
 }
@@ -298,6 +316,9 @@ form.big p:is(.help-block, .submit-buttons) {
 }
 
 
+progress {
+    margin: 0 var(--spacing);
+}
 
 code {
     background: var(--th-bg);
@@ -374,6 +395,8 @@ body:not(.admin, .resource-management) > header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--spacing);
+    flex-wrap: wrap;
 }
 
 body > header {
