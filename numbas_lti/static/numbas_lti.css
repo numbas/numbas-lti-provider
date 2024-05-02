@@ -396,7 +396,7 @@ body > main {
     flex-grow: 1;
 }
 
-body.centered :is(header, main) {
+body.centered main {
     max-width: var(--readable-width);
     margin-left: auto;
     margin-right: auto;

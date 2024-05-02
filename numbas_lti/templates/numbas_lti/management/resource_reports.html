@@ -21,6 +21,7 @@
                     <th scope="col">{% translate "Status" %}</th>
                     <th scope="col">{% translate "Date created" %}</th>
                     <th scope="col">{% translate "Expiry date" %}</th>
+                    <th scope="col">{% translate "Created by" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,6 +31,7 @@
                     <td>{{report.get_status_display}}</td>
                     <td>{% time_tag report.creation_time %}</td>
                     <td>{{report.expiry_date}}</td>
+                    <td>{{report.created_by.get_full_name}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
