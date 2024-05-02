@@ -13,7 +13,7 @@
 {%endblock stylesheets %}
 
 {% block attempt_content %}
-    <p><a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="text-success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
+    <p><a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review this attempt" %}</span></a></p>
 
     <p><a class="button link" href="{% url_with_lti 'attempt_scorm_listing' attempt.pk %}">{% icon 'list' %} {% translate "View raw SCORM data for this attempt" %}</a></p>
 
