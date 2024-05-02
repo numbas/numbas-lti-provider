@@ -555,7 +555,7 @@ class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,Mus
                 'start_time': a.start_time,
                 'user': { 
                     'full_name': a.user.get_full_name(),
-                    'identifier': a.user_data().identifier(),
+                    'identifier': a.user_data().identifier() if a.user_data() else '',
                 },
             }
             for a in attempts
