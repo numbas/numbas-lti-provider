@@ -36,7 +36,14 @@ class RegisterView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context['domain'] = self.request.get_host().split(':')[0]
         context['register_url'] = self.request.build_absolute_uri(reverse('lti_13:dynamic_registration'))
+        context['email_address'] = settings.DEFAULT_FROM_EMAIL
+        context['launch_url'] = self.request.build_absolute_uri(reverse('lti_13:launch'))
+        context['jwks_url'] = self.request.build_absolute_uri(reverse('lti_13:jwks'))
+        context['login_url'] = self.request.build_absolute_uri(reverse('lti_13:login'))
+        context['canvas_config_url'] = self.request.build_absolute_uri(reverse_lazy('lti_13:canvas_config_json'))
+        context['icon_url'] = self.request.build_absolute_uri(static("icon.png"))
 
         return context
 

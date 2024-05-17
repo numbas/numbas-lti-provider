@@ -22,13 +22,13 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'Numbas LTI provider'
-copyright = '2018-2021, Newcastle University'
+copyright = '2018-2024, Newcastle University'
 author = 'Numbas'
 
 # The short X.Y version
-version = 'v3.2'
+version = 'v4.0'
 # The full version, including alpha/beta/rc tags
-release = 'v3.2'
+release = 'v4.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -63,7 +63,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -79,7 +79,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_book_theme'
 
 html_logo = '_static/images/numbas-logo-large.png'
 
@@ -87,19 +87,22 @@ html_logo = '_static/images/numbas-logo-large.png'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'use_fullscreen_button': False,
+    'use_issues_button': False,
+    'repository_url': 'https://github.com/numbas/numbas-lti-provider',
+    'repository_branch': 'master',
+    'use_repository_button': True,
+    'use_edit_page_button': True,
+    'path_to_docs': 'doc/source',
+    'navigation_with_keys': False,
+}
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
-html_context = {
-  'display_github': True,
-  'github_user': 'numbas',
-  'github_repo': 'numbas-lti-provider',
-  'github_version': 'master/doc/source/',
-}
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

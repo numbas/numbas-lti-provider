@@ -5,7 +5,7 @@ For administrators
 
 .. toctree::
     
-    consumers
+    consumers/index
     editorlink
     stress-tests
     dashboard

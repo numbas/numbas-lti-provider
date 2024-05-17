@@ -5,13 +5,36 @@ Resources
 
 A *resource* is a single Numbas exam, which students access via the VLE.
 
-Resources are automatically created when you launch a new Numbas activity from the VLE as an instructor.
-You must select a Numbas exam to use, and then any students who launch the same activity will be shown the exam.
-
 .. _create-resource:
 
+Creating a link to a resource
+-----------------------------
+
+The process of creating and linking to resources differs depending on whether your VLE is connected using LTI 1.1 or LTI 1.3.
+
+LTI 1.3
+^^^^^^^
+
+When you start creating a link to Numbas from your VLE, you are shown the resource selection view.
+
+.. figure:: _static/deep-link.png
+    :alt: "Select an existing resource to link to, or create a new one". "Context: NUM0001 Introduction to Numbas". A button labelled "Create a new resource", followed by a header "Existing resources", with a list of resources each with a button labelled "Use this resource".
+
+    The resource selection screen.
+
+Usually, you will make a new resource for each link.
+
+If you would like to control access to a resource through your VLE, you might have several links to the same resource, each with different access controls.
+
+LTI 1.1
+^^^^^^^
+
+Resources are automatically created when you launch a new Numbas activity from the VLE as an instructor.
+
 Creating a new resource
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
+
+You must select a Numbas exam to use, and then any students who launch the same activity will be shown the exam.
 
 .. figure:: _static/new_resource.png
     :alt: Form with options to upload a Numbas package, or select a ready-made exam.
@@ -23,6 +46,13 @@ Either upload an exam package that you have downloaded from the Numbas editor or
 When you :ref:`download an exam package <numbas:exam-admin-controls>` from the Numbas editor, you must use the :guilabel:`SCORM package` option.
 
 Once you've selected an exam, you will be shown the dashboard for the resource.
+
+Using an existing resource
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you choose to use an existing resource, any student who open the link from your VLE will be shown that resource.
+
+Note that this does not create a copy of the resource: students will see the same list of attempts, and instructors will see all the same data, on opening any link to the same resource.
 
 Dashboard
 ---------
@@ -41,10 +71,8 @@ Report scores back to VLE
 
 The LTI provider can automatically report scores back to the VLE.
 
-Click the :guilabel:`Report scores back to VLE` button to begin this process.
+You can click the :guilabel:`Report scores back to VLE` button to force scores for every student to be reported back.
 This may take some time; you'll be shown either a success message or any errors encountered while reporting scores.
-
-This isn't supported by every VLE.
 
 .. _discount-question-parts:
 
@@ -129,12 +157,14 @@ On the :guilabel:`Validate a receipt code` page, copy a code from a student into
 If the code is valid, you'll be shown the information from the receipt, as well as a link to view the attempt's data in more detail.
 
 .. figure:: _static/valid-receipt-code.png
+   :alt: A page headed "Validate receipt code". There is a table showing data from the receipt compared with that in the database. There are green ticks on each row.
 
    A validated receipt code.
 
 If the code is invalid, or corresponds to an attempt at a different resource, you'll be told so.
 
-.. figure:: _static/attempts.png
+.. figure:: _static/invalid-receipt-code.png
+   :alt: A page headed "Validate receipt code". There is a red cross and the message "Invalid code: the code you entered is not valid."
 
    An invalid receipt code.
 
@@ -144,6 +174,7 @@ Attempts
 Click on the :guilabel:`Attempts` button at the top of the page to view the attempt management screen.
 
 .. figure:: _static/attempts.png
+    :alt: A page headed "attempts". There are buttons to download attempt data, and then a paged table with a row for each attempt.
 
     The attempt management screen.
 
@@ -184,22 +215,26 @@ This is useful when a student queries the mark they were awarded for a part of t
 
 Note that review mode always opens attempts as if they were completed, even if the student has not yet ended the exam.
 
-Remark an attempt
-^^^^^^^^^^^^^^^^^
+Change scores for a single attempt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Click the :guilabel:`Remark` button to manually change the score awarded for a question part.
+You can override the score that Numbas gave for individual parts of an attempt.
+
+Click an attempt's :guilabel:`Change score` button.
 
 You are shown a list of every question part in the exam.
-Click the pencil icon on the row corresponding to the part you want to change, and enter the new score.
-The new score is saved as you type, and the totals for the question and the whole exam are recalculated automatically.
+Tick the box on the row corresponding to the part you want to change, and enter the new score.
+
+When you've made all the desired changes, click the :guilabel:`Save these scores` button.
+The totals for the question and the whole exam are recalculated automatically.
 
 .. figure:: _static/remark-parts.png
-    :alt: List of question parts. Part a gap 0 of question 1 has been discounted, and question 2 part a gap 0 has had its score manually set to 3.
+    :alt: List of question parts. Part a of question 1 has had its score changed to 2.
 
-    Remarking an attempt.
+    Re-marking an attempt.
 
 .. note::
-   After updating the exam package associated with a resource, you can :ref:`automatically remark all attempts <auto-remark>` using the :guilabel:`Remark` tab.
+   After updating the exam package associated with a resource, you can :ref:`automatically re-mark all attempts <auto-remark>` using the :guilabel:`Re-mark` tab.
 
 .. _attempt-timeline:
 
@@ -214,6 +249,7 @@ This page will update in real-time as the student continues their attempt.
 Click the :guilabel:`Download attempt data in JSON format` button to obtain a ``.json`` file containing all data pertaining to this attempt, including question and part scores, completion status, and the values of question variables.
 
 Numbas uses the `SCORM <https://scorm.com/scorm-explained/>`_ standard to store data about attempts.
+
 By clicking on the :guilabel:`View raw SCORM data for this attempt` button, you can see all of the SCORM data model elements stored for a particular attempt.
 
 This is most useful for debugging connection errors, to confirm that data has been saved.
@@ -221,13 +257,16 @@ This is most useful for debugging connection errors, to confirm that data has be
 If :guilabel:`Most recent value only` is ticked, only the most recent value for each element is shown.
 Untick it to see every value that the element has taken since the start of the attempt.
 
-You can type a regular expression in the :guilabel:`Search for an element` box to narrow down the displayed list of elements.
+You can type a `regular expression <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions>`__ in the :guilabel:`Search for an element` box to narrow down the displayed list of elements.
 
 Delete an attempt
 ^^^^^^^^^^^^^^^^^
 
 Click the :guilabel:`Delete` button to delete an attempt.
-This is permanent; the student will be able to start a new attempt next time they launch the activity.
+
+This is permanent.
+
+The student will be able to start a new attempt next time they launch the activity.
 
 Reopen an attempt
 ^^^^^^^^^^^^^^^^^
@@ -292,6 +331,7 @@ Settings
 -----------------
 
 .. figure:: _static/settings.png
+    :alt: A page headed "Settings", with buttons "Replace exam package" and "Download exam package", followed by groups of form fields.
 
     The resource settings screen.
 
@@ -305,7 +345,7 @@ Because the new version might have changed in a way that is incompatible with ex
 If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`Make existing attempts use this version`.
 All attempts using the old package will be updated to use the new one.
 
-If the new version of the exam fixes problems with marking, you can try :ref:`automatically remarking existing attempts <auto-remark>`.
+If the new version of the exam fixes problems with marking, you can try :ref:`automatically re-marking existing attempts <auto-remark>`.
 
 .. _grading-method:
 
@@ -432,41 +472,41 @@ When a student launches a resource requiring a lockdown app, they will be shown 
 
 .. _auto-remark:
 
-Remark
-------
+Re-mark
+-------
 
 .. figure:: _static/remark-attempts.png
-    :alt: The remark resource view.
+    :alt: The re-mark resource view.
     
-    Remarking a resource.
+    Re-marking a resource.
 
-The :guilabel:`Remark` tab provides an interface for automatically re-running attempts at the resource using the latest version of the exam package.
+The :guilabel:`Re-mark` tab provides an interface for automatically re-running attempts at the resource using the latest version of the exam package.
 If the total score awarded for an attempt is different to the saved score, you can overwrite it.
 
 When the page loads, you are shown all attempts at the resource.
-You can remark individual attempts, or remark all the attempts automatically.
+You can re-mark individual attempts, or re-mark all the attempts automatically.
 
 .. note::
 
-    Remarking an exam is computationally intensive, so your browser may appear unresponsive.
+    Re-marking an exam is computationally intensive, so your browser may appear unresponsive.
 
 If :guilabel:`Use unsubmitted answers` is ticked, then any answers entered by the student but not submitted will be considered to be submitted.
 You can use this in cases where a student forgot to submit their answers and you want to have them marked anyway.
 
-After you click :guilabel:`Remark all attempts`, each attempt will be remarked in turn.
-A progress bar shows the proportion of attempts that have been remarked, and an estimated time until completion.
+After you click :guilabel:`Re-mark all attempts`, each attempt will be re-marked in turn.
+A progress bar shows the proportion of attempts that have been re-marked, and an estimated time until completion.
 
-To stop the process of remarking all attempts, click :guilabel:`Stop marking`.
-If an attempt is currently being remarked, it can't be interrupted - the process will stop after that attempt is finished.
+To stop the process of re-marking all attempts, click :guilabel:`Stop marking`.
+If an attempt is currently being re-marked, it can't be interrupted - the process will stop after that attempt is finished.
 
 You can choose to :guilabel:`Show` all attempts, only attempts with changed scores, or only attempts with either increased or decreased scores.
 
-When one or more attempts have been remarked and produced different scores, the :guilabel:`Save all changed attempts` button becomes available.
+When one or more attempts have been re-marked and produced different scores, the :guilabel:`Save all changed attempts` button becomes available.
 After clicking this button, any changed data corresponding to the shown attempts is saved to the database.
 This data will appear in the :ref:`timeline for the attempt <attempt-timeline>` and will affect the reported scores for the attempt.
 
-Each attempt has its own :guilabel:`Remark` button, which will remark only that attempt.
-When an attempt has been remarked, the change in total score is shown.
+Each attempt has its own :guilabel:`Re-mark` button, which will re-mark only that attempt.
+When an attempt has been re-marked, the change in total score is shown.
 If the total score is different to that stored in the database, a :guilabel:`Save` button appears.
 Clicking the button causes changed data corresponding to the attempt to be saved to the database, updating its timeline and reported score.
 

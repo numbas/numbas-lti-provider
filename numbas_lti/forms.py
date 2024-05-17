@@ -97,10 +97,23 @@ class AccessChangeForm(ModelForm):
 
         return ac
 
-class ResourceSettingsForm(ModelForm):
+class FieldsetFormMixin:
+    def fieldsets(self):
+        for label, fieldnames in self.Meta.fieldsets:
+            yield (label, [self[fieldname] for fieldname in fieldnames if fieldname in self.fields])
+
+class ResourceSettingsForm(FieldsetFormMixin, ModelForm):
+    template_name = 'numbas_lti/management/resource_settings_form.html'
     class Meta:
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
+        fieldsets = [
+            (_('Grading'), ('grading_method', 'include_incomplete_attempts',)),
+            (_('Attempts'), ('max_attempts',)),
+            (_('Feedback'), ('show_marks_when', 'report_mark_time', 'allow_review_from', 'email_receipts',)),
+            (_('Availability'), ('available_from', 'available_until')),
+            (_('Lockdown app'), ('require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password')),
+        ]
         widgets = {
             'allow_review_from': DateTimeInput(format=datetime_format),
             'available_from': DateTimeInput(format=datetime_format),
@@ -137,7 +150,7 @@ class CreateSuperuserForm(UserCreationForm):
         return user
 
 class CreateConsumerForm(ModelForm):
-    key = forms.CharField(strip=True,widget=forms.Textarea(attrs={'class':'form-control'}))
+    key = forms.CharField(strip=True,widget=forms.TextInput(attrs={'class':'form-control'}))
 
     class Meta:
         model = LTIConsumer

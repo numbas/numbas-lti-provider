@@ -235,7 +235,7 @@ table.fixed {
 
 .scrolling-table table {
     table-layout: auto;
-    width: auto;
+    width: 100%;
     margin-left: 0;
     margin-right: 0;
 }
@@ -293,6 +293,7 @@ form label {
 
 fieldset {
     border: thin solid;
+    margin: var(--half-space);
 }
 
 form.big {
@@ -302,11 +303,11 @@ form.big {
     grid-gap: var(--double-space);
 }
 
-form.big > p:not(.help-block,.submit-buttons) {
+form.big p:not(.help-block,.submit-buttons) {
     display: grid;
     grid-gap: var(--spacing);
-    align-items: end;
-    width: min(90vw, 40em);
+    align-items: center;
+    grid-auto-flow: column;
 }
 
 form.big p:is(.help-block, .submit-buttons) {
@@ -315,14 +316,28 @@ form.big p:is(.help-block, .submit-buttons) {
     grid-column: 1/-1;
 }
 
+form.big .fieldsets {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--quad-space);
+    align-items: start;
+}
+
+form.big label {
+    margin: 0;
+}
+
 
 progress {
     margin: 0 var(--spacing);
 }
 
-code {
+code, pre {
     background: var(--th-bg);
     padding: 0 var(--half-space);
+}
+code {
     word-break: break-all;
 }
 
@@ -435,11 +450,15 @@ body.resource-management #top-nav .navbar-brand {
     grid-column: 1/-1;
 }
 
-body.dashboard ul.actions li ~ li {
-    border-top: 1px solid #ccc;
+body.dashboard .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing) var(--quad-space);
 }
-body.dashboard ul.actions li {
-    padding: 1em 0;
+
+body.dashboard #settings-table .danger {
+    text-decoration: dotted underline;
+    font-style: italic;
 }
 
 body.error-message main {
@@ -488,6 +507,18 @@ body.edit-editor-link .project h3 {
 }
 body.edit-editor-link .question.getPart(avatar ){
     width: 2em;
+}
+
+
+body.deep-link #existing-resources > ul > li {
+    margin-bottom: var(--double-space);
+}
+body.deep-link #existing-resources p {
+    margin: 0;
+}
+
+body.remark-attempt #parts input {
+    width: revert;
 }
 
 .card-list {
@@ -556,4 +587,9 @@ body.edit-editor-link .question.getPart(avatar ){
     button, .button {
         white-space: initial;
     }
+
+    form.big p:not(.help-block,.submit-buttons) {
+        grid-auto-flow: row;
+    }
+
 }

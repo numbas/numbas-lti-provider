@@ -2,9 +2,11 @@
 {% load i18n %}
 {% load querystring %}
 
+{% block body_class %}deep-link {{block.super}}{% endblock %}
+
 {% block main %}
 <div class="help-block">
-    <p>{% blocktranslate %}Select a resource to link to, or create a new one.{% endblocktranslate %}</p>
+    <p>{% blocktranslate %}Select an existing resource to link to, or create a new one.{% endblocktranslate %}</p>
 </div>
 
 <p>Context: {{lti_context}}</p>

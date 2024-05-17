@@ -22,7 +22,7 @@
         <p>Set new elements every <input type="number" v-model="element_period" min="1"> {{$filters.pluralize(element_period, 'second')}}.</p>
         <button class="button primary" @click="start_attempt">Start an attempt</button>
 
-        <table>
+        <table class="fixed">
             <thead>
                 <tr>
                     <th scope="col">{{attempts.length}} {{$filters.pluralize(attempts.length, 'attempt')}}.</th>

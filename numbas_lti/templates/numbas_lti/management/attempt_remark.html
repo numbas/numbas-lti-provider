@@ -6,6 +6,8 @@
 
 {% block title %}{% translate "Change scores for question parts" %} - {{block.super}}{% endblock %}
 
+{% block body_class %}remark-attempt {{block.super}}{% endblock %}
+
 {% block stylesheets %}
 {{block.super}}
 <link rel="stylesheet" href="{% static 'attempt_remark.css' %}">

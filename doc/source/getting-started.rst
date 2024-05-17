@@ -28,7 +28,7 @@ Follow the :ref:`installation instructions <installation>` to set up an instance
 Link your VLE
 #############
 
-:ref:`Create a consumer <add-consumer>` in the tool provider's admin interface, and connect to it from your VLE.
+:ref:`Create a consumer <consumer>` in the tool provider's admin interface, and connect to it from your VLE.
 
 This may require support from the administrator of your VLE.
 

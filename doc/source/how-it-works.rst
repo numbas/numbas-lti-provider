@@ -2,7 +2,7 @@ How it works
 ============
 
 * :ref:`Install the software <installation>` on your own server.
-* :ref:`Create an LTI consumer key <add-consumer>` and add the LTI tool to your VLE using the details provided.
+* :ref:`Create a connection <consumer>` between the LTI tool and your VLE.
 * Add a link to the tool from your course's page on the VLE and upload a Numbas exam package.
 * Students click on the link to attempt the exam.
   Their answers and scores are saved as soon as they are submitted.

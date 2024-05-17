@@ -9,6 +9,34 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v4.0
+----
+
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
+.. todo::
+
+    Does the INSTRUCTOR_ROLES setting need to be updated?
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+There are changes to some values in :file:`settings.py`, and new settings ``CACHES`` and ``REQUESTS_USER_AGENT``.
+
+Add the following line to the top of :file:`numbasltiprovider/settings.py`::
+
+    import pylti1p3.roles
+
+Copy the values of the following objects from :file:`numbasltiprovider/settings.py.dist` to :file:`numbasltiprovider/settings.py`:
+
+* ``INSTALLED_APPS`` (adding ``'daphne'`` and ``'numbas_lti.apps.PyLTI1p3ToolConfigBigAutoField'``)
+* ``AUTHENTICATION_BACKENDS`` (replacing ``'numbas_lti.backends.LTIAuthBackend'`` with ``'numbas_lti.backends.LTI_11_AuthBackend'`` and ``'numbas_lti.backends.LTI_13_AuthBackend'``)
+* ``STORAGES`` (replaces ``STATICFILES_STORAGE``)
+* ``LTI_INSTRUCTOR_ROLES`` (there are separate lists for LTI 1.1 and LTI 1.3)
+* ``CACHES`` (new setting)
+* ``REQUESTS_USER_AGENT`` (new setting)
+
 v3.2
 ----
 
