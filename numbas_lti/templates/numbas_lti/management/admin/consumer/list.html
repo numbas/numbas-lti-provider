@@ -22,30 +22,19 @@
                                 <a href="{% url 'view_consumer' consumer.pk %}">{{consumer.title}}</a>
                             </h2>
                         </header>
+                        <dl>
                         {% if consumer.lti_11 %}
-                            <dl>
-                                <dt>{% translate "LTI version" %}</dt>
-                                <dd>1.1</dd>
-
-                                <dt>{% translate "Consumer key" %}</dt>
-                                <dd><code>{{consumer.lti_11.key}}</code></dd>
-
-                                <dt>{% translate "Shared secret" %}</dt>
-                                <dd><code>{{consumer.lti_11.secret}}</code></dd>
-                            </dl>
+                            <dt>{% translate "LTI version" %}</dt>
+                            <dd>1.1</dd>
                         {% endif %}
                         {% if consumer.lti_13 %}
-                            <dl>
-                                <dt>{% translate "LTI version" %}</dt>
-                                <dd>1.3</dd>
+                            <dt>{% translate "LTI version" %}</dt>
+                            <dd>1.3</dd>
 
-                                <dt>{% translate "Name" %}</dt>
-                                <dd>{{consumer.lti_13.tool.title}}</dd>
-
-                                <dt>{% translate "Issuer" %}</dt>
-                                <dd><code>{{consumer.lti_13.tool.issuer}}</code></dd>
-                            </dl>
+                            <dt>{% translate "Issuer" %}</dt>
+                            <dd><code>{{consumer.lti_13.tool.issuer}}</code></dd>
                         {% endif %}
+                        </dl>
                         <p>
                             {% blocktranslate count num_resources=consumer.resources.count %}
                             1 resource.
@@ -61,24 +50,6 @@
                     <p><a href="{% url 'create_consumer' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI 1.1 consumer" %}</a></p>
                 </li>
             </ul>
-        </section>
-
-        <section>
-            <h2>{% translate "Configuration information" %}</h2>
-
-            <h3>LTI 1.1</h3>
-            <dl>
-                <dt>{% translate "Here's the automatic configuration URL:" %}</dt>
-                <dd><pre>{{config_url}}</pre></dd>
-
-                <dt>{% translate "Here is this tool's Launch URL:" %}</dt>
-                <dd><pre>{{entry_url}}</pre></dd>
-                <dt>{% translate "And here's the icon URL:" %}</dt>
-                <dd>
-                    <pre>{{icon_url}}</pre>
-                    <img src="{% static 'icon.png' %}">
-                </dd>
-            </dl>
         </section>
     {% else %}
         <div class="alert warning">

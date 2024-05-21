@@ -22,11 +22,23 @@
     <section id="lti-11-details">
         <p>{% translate "This consumer uses LTI 1.1. These are its connection details." %}</p>
         <dl>
-            <dt>{% translate "Key" %}</dt>
+            <dt>{% translate "Consumer key" %}</dt>
             <dd><code>{{consumer.lti_11.key}}</code></dd>
-            <dt>{% translate "Secret" %}</dt>
+            <dt>{% translate "Shared Secret" %}</dt>
             <dd><code>{{consumer.lti_11.secret}}</code></dd>
+
+            <dt>{% translate "Automatic configuration URL:" %}</dt>
+            <dd><pre>{{config_url}}</pre></dd>
+
+            <dt>{% translate "Launch URL:" %}</dt>
+            <dd><pre>{{entry_url}}</pre></dd>
+            <dt>{% translate "Icon URL:" %}</dt>
+            <dd>
+                <pre>{{icon_url}}</pre>
+                <img src="{% static 'icon.png' %}">
+            </dd>
         </dl>
+        </section>
     </section>
     {% endif %}
 {% endblock management_header %}

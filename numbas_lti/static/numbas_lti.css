@@ -328,6 +328,9 @@ form.big label {
     margin: 0;
 }
 
+dl {
+    margin-bottom: var(--double-space);
+}
 
 progress {
     margin: 0 var(--spacing);

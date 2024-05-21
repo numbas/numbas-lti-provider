@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load icon %}
 
-{% block title %}{% blocktranslate with key=consumer.key %}Delete "{{key}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
+{% block title %}{% blocktranslate with key=consumer.key %}Delete "{{consumer.title}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
 
 {% block management_header %}
     <h1>{% translate "Delete an LTI consumer" %}</h1>
@@ -10,7 +10,7 @@
 
 {% block management_content %}
     <p>
-        {% blocktranslate with key=consumer.key%}Are you sure you want to delete the LTI consumer <code>{{key}}</code>?{% endblocktranslate %}
+        {% blocktranslate with title=consumer.title%}Are you sure you want to delete the LTI consumer <code>{{title}}</code>?{% endblocktranslate %}
     </p>
 
     <p class="danger">{% translate "All attempt data accessed through this consumer will be deleted." %}</p>
