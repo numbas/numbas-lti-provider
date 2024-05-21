@@ -3,11 +3,10 @@
 {% load icon %}
 {% load static %}
 
-{% block title %}{{consumer.key}} - {{block.super}}{% endblock %}
+{% block title %}{{consumer.title}} - {{block.super}}{% endblock %}
 
 {% block stylesheets %}
     {{block.super}}
-    <link rel="stylesheet" href="{% static 'view_consumer.css' %}">
 {%endblock stylesheets %}
 
 {% block management_header %}
@@ -18,8 +17,50 @@
     </p>
     {% endif %}
 
+{% endblock management_header %}
+
+{% block management_content %}
+    <section id="contexts">
+        <h2>{% translate "Contexts" %}</h2>
+
+        {% if not consumer.contexts.count %}
+            <p>{% translate "This consumer has not created any resources yet." %}</p>
+        {% else %}
+            <table class="periods">
+                <colgroup>
+                    <col style="width: 10em;"/>
+                    <col/>
+                    <col style="width: 4em;"/>
+                    <col style="width: 4em;"/>
+                </colgroup>
+                <thead>
+                    <th scope="col">{% translate "Time period" %}</th>
+                    <th scope="col">{% translate "Context" %}</th>
+                    <th scope="col">{% translate "Resources" %}</th>
+                    <th scope="col">{% translate "Attempts" %}</th>
+                </thead>
+                <tbody>
+                {% for period,contexts in period_groups %}
+                    {% for context in contexts %}
+                    <tr>
+                        {% if forloop.first %}<td rowspan="{{contexts|length}}">{% if period %}{{period.name}}{% else %}{% translate "Not in a defined time period" %}{% endif %}</td>{% endif %}
+                        <td><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></td>
+                        <td class="number">{{context.resources.count}}</td>
+                        <td class="number">{{context.num_attempts}}</td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <a class="button default" href="{% url 'consumer_manage_time_periods' consumer.pk %}">{% icon 'calendar' %} Manage time periods</a>
+        {% endif %}
+    </section>
+
     {% if consumer.lti_11 %}
     <section id="lti-11-details">
+        <h2>{% translate "Connection details" %}</h2>
+
         <p>{% translate "This consumer uses LTI 1.1. These are its connection details." %}</p>
         <dl>
             <dt>{% translate "Consumer key" %}</dt>
@@ -28,57 +69,23 @@
             <dd><code>{{consumer.lti_11.secret}}</code></dd>
 
             <dt>{% translate "Automatic configuration URL:" %}</dt>
-            <dd><pre>{{config_url}}</pre></dd>
+            <dd><code>{{config_url}}</code></dd>
 
             <dt>{% translate "Launch URL:" %}</dt>
-            <dd><pre>{{entry_url}}</pre></dd>
+            <dd><code>{{entry_url}}</code></dd>
             <dt>{% translate "Icon URL:" %}</dt>
             <dd>
-                <pre>{{icon_url}}</pre>
+                <code>{{icon_url}}</code>
+                <br>
                 <img src="{% static 'icon.png' %}">
             </dd>
         </dl>
         </section>
     </section>
     {% endif %}
-{% endblock management_header %}
 
-{% block management_content %}
-    <h2>{% translate "Contexts" %}</h2>
-
-    {% if not consumer.contexts.count %}
-        <p>{% translate "This consumer has not created any resources yet." %}</p>
-    {% else %}
-        <table class="periods">
-            <colgroup>
-                <col style="width: 10em;"/>
-                <col/>
-                <col style="width: 4em;"/>
-                <col style="width: 4em;"/>
-            </colgroup>
-            <thead>
-                <th scope="col">{% translate "Time period" %}</th>
-                <th scope="col">{% translate "Context" %}</th>
-                <th scope="col">{% translate "Resources" %}</th>
-                <th scope="col">{% translate "Attempts" %}</th>
-            </thead>
-            <tbody>
-            {% for period,contexts in period_groups %}
-                {% for context in contexts %}
-                <tr>
-                    {% if forloop.first %}<td rowspan="{{contexts|length}}">{% if period %}{{period.name}}{% else %}{% translate "Not in a defined time period" %}{% endif %}</td>{% endif %}
-                    <td><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></td>
-                    <td class="number">{{context.resources.count}}</td>
-                    <td class="number">{{context.num_attempts}}</td>
-                </tr>
-                {% endfor %}
-            {% endfor %}
-            </tbody>
-        </table>
-
-        <a class="button default" href="{% url 'consumer_manage_time_periods' consumer.pk %}">{% icon 'calendar' %} Manage time periods</a>
-    {% endif %}
-
-    <br>
-    <a href="{% url 'delete_consumer' consumer.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</a>
+    <section id="management">
+        <h2>{% translate "Management" %}</h2>
+        <p href="{% url 'delete_consumer' consumer.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</p>
+    </section>
 {% endblock management_content %}

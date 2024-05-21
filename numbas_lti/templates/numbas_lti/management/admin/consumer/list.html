@@ -12,7 +12,7 @@
 {% block management_content %}
     {% if object_list.exists %}
         <section id="consumers">
-            <p>{% translate "The configured LTI consumers are listed below. To access this tool, use the configuration URL below, and the corresponding consumer key and consumer secret." %}</p>
+            <p>{% translate "The configured LTI consumers are listed below." %}</p>
 
             <ul id="consumer-list" class="card-list">
                 {% for consumer in object_list %}
