@@ -2,12 +2,12 @@ from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.core.exceptions import SuspiciousOperation
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, JsonResponse, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, JsonResponse, HttpResponseNotAllowed, Http404
 from django.shortcuts import render, redirect
 from django.template import loader
 from django.templatetags.static import static
 from django.views import View
-from django.views.generic import TemplateView, FormView, RedirectView
+from django.views.generic import TemplateView, FormView, RedirectView, edit, detail
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.urls import reverse, reverse_lazy
@@ -15,7 +15,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _, gettext
 from . import mixins, resource
 from numbas_lti.backends import new_lti_user
-from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData
+from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData, LTIConsumerRegistrationToken
 import numbas_lti.forms
 import numbas_lti.views.entry
 from pathlib import PurePath
@@ -37,7 +37,7 @@ class RegisterView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         context['domain'] = self.request.get_host().split(':')[0]
-        context['register_url'] = self.request.build_absolute_uri(reverse('lti_13:dynamic_registration'))
+        #context['register_url'] = self.request.build_absolute_uri(reverse('lti_13:dynamic_registration'))
         context['email_address'] = settings.DEFAULT_FROM_EMAIL
         context['launch_url'] = self.request.build_absolute_uri(reverse('lti_13:launch'))
         context['jwks_url'] = self.request.build_absolute_uri(reverse('lti_13:jwks'))
@@ -206,6 +206,24 @@ class JWKSView(View):
     def get(self, request, *args, **kwargs):
         return JsonResponse(self.tool_conf.get_jwks(), safe=False)
 
+class CreateRegistrationTokenView(edit.CreateView):
+    model = LTIConsumerRegistrationToken
+    template_name = 'numbas_lti/lti_13/registration/create_token.html'
+    form_class = numbas_lti.forms.CreateRegistrationTokenForm
+
+class RegistrationTokenView(detail.DetailView):
+    model = LTIConsumerRegistrationToken
+    context_object_name = 'token'
+    template_name = 'numbas_lti/lti_13/registration/view_token.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        token = self.get_object()
+        context['registration_url'] = self.request.build_absolute_uri(reverse('lti_13:use_dynamic_registration_token', kwargs={'pk': token.uid,}))
+        
+        return context
+
 class DynamicRegistration(DjangoDynamicRegistration):
     """
         Dynamic registration handler.
@@ -236,26 +254,78 @@ class DynamicRegistration(DjangoDynamicRegistration):
             'label': 'New tool link',
         }]
 
-def register_dynamic(request):
+class UseRegistrationTokenView(edit.DeleteView):
     """
         Dynamic registration view.
         Triggers the dynamic registration handler, which creates an LtiTool entry in the database.
-        Returns a page which does a JavaScript postMessage call to the platform to tell it that registration is complete.
+
+        Documentation about the dynamic registration protocol is at https://www.imsglobal.org/spec/lti-dr/v1p0.
+
+        On GET, shows a confirmation message about using the given token to register the tool with the given OpenID configuration.
+
+        On POST, completes the registration and returns a page which does a JavaScript postMessage call to the platform to tell it that registration is complete.
     """
 
-    try:
-        registration = DynamicRegistration(request)
+    model = LTIConsumerRegistrationToken
+    context_object_name = 'token'
+    template_name = 'numbas_lti/lti_13/registration/use_token.html'
 
-        lti_tool = registration.register()
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        print("!!!!!!!!!!!!!!!!")
+        try:
+            self.get_object()
+        except Http404 as e:
+            print("!!!!!!!!!!!!!!!!")
+            return self.show_error(_('The given registration token could not be found. It may have already been used.'))
 
-    except LtiException as e:
-        return render(request,'numbas_lti/launch_errors/registration_error.html',{'error': e})
+        return super().dispatch(request, *args, **kwargs)
 
-    consumer = LTIConsumer.objects.create()
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
 
-    LTI_13_Consumer.objects.create(consumer=consumer, tool=lti_tool)
+        registration = DynamicRegistration(self.request)
+        context['registration'] = registration
+        openid_configuration = context['openid_configuration'] = registration.get_openid_configuration()
+        context['platform_name'] = registration.get_platform_name(openid_configuration)
 
-    return HttpResponse(registration.complete_html())
+        platform_config = context['platform_config'] = openid_configuration.get('https://purl.imsglobal.org/spec/lti-platform-configuration', {})
+
+        messages_supported = [m.get('type') for m in platform_config.get('messages_supported', [])]
+        supports_resource_link = 'LtiResourceLinkRequest' in messages_supported
+        supports_deep_link = 'LtiDeepLinkingRequest' in messages_supported
+
+        warnings = context['warnings'] = []
+
+        if not supports_resource_link:
+            warnings.append(_('This platform does not support resource links.'))
+
+        if not supports_deep_link:
+            warnings.append(_('This platform does not support deep-linking content selection.'))
+
+        return context
+
+    def show_error(self, message):
+        return render(self.request,'numbas_lti/launch_errors/registration_error.html',{'error': message})
+
+    def form_valid(self, form):
+        token = self.object
+
+        try:
+            registration = DynamicRegistration(self.request)
+
+            lti_tool = registration.register()
+
+            token.delete()
+
+        except LtiException as e:
+            return self.show_error(e)
+
+        consumer = LTIConsumer.objects.create()
+
+        LTI_13_Consumer.objects.create(consumer=consumer, tool=lti_tool)
+
+        return HttpResponse(registration.complete_html())
 
 class ResourceLaunchView(mixins.LTI_13_Mixin):
     must_have_message_launch = True

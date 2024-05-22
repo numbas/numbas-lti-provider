@@ -1,0 +1,19 @@
+{% extends "numbas_lti/lti_13/base.html" %}
+{% load i18n %}
+
+{% block body_class %}login{% endblock %}
+
+{% block title %}{% translate "LTI 1.3 dynamic registration" %} - {{block.super}}{% endblock %}
+
+{% block main %}
+
+    <h1>{% blocktranslate %}LTI 1.3 dynamic registration{% endblocktranslate %}</h1>
+
+    <p>{% blocktranslate with name=token.name %}This registration token is intended to be used for <em>{{name}}</em>{% endblocktranslate %}.</p>
+
+    <p>{% blocktranslate with platform_name=platform_name %}Would you like to use this token to register the platform <strong>{{platform_name}}</strong> with this Numbas LTI tool?{% endblocktranslate %}</p>
+
+    <form method="POST">
+        <button class="primary" type="submit">{% translate "Register" %}</button>
+    </form>
+{% endblock main %}

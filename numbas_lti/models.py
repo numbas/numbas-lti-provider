@@ -128,6 +128,24 @@ class LTIConsumer(models.Model):
         groups = [(p,sorted(cs,key=lambda c:c.name.upper())) for p,cs in out]
         return groups
 
+class LTIConsumerRegistrationToken(models.Model):
+    """ 
+        A token allowing one registration of an LTI consumer by dynamic registration.
+    """
+    uid = models.UUIDField(default = uuid.uuid4, primary_key = True)
+    created = models.DateTimeField(auto_now_add = True)
+    name = models.CharField(max_length=500, verbose_name=_('Intended use for this token'))
+
+    class Meta:
+        verbose_name = _('LTI consumer registration token')
+        verbose_name_plural = _('LTI consumer registration tokens')
+
+    def __str__(self):
+        return f'{self.uid} ({self.name})'
+
+    def get_absolute_url(self):
+        return reverse('lti_13:view_dynamic_registration_token', kwargs={'pk':self.uid})
+
 class LTI_11_Consumer(models.Model):
     consumer = models.OneToOneField(LTIConsumer, related_name='lti_11', on_delete=models.CASCADE)
     key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))

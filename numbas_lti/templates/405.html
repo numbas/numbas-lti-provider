@@ -1,0 +1,10 @@
+{% extends "numbas_lti/error_message.html" %}
+{% load i18n %}
+
+{% block body_class %}{{block.super}} method-not-allowed{% endblock %}
+
+{% block header_message %}{% translate "Method not allowed" %}{% endblock %}
+
+{% block main %}
+    <p>{% blocktranslate with method=request.method %}{{method}} requests are not allowed at this address.{% endblocktranslate %}</p>
+{% endblock main %}

@@ -5,7 +5,9 @@ app_name = 'lti'
 
 urlpatterns = [
     path(r'register/', views.RegisterView.as_view(), name='register'),
-    path(r'register/dynamic/', views.register_dynamic, name='dynamic_registration'),
+    path(r'register/dynamic/new-token/', views.CreateRegistrationTokenView.as_view(), name='new_dynamic_registration_token'),
+    path(r'register/dynamic/<uuid:pk>/view/', views.RegistrationTokenView.as_view(), name='view_dynamic_registration_token'),
+    path(r'register/dynamic/<uuid:pk>/use/', views.UseRegistrationTokenView.as_view(), name='use_dynamic_registration_token'),
     path(r'register/canvas_config.json', views.canvas_config_json, name='canvas_config_json'),
 
     path(r'login/', views.LoginView.as_view(), name='login'),

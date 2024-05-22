@@ -18,9 +18,7 @@
 
 <article id="moodle">
     <h2>Moodle</h2>
-    <p>
-    <p>{% translate "Use this URL to register your platform with this tool, using LTI Dynamic Registration:" %}</p>
-    <code>{{register_url}}</code>
+    <p><a href="{% url 'lti_13:new_dynamic_registration_token' %}">{% translate "Create a dynamic registration token" %}</a>.</p>
 </article>
 
 <hr>
@@ -96,8 +94,7 @@
     <h2>{% translate "Other platforms" %}</h2>
 
     <h3>{% translate "Dynamic registration" %}</h3>
-    <p>{% translate "Use this URL to register your platform with this tool, using LTI Dynamic Registration:" %}</p>
-    <code>{{register_url}}</code>
+    <p><a href="{% url 'lti_13:new_dynamic_registration_token' %}">{% translate "Create a dynamic registration token" %}</a>.</p>
 
     <h3>{% translate "Manual registration" %}</h3>
 

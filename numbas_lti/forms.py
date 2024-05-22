@@ -8,7 +8,7 @@ from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
 from . import requests_session
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTIConsumerRegistrationToken, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink
 from .test_exam import test_zipfile, ExamTestException
 
 from django.core.files import File
@@ -167,6 +167,11 @@ class CreateConsumerForm(ModelForm):
                 secret=get_random_string(20,allowed_chars = string.ascii_lowercase+string.digits)
             )
         return consumer
+
+class CreateRegistrationTokenForm(ModelForm):
+    class Meta:
+        model = LTIConsumerRegistrationToken
+        fields = ('name',)
 
 class LTI_13_LinkResourceForm(ModelForm):
     class Meta:
