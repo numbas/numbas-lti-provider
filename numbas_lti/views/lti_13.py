@@ -272,11 +272,9 @@ class UseRegistrationTokenView(edit.DeleteView):
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
-        print("!!!!!!!!!!!!!!!!")
         try:
             self.get_object()
         except Http404 as e:
-            print("!!!!!!!!!!!!!!!!")
             return self.show_error(_('The given registration token could not be found. It may have already been used.'))
 
         return super().dispatch(request, *args, **kwargs)

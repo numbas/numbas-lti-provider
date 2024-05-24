@@ -11,7 +11,7 @@
 
     <p>{% blocktranslate with name=token.name %}This registration token is intended to be used for <em>{{name}}</em>{% endblocktranslate %}.</p>
 
-    <p>{% blocktranslate with platform_name=platform_name %}Would you like to use this token to register the platform <strong>{{platform_name}}</strong> with this Numbas LTI tool?{% endblocktranslate %}</p>
+    <p>{% blocktranslate with issuer=openid_configuration.issuer platform_name=platform_name %}Would you like to use this token to register the platform <strong>{{platform_name}}</strong> at <a href="{{issuer}}">{{issuer}}</a> with this Numbas LTI tool?{% endblocktranslate %}</p>
 
     <form method="POST">
         <button class="primary" type="submit">{% translate "Register" %}</button>
