@@ -1192,7 +1192,7 @@ class Attempt(models.Model):
                 }
         """
         paths = sorted(self.part_paths(),key=lambda x:(len(x),x))
-        re_path = re.compile('q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
+        re_path = re.compile(r'q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
