@@ -4,6 +4,10 @@
 {% load static %}
 {% load statici18n %}
 
+{% block title %}{% translate "Change scores for question parts" %} - {{block.super}}{% endblock %}
+
+{% block body_class %}remark-attempt {{block.super}}{% endblock %}
+
 {% block stylesheets %}
 {{block.super}}
 <link rel="stylesheet" href="{% static 'attempt_remark.css' %}">
@@ -15,13 +19,13 @@
 {% endblock %}
 
 {% block attempt_content %}
-    <h3>{% trans "Change scores for question parts" %}</h3>
+    <h2>{% translate "Change scores for question parts" %}</h2>
 
-    <p>{% blocktrans %}To change the score for a part, tick the corresponding checkbox, write the new score, and then click <i>Save these scores</i>.{% endblocktrans %}</p>
+    <p>{% blocktranslate %}To change the score for a part, tick the corresponding checkbox, write the new score, and then click <i>Save these scores</i>.{% endblocktranslate %}</p>
 
-    <form id="parts-form" method="POST" class="form-inline">
+    <form id="parts-form" method="POST">
         {% csrf_token %}
-        <table id="parts" class="table table-hover table-condensed">
+        <table id="parts">
             <colgroup>
                 <col class="question">
                 <col class="part">
@@ -30,27 +34,27 @@
             </colgroup>
             <thead>
                 <tr>
-                    <th>{% trans "Question" %}</th>
-                    <th>{% trans "Part" %}</th>
-                    <th>{% trans "Gap" %}</th>
-                    <th>{% trans "Score" %}</th>
-                    <th>{% trans "Original score" %}</th>
+                    <th scope="col">{% translate "Question" %}</th>
+                    <th scope="col">{% translate "Part" %}</th>
+                    <th scope="col">{% translate "Gap" %}</th>
+                    <th scope="col">{% translate "Score" %}</th>
+                    <th scope="col">{% translate "Original score" %}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for part in parts %}
-                <tr class="part {% if part.p == None %}info{% endif %} {% if part.discount %}discounted{% endif %}{% if part.remark %}remarked{% endif %}{% if part.p and not part.has_gaps %}remarkable{% endif %}">
-                    <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
-                    <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
+                <tr class="part {% if part.p == None %}info{% endif %} {% if part.discount %}discounted{% endif %}{% if part.remark %}remarked{% endif %}{% if part.p and not part.has_gaps %} remarkable{% endif %}">
+                    <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}muted not-first-appearance{% endif %}">{{part.q}}</td>
+                    <td class="{% if part.p and part.g %}muted not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
                     <td>{% if part.g %}{{part.g}}{% endif %}</td>
                     <td class="score">
                         {% if part.discount %}
                             Discounted
                         {% else %}
                             {% if part.p and not part.has_gaps %}
-                            <input title="{% blocktrans with path=part.path %}Change score for part {{path}}?{% endblocktrans %}" type="checkbox" class="remark" name="remark-{{part.path}}" {% if part.remark %}checked{% endif %}>
+                            <input title="{% blocktranslate with path=part.path %}Change score for part {{path}}?{% endblocktranslate %}" type="checkbox" class="remark" name="remark-{{part.path}}" {% if part.remark %}checked{% endif %}>
                             <span class="control monospace">
-                                <input title="{% blocktrans with path=part.path %}Score for part {{path}}{% endblocktrans %}" class="form-control score" type="number" name="score-{{part.path}}" data-original-score="{{part.original_score}}" value="{{part.score}}" min="0" max="{{part.max_score}}" step="0.01" {% if not part.remark %}disabled{% endif %}>
+                                <input title="{% blocktranslate with path=part.path %}Score for part {{path}}{% endblocktranslate %}" class="score" type="number" name="score-{{part.path}}" data-original-score="{{part.original_score}}" value="{{part.score}}" min="0" max="{{part.max_score}}" step="0.01" {% if not part.remark %}disabled{% endif %}>
                             </span>
                             {% endif %}
                         {% endif %}
@@ -64,6 +68,6 @@
                 {% endfor %}
             </table>
         </table>
-        <button type="submit" class="btn btn-primary btn-lg">{% trans "Save these scores" %}</button>
+        <button type="submit" class="button primary large">{% translate "Save these scores" %}</button>
     </form>
 {% endblock attempt_content %}

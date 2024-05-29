@@ -1,0 +1,47 @@
+{% extends "numbas_lti/lti_13/base.html" %}
+{% load i18n %}
+{% load querystring %}
+
+{% block body_class %}deep-link {{block.super}}{% endblock %}
+
+{% block main %}
+<div class="help-block">
+    <p>{% blocktranslate %}Select an existing resource to link to, or create a new one.{% endblocktranslate %}</p>
+</div>
+
+<p>Context: {{lti_context}}</p>
+
+<section id="new-resource">
+    <a class="button primary large" href="{% url_with_lti 'lti_13:deep_link_create_resource' %}">{% translate "Create a new resource" %}</a>
+</section>
+
+<hr>
+
+<section id="existing-resources">
+    <h2>{% translate "Existing resources" %}</h2>
+
+    <ul>
+        {% for resource in resources %}
+        <li>
+            <p>
+            <a href="{% url_with_lti 'resource_dashboard' resource.pk %}" target="resource">{% if resource.exam %}{{resource.exam.title}}{% else %}{{resource.title}}{% endif %}</a>
+                ({% blocktranslate count num_attempts=resource.attempts.count %}1 attempt{% plural %}{{num_attempts}} attempts{% endblocktranslate %})
+            </p>
+            <form method="POST" action="{% url_with_lti 'lti_13:deep_link_use_resource' %}">
+                {% csrf_token %}
+                <input type="hidden" name="resource_pk" value="{{resource.pk}}">
+                <button class="button default" type="submit">{% translate "Use this resource" %}</button>
+            </form>
+            {% if resource.lti_13_links.exists %}
+                <p>{% blocktranslate %}Existing links:{% endblocktranslate %}</p>
+                <ul>
+                    {% for link in resource.lti_13_links.all %}
+                    <li>{{link.title}}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock main %}

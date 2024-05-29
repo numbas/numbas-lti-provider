@@ -1,45 +1,53 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
+{% load icon %}
 {% load static %}
+{% load time_tag %}
 
 {% block title %}{{user.get_full_name}} - {{block.super}}{% endblock %}
 
-{% block management_content %}
-<h1>{{user.get_full_name}}</h1>
+{% block body_class %}{{block.super}} user-info{% endblock %}
 
+{% block management_header %}
+    <h1>{{user.get_full_name}}</h1>
+{% endblock management_header %}
+
+{% block management_content %}
 <section>
     <dl>
-        <dt>{% trans "Username" %}</dt>
+        <dt>{% translate "Username" %}</dt>
         <dd>{{user.username}}</dd>
-        <dt>{% trans "Email address" %}</dt>
+
+        <dt>{% translate "Email address" %}</dt>
         <dd><a href="mailto:{{user.email}}">{{user.email}}</a></dd>
-        <dt>{% trans "Consumer" %}</dt>
+
+        <dt>{% translate "Consumer" %}</dt>
         <dd>
             {% for consumer in consumers %}
-            <a href="{% url 'view_consumer' consumer.pk %}"><code>{{consumer.key}}</code></a>
+            <a href="{% url 'view_consumer' consumer.pk %}">{{consumer.title}}</a>
             {% endfor %}
         </dd>
     </dl>
 </section>
 
 {% if user.attempts.exists %}
-<section>
-    <h2>Recent attempts</h2>
-    <table class="table">
+<section id="recent-attempts">
+    <h2>{% translate "Recent attempts" %}</h2>
+    <table>
         <thead>
             <tr>
-                <th>{% trans "Resource" %}</th>
-                <th>{% trans "Start time" %}</th>
-                <th></th>
+                <th scope="col">{% translate "Resource" %}</th>
+                <th scope="col">{% translate "Start time" %}</th>
+                <th scope="col">{% translate "Review" %}</th>
             </tr>
         </thead>
         <tbody>
         {% for attempt in user.attempts.all|slice:":10" %}
         <tr>
-            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="text-muted">{{attempt.resource.context.name}}</span></td>
-            <td>{{attempt.start_time}}</td>
+            <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="muted">{{attempt.resource.lti_contexts.first.name}}</span></td>
+            <td>{% time_tag attempt.start_time %}</td>
             <td>
-                <a class="btn btn-link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="text-success"><span class="glyphicon glyphicon-play"></span> {% trans "Review" %}</span></a>
+                <a class="button link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
             </td>
         </tr>
         {% endfor %}
@@ -49,15 +57,16 @@
 {% endif %}
 
 <section>
-    <h2>{% trans "Recent launches" %}</h2>
-    <h3>{% trans "Attempts" %}</h3>
-    <table class="table">
+    <h2>{% translate "Recent launches" %}</h2>
+
+    <h3>{% translate "Attempts" %}</h3>
+    <table>
         <thead>
             <tr>
-                <th>{% trans "Attempt" %}</th>
-                <th>{% trans "Launch time" %}</th>
-                <th>{% trans "Attempt start time" %}</th>
-                <th>{% trans "Mode" %}</th>
+                <th scope="col">{% translate "Attempt" %}</th>
+                <th scope="col">{% translate "Launch time" %}</th>
+                <th scope="col">{% translate "Attempt start time" %}</th>
+                <th scope="col">{% translate "Mode" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -65,33 +74,34 @@
             <tr>
                 <td>
                     {% if launch.attempt.deleted %}
-                    {{launch.attempt.resource.title}} <em>(deleted)</em>
+                    {{launch.attempt.resource.title}} <em>({% translate "deleted" %})</em>
                     {% else %}
-                    <a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a>
+                    <a href="{% url 'attempt_timeline' launch.attempt.pk %}">{{launch.attempt.resource.title}}</a> - <span class="muted">{{launch.attempt.resource.lti_contexts.first.name}}</span>
                     {% endif %}
                 </td>
-                <td>{{launch.time}}</td>
-                <td>{{launch.attempt.start_time}}</td>
+                <td>{% time_tag launch.time %}</td>
+                <td>{% time_tag launch.attempt.start_time %}</td>
                 <td>{{launch.mode}}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <h3>{% trans "Resources" %}</h3>
-    <table class="table">
+
+    <h3>{% translate "Resources" %}</h3>
+    <table>
         <thead>
             <tr>
-                <th>{% trans "Resource" %}</th>
-                <th>{% trans "Time" %}</th>
-                <th>{% trans "IP address" %}</th>
-                <th>{% trans "Browser user agent" %}</th>
+                <th scope="col">{% translate "Resource" %}</th>
+                <th scope="col">{% translate "Time" %}</th>
+                <th scope="col">{% translate "IP address" %}</th>
+                <th scope="col">{% translate "Browser user agent" %}</th>
             </tr>
         </thead>
         <tbody>
             {% for launch in user.lti_launches.all|slice:":10" %}
             <tr>
-                <td><a href="{% url 'manage_attempts' launch.resource.pk %}?userid={{user.username}}">{{launch.resource.title}} ({{launch.resource.context.name}})</a></td>
-                <td>{{launch.time}}</td>
+                <td><a href="{% url 'manage_attempts' launch.resource.pk %}?userid={{user.username}}">{{launch.resource.title}}</a> - <span class="muted">{{launch.resource.lti_contexts.first.name}}</span></td>
+                <td>{% time_tag launch.time %}</td>
                 <td>{{launch.ip_address}}</td>
                 <td class="monospace">{{launch.user_agent}}</td>
             </tr>

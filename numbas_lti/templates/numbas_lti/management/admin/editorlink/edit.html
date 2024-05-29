@@ -1,67 +1,64 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
 
-{% block title %}{% blocktrans with name=object.name %}Edit link to "{{name}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+{% block title %}{% blocktranslate with name=object.name %}Edit link to "{{name}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
+
+{% block body_class %}{{block.super}} edit-editor-link{% endblock %}
 
 {% block stylesheets %}
 {{block.super}}
 <style type="text/css">
-.project h3 {
-    margin-top: 0;
-    font-size: 1.3em;
-}
-.avatar {
-    width: 2em;
-}
 </style>
 {% endblock stylesheets %}
 
 {% block management_content %}
 <form method="POST">
     {% csrf_token %}
-    {{form|bootstrap}}
+
+    {{form}}
+
     <fieldset>
-        <h2>{% trans "Select projects to make available" %}</h2>
-        <p>{% blocktrans %}To appear in this list, a project must be marked "Visible to non-members" in the editor.{% endblocktrans %}</p>
-        <p>{% trans "Exams from selected projects will be made available to instructors when they create an activity." %}</p>
+        <legend>{% translate "Select projects to make available" %}</legend>
+
+        <p>{% blocktranslate %}To appear in this list, a project must be marked "Visible to non-members" in the editor.{% endblocktranslate %}</p>
+        <p>{% translate "Exams from selected projects will be made available to instructors when they create an activity." %}</p>
+
         {% if project_formset|length %}
-            <p>{% trans "Select the projects you'd like to make available below." %}</p>
+            <p>{% translate "Select the projects you'd like to make available below." %}</p>
         {% else %}
-            <p class="alert alert-warning">{% blocktrans %}No projects have been made visible - go to the editor and mark a project "Visible to non-members" before proceeding.{% endblocktrans %}</p>
+            <p class="alert warning">{% blocktranslate %}No projects have been made visible - go to the editor and mark a project "Visible to non-members" before proceeding.{% endblocktranslate %}</p>
         {% endif %}
+
         {{project_formset.management_form}}
         {{project_formset.non_form_errors}}
-        <table class="table">
+        <table>
             <tbody>
                 {% for pform,project in projects %}
                 <tr class="project">
                     <td>{{pform.use}}</td>
                     <td>
-                        <h3>
-                            <a class="project-name" target="_blank" href="{{pform.homepage.value}}">{{pform.name.value}}</a>
-                            <small class="project-owner">
-                                {% trans "by" %} <a href="{{project.owner.profile}}" target="_blank">
-                                    {% if project.owner.avatar %}<img alt="picture of {{project.owner.full_name}}" src="{{project.owner.avatar.40x40}}" class="avatar"> {% endif %}
-                                    {{project.owner.full_name}}
-                                </a>
-                            </small>
-                        </h3>
+                        <a class="project-name" target="_blank" href="{{pform.homepage.value}}">{{pform.name.value}}</a>
+                        <small class="project-owner">
+                            {% translate "by" %} <a href="{{project.owner.profile}}" target="_blank">
+                                {% if project.owner.avatar %}<img alt="picture of {{project.owner.full_name}}" src="{{project.owner.avatar.40x40}}" class="avatar"> {% endif %}
+                                {{project.owner.full_name}}
+                            </a>
+                        </small>
                         <div class="project-description">{{pform.description.value|safe}}</div>
                         {{pform.errors}}
                     </td>
                     <td>
-                        {% blocktrans count counter=project.num_questions %}
+                        {% blocktranslate count counter=project.num_questions %}
                         1 question
                         {% plural %}
                         {{counter}} questions
-                        {% endblocktrans %}
+                        {% endblocktranslate %}
                         and
-                        {% blocktrans count counter=project.num_exams %}
+                        {% blocktranslate count counter=project.num_exams %}
                         1 exam
                         {% plural %}
                         {{counter}} exams
-                        {% endblocktrans %}
+                        {% endblocktranslate %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -74,6 +71,6 @@
             {{pform.rest_url}}
         {% endfor %}
     </fieldset>
-    <button class="btn btn-primary" type="submit">{% trans "Save" %}</button>
+    <button class="button primary" type="submit">{% translate "Save" %}</button>
 </form>
 {% endblock management_content %}

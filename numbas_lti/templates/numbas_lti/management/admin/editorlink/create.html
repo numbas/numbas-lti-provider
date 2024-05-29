@@ -1,22 +1,19 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
-{% block title %}{% trans "Connect to a Numbas editor" %} - {{block.super}}{% endblock %}a
+{% block title %}{% translate "Connect to a Numbas editor" %} - {{block.super}}{% endblock %}a
+
+{% block management_header %}
+    <h1>{% translate "Connect to a Numbas editor" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
-<div class="container">
-    <header>
-        <h1>{% trans "Connect to a Numbas editor" %}</h1>
-    </header>
+    <form method="POST" action="">
+        {% csrf_token %}
+        {{form}}
 
-    <main>
-        <form method="POST" action="">
-            {% csrf_token %}
-            {{form|bootstrap}}
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Connect" %}</button>
-            <a class="btn btn-link" href="{% url 'list_editorlinks' %}">{% trans "Cancel" %}</a>
-        </form>
-    </main>
-</div>
+        <button type="submit" class="button primary">{% icon 'plus' %} {% translate "Connect" %}</button>
+        <a class="button link" href="{% url 'list_editorlinks' %}">{% translate "Cancel" %}</a>
+    </form>
 {% endblock management_content %}

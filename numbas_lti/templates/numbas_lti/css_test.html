@@ -1,0 +1,113 @@
+{% extends "numbas_lti/base.html" %}
+{% load icon %}
+
+{% block content %}
+<header>
+    <h1>Testing the CSS styles</h1>
+</header>
+
+<main>
+
+    <p>
+        <button type="button">unstyled</button>
+        <button type="button" class="primary">primary</button>
+        <button type="button" class="success">success</button>
+        <button type="button" class="warning">warning</button>
+        <button type="button" class="danger">danger</button>
+        <button type="button" class="muted">muted</button>
+        <button type="button" class="info">info</button>
+        <button type="button" class="link">link</button>
+        <a href="#" class="link">link</a>
+    </p>
+
+    <p>Text that is not styled</p>
+    <div class="alert">
+        <p>An unstyled alert.</p>
+    <p>
+        <button type="button">unstyled</button>
+        <button type="button" class="primary">primary</button>
+        <button type="button" class="success">success</button>
+        <button type="button" class="warning">warning</button>
+        <button type="button" class="danger">danger</button>
+        <button type="button" class="muted">muted</button>
+        <button type="button" class="info">info</button>
+        <button type="button" class="link">link</button>
+    </p>
+    </div>
+
+    <p>Text <span class="success">Text styled success</span> like that</p>
+    <div class="alert success">
+        <p>An alert styled success.</p>
+    <p>
+        <button type="button">unstyled</button>
+        <button type="button" class="primary">primary</button>
+        <button type="button" class="success">success</button>
+        <button type="button" class="warning">warning</button>
+        <button type="button" class="danger">danger</button>
+        <button type="button" class="muted">muted</button>
+        <button type="button" class="info">info</button>
+        <button type="button" class="link">link</button>
+    </p>
+    </div>
+
+    <p>Text <span class="warning">Text styled warning</span> like that</p>
+    <div class="alert warning">
+        <p>An alert styled warning.</p>
+    <p>
+        <button type="button">unstyled</button>
+        <button type="button" class="primary">primary</button>
+        <button type="button" class="success">success</button>
+        <button type="button" class="warning">warning</button>
+        <button type="button" class="danger">danger</button>
+        <button type="button" class="muted">muted</button>
+        <button type="button" class="info">info</button>
+        <button type="button" class="link">link</button>
+    </p>
+    </div>
+
+    <p>Text <span class="danger">Text styled danger</span> like that</p>
+    <div class="alert danger">
+        <p>An alert styled danger.</p>
+    <p>
+        <button type="button">unstyled</button>
+        <button type="button" class="primary">primary</button>
+        <button type="button" class="success">success</button>
+        <button type="button" class="warning">warning</button>
+        <button type="button" class="danger">danger</button>
+        <button type="button" class="muted">muted</button>
+        <button type="button" class="info">info</button>
+        <button type="button" class="link">link</button>
+    </p>
+    </div>
+
+    <p>Text <span class="muted">Text styled muted</span> like that</p>
+    <div class="alert muted">
+        <p>An alert styled muted.</p>
+    <p>
+        <button type="button">unstyled</button>
+        <button type="button" class="primary">primary</button>
+        <button type="button" class="success">success</button>
+        <button type="button" class="warning">warning</button>
+        <button type="button" class="danger">danger</button>
+        <button type="button" class="muted">muted</button>
+        <button type="button" class="info">info</button>
+        <button type="button" class="link">link</button>
+    </p>
+    </div>
+
+    <p>Text <span class="info">Text styled info</span> like that</p>
+    <div class="alert info">
+        <p>An alert styled info.</p>
+    <p>
+        <button type="button">unstyled</button>
+        <button type="button" class="primary">primary</button>
+        <button type="button" class="success">success</button>
+        <button type="button" class="warning">warning</button>
+        <button type="button" class="danger">danger</button>
+        <button type="button" class="muted">muted</button>
+        <button type="button" class="info">info</button>
+        <button type="button" class="link">link</button>
+    </p>
+    </div>
+</main>
+{% endblock content %}

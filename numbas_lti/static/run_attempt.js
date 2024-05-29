@@ -31,6 +31,25 @@ function load_iframe() {
     var iframe_container = document.getElementById('scorm-player-container');
     iframe_container.innerHTML = '';
     iframe_container.appendChild(iframe);
+
+    // TODO - replace with a ResizeObserver
+    function resize_iframe() {
+        var iframe = document.getElementById('scorm-player');
+        if(!(iframe && iframe.contentWindow)) {
+            return;
+        }
+        try {
+            var dh = document.documentElement.getBoundingClientRect().bottom;
+            var ih = iframe.clientHeight;
+            var oh = dh-ih;
+            var wh = window.innerHeight;
+            var h = wh-oh-10;
+            var height = Math.max(500,h);
+            iframe.style.height = height+'px';
+        } catch(e) {
+        }
+    }
+    setInterval(resize_iframe,500);
 }
 
 function show_loading_error(e) {

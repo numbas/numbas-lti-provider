@@ -9,8 +9,8 @@
 	http://www.imsglobal.org/xsd/imslticm_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticm_v1p0.xsd
 	http://www.imsglobal.org/xsd/imslticp_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticp_v1p0.xsd">
 
-	<blti:title>{% trans "Numbas" %}</blti:title>
-    <blti:description>{% trans "Direct students to attempt a Numbas exam. Instructors can review and manage students' attempts. Scores feed back to the grade book." %}</blti:description>
+	<blti:title>{% translate "Numbas" %}</blti:title>
+    <blti:description>{% translate "Direct students to attempt a Numbas exam. Instructors can review and manage students' attempts. Scores feed back to the grade book." %}</blti:description>
 	<blti:icon>{{icon}}</blti:icon>
 	<blti:launch_url>{{entry_url}}</blti:launch_url>
 

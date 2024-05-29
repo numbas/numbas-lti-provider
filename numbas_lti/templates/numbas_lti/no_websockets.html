@@ -1,17 +1,9 @@
-{% extends "numbas_lti/base.html" %}
+{% extends "numbas_lti/error_message.html" %}
 {% load percentage %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <div class="alert alert-warning">
-    <header>
-        <h1><span class="glyphicon glyphicon-exclamation-sign"></span> {% trans "Incompatible browser" %}</h1>
-    </header>
+{% block header_message %}{% translate "Incompatible browser" %}{% endblock %}
 
-    <main>
-        <p>{% trans "Your browser does not support WebSockets, which are required. Please try a different browser - Google Chrome or Mozilla Firefox will work." %}</p>
-    </main>
-    </div>
-</div>
-{% endblock content %}
+{% block main %}
+    <p>{% translate "Your browser does not support WebSockets, which are required. Please try a different browser - Google Chrome, Microsoft Edge, Safari or Firefox will work." %}</p>
+{% endblock main %}

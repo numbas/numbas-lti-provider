@@ -2,13 +2,11 @@
 {% load i18n %}
 
 {% block content %}
-<div class="container">
     <header>
-        <h1>{% trans "Consumer registration not currently supported" %}</h1>
+        <h1>{% translate "Consumer registration not currently supported" %}</h1>
     </header>
     <main>
-        <p>{% trans "Sorry, automatic registration requests aren't currently supported. Instead, use the IMS cartridge URL:" %}</p>
+        <p>{% translate "Sorry, automatic registration requests aren't currently supported. Instead, use the IMS cartridge URL:" %}</p>
         <pre>{{config_url}}</pre>
     </main>
-</div>
 {% endblock content %}

@@ -11,7 +11,7 @@ from huey.contrib.djhuey import periodic_task, task, db_periodic_task, db_task
 import json
 import logging
 from numbas_lti.report_outcome import ReportOutcomeException
-from numbas_lti.models import Attempt, ScormElement, diff_scormelements, FileReport
+from numbas_lti.models import Attempt, ScormElement, diff_scormelements, FileReport, EditorLink, Resource
 import re
 
 logger = logging.getLogger(__name__)
@@ -19,22 +19,26 @@ logger = logging.getLogger(__name__)
 @db_task(priority=1)
 def editorlink_update_cache(el):
     logger.debug(f"Update the editor link {el}")
+    el = EditorLink.objects.get(pk=el.pk)
     el.update_cache()
     el.save()
 
 @db_task(priority=300)
 def send_attempt_completion_receipt(attempt):
     logger.debug(f"Send a completion receipt for attempt {attempt}")
+    attempt = Attempt.objects.get(pk=attempt.pk)
     attempt.send_completion_receipt()
 
 @db_task(priority=200)
 def resource_report_scores(resource):
     logger.debug(f"Report scores for resource {resource}")
+    resource = Resource.objects.get(pk=resource.pk)
     resource.report_scores()
 
 @db_task(priority=200)
 def attempt_report_outcome(attempt):
     logger.debug(f"Report score for attempt {attempt}")
+    attempt = Attempt.objects.get(pk=attempt.pk)
     try:
         attempt.report_outcome()
     except ReportOutcomeException:
@@ -161,7 +165,10 @@ def report_task(writer):
                 writer(fr,f,**kwargs)
             fr.status = 'complete'
             fr.save()
-        except Exception:
+        except Exception as e:
+            print("ERROR")
+            import traceback
+            traceback.print_exception(e)
             fr.status = 'error'
             fr.save()
 
@@ -188,6 +195,7 @@ def csv_report_task(row_iterator):
 
 @csv_report_task
 def resource_scores_csv_report(fr):
+    logger.debug(f"Create scores CSV report {fr}")
     resource = fr.resource
 
     headers = [_(x) for x in ['First name','Last name','Email','Username','Percentage','Raw score', 'Max score']]
@@ -196,7 +204,8 @@ def resource_scores_csv_report(fr):
     for student in resource.students().all():
         user_data = resource.user_data(student)
         username = '' if user_data is None else user_data.get_source_id()
-        scaled_score = resource.grade_user(student)
+        attempt = resource.grade_user(student)
+        scaled_score = attempt.scaled_score
         student_attempts = resource.attempts.filter(user=student)
         max_score = max(a.max_score for a in student_attempts) if student_attempts.exists() else 0
         raw_score = scaled_score * max_score    # This might introduce a rounding error

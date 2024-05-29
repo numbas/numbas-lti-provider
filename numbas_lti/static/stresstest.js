@@ -1,12 +1,6 @@
-var _ = gettext;
+import {createApp} from './vue.js';
 
-Vue.filter('pluralize',function(n,word,plural) {
-    if(n==1) {
-        return word;
-    } else {
-        return plural || word+'s';
-    }
-});
+var _ = gettext;
 
 function poisson(lambda) {
   var L = Math.exp(-lambda);
@@ -93,57 +87,66 @@ Attempt.prototype = {
     }
 }
 
-var app = new Vue({
-    el: '#app',
-    data: {
-        csrftoken: getCSRFToken(),
-        num_attempts_to_start: 50,
-        time_to_start: '',
-        start_attempts_timeout: null,
-        num_elements_set_on_creation: 100,
-        attempts: [],
-        element_period: 60,
-        last_tick: null
+const app = createApp({
+    data() {
+        return {
+            csrftoken: getCSRFToken(),
+            num_attempts_to_start: 50,
+            time_to_start: '',
+            start_attempts_timeout: null,
+            num_elements_set_on_creation: 100,
+            attempts: [],
+            element_period: 60,
+            last_tick: null
+        }
     },
+
+    mounted() {
+        setInterval(() => {
+            this.tick();
+        },1000);
+    },
+
     methods: {
         start_next_minute: function() {
             var t = new Date((new Date()).getTime()+60000);
             this.time_to_start = t.toTimeString().slice(0,5);
         },
         start_attempts: function() {
-            for(var i=0;i<app.num_attempts_to_start;i++) {
-                app.start_attempt();
+            for(var i=0;i < this.num_attempts_to_start;i++) {
+                this.start_attempt();
             }
-            app.time_to_start = '';
+            this.time_to_start = '';
         },
         start_attempt: function() {
-            var attempt = new Attempt();
-            app.attempts.push(attempt);
+            let attempt = new Attempt();
+            this.attempts.push(attempt);
+            attempt = this.attempts[this.attempts.length-1];
             fetch('new-attempt',{
                 method:'POST',
                 credentials:'same-origin',
                 headers:{
                     'X-CSRFToken': this.csrftoken}
-            }).then(function(response) {
+            }).then(response => {
                 return response.json();
-            }).then(function(data) {
+            }).then(data => {
                 attempt.begin(data);
-                for(var i=0;i<app.num_elements_set_on_creation;i++) {
+                for(var i=0;i<this.num_elements_set_on_creation;i++) {
                     attempt.set_element();
                 }
-            },function(error) {
+            }).catch(error => {
                 console.error(interpolate(_("Error starting attempt: %s"),[error]));
-            })
+            });
         },
         wipe: function() {
-            app.attempts.map(function(attempt){ attempt.end(); });
+            this.attempts.forEach(attempt => attempt.end());
             fetch('wipe',{
                 method:'POST',
                 credentials:'same-origin',
                 headers:{
                     'X-CSRFToken': this.csrftoken}
-            }).then(function(response) {
-                app.attempts = [];
+            }).then((response) => {
+                this.attempts = [];
             });
         },
         tick: function() {
@@ -151,7 +154,7 @@ var app = new Vue({
             if(this.last_tick) {
                 var lambda = 1/this.element_period;
                 var dt = (d-this.last_tick)/1000;
-                this.attempts.forEach(function(attempt) {
+                this.attempts.forEach(attempt => {
                     attempt.ticker(dt,lambda);
                 });
             }
@@ -171,16 +174,16 @@ var app = new Vue({
             return d;
         },
         num_attempts_waiting_to_start: function() {
-            return this.attempts.filter(function(a) { return !a.begun }).length;
+            return this.attempts.filter(a => !a.begun).length;
         },
         num_attempts_without_socket: function() {
-            return this.attempts.filter(function(a) { return a.socket_state!='open' }).length;
+            return this.attempts.filter(a => a.socket_state!='open').length;
         },
         num_attempts_queued: function() {
-            return this.attempts.filter(function(a) { return a.queue_length>0 || a.num_batches>0 }).length;
+            return this.attempts.filter(a => a.queue_length>0 || a.num_batches>0).length;
         },
         num_attempts_waiting_for_ajax: function() {
-            return this.attempts.filter(function(a) { return a.pending_ajax }).length;
+            return this.attempts.filter(a => a.pending_ajax).length;
         }
     },
     watch: {
@@ -191,8 +194,8 @@ var app = new Vue({
             if(date) {
                 var seconds = date - (new Date());
                 if(seconds>0) {
-                    this.start_attempts_timeout = setTimeout(function() {
-                        app.start_attempts();
+                    this.start_attempts_timeout = setTimeout(() => {
+                        this.start_attempts();
                     },seconds);
                 }
             }
@@ -200,6 +203,14 @@ var app = new Vue({
     }
 });
 
-setInterval(function() {
-    app.tick();
-},1000);
+app.config.globalProperties.$filters = {
+    pluralize: function(n,word,plural) {
+        if(n==1) {
+            return word;
+        } else {
+            return plural || word+'s';
+        }
+    }
+}
+
+app.mount('#app');

@@ -3,17 +3,18 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 from django.conf import settings
 from django.forms import ModelForm, Form
+import django.forms.renderers
 from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings
+from . import requests_session
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTIConsumerRegistrationToken, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink
 from .test_exam import test_zipfile, ExamTestException
 
 from django.core.files import File
 from io import BytesIO
 
 from django.contrib.auth.forms import UserCreationForm
-import bootstrap_datepicker_plus
 from django.contrib.auth.models import User
 import os
 import requests
@@ -26,35 +27,24 @@ import string
 
 datetime_format = get_format('DATETIME_INPUT_FORMATS')[0]
 
-class DateTimePickerInput(bootstrap_datepicker_plus.DateTimePickerInput):
-    _default_options = dict(bootstrap_datepicker_plus.DateTimePickerInput._default_options, **{
-        'sideBySide': True,
-        'useCurrent': False,
-    })
-
-    def __init__(self, attrs=None, *args, **kwargs):
-        attrs = attrs if attrs else {}
-        if 'autocomplete' not in attrs:
-            attrs['autocomplete'] = 'no'
-        super().__init__(attrs, *args, **kwargs)
-
-class DatePickerInput(bootstrap_datepicker_plus.DatePickerInput):
-    _default_options = dict(bootstrap_datepicker_plus.DateTimePickerInput._default_options, **{
-        'format': 'YYYY-MM-DD',
-    })
-
-    def __init__(self, attrs=None, *args, **kwargs):
-        attrs = attrs if attrs else {}
-        if 'autocomplete' not in attrs:
-            attrs['autocomplete'] = 'no'
-        super().__init__(attrs, *args, **kwargs)
-
 def split_newlines_commas(text):
     items = [x.strip() for x in sum((l.split(',') for l in text.split('\n')),[])]
     return [x for x in items if x!='']
 
+class MultipleStringField(forms.MultipleChoiceField):
+    """
+        A field that accepts any list of strings.
+    """
+
+    def valid_value(self, value):
+        return True
+
+class DateTimeInput(forms.DateTimeInput):
+    input_type = 'datetime-local'
+
 class AccessChangeForm(ModelForm):
 
+    nrps_applies_to = MultipleStringField(required=False, label=_('Usernames'))
     usernames = forms.CharField(required=False, label=_('Usernames'), widget=forms.Textarea(attrs={'rows':5}), help_text=_('Enter usernames, separated by commas or one on each line.'))
     emails = forms.CharField(required=False, label=_('Email addresses'), widget=forms.Textarea(attrs={'rows':5}), help_text=_('Enter email addresses, separated by commas or one on each line.'))
     extend_deadline_days = forms.IntegerField(required=False, label=_('days'), widget=forms.NumberInput(attrs={'class':'form-control'}))
@@ -77,8 +67,8 @@ class AccessChangeForm(ModelForm):
         ]
         widgets = {
             'description': forms.TextInput(),
-            'available_from': DateTimePickerInput(format=datetime_format),
-            'available_until': DateTimePickerInput(format=datetime_format),
+            'available_from': DateTimeInput(format=datetime_format),
+            'available_until': DateTimeInput(format=datetime_format),
             'extend_duration': forms.TextInput(attrs={'class':'form-control'}),
             'extend_duration_units': forms.Select(attrs={'class':'form-control'}),
             'resource': forms.HiddenInput(),
@@ -101,7 +91,9 @@ class AccessChangeForm(ModelForm):
 
         if commit:
             ac.save()
-            usernames = split_newlines_commas(self.cleaned_data['usernames'])
+            nrps_usernames = self.cleaned_data['nrps_applies_to']
+            text_usernames = split_newlines_commas(self.cleaned_data['usernames'])
+            usernames = text_usernames + nrps_usernames
             ac.usernames.exclude(username__in=usernames).delete()
             new_usernames = set(usernames) - set(ac.usernames.values_list('username',flat=True))
             for username in new_usernames:
@@ -117,14 +109,27 @@ class AccessChangeForm(ModelForm):
 
         return ac
 
-class ResourceSettingsForm(ModelForm):
+class FieldsetFormMixin:
+    def fieldsets(self):
+        for label, fieldnames in self.Meta.fieldsets:
+            yield (label, [self[fieldname] for fieldname in fieldnames if fieldname in self.fields])
+
+class ResourceSettingsForm(FieldsetFormMixin, ModelForm):
+    template_name = 'numbas_lti/management/resource_settings_form.html'
     class Meta:
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
+        fieldsets = [
+            (_('Grading'), ('grading_method', 'include_incomplete_attempts',)),
+            (_('Attempts'), ('max_attempts',)),
+            (_('Feedback'), ('show_marks_when', 'report_mark_time', 'allow_review_from', 'email_receipts',)),
+            (_('Availability'), ('available_from', 'available_until')),
+            (_('Lockdown app'), ('require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password')),
+        ]
         widgets = {
-            'allow_review_from': DateTimePickerInput(format=datetime_format),
-            'available_from': DateTimePickerInput(format=datetime_format),
-            'available_until': DateTimePickerInput(format=datetime_format),
+            'allow_review_from': DateTimeInput(format=datetime_format),
+            'available_from': DateTimeInput(format=datetime_format),
+            'available_until': DateTimeInput(format=datetime_format),
             'lockdown_app_password': forms.TextInput(attrs={'class':'form-control', 'placeholder': getattr(settings,'LOCKDOWN_APP',{}).get('password','')}),
         }
 
@@ -157,16 +162,43 @@ class CreateSuperuserForm(UserCreationForm):
         return user
 
 class CreateConsumerForm(ModelForm):
+    key = forms.CharField(strip=True,widget=forms.TextInput(attrs={'class':'form-control'}))
+
     class Meta:
         model = LTIConsumer
-        fields = ('key','url','identifier_field',)
+        fields = ('url','identifier_field',)
 
     def save(self,commit=True):
         consumer = super(CreateConsumerForm,self).save(commit=False)
-        consumer.secret = get_random_string(20,allowed_chars = string.ascii_lowercase+string.digits)
         if commit:
             consumer.save()
+            key = self.cleaned_data['key']
+            lti_11_consumer = LTI_11_Consumer.objects.create(
+                consumer=consumer,
+                key=key,
+                secret=get_random_string(20,allowed_chars = string.ascii_lowercase+string.digits)
+            )
         return consumer
+
+class CreateRegistrationTokenForm(ModelForm):
+    class Meta:
+        model = LTIConsumerRegistrationToken
+        fields = ('name',)
+
+class LTI_13_LinkResourceForm(ModelForm):
+    class Meta:
+        model = LTI_13_ResourceLink
+        fields = ('resource_link_id', 'title', 'description', 'context')
+
+    def save(self, commit=True):
+        if commit:
+            try:
+                resource = self.instance.resource
+            except Resource.DoesNotExist:
+                resource = Resource.objects.create(title = self.cleaned_data['title'], description=self.cleaned_data['description'])
+                self.instance.resource = resource
+
+        return super().save(commit=commit)
 
 class CreateExamForm(ModelForm):
     package = forms.FileField(required=False)
@@ -202,7 +234,7 @@ class CreateExamForm(ModelForm):
             query = parse_qs(qs)
             query.setdefault('scorm','')
             retrieve_url = urlunparse((scheme, netloc, path, params, urlencode(query,True), fragment))
-            package_bytes = requests.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
+            package_bytes = requests_session.get_session().get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
             cleaned_data['package'] = File(BytesIO(package_bytes),name='exam.zip')
 
         if getattr(settings,'TEST_UPLOADED_EXAMS',False) and hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
@@ -242,7 +274,7 @@ class CreateEditorLinkForm(ModelForm):
     def clean_url(self):
         url = self.cleaned_data['url']
         try:
-            response = requests.get('{}/api/handshake'.format(url), timeout=getattr(settings,'REQUEST_TIMEOUT',60))
+            response = requests_session.get_session().get('{}/api/handshake'.format(url), timeout=getattr(settings,'REQUEST_TIMEOUT',60))
             if response.status_code != 200:
                 raise Exception(_("Request returned HTTP status code") + " {}.".format(response.status_code))
             data = response.json()
@@ -266,8 +298,8 @@ class ConsumerTimePeriodForm(ModelForm):
         fields = ['name','start','end']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
-            'start': DatePickerInput(attrs={'class':'form-control','type':'date'}),
-            'end': DatePickerInput(attrs={'class':'form-control','type':'date'}),
+            'start': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'end': forms.DateInput(attrs={'class':'form-control','type':'date'}),
         }
 
 ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)

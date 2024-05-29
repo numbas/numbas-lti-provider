@@ -1,7 +1,7 @@
-from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url
+from .mixins import static_view, request_is_instructor, get_lti_entry_url, get_config_url, reverse_with_lti
 from numbas_lti import lockdown_app
 from numbas_lti.util import add_query_param
-from numbas_lti.models import LTIConsumer, LTIUserData, LTILaunch
+from numbas_lti.models import LTIConsumer, LTIUserData, LTI_11_UserData, LTILaunch
 from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -21,12 +21,17 @@ no_websockets = static_view('numbas_lti/no_websockets.html')
 not_authorized = static_view('numbas_lti/not_authorized.html')
 
 @csrf_exempt
+def css_test(request):
+    if not User.objects.filter(is_superuser=True).exists():
+        return redirect(reverse('create_superuser'))
+    context = {}
+    return render(request,'numbas_lti/css_test.html',context)
+
+@csrf_exempt
 def index(request):
     if not User.objects.filter(is_superuser=True).exists():
         return redirect(reverse('create_superuser'))
-    context = {
-        'entry_url': get_lti_entry_url(request),
-    }
+    context = {}
     return render(request,'numbas_lti/index.html',context)
 
 @csrf_exempt
@@ -60,7 +65,7 @@ def do_lti_entry(request):
         return not_an_lti_launch(request)
 
     launch_types = {
-        'basic-lti-launch-request': basic_lti_launch,
+        'basic-lti-launch-request': basic_lti_11_launch,
         'ToolProxyRegistrationRequest': consumer_registration_request,
     }
     
@@ -93,13 +98,13 @@ def not_post(request):
 def not_an_lti_launch(request):
     return render(request,'numbas_lti/launch_errors/not_an_lti_launch.html',{'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 
-def basic_lti_launch(request):
+def basic_lti_11_launch(request):
     try:
         request.resource
     except AttributeError:
         return no_resource(request)
 
-    consumer = request.resource.context.consumer
+    consumer = request.resource.lti_11_contexts().first().consumer
 
     is_instructor = request_is_instructor(request)
 
@@ -111,44 +116,70 @@ def basic_lti_launch(request):
         'consumer': consumer, 
         'consumer_user_id': user_id,
     }
-    user_data = LTIUserData.objects.filter(**user_data_args).last()
-    if user_data is None:
-        user_data = LTIUserData.objects.create(**user_data_args)
+    user_data, _ = LTIUserData.objects.update_or_create(
+        **user_data_args,
+        defaults = {
+            "is_instructor": is_instructor
+        }
+    )
 
-    user_data.lis_result_sourcedid = request.LTI.get('lis_result_sourcedid')
-    user_data.lis_person_sourcedid = request.LTI.get('lis_person_sourcedid','')
-    user_data.lis_outcome_service_url = request.LTI.get('lis_outcome_service_url')
-    user_data.is_instructor = is_instructor
-    user_data.save()
+    lti_11_data, _ = LTI_11_UserData.objects.update_or_create(
+        user_data=user_data,
+        defaults = {
+            "lis_result_sourcedid": request.LTI.get('lis_result_sourcedid'),
+            "lis_person_sourcedid": request.LTI.get('lis_person_sourcedid',''),
+            "lis_outcome_service_url": request.LTI.get('lis_outcome_service_url'),
+        }
+    )
 
-    ip_address, ip_routable = get_client_ip(request)
+    record_launch(request, role='teacher' if is_instructor else 'student', lti_11_resource_link=request.lti_11_resource_link)
+
+    if is_instructor:
+        return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
+    else:
+        return student_launch(request, request.resource)
+
+def record_launch(request, role='', lti_11_resource_link=None, lti_13_resource_link=None):
+    ip_address, _ = get_client_ip(request)
 
     user_agent = request.META.get('HTTP_USER_AGENT')
 
+    resource = None
+
+    if lti_11_resource_link is not None:
+        resource = lti_11_resource_link.resource
+
+    if lti_13_resource_link is not None:
+        resource = lti_13_resource_link.resource
+
     launch = LTILaunch.objects.create(
         user = request.user,
-        resource = request.resource,
+        resource = resource,
         user_agent = user_agent,
-        ip_address = ip_address
+        ip_address = ip_address,
+        role = role,
+        lti_11_resource_link = lti_11_resource_link,
+        lti_13_resource_link = lti_13_resource_link
     )
 
-    if is_instructor:
-        if not request.resource.exam:
-            return redirect(reverse('create_exam',args=(request.resource.pk,)))
-        else:
-            return redirect(reverse('resource_dashboard',args=(request.resource.pk,)))
+
+def student_launch(request, resource):
+    is_instructor = request_is_instructor(request)
+
+    if not resource.exam:
+        return render(request,'numbas_lti/exam_not_set_up.html',{})
+
+    require_lockdown_app, _, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
+    if require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
+        return show_lockdown_app(request)
+
+    if require_lockdown_app=='seb' and not lockdown_app.is_seb(request, seb_settings):
+        return show_seb_link(request)
+
+    if not request.resource.exam:
+        return render(request,'numbas_lti/exam_not_set_up.html',{})
     else:
-        require_lockdown_app, _, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
-        if require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
-            return show_lockdown_app(request)
-
-        if require_lockdown_app=='seb' and not lockdown_app.is_seb(request, seb_settings):
-            return show_seb_link(request)
-
-        if not request.resource.exam:
-            return render(request,'numbas_lti/exam_not_set_up.html',{})
-        else:
-            return redirect(reverse('show_attempts'))
+        return redirect(reverse_with_lti('show_attempts'))
 
 def show_lockdown_app(request):
     lockdown_url = lockdown_app.make_link(request)

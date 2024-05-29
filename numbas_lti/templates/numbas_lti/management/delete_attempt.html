@@ -1,10 +1,14 @@
 {% extends "numbas_lti/management/attempt_base.html" %}
 {% load i18n %}
+{% load querystring %}
+
+{% block title %}{% blocktranslate with name=attempt.user.get_full_name %}Delete an attempt by {{name}}{% endblocktranslate %} - {{block.super}}{% endblock title %}
 
 {% block attempt_content %}
-<p>{% trans "Are you sure you want to delete this attempt?" %}</p>
-<form action="" method="POST">
-    {% csrf_token %}
-    <p><button type="submit" class="btn btn-danger">{% trans "Delete it" %}</button> <a class="btn btn-link" href="{% url 'manage_attempts' attempt.resource.pk %}">{% trans "Cancel" %}</a></p>
-</form>
+    <p>{% translate "Are you sure you want to delete this attempt?" %}</p>
+
+    <form action="" method="POST">
+        {% csrf_token %}
+        <p><button type="submit" class="button danger">{% translate "Delete it" %}</button> <a class="button link" href="{% url_with_lti 'manage_attempts' attempt.resource.pk %}">{% translate "Cancel" %}</a></p>
+    </form>
 {% endblock attempt_content %}

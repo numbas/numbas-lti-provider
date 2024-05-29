@@ -5,9 +5,11 @@
 Numbas LTI provider
 ===================
 
-This is a `Basic LTI 1.1 <https://www.imsglobal.org/basic-overview-how-lti-works>`_ tool provider, to run `Numbas <http://www.numbas.org.uk>`_ exams in any LTI-compatible virtual learning environment.
+This is an :term:`LTI` tool, to run `Numbas <http://www.numbas.org.uk>`_ exams in any LTI-compatible virtual learning environment.
 
-The tool handles attempt data, and as well as offering CSV exports of student scores can report scores back to the host VLE's gradebook.
+LTI 1.1 and 1.3 (LTI Advantage) are supported.
+
+The tool handles attempt data, and as well as offering CSV exports of student scores can report scores back to the host :term:`VLE`'s gradebook.
 
 Contents
 ########

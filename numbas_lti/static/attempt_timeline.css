@@ -1,25 +1,25 @@
-body:not(.loaded) #loaded,
+body:not(.loaded) #app,
 body.loaded #loading {
     display: none;
-}
-#timeline {
-    margin: 2em 0;
 }
 
 #timeline thead th {
   position: sticky;
   top: 0;
-  background: #eee;
 }
 
 .item .exam-score {
     text-align: right;
 }
 
+td {
+    vertical-align: top;
+}
+
 .exam-score.changed {
     position: sticky;
-    top: 4em;
-    background: white;
+    top: 3.4em;
+    background: var(--td-bg);
 }
 
 #timeline .glyphicon {

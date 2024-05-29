@@ -1,141 +1,138 @@
 {% extends "numbas_lti/management/base.html" %}
-{% load bootstrap %}
 {% load i18n %}
+{% load icon %}
+{% load querystring %}
+{% load time_tag %}
+
+{% block title %}{% translate "Replace the exam package" %} - {{block.super}}{% endblock title %}
+
+{% block management_header %}
+    <h1>{% translate "Replace the exam package" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
-<h1>{% trans "Replace the exam package" %}</h1>
-
-{% with edit_url=current_exam.manifest.edit_url %}
-{% if edit_url %}
-<p><a class="btn btn-primary" href="{{edit_url}}" target="_blank"><span class="glyphicon glyphicon-pencil"></span> {% trans "Edit this exam" %}</a></p>
-<hr>
-{% endif %}
-{% endwith %}
-
-{% if current_exam.retrieve_url %}
-    {% blocktrans %}
-    <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
-    {% endblocktrans %}
-    <form method="POST" action="{% url 'replace_exam' request.resource.pk %}">
-        {% csrf_token %}
-
-        {% if form.errors %}
-            <div class="alert alert-danger">
-                <a class="close" data-dismiss="alert">&times;</a>
-                {% for field in form %}
-                    {% if field.errors %}
-                    <p><strong>{{field.label}}</strong>:
-                    {% for error in field.errors %}
-                         {{ error|safe }}
-                    {% endfor %}
-                    </p>
-                    {% endif %}
-                {% endfor %}
-            </div>
+    {% with edit_url=current_exam.manifest.edit_url %}
+        {% if edit_url %}
+            <p><a class="button primary" href="{{edit_url}}" target="_blank">{% icon 'pencil' %} {% translate "Edit this exam" %}</a></p>
+            <hr>
         {% endif %}
+    {% endwith %}
 
-        <input type="hidden" name="retrieve_url" value="{{current_exam.retrieve_url}}">
-        <input type="hidden" name="rest_url" value="{{current_exam.rest_url}}">
-        <div class="checkbox">
-            <label>
-                {{form.safe_replacement}}
-                {{form.safe_replacement.label}}
-            </label>
-        </div>
-        <p><button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-transfer"></span> {% trans "Update from editor" %}</button></p>
-    </form>
-    {% blocktrans %}
-    <p>Alternately, you can upload a new exam package below.</p>
+    {% if current_exam.retrieve_url %}
+    <section id="retrieve-from-editor">
+        {% blocktranslate %}
+        <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
+        {% endblocktranslate %}
+
+        <form method="POST" action="{% url_with_lti 'replace_exam' resource.pk %}">
+            {% csrf_token %}
+
+            <input type="hidden" name="retrieve_url" value="{{current_exam.retrieve_url}}">
+            <input type="hidden" name="rest_url" value="{{current_exam.rest_url}}">
+            {{form.safe_replacement.label_tag}}
+            {{form.safe_replacement}}
+            <p><button class="button danger" type="submit">{% icon 'refresh' %} {% translate "Update from editor" %}</button></p>
+        </form>
+        
+        <p>{% translate "Alternately, you can upload a new exam package below." %}</p>
+    </section>
+
     <hr>
-    {% endblocktrans %}
-{% endif %}
-
-
-<form method="POST" enctype="multipart/form-data" action="{% url 'replace_exam' request.resource.pk %}">
-    {% csrf_token %}
-    {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-            <a class="close" data-dismiss="alert">&times;</a>
-            {% for non_field_error in form.non_field_errors %}
-                 {{ non_field_error|safe }}
-            {% endfor %}
-        </div>
     {% endif %}
 
-    {% for field in form.hidden_fields %}
-        {{ field }}
-    {% endfor %}
 
-    <input type="hidden" name="retrieve_url" value="">
+    <section id="upload-exam">
+        <form method="POST" enctype="multipart/form-data" action="{% url_with_lti 'replace_exam' resource.pk %}">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert danger">
+                    {% for non_field_error in form.non_field_errors %}
+                         {{ non_field_error|safe }}
+                    {% endfor %}
+                </div>
+            {% endif %}
 
-    {% for field in form.visible_fields %}
-        {% include 'bootstrapform/field.html' %}
-    {% endfor %}
-    <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-import"></span> {% trans "Replace" %}</button> 
-</form>
+            {% for field in form.hidden_fields %}
+            <p>{{ field }}
+            {% endfor %}
 
-<hr>
+            <input type="hidden" name="retrieve_url" value="">
 
-<h2>{% trans "All versions of this exam" %}</h2>
+            {% for field in form.visible_fields %}
+                <p>
+                    {{field.label_tag}}
+                    {{field}}
+                </p>
+            {% endfor %}
+            <p><button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace" %}</button></p>
+        </form>
+    </section>
 
-{% if num_attempts_other_versions %}
-<div class="alert alert-warning">
-{% blocktrans with n=num_attempts_other_versions %}
-<p>There are {{n}} attempts set to use exam package(s) other than the active one.</p>
-<p><strong>If it is safe to do so</strong>, you can set these attempts to use the active version instead.</p>
-{% endblocktrans %}
-<p class="text-danger">{% trans "This can not be undone." %}</p>
-<form method="POST" action="{% url 'use_current_version' request.resource.pk %}">
-    {% csrf_token %}
-    <button class="btn btn-danger"><span class="glyphicon glyphicon-arrow-up"></span> {% trans "Set all attempts to use the current version." %}</button>
-</form>
-</div>
-{% endif %}
+    <hr>
 
-<div class="help-block">
-    <p>{% trans "All exam packages that have been associated with this resource are listed below." %}</p>
-    <p>{% trans "The currently active version is highlighted. This version is used for new attempts, and for automatic remarking." %}</p>
-</div>
+    <section id="versions">
+        <h2>{% translate "All versions of this exam" %}</h2>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th></th>
-            <th></th>
-            <th>{% trans "Title" %}</th>
-            <th>{% trans "Uploaded" %}</th>
-            <th>{% trans "Attempts using this version" %}</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for exam,num_attempts in exams %}
-        <tr class="{% if exam.is_active %}active{% endif %}">
-            <td>
-                <a target="_blank" href="{% url 'run_exam' exam.pk %}"><span class="glyphicon glyphicon-play"></span> {% trans "Test run" %}</a>
-            </td>
-            <td>
-                <a href="{{exam.package.url}}"><span class="glyphicon glyphicon-save"></span> {% trans "Download" %}</a>
-            </td>
-            <td>{{exam.title}}</td>
-            <td>{{exam.creation_time}}</td>
-            <td>{{num_attempts}}</td>
-            <td>
-                {% if not exam.is_active %}
-                <form method="POST" action="{% url 'restore_exam' request.resource.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="exam" value="{{exam.pk}}">
-                        <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> {% trans "Use this version" %}</button>
-                    </form>
-                {% else %}
-                    {% trans "This version is in use now." %}
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        {% if num_attempts_other_versions %}
+        <div class="alert warning">
+            {% blocktranslate with n=num_attempts_other_versions %}
+            <p>There are {{n}} attempts set to use exam package(s) other than the active one.</p>
+            <p><strong>If it is safe to do so</strong>, you can set these attempts to use the active version instead.</p>
+            {% endblocktranslate %}
+            <p class="danger">{% translate "This can not be undone." %}</p>
+            <form method="POST" action="{% url_with_lti 'use_current_version' resource.pk %}">
+                {% csrf_token %}
+                <button class="button danger">{% icon 'arrow-up' %} {% translate "Set all attempts to use the current version." %}</button>
+            </form>
+        </div>
+        {% endif %}
 
-<hr>
-<p><a class="btn btn-link" href="{% url 'resource_dashboard' request.resource.pk %}"><span class="glyphicon glyphicon-arrow-left"></span> {% trans "Cancel" %}</a></p>
+        <div class="help-block">
+            <p>{% translate "All exam packages that have been associated with this resource are listed below." %}</p>
+            <p>{% translate "The currently active version is highlighted. This version is used for new attempts, and for automatic remarking." %}</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                    <th scope="col">{% translate "Title" %}</th>
+                    <th scope="col">{% translate "Uploaded" %}</th>
+                    <th scope="col">{% translate "Attempts using this version" %}</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exam,num_attempts in exams %}
+                <tr class="{% if exam.is_active %}active{% endif %}">
+                    <td>
+                        <a target="_blank" href="{% url_with_lti 'run_exam' exam.pk %}">{% icon 'play' %} {% translate "Test run" %}</a>
+                    </td>
+                    <td>
+                        <a href="{{exam.package.url}}">{% icon 'save' %} {% translate "Download" %}</a>
+                    </td>
+                    <td>{{exam.title}}</td>
+                    <td>{% time_tag exam.creation_time %}</td>
+                    <td>{{num_attempts}}</td>
+                    <td>
+                        {% if not exam.is_active %}
+                        <form method="POST" action="{% url_with_lti 'restore_exam' resource.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="exam" value="{{exam.pk}}">
+                                <button type="submit" class="button default">{% icon 'thumbs-up' %} {% translate "Use this version" %}</button>
+                            </form>
+                        {% else %}
+                            {% translate "This version is in use now." %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <hr>
+
+    <p><a class="button link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% icon 'arrow-left' %} {% translate "Cancel" %}</a></p>
 {% endblock management_content %}

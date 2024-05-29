@@ -1,14 +1,12 @@
-{% extends "numbas_lti/base.html" %}
+{% extends "numbas_lti/error_message.html" %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <header>
-        <h1>{% trans "Incorrect access" %}</h1>
-    </header>
-    <main>
-        <p>This URL is for LTI launches, which must be <code>POST</code> requests triggered by the LTI consumer.</p>
-    </main>
-</div>
-{% endblock content %}
+{% block body_class %}{{block.super}} launch-error not-post{% endblock %}
+
+{% block title %}{% translate "Incorrect access" %} - {{block.super}}{% endblock %}
+{% block header_message %}{% translate "Incorrect access" %}{% endblock %}
+
+{% block main %}
+    <p>This URL is for LTI launches, which must be <code>POST</code> requests triggered by the LTI consumer.</p>
+{% endblock main %}
 

@@ -8,17 +8,10 @@ function toggle_lockdown_fields() {
     Object.entries(lockdown_fields).forEach(([value, fields]) => {
         for(let f of fields) {
             const show = shown_fields.indexOf(f) >= 0;
-            let group = document.getElementById(`id_${f}`);
-            if(!group) {
-                continue;
-            }
-            while(group && !group.classList.contains('form-group')) {
-                group = group.parentElement;
-            }
+            let group = document.getElementById(`id_${f}`).parentElement;
             group.classList.toggle('hidden',!show);
         }
     });
 }
 toggle_lockdown_fields();
 document.getElementById('id_require_lockdown_app').addEventListener('input', toggle_lockdown_fields);
-

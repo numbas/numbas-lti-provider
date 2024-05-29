@@ -1,1 +1,1 @@
-{% load i18n %}{% blocktranslate with allow_review_from=allow_review_from %}Review will be available from {{allow_review_from}}{% endblocktranslate %}
+{% load i18n %}<span class="warning">{% blocktranslate with time_iso=attempt.resource.allow_review_from|date:"c" time=attempt.resource.allow_review_from %}Review will be available from <time datetime="{{time_iso}}">{{time}}</time>{% endblocktranslate %}</span>

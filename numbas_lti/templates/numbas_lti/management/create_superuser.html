@@ -1,20 +1,20 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
+
+{% block title %}{% translate "Initial set-up" %} - {{block.super}}{% endblock title %}
 
 {% block content %}
-<div class="container">
     <header>
-        <h1>{% trans "Initial set-up" %}</h1>
+        <h1>{% translate "Initial set-up" %}</h1>
     </header>
     <main>
-        <div class="lead">
-            {% trans "Welcome to the Numbas LTI provider! First, you need to create an admin account." %}
-        </div>
+        <p>{% translate "Welcome to the Numbas LTI provider! First, you need to create an admin account." %}</p>
+
         <form method="POST" action="">
             {% csrf_token %}
-            {{form|bootstrap}}
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Create admin account" %}</button>
+            {{form}}
+            <button type="submit" class="button primary">{% icon 'plus' %} {% translate "Create admin account" %}</button>
         </form>
     </main>
 {% endblock content %}

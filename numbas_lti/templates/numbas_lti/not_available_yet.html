@@ -1,1 +1,1 @@
-{% load i18n %}{% blocktrans with available_from=available_from %}This exam is not available yet. You may access it from {{available_from}}.{% endblocktrans %}
+{% load i18n %}{% load time_tag %}{% blocktranslate %}This exam is not available yet. You may access it from {% endblocktranslate %}{% time_tag available_from %}.

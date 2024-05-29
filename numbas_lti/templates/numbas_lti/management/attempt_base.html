@@ -1,19 +1,26 @@
 {% extends "numbas_lti/management/base.html" %}
 {% load i18n %}
+{% load icon %}
+{% load querystring %}
+{% load time_tag %}
 
 {% block management_header %}
-<p><a href="{% url 'manage_attempts' attempt.resource.pk %}">{% trans "Back to attempts listing" %}</a></p>
+<p><a href="{% url_with_lti 'manage_attempts' attempt.resource.pk %}">{% icon "arrow-left" %} {% translate "Back to attempts listing" %}</a></p>
 
-    <h2>
-        {% blocktrans with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktrans %}
-    </h2>
-    <h3>
-        <small>{% blocktrans with time=attempt.start_time %}Started {{time}}{% endblocktrans %}</small>
-    </h3>
+    <h1>
+        {% blocktranslate with name=attempt.user.get_full_name %}Attempt by {{name}}{% endblocktranslate %}
+    </h1>
+
+    <dl id="time-info">
+        <dt>{% translate "Started" %}</dt>
+        <dd>{% time_tag attempt.start_time %}</dd>
+
+        <dt>{% translate "Ended" %}</dt>
+        <dd>{% time_tag attempt.end_time %}</dd>
+    </dl>
 {% endblock management_header %}
 
+
 {% block management_content %}
-
     {% block attempt_content %}{% endblock attempt_content %}
-
 {% endblock management_content %}

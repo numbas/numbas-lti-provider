@@ -1,27 +1,24 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
 {% block title %}{% blocktranslate with name=object.name %}Delete "{{name}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
 
-{% block management_content %}
-<div class="container">
-    <header>
-        <h1>Delete a SEB settings file</h1>
-    </header>
+{% block management_header %}
+    <h1>{% blocktranslate with name=object.name %}Delete "{{name}}"{% endblocktranslate %}</h1>
+{% endblock management_header %}
 
-    <main>
+{% block management_content %}
+    <p>
+        {% blocktranslate with name=object.name %}Are you sure you want to delete the SEB settings file <strong>{{name}}</strong>?{% endblocktranslate %}
+    </p>
+    <p class="danger">{% translate "All resources using this settings file will be inaccessible until you pick a new settings file." %}</p>
+
+    <form method="POST" action="">
+        {% csrf_token %}
         <p>
-            {% blocktranslate with name=object.name %}Are you sure you want to delete the SEB settings file <strong>{{name}}</strong>?{% endblocktranslate %}
+            <button type="submit" class="button danger">{% icon 'trash' %} {% translate "Delete this SEB settings file" %}</button>
+            <a class="button link" href="{% url 'edit_seb_settings' object.pk %}">{% translate "Cancel" %}</a>
         </p>
-        <p class="text-danger">{% translate "All resources using this settings file will be inaccessible until you pick a new settings file." %}</p>
-        <form method="POST" action="">
-            {% csrf_token %}
-            <p>
-                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% translate "Delete this SEB settings file" %}</button>
-                <a class="btn btn-link" href="{% url 'edit_seb_settings' object.pk %}">{% translate "Cancel" %}</a>
-            </p>
-        </form>
-    </main>
-</div>
+    </form>
 {% endblock management_content %}

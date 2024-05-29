@@ -1,19 +1,49 @@
-from django.conf import settings
 from django import http
+from django.conf import settings
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.http import QueryDict
 from django.templatetags.static import static
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django_auth_lti.patch_reverse import reverse
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
+from django.views.decorators.csrf import csrf_exempt
 from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django_auth_lti.verification import is_allowed
 from functools import wraps
-from numbas_lti import lockdown_app
-from numbas_lti.models import Resource, Exam
+from numbas_lti import lockdown_app, requests_session
+from numbas_lti.models import Resource, Exam, LTIContext
+from numbas_lti.middleware import get_lti_13_context
+import pylti1p3.roles
+from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
+from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
+from pylti1p3.exception import LtiException
 import urllib.parse
 
-INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES',['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant'])
+INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES', {})
+INSTRUCTOR_ROLES.setdefault('lti_11', ['Instructor','Administrator','ContentDeveloper','Manager','TeachingAssistant'])
+INSTRUCTOR_ROLES.setdefault('lti_13', [pylti1p3.roles.TeacherRole, pylti1p3.roles.TeachingAssistantRole, pylti1p3.roles.StaffRole, pylti1p3.roles.DesignerRole,])
+
+def reverse_with_lti(request, view_name, args=[], current_app=None, kwargs={}):
+    """
+        Reverse a view name to a URL, and add in any LTI launch data as a query parameter.
+        LTI 1.1 launch data is added automatically by the patched ``reverse`` method. For LTI 1.3, the launch ID is added here.
+    """
+
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+
+    if hasattr(request, 'lti_13_message_launch'):
+        message_launch = request.lti_13_message_launch
+
+        query_dict = QueryDict(mutable=True)
+
+        query_dict['lti_13_launch_id'] = message_launch.get_launch_id()
+
+        url += '?' + query_dict.urlencode()
+    
+    return url
 
 def get_lti_entry_url(request):
     return request.build_absolute_uri(reverse('lti_entry',exclude_resource_link_id=True))
@@ -24,23 +54,111 @@ def get_config_url(request):
 def request_is_instructor(request):
     if request.user.is_superuser:
         return True
-    return bool(is_allowed(request,INSTRUCTOR_ROLES,False))
+
+    # LTI 1.3
+    if hasattr(request, 'lti_13_message_launch'):
+        message_launch = request.lti_13_message_launch
+        return message_launch.check_teacher_access() or message_launch.check_teaching_assistant_access() or message_launch.check_staff_access()
+
+    # LTI 1.1
+    return bool(is_allowed(request,INSTRUCTOR_ROLES['lti_11'],False))
+
+def request_is_student(request):
+    # LTI 1.3
+    if hasattr(request, 'lti_13_message_launch'):
+        message_launch = request.lti_13_message_launch
+        return message_launch.check_student_access()
+
+    # LTI 1.1
+    return not request_is_instructor(request)
 
 def static_view(template_name):
     return generic.TemplateView.as_view(template_name=template_name)
 
+class LTI_13_Mixin:
+    """
+        A view mixin which adds can get LTI 1.3 message launch data.
+        The message launch data is loaded from cache by the middleware, or POST parameters if the request is part of a launch.
+    """
 
+    tool_conf = DjangoDbToolConf()
+    launch_data_storage = DjangoCacheDataStorage()
 
-class LTIRoleOrSuperuserMixin(LTIRoleRestrictionMixin):
+    message_launch_cls = DjangoMessageLaunch
+
+    must_have_message_launch = False    # If True, then an error will be shown if no LTI launch data can be found for this request.
+
+    launch_error_template = 'numbas_lti/launch_errors/not_an_lti_launch.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.check_message_launch()
+        except Exception as exception:
+            return render(self.request, self.launch_error_template, {'exception': exception, 'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def check_message_launch(self):
+        if not self.must_have_message_launch:
+            return
+
+        message_launch = self.get_message_launch()
+        if self.must_have_message_launch and not message_launch:
+            raise SuspiciousOperation(_("This URL is supposed to be used to launch an LTI activity, but no LTI data was found."))
+
+    def get_message_launch(self):
+        if not hasattr(self.request, 'lti_13_message_launch'):
+            message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage, requests_session=requests_session.get_session())
+            try:
+                message_launch.validate()
+                self.request.lti_13_message_launch = message_launch
+            except Exception:
+                self.request.lti_13_message_launch = None
+
+        return self.request.lti_13_message_launch
+
+    def get_lti_context(self):
+        if getattr(self, 'context', None) is None:
+            self.lti_context = get_lti_13_context(self.get_message_launch())
+        return self.lti_context
+
+    def get_custom_param(self, param_name):
+        message_launch_data = self.get_message_launch().get_launch_data()
+
+        return message_launch_data\
+            .get('https://purl.imsglobal.org/spec/lti/claim/custom', {})\
+            .get(param_name)
+
+    def reverse_with_lti(self, *args, **kwargs):
+        return reverse_with_lti(self.request, *args, **kwargs)
+
+class LTIRoleOrSuperuserMixin(LTI_13_Mixin, LTIRoleRestrictionMixin):
+    raise_exception = False
+
+    allowed_roles = None
+
     @property
     def redirect_url(self):
         return reverse('not_authorized')+'?originalurl='+urllib.parse.quote(self.request.path+'?'+self.request.META.get('QUERY_STRING',''))
 
     def check_allowed(self, request):
-        if request.user.is_superuser:
+        if request.user.is_superuser or self.allowed_roles is None:
             return True
         else:
-            return super(LTIRoleOrSuperuserMixin, self).check_allowed(request)
+            try:
+                message_launch = self.get_message_launch()
+                jwt_body = message_launch._get_jwt_body()
+                for role in self.allowed_roles['lti_13']:
+                    if role(jwt_body).check():
+                        return True
+            except (AttributeError, LtiException):
+                if is_allowed(request, self.allowed_roles['lti_11'], raise_exception=False):
+                    return True
+
+            if self.raise_exception:
+                raise PermissionDenied
+            else:
+                return False
 
 class MustBeInstructorMixin(LTIRoleOrSuperuserMixin):
     allowed_roles = INSTRUCTOR_ROLES
@@ -82,8 +200,6 @@ class ResourceManagementViewMixin(ManagementViewMixin):
 
     def dispatch(self,*args,**kwargs):
         self.resource = self.get_resource()
-        if not hasattr(self.request,'resource') or self.request.resource is None:
-            self.request.resource = self.resource
 
         return super(ResourceManagementViewMixin,self).dispatch(*args,**kwargs)
 
@@ -91,7 +207,7 @@ class MustHaveExamMixin(object):
     def dispatch(self,*args,**kwargs):
         resource = self.get_resource()
         if resource.exam is None:
-            return redirect(reverse('create_exam',args=(resource.pk,)))
+            return redirect(self.reverse_with_lti('create_exam',args=(resource.pk,)))
 
         return super(MustHaveExamMixin,self).dispatch(*args,**kwargs)
 

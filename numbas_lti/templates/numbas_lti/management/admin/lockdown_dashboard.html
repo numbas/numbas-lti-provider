@@ -4,17 +4,21 @@
 
 {% block title %}{% translate "Lockdown apps" %} - {{block.super}}{% endblock %}
 
+{% block body_class %}{{block.super}} lockdown-dashboard{% endblock %}
+
+{% block management_header %}
+    <h1>{% translate "Lockdown apps" %}</h1>
+{% endblock management_header %}
+
 {% block management_content %}
-<h1>{% translate "Lockdown apps" %}</h1>
+    <section id="numbas-lockdown">
+        <h2>{% translate "Numbas lockdown app" %}</h2>
+        <p>{% translate "The default password for the Numbas lockdown app is" %}</p>
+        <pre id="default-password">{{lockdown_app_password}}</pre>
+    </section>
 
-<section>
-    <h2>{% translate "Numbas lockdown app" %}</h2>
-    <p>{% translate "The default password for the Numbas lockdown app is" %}</p>
-    <div class="well"><code>{{lockdown_app_password}}</code></div>
-</section>
-
-<section>
-    <h2>{% translate "Safe Exam Browser" %}</h2>
-    <p><a href="{% url 'list_seb_settings' %}">{% translate "Manage SEB settings files" %}</a></p>
-</section>
+    <section id="safe-exam-browser">
+        <h2>{% translate "Safe Exam Browser" %}</h2>
+        <p><a href="{% url 'list_seb_settings' %}">{% translate "Manage SEB settings files" %}</a></p>
+    </section>
 {% endblock management_content %}

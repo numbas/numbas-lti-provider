@@ -1,27 +1,25 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
-{% block title %}{% blocktrans with key=consumer.key %}Delete "{{key}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+{% block title %}{% blocktranslate with key=consumer.key %}Delete "{{consumer.title}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
+
+{% block management_header %}
+    <h1>{% translate "Delete an LTI consumer" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
-<div class="container">
-    <header>
-        <h1>Delete an LTI consumer</h1>
-    </header>
+    <p>
+        {% blocktranslate with title=consumer.title%}Are you sure you want to delete the LTI consumer <code>{{title}}</code>?{% endblocktranslate %}
+    </p>
 
-    <main>
+    <p class="danger">{% translate "All attempt data accessed through this consumer will be deleted." %}</p>
+
+    <form method="POST" action="">
+        {% csrf_token %}
         <p>
-            {% blocktrans with key=consumer.key%}Are you sure you want to delete the LTI consumer <code>{{key}}</code>?{% endblocktrans %}
+            <button type="submit" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</button>
+            <a class="button link" href="{% url 'list_consumers' %}">{% translate "Cancel" %}</a>
         </p>
-        <p class="text-danger">{% trans "All attempt data accessed through this consumer will be deleted." %}</p>
-        <form method="POST" action="">
-            {% csrf_token %}
-            <p>
-                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this consumer" %}</button>
-                <a class="btn btn-link" href="{% url 'list_consumers' %}">{% trans "Cancel" %}</a>
-            </p>
-        </form>
-    </main>
-</div>
+    </form>
 {% endblock management_content %}

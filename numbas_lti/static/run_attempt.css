@@ -1,5 +1,9 @@
+@import 'variables.css';
+
 body {
     margin: 0;
+    background: var(--background-color);
+    color: var(--text-color);
 }
 #scorm-player {
     border: none;
@@ -12,15 +16,15 @@ body.ended #scorm-player {
     position: absolute;
     bottom: 0;
     right: 0;
-    padding: 0.4em 1em;
-    border-radius: 4px 0 0 0;
-    background: hsl(0,90%,50%);
-    color: white;
-    font-family: sans-serif;
-    transition: background-color 0.5s;
+    padding: var(--spacing) var(--double-space);
+    border-radius: var(--half-space) 0 0 0;
+    background: var(--danger-alert-bg);
+    color: var(--danger-alert-color);
+    font-family: var(--font-family);
+    transition: background-color var(--transition-duration);
 }
 #status-display a {
-    color: white;
+    color: currentColor;
 }
 #status-display.ok:not(.ended):not(.confirmation):not(.deadline-changed):not(.unavailable-at) {
     display: none;
@@ -29,9 +33,6 @@ body.ended #scorm-player {
     display: none;
 }
 #status-display:not(.localstorage-used) .text-localstorage-used {
-    display: none;
-}
-body.terminated #status-display .symbol, #status-display .symbol {
     display: none;
 }
 #status-display.disconnected .text-disconnected,
@@ -51,23 +52,24 @@ body.terminated #status-display .symbol, #status-display .symbol {
     white-space: normal;
     line-break: anywhere;
     font-size: 0.8em;
-    padding: 0 2rem;
+    padding: 0 var(--quad-space);
 }
 body.terminated #status-display.confirmation {
-    background: hsl(120, 90%, 25%);
-    padding: 0.5em;
+    background: var(--success-alert-bg);
+    color: var(--success-alert-color);
+    padding: var(--spacing);
     border-radius: 0;
     font-size: 1rem;
 }
 #status-display p {
     margin-top: 0;
-    margin-bottom: 0.5em;
+    margin-bottom: var(--spacing);
 }
 
 body.terminated #status-display {
     left: 0;
     font-size: 1.5rem;
-    padding-bottom: 2em;
+    padding-bottom: var(--quad-space);
     position: static;
 }
 body.terminated .text-localstorage-used {
@@ -75,26 +77,28 @@ body.terminated .text-localstorage-used {
 }
 
 body:not(.terminated) #status-display.unavailable-at {
-    background: hsl(240, 50%, 25%);
+    background: var(--info-alert-bg);
+    color: var(--info-alert-color);
     position: static;
-    padding: 0.5em;
+    padding: var(--spacing);
     border-radius: 0;
 }
 
 
 body:not(.terminated) #status-display.disconnected {
-    background: hsl(0,90%,50%);
+    background: var(--danger-alert-bg);
+    color: var(--danger-alert-color);
 }
 
 #deadline-change-display {
     position: absolute;
     top: 0;
     right: 0;
-    padding: 0.4em 1em;
-    border-radius: 0 0 0 4px;
-    background: hsl(0,0%,0%);
-    color: white;
-    font-family: sans-serif;
+    padding: var(--spacing) var(--double-space);
+    border-radius: 0 0 0 var(--spacing);
+    background: var(--info-alert-bg);
+    color: var(--info-alert-color);
+    font-family: var(--font-family);
     display: none;
 }
 #deadline-change-display.show {
@@ -103,16 +107,20 @@ body:not(.terminated) #status-display.disconnected {
 
 #try-final-ajax-again {
     font-size: 1em;
-    border: 0.1em solid hsl(0,0%,50%);
-    background: hsl(120,0%,95%);
-    border-radius: 0.1em;
-    padding: 0.2em 0.5em;
+    border: 0.1em solid var(--primary-button-border-color);
+    background: var(--primary-button-bg);
+    color: var(--primary-button-color);
+    border-radius: var(--button-radius);
+    padding: var(--half-space) var(--spacing);
 }
 #try-final-ajax-again:hover,
 #try-final-ajax-again:focus {
-    background: hsl(120,95%,90%);
+    background: var(--primary-button-hover-bg);
+}
+#try-final-ajax-again:active {
+    background: var(--primary-button-active-bg);
 }
 
 #try-final-ajax-again:disabled {
-    background: hsl(120,0%,70%);
+    background: var(--muted-button-bg);
 }

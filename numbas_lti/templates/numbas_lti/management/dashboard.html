@@ -1,205 +1,215 @@
 {% extends "numbas_lti/management/base.html" %}
-{% load percentage %}
 {% load i18n %}
+{% load icon %}
+{% load percentage %}
+{% load querystring %}
+{% load time_tag %}
 
-{% block body_class %}dashboard{% endblock %}
+{% block body_class %}{{block.super}} dashboard{% endblock %}
+
+{% block management_header %}
+    <h1>{% translate "Dashboard" %}
+{% endblock management_header %}
 
 {% block management_content %}
-    {% if resource.is_available %}
-    <div class="text-info">
-        <p>{% trans "This resource is currently available to students." %}</p>
-    </div>
-    {% else %}
-    <div class="text-warning">
-        <p>{% trans "This resource is not currently available to students." %}</p>
-    </div>
-    {% endif %}
+    <section id="availability">
+        {% if resource.is_available %}
+            <p class="info">{% translate "This resource is currently available to students." %}</p>
+        {% else %}
+            <p class="warning">{% translate "This resource is not currently available to students." %}</p>
+        {% endif %}
+    </section>
 
     {% if resource.attempts.count %}
 
-    <p><strong>{{resource.unbroken_attempts.count}}</strong> {% blocktrans count counter=resource.unbroken_attempts.count %}attempt{% plural %}attempts{% endblocktrans %} {% trans "by" %} <strong>{{students.count}}</strong> {% blocktrans count counter=students.count %}student{% plural %}students{% endblocktrans %}.</p>
+        <section id="attempts-count">
+            <p><strong>{{resource.unbroken_attempts.count}}</strong> {% blocktranslate count counter=resource.unbroken_attempts.count %}attempt{% plural %}attempts{% endblocktranslate %} {% translate "by" %} <strong>{{students.count}}</strong> {% blocktranslate count counter=students.count %}student{% plural %}students{% endblocktranslate %}.</p>
+        </section>
 
-    {% if last_report_process %}
-    <section>
-        {% if last_report_process.status == 'reporting' %}
-            <div class="alert alert-info">
-                <p>{% trans "Scores are currently being reported back to the grade book" %}.</p>
-                <p><a class="btn btn-danger" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Cancel" %}</a></p>
-            </div>
-        {% elif last_report_process.status == 'complete' %}
-            <div class="alert alert-success">
-                <p>{% trans "Scores were successfully reported back to the grade book." %}</p>
-                <p><a class="btn btn-success btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
-            </div>
-        {% elif last_report_process.status == 'error' %}
-            <div class="alert alert-danger">
-                <p>{% trans "An error was encountered while reporting scores back to the grade book:" %}</p>
-                <pre>{{last_report_process.response}}</pre>
-                <p>{% trans "Report this error to your VLE's administrator." %}</p>
-                <p><a class="btn btn-danger btn-sm" href="{% url 'dismiss_report_process' last_report_process.pk %}">{% trans "Dismiss this message" %}</a></p>
-            </div>
-        {% endif %}
-    </section>
-    {% endif %}
-
-    <section>
-        <ul class="list-unstyled actions">
-            <li><form method="POST" action="{% url 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-save"></span> {% trans "Download scores as CSV" %}</button></form></li>
-            {% if not last_report_process %}
-            <li>
-                <a class="btn btn-warning" href="{% url 'report_scores' resource.pk %}"><span class="glyphicon glyphicon-cloud-upload"></span> {% trans "Report scores back to VLE" %}</a>
-                {% if dismissed_report_process %}
-                <span class="text-warning">{% trans "A report process is being cancelled. Consider waiting until it has finished." %}</span>
-                {% endif %}
-            </li>
+        {% if last_report_process %}
+        <section id="last-report-status">
+            {% if last_report_process.status == 'reporting' %}
+                <div class="alert info">
+                    <p>{% translate "Scores are currently being reported back to the grade book" %}.</p>
+                    <p><a class="button danger" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Cancel" %}</a></p>
+                </div>
+            {% elif last_report_process.status == 'complete' %}
+                <div class="alert success">
+                    <p>{% translate "Scores were successfully reported back to the grade book." %}</p>
+                    <p><a class="button success small" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
+                </div>
+            {% elif last_report_process.status == 'error' %}
+                <div class="alert danger">
+                    <p>{% translate "An error was encountered while reporting scores back to the grade book:" %}</p>
+                    <pre>{{last_report_process.response}}</pre>
+                    <p>{% translate "Report this error to your VLE's administrator." %}</p>
+                    <p><a class="button danger small" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
+                </div>
             {% endif %}
-            <li><a href="{% url 'student_progress' resource.pk %}"><span class="glyphicon glyphicon-user"></span> {% trans "View individual student progress and grant access tokens" %}</a></li>
-            <li>
-                <a class="btn btn-danger" href="{% url 'discount_parts' resource.pk %}"><span class="glyphicon glyphicon-minus-sign"></span> {% trans "Discount question parts" %}</a>
-                <span class="help-block">{% trans "You can remark individual attempts on the attempts page." %}</span>
-            </li>
-            <li>
-                <a class="btn btn-info" href="{% url 'validate_receipt' resource.pk %}"><span class="glyphicon glyphicon-ok"></span> {% trans "Validate a receipt code" %}</a>
-            </li>
-        </ul>
-    </section>
+        </section>
+        {% endif %}
+
+        <section>
+            <ul class="list-unstyled actions">
+                <li><form method="POST" action="{% url_with_lti 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="button info">{% icon 'save' %} {% translate "Download scores as CSV" %}</button></form></li>
+                {% if not last_report_process %}
+                <li>
+                    <a class="button warning" href="{% url_with_lti 'report_scores' resource.pk %}">{% icon 'upload' %} {% translate "Report scores back to VLE" %}</a>
+                    {% if dismissed_report_process %}
+                    <span class="warning">{% translate "A report process is being cancelled. Consider waiting until it has finished." %}</span>
+                    {% endif %}
+                </li>
+                {% endif %}
+                <li><a class="button" href="{% url_with_lti 'student_progress' resource.pk %}">{% icon 'user' %} {% translate "View individual student progress and grant access tokens" %}</a></li>
+                <li>
+                    <a class="button danger" href="{% url_with_lti 'discount_parts' resource.pk %}">{% icon 'minus-sign' %} {% translate "Discount question parts" %}</a>
+                    <span class="help-block">{% translate "You can remark individual attempts on the attempts page." %}</span>
+                </li>
+                <li>
+                    <a class="button info" href="{% url_with_lti 'validate_receipt' resource.pk %}">{% icon 'ok' %} {% translate "Validate a receipt code" %}</a>
+                </li>
+            </ul>
+        </section>
 
     {% else %}
-        <p>{% trans "No students have attempted this exam yet. Information about scores will appear here once a student attempts this exam." %}</p>
+        <section id="attempts-count">
+            <p>{% translate "No students have attempted this exam yet. Information about scores will appear here once a student attempts this exam." %}</p>
+        </section>
     {% endif %}
 
     {% if exam_info %}
     <hr>
-    <section>
+
+    <section id="settings-info">
         {% if exam_info.navigateMode == 'sequence' %}
-        <p>{% blocktrans %}This exam is in <strong>sequential mode</strong>, best for summative assessments.{% endblocktrans %}</p>
+        <p>{% blocktranslate %}This exam is in <strong>sequential mode</strong>, best for summative assessments.{% endblocktranslate %}</p>
         {% endif %}
         {% if exam_info.navigateMode == 'menu' %}
-        <p>{% blocktrans %}This exam is in <strong>choose from a menu mode</strong>, best for formative material.{% endblocktrans %}</p>
+        <p>{% blocktranslate %}This exam is in <strong>choose from a menu mode</strong>, best for formative material.{% endblocktranslate %}</p>
         {% endif %}
 
         {% if resource.max_attempts == 0 %}
-        <p>{% blocktrans %}Students are allowed to start as many attempts as they like.{% endblocktrans %}</p>
+        <p>{% blocktranslate %}Students are allowed to start as many attempts as they like.{% endblocktranslate %}</p>
         {% else %}
-        <p>{% blocktrans count counter=resource.max_attempts with max_attempts=resource.max_attempts %}Students may make <strong>one</strong> attempt.{% plural %}Students may start <strong>{{max_attempts}}</strong> attempts.{% endblocktrans %}</p>
+        <p>{% blocktranslate count counter=resource.max_attempts with max_attempts=resource.max_attempts %}Students may make <strong>one</strong> attempt.{% plural %}Students may start <strong>{{max_attempts}}</strong> attempts.{% endblocktranslate %}</p>
         {% endif %}
 
-        <p>{% blocktrans %}Students will be shown the following information:{% endblocktrans %}</p>
+        <p>{% blocktranslate %}Students will be shown the following information:{% endblocktranslate %}</p>
 
-        <table class="table">
+        <table id="settings-table">
             <thead>
                 <tr>
-                    <td></td>
-                    <th>{% trans "During an attempt" %}</th>
-                    <th>{% trans "Immediately after finishing an attempt" %}</th>
-                    <th>{% trans "When viewing an attempt in review mode" %}</th>
+                    <td class="empty"></td>
+                    <th scope="col">{% translate "During an attempt" %}</th>
+                    <th scope="col">{% translate "Immediately after finishing an attempt" %}</th>
+                    <th scope="col">{% translate "When viewing an attempt in review mode" %}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <th>{% trans "Total awarded scores for each attempt" %}</th>
-                    {% if resource.show_marks_when == 'always' %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if resource.show_marks_when == 'always' or resource.show_marks_when == 'complete' %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if resource.show_marks_when != 'never' %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    <th scope="row">{% translate "Total awarded scores for each attempt" %}</th>
+                    {% if resource.show_marks_when == 'always' %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if resource.show_marks_when == 'always' or resource.show_marks_when == 'complete' %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if resource.show_marks_when != 'never' %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% trans "Part and question maximum scores" %}</th>
-                    {% if exam_info.showTotalMark %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.showTotalMark or exam_info.completionShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.showTotalMark or exam_info.reviewShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    <th scope="row">{% translate "Part and question maximum scores" %}</th>
+                    {% if exam_info.showTotalMark %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showTotalMark or exam_info.completionShowResultsPage %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showTotalMark or exam_info.reviewShowResultsPage %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% trans "Awarded scores" %}</th>
-                    {% if exam_info.showActualMark %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.showActualMark or exam_info.completionShowResultsPage %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.showActualMark or exam_info.reviewShowScore %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    <th scope="row">{% translate "Awarded scores" %}</th>
+                    {% if exam_info.showActualMark %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showActualMark or exam_info.completionShowResultsPage %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showActualMark or exam_info.reviewShowScore %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% trans "Expected answers" %}</th>
-                    {% if exam_info.allowRevealAnswer %}<td class="success">{% trans "Available" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.completionShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.reviewShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    <th scope="row">{% translate "Expected answers" %}</th>
+                    {% if exam_info.allowRevealAnswer %}<td class="success">{% translate "Available" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.completionShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.reviewShowResultsPage and exam_info.reviewShowExpectedAnswer %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% trans "Question advice" %}</th>
-                    {% if exam_info.allowRevealAnswer %}<td class="success">{% trans "Available" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.completionShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.reviewShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    <th scope="row">{% translate "Question advice" %}</th>
+                    {% if exam_info.allowRevealAnswer %}<td class="success">{% translate "Available" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.completionShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.reviewShowResultsPage and exam_info.reviewShowAdvice %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% trans "Part feedback" %}</th>
-                    {% if exam_info.showAnswerState %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.showAnswerState or exam_info.completionShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
-                    {% if exam_info.showAnswerState or exam_info.reviewShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% trans "Shown" %}</td>{% else %}<td class="danger">{% trans "Not shown" %}</td>{% endif %}
+                    <th scope="row">{% translate "Part feedback" %}</th>
+                    {% if exam_info.showAnswerState %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showAnswerState or exam_info.completionShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
+                    {% if exam_info.showAnswerState or exam_info.reviewShowResultsPage and exam_info.reviewShowFeedback %}<td class="success">{% translate "Shown" %}</td>{% else %}<td class="danger">{% translate "Not shown" %}</td>{% endif %}
                 </tr>
                 <tr>
-                    <th>{% trans "Print a transcript" %}</th>
-                    {% if exam_info.allowPrinting %}<td class="success">{% trans "Allowed" %}</td>{% else %}<td class="danger">{% trans "Not allowed" %}</td>{% endif %}
-                    {% if exam_info.allowPrinting %}<td class="success">{% trans "Allowed" %}</td>{% else %}<td class="danger">{% trans "Not allowed" %}</td>{% endif %}
-                    {% if exam_info.allowPrinting %}<td class="success">{% trans "Allowed" %}</td>{% else %}<td class="danger">{% trans "Not allowed" %}</td>{% endif %}
+                    <th scope="row">{% translate "Print a transcript" %}</th>
+                    {% if exam_info.allowPrinting %}<td class="success">{% translate "Allowed" %}</td>{% else %}<td class="danger">{% translate "Not allowed" %}</td>{% endif %}
+                    {% if exam_info.allowPrinting %}<td class="success">{% translate "Allowed" %}</td>{% else %}<td class="danger">{% translate "Not allowed" %}</td>{% endif %}
+                    {% if exam_info.allowPrinting %}<td class="success">{% translate "Allowed" %}</td>{% else %}<td class="danger">{% translate "Not allowed" %}</td>{% endif %}
                 </tr>
             </tbody>
         </table>
 
         {% if exam_info.startPassword %}
-        <p>{% blocktrans %}Students <strong>must</strong> enter a password to begin this exam.{% endblocktrans %}</p>
+        <p>{% blocktranslate %}Students <strong>must</strong> enter a password to begin this exam.{% endblocktranslate %}</p>
         {% else %}
-        <p>{% blocktrans %}Students <strong>do not</strong> need to enter a password to begin this exam.{% endblocktrans %}</p>
+        <p>{% blocktranslate %}Students <strong>do not</strong> need to enter a password to begin this exam.{% endblocktranslate %}</p>
         {% endif %}
 
         {% if exam_info.hasPercentPass %}
-        <p>{% blocktrans with threshold=exam_info.percentPass%}There is a pass threshold of <strong>{{threshold}}%</strong>.{% endblocktrans %}</p>
+        <p>{% blocktranslate with threshold=exam_info.percentPass%}There is a pass threshold of <strong>{{threshold}}%</strong>.{% endblocktranslate %}</p>
         {% endif %}
 
         {% if exam_info.hasTimeLimit %}
-        <p>{% blocktrans with duration=exam_info.duration|floatformat %}There is a time limit of <strong>{{duration}} minutes</strong>.{% endblocktrans %}</p>
+        <p>{% blocktranslate with duration=exam_info.duration|floatformat %}There is a time limit of <strong>{{duration}} minutes</strong>.{% endblocktranslate %}</p>
         {% else %}
-        <p>{% blocktrans %}This exam has no time limit.{% endblocktrans %}</p>
+        <p>{% blocktranslate %}This exam has no time limit.{% endblocktranslate %}</p>
         {% endif %}
 
-        <p>{% blocktrans %}During an attempt, students:{% endblocktrans %}</p>
+        <p>{% blocktranslate %}During an attempt, students:{% endblocktranslate %}</p>
         <ul>
-            <li>{% if exam_info.allowRegen %}{% blocktrans %}<strong>may</strong> regenerate questions.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> regenerate questions.{% endblocktrans %}{% endif %}</li>
-            <li>{% if exam_info.allowBrowse %}{% blocktrans %}<strong>may</strong> move freely between questions.{% endblocktrans %}{% else %}{% if exam_info.allowReverse %}{% blocktrans %}<strong>may</strong> move to the next question or previous questions.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> return to questions.{% endblocktrans %}{% endif %}{% endif %}</li>
+            <li>{% if exam_info.allowRegen %}{% blocktranslate %}<strong>may</strong> regenerate questions.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> regenerate questions.{% endblocktranslate %}{% endif %}</li>
+            <li>{% if exam_info.allowBrowse %}{% blocktranslate %}may <strong>move freely between questions</strong>.{% endblocktranslate %}{% else %}{% if exam_info.allowReverse %}{% blocktranslate %}may <strong>move to the next question or previous questions</strong>.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> return to questions.{% endblocktranslate %}{% endif %}{% endif %}</li>
             {% if exam_info.hasTimeLimit %}
-            <li>{% if exam_info.allowPause %}{% blocktrans %}<strong>may</strong> pause the timer.{% endblocktrans %}{% else %}{% blocktrans %}<strong>may not</strong> pause the timer.{% endblocktrans %}{% endif %}</li>
+            <li>{% if exam_info.allowPause %}{% blocktranslate %}<strong>may</strong> pause the timer.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> pause the timer.{% endblocktranslate %}{% endif %}</li>
             {% endif %}
-            <li>{% blocktrans %}<strong>may</strong> leave the attempt and resume later.{% endblocktrans %}</li>
+            <li>{% blocktranslate %}<strong>may</strong> leave the attempt and resume later.{% endblocktranslate %}</li>
         </ul>
 
-        <table class="table">
+        <table>
             <thead>
                 <tr>
-                    <th>{% trans "This will happen" %}</th>
-                    <th>{% trans "When" %}</th>
+                    <th scope="col">{% translate "This will happen" %}</th>
+                    <th scope="col">{% translate "When" %}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>{% blocktrans %}Students may attempt the exam{% endblocktrans %}</td>
+                    <td>{% blocktranslate %}Students may attempt the exam{% endblocktranslate %}</td>
                     <td>
                         {% if resource.available_from == None %}
-                            {% if resource.available_until == None %}{% trans "any time" %}{% else %}{% blocktrans with available_until=resource.available_until %}until {{available_until}}{% endblocktrans %}{% endif %}
+                        {% if resource.available_until == None %}{% translate "any time" %}{% else %}{% blocktranslate with available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}until <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}{% endif %}
                         {% else %}
                             {% if resource.available_until == None %}
-                                {% blocktrans with available_from=resource.available_from %}from {{available_from}}{% endblocktrans %}
+                                {% blocktranslate with available_from=resource.available_from available_from_iso=resource.available_from|date:"c" %}from <time datetime="{{available_from_iso}}">{{available_from}}</time>{% endblocktranslate %}
                             {% else %}
                                 {% if resource.available_from < resource.available_until %}
-                                    {% blocktrans with available_from=resource.available_from available_until=resource.available_until %}between {{available_from}} and {{available_until}}{% endblocktrans %}
+                                    {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}between <time datetime="{{available_from_iso}}">{{available_from}}</time> and <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
                                 {% else %}
-                                    {% blocktrans with available_from=resource.available_from available_until=resource.available_until %}before {{available_from}}, or after {{available_until}}{% endblocktrans %}
+                                    {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}before <time datetime="{{available_from_iso}}">{{available_from}}</time>, or after <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
                                 {% endif %}
                             {% endif %}
                         {% endif %}
                     </td>
                 </tr>
                 <tr>
-                    <td>{% trans "Students may review their attempts" %}</td>
-                    <td>{% if resource.allow_review_from == None %}{% trans "immediately after finishing an attempt" %}{% else %}{% blocktrans with allow_review_from=resource.allow_review_from %}from {{allow_review_from}}{% endblocktrans %}{% endif %}</td>
+                    <td>{% translate "Students may review their attempts" %}</td>
+                    <td>{% if resource.allow_review_from == None %}{% translate "immediately after finishing an attempt" %}{% else %}{% translate "from" %} {% time_tag resource.allow_review_from %}{% endif %}</td>
                 </tr>
                 <tr>
-                    <td>{% blocktrans %}Each student's score will be reported back to the consumer{% endblocktrans %}</td>
-                    <td>{% if resource.report_mark_time == 'immediately' %}{% trans "as soon as it changes" %}{% elif resource.report_mark_time == 'oncompletion' %}{% trans "immediately after each attempt is completed" %}{% else %}{% trans "when the instructor requests it" %}{% endif %}</td>
+                    <td>{% blocktranslate %}Each student's score will be reported back to the consumer{% endblocktranslate %}</td>
+                    <td>{% if resource.report_mark_time == 'immediately' %}{% translate "as soon as it changes" %}{% elif resource.report_mark_time == 'oncompletion' %}{% translate "immediately after each attempt is completed" %}{% else %}{% translate "when the instructor requests it" %}{% endif %}</td>
                 </tr>
             </tbody>
         </table>

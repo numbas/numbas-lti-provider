@@ -1,101 +1,145 @@
 {% extends "numbas_lti/management/base.html" %}
-{% load bootstrap %}
 {% load i18n %}
+{% load icon %}
 {% load static %}
 {% load statici18n %}
 
+{% block title %}{% translate "Statistics" %} - {{block.super}}{% endblock title %}
+
+{% block management_header %}
+    <h1>
+        {% blocktranslate with resource_name=resource.title %}Statistics for <strong>{{resource_name}}</strong>{% endblocktranslate %}
+    </h1>
+{% endblock management_header %}
+
 {% block management_content %}
-<h2>
-    {% blocktrans with resource_name=resource.title %}Statistics for <strong>{{resource_name}}</strong>{% endblocktrans %}
-    <br>
-    <small>{{resource.context.name}}</small>
-</h2>
+    <button type="button" onclick="window.print()" class="no-print button info">
+        {% icon 'print' %}
+        {% translate "Print this page" %}
+    </button>
 
-<button type="button" onclick="window.print()" class="hidden-print btn btn-info">
-    <span class="glyphicon glyphicon-print"></span>
-    {% trans "Print this page" %}
-</button>
+    <section id="attempt_completion">
+        <h2>{% translate "Attempt completion" %}</h2>
+        <table id="completion-table">
+            <thead>
+                <tr>
+                    {% for label,value,n in completion_counts %}
+                    <th scope="col">{{label}}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                {% for label,value,n in completion_counts %}
+                    <td class="value" data-value="{{value}}">{{n}}</td>
+                {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </section>
 
-<section id="attempt_completion">
-    <h3>{% trans "Attempt completion" %}</h3>
-    <table class="table" id="completion-table">
-        <tbody>
-            {% for label,value,n in completion_counts %}
-            <tr>
-                <td>{{label}}</td>
-                <td class="value" data-value="{{value}}">{{n}}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</section>
+    <input type="checkbox" id="completed-toggle"> <label for="completed-toggle">{% translate "Only count completed attempts" %}</label>
 
-<input type="checkbox" id="completed-toggle"> <label for="completed-toggle">{% trans "Only count completed attempts" %}</label>
+    <section id="summary_statistics">
+        <h2>{% translate "Summary statistics" %}</h2>
 
-<section id="summary_statistics">
-    <h3>{% trans "Summary statistics" %}</h3>
-    <table class="table" id="summary-stats-table">
-        <thead>
-            <tr>
-                <th></th>
-                <th>{% trans "Mean" %}</th>
-                <th>{% trans "Lower quartile" %}</th>
-                <th>{% trans "Median" %}</th>
-                <th>{% trans "Upper quartile" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-</section>
+        <div class="scrolling-table">
+            <table id="summary-stats-table">
+                <thead>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">{% translate "Mean" %}</th>
+                        <th scope="col">{% translate "Lower quartile" %}</th>
+                        <th scope="col">{% translate "Median" %}</th>
+                        <th scope="col">{% translate "Upper quartile" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-<section id="stacked_status_chart">
-    <div class="legend">
-        <span class="num_not_attempted">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Not attempted" %}
-        </span>
-        <span class="num_incorrect">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Incorrect" %}
-        </span>
-        <span class="num_partial">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Partially correct" %}
-        </span>
-        <span class="num_correct">
-            <svg class="box" width="20" height="20"><rect width="20" height="20"></rect></svg>
-            {% trans "Correct" %}
-        </span>
-    </div>
-    <div class="chart">
-        <svg class="diagram"></svg>
-    </div>
-</section>
+    <section id="stacked_status_chart">
+        <div class="legend">
+            <span class="num_not_attempted">
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="not-attempted-fill" x="0" y="0" width="25" height="25">
+                            <rect width="100%" height="100%" style="fill: var(--muted-color)"></rect>
+                            <circle cx="50%" cy="50%" r="5" style="fill: var(--background-color)"></circle>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
+                {% translate "Not attempted" %}
+            </span>
+
+            <span class="num_incorrect">
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="incorrect-fill" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                            <rect width="100%" height="100%" style="fill: var(--danger-color)"></rect>
+                            <line x1="0" y1="0" x2="100%" y2="100%" stroke-width="3" style="stroke: var(--background-color)"></line>
+                            <line x1="0" y1="100%" x2="100%" y2="0" stroke-width="3" style="stroke: var(--background-color)"></line>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
+                {% translate "Incorrect" %}
+            </span>
+            <span class="num_partial">
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="partial-fill" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                            <rect width="100%" height="100%" style="fill: var(--warning-color)"></rect>
+                            <line x1="0" y1="100%" x2="100%" y2="0" stroke-width="3" style="stroke: var(--background-color)"></line>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
+                {% translate "Partially correct" %}
+            </span>
+            <span class="num_correct">
+                <svg class="box" width="25" height="25">
+                    <defs>
+                        <pattern id="correct-fill" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                            <rect width="100%" height="100%" style="fill: var(--success-color)"></rect>
+                        </pattern>
+                    </defs>
+                    <rect width="25" height="25"></rect>
+                </svg>
+                {% translate "Correct" %}
+            </span>
+        </div>
+        <div class="chart">
+            <svg class="diagram"></svg>
+        </div>
+    </section>
 
 
-<section id="question_scores_chart">
-    <h3>{% trans "Score distribution" %}</h3>
-    <p>{% blocktrans %}In the following charts, the horizontal axis represents scaled score, and the vertical axis represents the number of attempts achieving that score.{% endblocktrans %}</p>
-    <div class="chart"></div>
-</section>
+    <section id="question_scores_chart">
+        <h2>{% translate "Score distribution" %}</h2>
+        <p>{% blocktranslate %}In the following charts, the horizontal axis represents scaled score, and the vertical axis represents the number of attempts achieving that score.{% endblocktranslate %}</p>
+        <div class="chart"></div>
+    </section>
 
-<section id="times">
-    <h3>{% trans "Attempt times" %}</h3>
-	<p>{% blocktrans %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktrans %}</p>
-    <div class="chart">
-        <svg class="diagram"></svg>
-    </div>
-</section>
+    <section id="times">
+        <h2>{% translate "Attempt times" %}</h2>
+        <p>{% blocktranslate %}The following chart shows start and end times of all attempts. Note that students may not be active for the whole of the shown time.{% endblocktranslate %}</p>
+        <div class="chart">
+            <svg class="diagram"></svg>
+        </div>
+    </section>
 
-<section id="time_spent_chart">
-    <h3>{% trans "Time spent" %}</h3>
-	<p>{% blocktrans %}In the following chart, the horizontal axis represents the time spent on an attempt, and the vertical axis represents the number of attempts lasting that long.{% endblocktrans %}</p>
-    <div class="chart">
-    </div>
-</section>
+    <section id="time_spent_chart">
+        <h2>{% translate "Time spent" %}</h2>
+        <p>{% blocktranslate %}In the following chart, the horizontal axis represents the time spent on an attempt, and the vertical axis represents the number of attempts lasting that long.{% endblocktranslate %}</p>
+        <div class="chart">
+        </div>
+    </section>
 
-{% endblock %}
+{% endblock management_content %}
 
 {% block stylesheets %}
     {{block.super}}

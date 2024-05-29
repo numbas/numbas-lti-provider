@@ -1,23 +1,21 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
-{% block title %}{% trans "Add a new SEB settings file" %} - {{block.super}}{% endblock %}
+{% block title %}{% translate "Add a new SEB settings file" %} - {{block.super}}{% endblock %}
+
+{% block management_header %}
+    <h1>{% translate "Add a new SEB settings file" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
-<div class="container">
-    <header>
-        <h1>{% trans "Add a new SEB settings file" %}</h1>
-    </header>
+    {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
 
-    <main>
-        {% include "numbas_lti/management/admin/seb_settings/config_instructions.html" %}
-        <hr>
-        <form method="POST" action="" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{form|bootstrap}}
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add SEB settings" %}</button>
-        </form>
-    </main>
-</div>
+    <hr>
+
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form}}
+        <button type="submit" class="button primary">{% icon 'plus' %} {% translate "Add SEB settings" %}</button>
+    </form>
 {% endblock management_content %}

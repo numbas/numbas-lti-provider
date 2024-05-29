@@ -11,19 +11,19 @@ table#parts .question-id {
     font-size: 1.2em;
     font-weight: bold;
 }
-table#parts .not-first-appearance {
-    color: #ccc;
-}
 table#parts th {
     text-align: center;
 }
 table#parts td {
-  border-left: 1px dashed #ccc;
+  border-left-style: dashed;
   vertical-align: middle;
+}
+table#parts td:first-child {
+    border-left: none;
 }
 
 .part.discounted td, .part.remarked td {
-    background-color: hsl(50.4, 80.6%, 93.9%);
+    background-color: var(--info-alert-bg);
 }
 
 .part .original-score {
@@ -35,8 +35,4 @@ table#parts td {
 }
 .monospace {
     font-family: monospace;
-}
-
-.part.changed input {
-    background: hsl(0, 50%, 95%);
 }

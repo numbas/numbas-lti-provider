@@ -1,14 +1,16 @@
 {% extends "numbas_lti/base.html" %}
-{% load percentage %}
 {% load i18n %}
+{% load icon %}
+{% load percentage %}
+{% load querystring %}
+{% load time_tag %}
+
+{% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
 
 {% block content %}
-<div class="container">
-    <header class="page-header">
+    <header>
         <h1>
             {{resource.title}}
-            <span class="text-muted">·</span>
-            <small>{{resource.context.name}}</small>
         </h1>
     </header>
 
@@ -21,23 +23,23 @@
         </p>
 
         {% if resource.discounted_parts.exists %}
-        <div class="alert alert-info">
+        <div class="alert info">
             <p>{% blocktranslate %}Parts of this activity have been discounted by an instructor. Your final score may not match the one you see.{% endblocktranslate %}</p>
         </div>
         {% endif %}
 
         {% for message in messages %}
-        <div class="alert alert-info">
+        <div class="alert info">
             {{message}}
         </div>
         {% endfor %}
 
-        <table class="table">
+        <table>
             <thead>
                 <tr>
-                    <th>{% translate "Start time" %}</th>
-                    <th>{% translate "Score" %}</th>
-                    <th></th>
+                    <th scope="col">{% translate "Start time" %}</th>
+                    <th scope="col">{% translate "Score" %}</th>
+                    <th scope="col"></th>
                 </tr>
             </thead>
             <tbody>
@@ -45,13 +47,13 @@
                 <tr>
                     <td colspan="2">
                     <td>
-                        <a class="btn btn-warning" href="{% url 'new_attempt' %}"><span class="glyphicon glyphicon-plus"></span> {% translate "Start a new attempt" %}</a>
+                        <a class="button warning" href="{% url_with_lti 'new_attempt' %}">{% icon 'plus' %} {% translate "Start a new attempt" %}</a>
                     </td>
                 </tr>
                 {% endif %}
                 {% for attempt in object_list %}
                 <tr>
-                    <td>{{attempt.start_time}}</td>
+                    <td>{% time_tag attempt.start_time %}</td>
                     <td>
                         {% if attempt.should_show_scores %}
                             {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})
@@ -63,16 +65,16 @@
                             {% endif %}
                         {% endif %}
                         {% if attempt.is_remarked %}
-                        <br>
-                        <small>{% translate "This score has been manually changed by an instructor." %}</small>
+                            <br>
+                            <small>{% translate "This score has been manually changed by an instructor." %}</small>
                         {% endif %}
                     </td>
                     <td>
                         {% if attempt.completed %}
                             {% if attempt.review_allowed %}
-                            <a class="btn btn-info" href="{% url 'run_attempt' pk=attempt.pk %}">
-                                <span class="glyphicon glyphicon-apple"></span> {% translate "Review this attempt" %}
-                            </a>
+                                <a class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                                    {% icon 'play' %} {% translate "Review this attempt" %}
+                                </a>
                             {% else %}
                                 {% if attempt.resource.allow_review_from %}
                                     {% include "numbas_lti/review_not_allowed.html" with allow_review_from=attempt.resource.allow_review_from %}
@@ -80,9 +82,9 @@
                             {% endif %}
                         {% else %}
                             {% if attempt.resume_allowed %}
-                            <a class="btn {% if attempt.completed %}btn-info{% else %}btn-primary{% endif %}" href="{% url 'run_attempt' pk=attempt.pk %}">
-                                <span class="glyphicon glyphicon-play"></span> {% translate "Continue" %}
-                            </a>
+                                <a class="button {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                                    {% icon 'play' %} {% translate "Continue" %}
+                                </a>
                             {% endif %}
                         {% endif %}
                     </td>
@@ -91,5 +93,7 @@
             </tbody>
         </table>
     </main>
+
+    {% include "numbas_lti/footer.html" %}
 </div>
 {% endblock content %}

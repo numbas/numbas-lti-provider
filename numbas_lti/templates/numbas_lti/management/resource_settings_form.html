@@ -1,0 +1,15 @@
+<div class="fieldsets">
+    {% for fieldset, fields in form.fieldsets %}
+    <fieldset>
+        <legend>{{fieldset}}</legend>
+
+        {% for field in fields %}
+        <p>
+        {{field.label_tag}}
+        {{field}}
+        {{errors}}
+        </p>
+        {% endfor %}
+    </fieldset>
+    {% endfor %}
+</div>

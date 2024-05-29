@@ -1,0 +1,11 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <header>
+        <h1>{% translate "Numbas" %}</h1>
+    </header>
+    <main>{% block main %}{% endblock main %}</main>
+
+    {% include "numbas_lti/footer.html" %}
+{% endblock content %}

@@ -1,81 +1,61 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
+{% load icon %}
 {% load static %}
 
-{% block title %}{% trans "Consumers" %} - {{block.super}}{% endblock %}
+{% block title %}{% translate "Consumers" %} - {{block.super}}{% endblock %}
 
-
-{% block stylesheets %}
-{{block.super}}
-<style type="text/css">
-    .nav-tabs {
-        margin-bottom: 1rem;
-    }
-</style>
-{% endblock stylesheets %}
+{% block management_header %}
+    <h1>{% translate "Consumers" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
     {% if object_list.exists %}
-        <div>
-            <p>{% trans "The configured LTI consumers are listed below. To access this tool, use the configuration URL below, and the corresponding consumer key and consumer secret." %}</p>
-        </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>{% trans "Consumer key" %}</th>
-                    <th>{% trans "Shared secret" %}</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for consumer in object_list %}
-                <tr>
-                    <td><code>{{consumer.key}}</code></td>
-                    <td><code>{{consumer.secret}}</code></td>
-                    <td>
-                        {% blocktrans count num_resources=consumer.resources.count %}
-                        1 resource.
-                        {% plural %}
-                        {{num_resources}} resources.
-                        {% endblocktrans %}
-                    </td>
-                    <td>
-                        <a href="{% url 'view_consumer' consumer.pk %}" class="btn btn-primary">{% trans "Manage" %}</a>
-                        <a href="{% url 'delete_consumer' consumer.pk %}" title="{% trans "Delete this consumer" %}" class="btn btn-link"><span class="text-danger glyphicon glyphicon-trash"></span></a>
-                        {% if consumer.url %}<a class="btn btn-link" href="{{consumer.url}}" target="_blank">{% trans "Visit" %} <span class="glyphicon glyphicon-new-window"></span></a>{% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <p><a href="{% url 'create_consumer' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add a new LTI consumer" %}</a></p>
+        <section id="consumers">
+            <p>{% translate "The configured LTI consumers are listed below." %}</p>
 
-        <hr>
-        <section>
-            <h2>{% trans "Configuration information" %}</h2>
-            <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active"><a href="#config-xml" aria-controls="config-xml" role="tab" data-toggle="tab">{% trans "Configuration by URL" %}</a></li>
-                <li role="presentation"><a href="#config-manual" aria-controls="config-manual" role="tab" data-toggle="tab">{% trans "Manual configuration" %}</a></li>
+            <ul id="consumer-list" class="card-list">
+                {% for consumer in object_list %}
+                    <li class="consumer card">
+                        <header>
+                            <h2>
+                                <a href="{% url 'view_consumer' consumer.pk %}">{{consumer.title}}</a>
+                            </h2>
+                        </header>
+                        <dl>
+                        {% if consumer.lti_11 %}
+                            <dt>{% translate "LTI version" %}</dt>
+                            <dd>1.1</dd>
+                        {% endif %}
+                        {% if consumer.lti_13 %}
+                            <dt>{% translate "LTI version" %}</dt>
+                            <dd>1.3</dd>
+
+                            <dt>{% translate "Issuer" %}</dt>
+                            <dd><code>{{consumer.lti_13.tool.issuer}}</code></dd>
+                        {% endif %}
+                        </dl>
+                        <p>
+                            {% blocktranslate count num_resources=consumer.resources.count %}
+                            1 resource.
+                            {% plural %}
+                            {{num_resources}} resources.
+                            {% endblocktranslate %}
+                        </p>
+                    </li>
+                {% endfor %}
+
+                <li>
+                    <p><a href="{% url 'lti_13:register' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI 1.3 consumer" %}</a></p>
+                    <p><a href="{% url 'create_consumer' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI 1.1 consumer" %}</a></p>
+                </li>
             </ul>
-            <div class="tab-content">
-                <div role="tabpanel" class="tab-pane active" id="config-xml">
-                    <p>{% trans "Here's the automatic configuration URL:" %}</p>
-                    <pre>{{config_url}}</pre>
-                </div>
-                <div role="tabpanel" class="tab-pane" id="config-manual">
-                    <p>{% trans "Here is this tool's Launch URL:" %}</p>
-                    <pre>{{entry_url}}</pre>
-                    <p>{% trans "And here's the icon URL:" %}</p>
-                    <pre>{{icon_url}}</pre>
-                    <img src="{% static 'icon.png' %}">
-                </div>
-            </div>
         </section>
     {% else %}
-        <div class="alert alert-warning">
-            <p>{% trans "No LTI consumers have been set up yet." %}</p>
-            <p><a href="{% url 'create_consumer' %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> {% trans "Add a new LTI consumer" %}</a></p>
+        <div class="alert warning">
+            <p>{% translate "No LTI consumers have been set up yet." %}</p>
+            <p><a href="{% url 'lti_13:register' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI 1.3 consumer" %}</a></p>
+            <p><a href="{% url 'create_consumer' %}" class="button primary">{% icon 'plus' %} {% translate "Add a new LTI 1.1 consumer" %}</a></p>
         </div>
     {% endif %}
 {% endblock management_content %}

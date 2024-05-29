@@ -1,7 +1,11 @@
 from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
 from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
-from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, LTIUserData, ScormElement, RemarkedScormElement, AccessChange, DISCOUNT_BEHAVIOURS
+from numbas_lti.models import \
+        Resource, LTI_13_ResourceLink, AccessToken, Exam, Attempt, \
+        ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, \
+        LTIUserData, ScormElement, RemarkedScormElement, AccessChange, \
+        DISCOUNT_BEHAVIOURS, LTIContext
 from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
@@ -26,7 +30,7 @@ import datetime
 import json
 import itertools
 
-class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.CreateView):
+class CreateExamView(HelpLinkMixin, MustBeInstructorMixin, generic.edit.CreateView):
     model = Exam
     management_tab = 'create_exam'
     template_name = 'numbas_lti/management/create_exam.html'
@@ -44,8 +48,15 @@ class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorM
 
         return context
 
+    def get_success_url(self):
+        return self.reverse_with_lti('resource_settings', args=(self.object.resource.pk,))
+
+class LTI_11_CreateExamView(ResourceManagementViewMixin, CreateExamView):
+    def get_resource(self):
+        return Resource.objects.get(pk=self.kwargs['pk'])
+
     def form_valid(self,form):
-        resource = self.request.resource
+        resource = self.get_resource()
         exam = self.object = form.save(commit=False)
         exam.resource = resource
         exam.save()
@@ -53,8 +64,6 @@ class CreateExamView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorM
         resource.save()
         return http.HttpResponseRedirect(self.get_success_url())
 
-    def get_success_url(self):
-        return reverse('resource_settings',args=(self.request.resource.pk,))
 
 class ReplaceExamView(CreateExamView):
     management_tab = 'settings'
@@ -62,9 +71,15 @@ class ReplaceExamView(CreateExamView):
     form_class = forms.ReplaceExamForm
     helplink = 'instructor/resources.html#replace-exam-package'
 
+    def get_resource(self):
+        return Resource.objects.get(pk=self.kwargs['pk'])
+
     def get_context_data(self,*args,**kwargs):
-        resource = self.request.resource
         context = super(ReplaceExamView,self).get_context_data(*args,**kwargs)
+
+        resource = self.get_resource()
+        context['resource'] = resource
+
         context['current_exam'] = resource.exam
         exams = []
         for exam in resource.exams.all():
@@ -75,37 +90,41 @@ class ReplaceExamView(CreateExamView):
         return context
 
     def form_valid(self,form):
-        resource = self.request.resource
+        resource = self.get_resource()
         old_exam = resource.exam
-        response = super().form_valid(form)
+        new_exam = self.object = form.save(commit=False)
+        new_exam.resource = resource
+        new_exam.save()
 
-        new_exam = self.object
+        resource.exam = new_exam
+        resource.save(update_fields=['exam'])
+
         if form.cleaned_data['safe_replacement']:
             resource.attempts.filter(exam=old_exam).update(exam=new_exam)
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
-        return response
+        return http.HttpResponseRedirect(self.get_success_url())
 
 class RestoreExamView(MustBeInstructorMixin, ResourceManagementViewMixin,generic.edit.UpdateView):
     model = Resource
     form_class = forms.RestoreExamForm
 
     def get_success_url(self):
-        return reverse('replace_exam',args=(self.request.resource.pk,))
+        return self.reverse_with_lti('replace_exam',args=(self.get_resource().pk,))
 
 class AttemptsUseCurrentVersionView(MustBeInstructorMixin, ResourceManagementViewMixin, generic.UpdateView):
     model = Resource
     http_method_names = ['post']
 
     def post(self, request, *args, **kwargs):
-        resource = self.request.resource
+        resource = self.get_resource()
         with transaction.atomic():
             for a in Attempt.objects.filter(resource=resource).exclude(exam=resource.exam):
                 a.exam = resource.exam
                 a.save()
         messages.add_message(self.request,messages.INFO,_('All attempts now use the active version of this resource\'s exam.'))
-        return redirect(reverse('replace_exam',args=(resource.pk,)))
+        return redirect(self.reverse_with_lti('replace_exam',args=(resource.pk,)))
 
 class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource
@@ -195,16 +214,68 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
 
         context['unlimited_attempts'] = resource.max_attempts == 0
 
-        context['student_summary'] = [
-            (
-                student,
-                resource.grade_user(student),
-                student.lti_data.filter(resource=resource).last(),
-                Attempt.objects.filter(user=student,resource=resource).exclude(broken=True).count(),
-                AccessToken.objects.filter(user=student,resource=resource).count(),
-            ) 
-            for student in resource.students().all()
-        ]
+        students = resource.students().all()
+
+        def summarise_extra_student(student):
+            return {
+                'last_name': student['family_name'],
+                'first_name': student['given_name'],
+                'full_name': student['name'],
+                'reported_score': 0,
+                'score': 0,
+                'lti_data': None,
+                'attempts': 0,
+                'access_tokens': 0,
+            }
+
+        def summarise_student(student):
+            attempt = resource.grade_user(student)
+            score = attempt.scaled_score if attempt else 0
+            lti_data = student.lti_data.filter(resource=resource).last()
+
+            if ags_grades is not None:
+                subs = student.lti_13_aliases.all().values_list('sub', flat=True)
+                grades = [g for g in ags_grades if g['userId'] in subs]
+                grade = grades[0] if grades else None
+                reported_score = (grade['resultScore'] / grade['resultMaximum']) if grade else None
+                score_not_reported = reported_score != score
+            else:
+                reported_score = lti_data.last_reported_score
+
+            return {
+                'last_name': student.last_name,
+                'first_name': student.first_name,
+                'full_name': student.get_full_name(),
+                'reported_score': reported_score,
+                'score': score,
+                'lti_data': lti_data,
+                'attempts': Attempt.objects.filter(user=student,resource=resource).exclude(broken=True).count(),
+                'access_tokens': AccessToken.objects.filter(user=student,resource=resource).count(),
+            }
+
+        message_launch = self.get_message_launch()
+        if message_launch:
+            is_lti_13 = context['is_lti_13'] = True
+        else:
+            is_lti_13 = context['is_lti_13'] = False
+
+        extra_students = []
+        ags_grades = None
+        lti_context = resource.lti_13_contexts().first()
+        if lti_context:
+            ags = lti_context.get_ags()
+            lineitem = resource.get_lti_13_lineitem(ags)
+            ags_grades = context['grades'] = ags.get_grades(lineitem)
+            nrps_members = [m for m in lti_context.nrps_members() if m['student']]
+            if nrps_members:
+                got_ids = [s for student in students for s in student.lti_13_aliases.all().values_list('sub', flat=True)]
+                extra_students = [summarise_extra_student(m) for m in nrps_members if m['user_id'] not in got_ids]
+
+
+        summaries = [summarise_student(student) for student in students] + extra_students
+
+        context['student_summary'] = sorted(summaries, key=lambda x: (x['last_name'], x['first_name']))
+
 
         return context
 
@@ -278,7 +349,7 @@ class ResourceSettingsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementVie
     helplink = 'instructor/resources.html#settings'
 
     def get_success_url(self):
-        return reverse('resource_dashboard',args=(self.get_object().pk,))
+        return self.reverse_with_lti('resource_dashboard',args=(self.get_object().pk,))
 
 class CreateResourceFileReportView(MustBeInstructorMixin,CreateFileReportView,generic.detail.DetailView):
     model = Resource
@@ -287,7 +358,7 @@ class CreateResourceFileReportView(MustBeInstructorMixin,CreateFileReportView,ge
         return self.object
 
     def get_success_url(self):
-        return reverse('resource_dashboard',args=(self.object.pk,))
+        return self.reverse_with_lti('resource_dashboard',args=(self.object.pk,))
 
 class FileReportsListView(HelpLinkMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     template_name = 'numbas_lti/management/resource_reports.html'
@@ -344,7 +415,7 @@ def grant_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=resource)
 
-    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
+    return redirect(self.reverse_with_lti('resource_dashboard',args=(resource.pk,)))
 
 @lti_role_or_superuser_required(INSTRUCTOR_ROLES)
 def remove_access_token(request,resource_id,user_id):
@@ -352,7 +423,7 @@ def remove_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.filter(user=user,resource=resource).first().delete()
 
-    return redirect(reverse('resource_dashboard',args=(resource.pk,)))
+    return redirect(self.reverse_with_lti('resource_dashboard',args=(resource.pk,)))
 
 class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
     model = ReportProcess
@@ -361,7 +432,7 @@ class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
         process = self.get_object()
         process.dismissed = True
         process.save()
-        return redirect(reverse('resource_dashboard',args=(process.resource.pk,)))
+        return redirect(self.reverse_with_lti('resource_dashboard',args=(process.resource.pk,)))
 
 class RunExamView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     """
@@ -489,14 +560,14 @@ class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,Mus
                 'start_time': a.start_time,
                 'user': { 
                     'full_name': a.user.get_full_name(),
-                    'identifier': a.user_data().identifier(),
+                    'identifier': a.user_data().identifier() if a.user_data() else '',
                 },
             }
             for a in attempts
         ]
 
         context['parameters'] = {
-            'save_url': reverse('resource_remark_save_data',args=(resource.pk,)),
+            'save_url': self.reverse_with_lti('resource_remark_save_data',args=(resource.pk,)),
         }
 
         source_path = Path(resource.exam.extracted_path) / 'source.exam'
@@ -638,7 +709,17 @@ class AccessChangesView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstruc
     resource_pk_url_kwarg = 'resource_id'
     helplink = 'instructor/resources.html#access-changes'
     
-class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.CreateView):
+class AccessChangeEditView(HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin):
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        lti_context = self.get_resource().lti_13_contexts().first()
+        if lti_context:
+            context['nrps_members'] = lti_context.nrps_members()
+
+        return context
+
+class CreateAccessChangeView(AccessChangeEditView, generic.CreateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     template_name = 'numbas_lti/management/access_change/edit.html'
@@ -657,9 +738,9 @@ class CreateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
         return initial
 
     def get_success_url(self):
-        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+        return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
 
-class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeInstructorMixin, generic.UpdateView):
+class UpdateAccessChangeView(AccessChangeEditView, generic.UpdateView):
     model = AccessChange
     form_class = forms.AccessChangeForm
     management_tab = 'access-changes'
@@ -670,13 +751,15 @@ class UpdateAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
         return self.get_object().resource
 
     def get_success_url(self):
-        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+        return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
 
     def get_initial(self):
         initial = super().get_initial()
         ac = self.get_object()
         initial['resource'] = ac.resource
-        initial['usernames'] = '\n'.join(u.username for u in ac.usernames.all())
+        usernames = [u.username for u in ac.usernames.all()]
+        initial['nrps_applies_to'] = usernames
+        initial['usernames'] = '\n'.join(usernames)
         initial['emails'] = '\n'.join(e.email for e in ac.emails.all())
         if ac.extend_deadline is not None:
             initial['extend_deadline_days'] = ac.extend_deadline.days
@@ -693,4 +776,4 @@ class DeleteAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
         return self.get_object().resource
 
     def get_success_url(self):
-        return reverse('resource_access_changes',args=(self.get_resource().pk,))
+        return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))

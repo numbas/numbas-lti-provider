@@ -1,30 +1,31 @@
-{% extends "numbas_lti/base.html" %}
+{% extends "numbas_lti/error_message.html" %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <header>
-        <h1>{% trans "Not an LTI launch" %}</h1>
-    </header>
-    <main>
-        <p>{% trans "This URL is supposed to be used to launch an LTI activity." %}</p>
+{% block body_class %}{{block.super}} launch-error not-an-lti-launch{% endblock %}
 
-        {% if debug %}
-        <h2>POST data</h2>
-        <p>{% blocktrans %}You should see some LTI-related items in the table below, such as <code>lti_message_type</code> and <code>lti_version</code>." {% endblocktrans %}</p>
-        <p>{% trans "If those aren't present, it's likely that you haven't arrived via an LTI launch." %}</p>
-        <table>
-            <thead>
-                <tr><th>{% trans "Key" %}</th><th>{% trans "Value" %}</th></tr>
-            </thead>
-            <tbody>
-                {% for key,value in post_data %}
-                <tr><td><code>{{key}}</code></td><td><code>{{value}}</code></td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-    </main>
-</div>
-{% endblock content %}
+{% block title %}{% translate "Not an LTI launch" %} - {{block.super}}{% endblock %}
+{% block header_message %}{% translate "Not an LTI launch" %}{% endblock %}
 
+{% block main %}
+    {% if exception %}
+        <p>{{exception}}</p>
+    {% else %}
+        <p>{% translate "This URL is supposed to be used to launch an LTI activity." %}</p>
+    {% endif %}
+
+    {% if debug %}
+    <h2>POST data</h2>
+    <p>{% blocktranslate %}You should see some LTI-related items in the table below, such as <code>lti_message_type</code> and <code>lti_version</code>. {% endblocktranslate %}</p>
+    <p>{% translate "If those aren't present, it's likely that you haven't arrived via an LTI launch." %}</p>
+    <table>
+        <thead>
+            <tr><th scope="col">{% translate "Key" %}</th><th scope="col">{% translate "Value" %}</th></tr>
+        </thead>
+        <tbody>
+            {% for key,value in post_data %}
+            <tr><td><code>{{key}}</code></td><td><code>{{value}}</code></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock main %}

@@ -1,1 +1,1 @@
-<span class="glyphicon glyphicon-book"></span> {{resource.title}}{% if resource.title != resource.exam.title %} / {{resource.exam.title}}{% endif %} ({{resource.context.name}} - <code>{{resource.context.consumer.key}}</code>)
+{% load i18n %}{% translate "Resource:" %} {{resource.title}}{% if resource.title != resource.exam.title %} / {{resource.exam.title}}{% endif %} {% with lti_context=resource.lti_contexts.first %}{% if lti_context %}({{lti_context.name}} - <code>{{lti_context.consumer.title}}</code>){% endif %}{% endwith %}

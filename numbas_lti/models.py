@@ -4,12 +4,13 @@ from collections import defaultdict
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import signing
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.utils import OperationalError
-from django.db.models import Min, Count, Q, Subquery
+from django.db.models import Min, Count, Q, Subquery, OuterRef, Func, F
 from django.template.loader import get_template
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _, gettext, ngettext
@@ -21,17 +22,27 @@ import json
 from lxml import etree
 import os
 from pathlib import Path
+from pylti1p3.assignments_grades import AssignmentsGradesService
+from pylti1p3.names_roles import NamesRolesProvisioningService
+from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
+from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
+from pylti1p3.lineitem import LineItem
+import pylti1p3.roles
+from pylti1p3.service_connector import ServiceConnector, REQUESTS_USER_AGENT
 import re
-import requests
 import shutil
 import time
 import uuid
 from zipfile import ZipFile
 
+from . import requests_session
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
 from .util import parse_scorm_timeinterval
+
+
+requests = requests_session.get_session()
 
 class NotDeletedManager(models.Manager):
     def get_queryset(self):
@@ -47,9 +58,11 @@ IDENTIFIER_FIELDS = [
 ]
 
 class LTIConsumer(models.Model):
+    """
+        An LTI consumer.
+        Specific settings for the LTI 1.1 and LTI 1.3 protocols are in separate models, ``LTI_11_Consumer`` and ``LTI_13_Consumer``.
+    """
     url = models.URLField(blank=True,default='',verbose_name=_('Home URL of consumer'))
-    key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
-    secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
     deleted = models.BooleanField(default=False)
     identifier_field = models.CharField(default='', blank=True, max_length=20, choices=IDENTIFIER_FIELDS, verbose_name=_('Field used to identify students'))
 
@@ -60,14 +73,25 @@ class LTIConsumer(models.Model):
         verbose_name_plural = _('LTI consumers')
 
     def __str__(self):
-        return self.key
+        return f'Consumer {self.url} (ID: {self.pk})'
+
+    def get_absolute_url(self):
+        return reverse('view_consumer', args=(self.pk,))
+
+    @property
+    def title(self):
+        if hasattr(self, 'lti_11'):
+            return self.lti_11.key
+        elif hasattr(self, 'lti_13'):
+            return self.lti_13.tool.title
 
     @property
     def resources(self):
-        return Resource.objects.filter(context__consumer=self)
+        return Resource.objects.filter(Q(lti_11_links__context__consumer=self) | Q(lti_13_links__context__consumer=self))
 
     def contexts_grouped_by_period(self):
-        contexts = self.contexts.exclude(name='').annotate(creation=Min('resources__creation_time'),num_attempts=Count('resources__attempts')).order_by('-creation')
+        resources = Resource.objects.filter(Q(lti_13_links__context=OuterRef('pk')) | Q(lti_11_links__context=OuterRef('pk')))
+        contexts = self.contexts.exclude(name='').annotate(creation=Subquery(resources.order_by('creation_time').values('creation_time')[:1]),num_attempts=resources.annotate(n=Func(F('attempts'), function='COUNT')).values('n')).order_by('-creation')
         if not self.time_periods.exists():
             return [(None,contexts)]
         it = iter(self.time_periods.order_by('-end'))
@@ -103,6 +127,49 @@ class LTIConsumer(models.Model):
             out.append((None,no_creation[:]))
         groups = [(p,sorted(cs,key=lambda c:c.name.upper())) for p,cs in out]
         return groups
+
+class LTIConsumerRegistrationToken(models.Model):
+    """ 
+        A token allowing one registration of an LTI consumer by dynamic registration.
+    """
+    uid = models.UUIDField(default = uuid.uuid4, primary_key = True)
+    created = models.DateTimeField(auto_now_add = True)
+    name = models.CharField(max_length=500, verbose_name=_('Intended use for this token'))
+
+    class Meta:
+        verbose_name = _('LTI consumer registration token')
+        verbose_name_plural = _('LTI consumer registration tokens')
+
+    def __str__(self):
+        return f'{self.uid} ({self.name})'
+
+    def get_absolute_url(self):
+        return reverse('lti_13:view_dynamic_registration_token', kwargs={'pk':self.uid})
+
+class LTI_11_Consumer(models.Model):
+    consumer = models.OneToOneField(LTIConsumer, related_name='lti_11', on_delete=models.CASCADE)
+    key = models.CharField(max_length=100,unique=True,verbose_name=_('Consumer key'),help_text=_('The key should be human-readable, and uniquely identify this consumer.'))
+    secret = models.CharField(max_length=100,verbose_name=_('Shared secret'))
+
+class LTI_11_UserAlias(models.Model):
+    consumer = models.ForeignKey(LTIConsumer, related_name='lti_11_user_aliases', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='lti_11_aliases', on_delete=models.CASCADE)
+    consumer_user_id = models.TextField()
+
+class LTI_13_Consumer(models.Model):
+    consumer = models.OneToOneField(LTIConsumer, related_name='lti_13', on_delete=models.CASCADE)
+    tool = models.OneToOneField(LtiTool, related_name='numbas', on_delete=models.CASCADE)
+
+class LTI_13_UserAlias(models.Model):
+    consumer = models.ForeignKey(LTIConsumer, related_name='lti_13_user_aliases', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='lti_13_aliases', on_delete=models.CASCADE)
+    sub = models.CharField(max_length=255) # The platform's identifier for the user
+
+    full_name = models.CharField(max_length=1000, blank=True, default='')
+    given_name = models.CharField(max_length=1000, blank=True, default='')
+    family_name = models.CharField(max_length=1000, blank=True, default='')
+    email = models.EmailField(blank=True, default='')
+    locale = models.CharField(max_length=30, blank=True, default='')
 
 class ConsumerTimePeriod(models.Model):
     consumer = models.ForeignKey(LTIConsumer, related_name='time_periods', on_delete=models.CASCADE)
@@ -173,7 +240,7 @@ class Exam(ExtractPackage):
                 content = json.loads(re.sub(r'^// Numbas version: .*\n','',f.read()))
                 return content
         except (FileNotFoundError,json.JSONDecodeError):
-            return
+            return {}
 
     def has_duration(self):
         source = self.source()
@@ -227,7 +294,7 @@ class LTIContext(models.Model):
     class Meta:
         verbose_name = _('LTI context')
         verbose_name_plural = _('LTI contexts')
-        unique_together = (('context_id', 'instance_guid'),)
+        unique_together = (('context_id', 'instance_guid', 'consumer'),)
 
     def __str__(self):
         if self.name == self.label:
@@ -235,8 +302,70 @@ class LTIContext(models.Model):
         else:
             return '{} ({})'.format(self.name, self.label)
 
+    @property
+    def resources(self):
+        return Resource.objects.filter(Q(lti_11_links__context=self) | Q(lti_13_links__context=self))
+
     def get_absolute_url(self):
         return reverse('view_context', args=(self.pk,))
+
+class LTI_13_Context(models.Model):
+    tool_conf = DjangoDbToolConf()
+
+    context = models.OneToOneField(LTIContext, on_delete=models.CASCADE, related_name='lti_13')
+    ags_data = models.JSONField(blank=True, default=dict, null=True)
+    nrps_data = models.JSONField(blank=True, default=dict, null=True)
+
+    def get_service_connector(self):
+        tool = self.context.consumer.lti_13.tool
+
+        registration = self.tool_conf.find_registration_by_params(iss=tool.issuer, client_id=tool.client_id)
+
+        service_connector = ServiceConnector(registration, requests_session.get_session())
+    
+        return service_connector
+
+    def get_ags(self):
+        """
+            Get the Assignments and Grades Service controller for this context.
+        """
+        if self.ags_data:
+            return AssignmentsGradesService(self.get_service_connector(), self.ags_data)
+
+    def get_nrps(self):
+        """
+            Get the Names and Roles Provisioning Service controller for this context.
+        """
+
+        if self.nrps_data:
+            return NamesRolesProvisioningService(self.get_service_connector(), self.nrps_data)
+
+    def nrps_members(self):
+        cache_key = f'nrps_members-{self.pk}'
+
+        members = cache.get(cache_key)
+        if members is not None:
+            return members
+
+        nrps = self.get_nrps()
+        raw_members = nrps.get_members()
+        members = [
+            {
+                'name': m['name'],
+                'given_name': m['given_name'],
+                'family_name': m['family_name'],
+                'active': m['status'] == 'Active',
+                'student': pylti1p3.roles.StudentRole({"https://purl.imsglobal.org/spec/lti/claim/roles": m['roles']}).check(),
+                'user_id': m['user_id'],
+                'ext_user_username': m['ext_user_username'],
+                'email': m['email'],
+            }
+            for m in sorted(raw_members, key=lambda x: (x['family_name'], x['given_name']))
+        ]
+        cache.set(cache_key, members, 60)
+
+        return members
+
 
 REQUIRE_LOCKDOWN_APP_CHOICES = [
     ('', _('No')),
@@ -257,9 +386,7 @@ class SebSettings(models.Model):
         return reverse('edit_seb_settings',args=(self.pk,))
 
 class Resource(models.Model):
-    resource_link_id = models.CharField(max_length=300)
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL,related_name='main_exam_of')
-    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='resources')
     title = models.CharField(max_length=300,default='')
     description = models.TextField(default='')
 
@@ -293,8 +420,12 @@ class Resource(models.Model):
     def __str__(self):
         if self.exam:
             return "Resource {}: {}".format(self.pk, self.exam)
-        elif self.context:
-            return _('Resource in "{}" - no exam uploaded').format(self.context.name)
+        elif self.lti_11_links.exists():
+            link = self.lti_11_links.first()
+            return _('Resource linked to "{context}"').format(context=link.context)
+        elif self.lti_13_links.exists():
+            link = self.lti_13_links.first()
+            return _('Resource linked to "{context}"').format(context=link.context)
         else:
             return gettext('Resource with no context')
 
@@ -305,30 +436,41 @@ class Resource(models.Model):
         else:
             return 'resource'
 
+    def lti_contexts(self):
+        """
+            LTI Contexts that this resource is linked to.
+        """
+
+        return LTIContext.objects.filter(Q(lti_11_resource_links__resource=self) | Q(lti_13_resource_links__resource=self)).distinct()
+
+    def lti_13_contexts(self):
+        return LTI_13_Context.objects.filter(context__lti_13_resource_links__resource=self).distinct()
+
+    def lti_11_contexts(self):
+        return LTIContext.objects.filter(lti_11_resource_links__resource=self)
+
     def unbroken_attempts(self):
         return self.attempts.filter(broken=False)
 
     def grade_user(self,user):
+        """
+            Find the attempt representing the user's grade at this resource.
+            Depends on ``grading_method``.
+        """
         methods = {
-            'highest': self.grade_highest,
-            'last': self.grade_last,
+            'highest': '-scaled_score',
+            'last': '-start_time',
         }
         attempts = self.attempts.filter(user=user)
         if not self.include_incomplete_attempts:
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():
-            return 0
-        score = methods[self.grading_method](user,attempts)
-        return min(1,max(score,0))
-
-    def grade_highest(self,user,attempts):
-        return attempts.aggregate(highest_score=models.Max('scaled_score'))['highest_score']
-
-    def grade_last(self,user,attempts):
-        return attempts.order_by('-start_time').first().scaled_score
+            return None
+        attempt = attempts.order_by(methods[self.grading_method]).first()
+        return attempt
 
     def students(self):
-        return User.objects.filter(attempts__resource=self).distinct().order_by('last_name','first_name')
+        return User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct().order_by('last_name','first_name')
 
     def available_for_user(self,user=None):
         afrom = self.available_from
@@ -387,6 +529,9 @@ class Resource(models.Model):
         return data
 
     def is_available(self,user=None):
+        if user is not None and user.is_anonymous:
+            return False
+
         available_from, available_until = self.available_for_user(user)
 
         if available_from is None and available_until is None:
@@ -513,10 +658,7 @@ class Resource(models.Model):
         return data
 
     def receipt_salt(self):
-        if self.context and self.context.consumer:
-            return 'numbas_lti:consumer:'+self.context.consumer.key
-        else:
-            return 'numbas_lti:resource:'+str(self.pk)
+        return 'numbas_lti:resource:'+str(self.pk)
 
     def report_scores(self):
         if ReportProcess.objects.filter(resource=self,status='reporting').exists():
@@ -525,7 +667,7 @@ class Resource(models.Model):
         process = ReportProcess.objects.create(resource=self)
 
         errors = []
-        for user in User.objects.filter(attempts__resource=self).distinct():
+        for user in User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct():
             try:
                 request = report_outcome(self,user)
             except ReportOutcomeException as e:
@@ -574,6 +716,66 @@ class Resource(models.Model):
         _, lockdown_app_password, _ = self.require_lockdown_app_for_user(user)
         return lockdown_app_password
 
+    def estimate_max_score(self):
+        """
+            Estimate the maximum score for this resource.
+            Because the maximum score for a question can't be determined without running it, and might be different for different attempts, we can only estimate the maximum score by looking at an attempt at the exam.
+            If no attempts exist, return 1.
+            LTI platforms only store the scaled score, so this can only help readability and shouldn't affect any automated decisions.
+        """
+        try:
+            attempt = self.attempts.first()
+            return attempt.max_score
+        except Attempt.DoesNotExist:
+            return 1
+
+    def get_lti_13_lineitem(self, ags):
+        lineitem = LineItem({
+            "scoreMaximum": self.estimate_max_score(),
+            "tag": "grade",
+            "label": self.title,
+            "resourceId": f"resource-{self.pk}",
+        })
+
+        if self.available_from is not None:
+            lineitem.set_start_date_time(self.available_from.isoformat())
+        if self.available_until is not None:
+            lineitem.set_end_date_time(self.available_until.isoformat())
+
+        saved_lineitem = ags.find_or_create_lineitem(lineitem, condition = lambda l: l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id())
+        if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
+            or saved_lineitem.get_start_date_time() != lineitem.get_start_date_time()
+            or saved_lineitem.get_end_date_time() != lineitem.get_end_date_time()
+            ):
+            saved_lineitem.set_score_maximum(lineitem.get_score_maximum())
+            saved_lineitem.set_start_date_time(lineitem.get_start_date_time())
+            saved_lineitem.set_end_date_time(lineitem.get_end_date_time())
+            self.update_lti_13_lineitem(ags, saved_lineitem)
+
+        return saved_lineitem
+
+    def update_lti_13_lineitem(self, ags, lineitem=None):
+        if lineitem is None:
+            lineitem = self.get_lti_13_lineitem(ags)
+        scope = ags._service_data['scope']
+        access_token = ags._service_connector.get_access_token(scope)
+
+        ags._service_connector._requests_session.put(lineitem.get_id(), data=lineitem.get_value(), headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json', 'Content-Type': 'application/vnd.ims.lis.v2.lineitem+json'})
+
+        return lineitem
+
+
+class LTI_11_ResourceLink(models.Model):
+    resource = models.ForeignKey(Resource, related_name='lti_11_links', on_delete=models.CASCADE)
+    resource_link_id = models.CharField(max_length=300)
+    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='lti_11_resource_links')
+
+class LTI_13_ResourceLink(models.Model):
+    resource = models.ForeignKey(Resource, related_name='lti_13_links', on_delete=models.CASCADE)
+    resource_link_id = models.CharField(max_length=300)
+    title = models.CharField(max_length=300,default='')
+    description = models.TextField(default='', blank=True)
+    context = models.ForeignKey(LTIContext,blank=True,null=True,on_delete=models.SET_NULL,related_name='lti_13_resource_links')
 
 class ReportProcess(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='report_processes')
@@ -605,6 +807,8 @@ class AccessChangeManager(models.Manager):
     use_for_related_fields = True
 
     def for_user(self,user):
+        if user.is_anonymous:
+            return AccessChange.objects.none()
         query = Q(users=user) | Q(usernames__username=user.username) | Q(emails__email__iexact=user.email)
         return self.get_queryset().filter(query).distinct()
 
@@ -679,12 +883,12 @@ class EmailAccessChange(models.Model):
     email = models.EmailField()
 
 class LTIUserData(models.Model):
+    """
+        Associate the LTI 1.1 data for a user with a consumer.
+    """
     consumer = models.ForeignKey(LTIConsumer,on_delete=models.CASCADE,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_data')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE)
-    lis_result_sourcedid = models.CharField(max_length=1000,default='',blank=True,null=True)
-    lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
-    lis_person_sourcedid = models.CharField(max_length=1000,blank=True,default='',null=True)
     last_reported_score = models.FloatField(default=0)
     consumer_user_id = models.TextField(default='',blank=True,null=True)
     is_instructor = models.BooleanField(default=False)
@@ -694,13 +898,13 @@ class LTIUserData(models.Model):
         verbose_name_plural = _('LTI user data')
 
     def get_source_id(self):
-        if self.lis_person_sourcedid:
+        if self.lti_11 and self.lti_11.lis_person_sourcedid:
             return self.lis_person_sourcedid
         else:
             return self.consumer_user_id
 
     def identifier(self):
-        identifier_field = self.resource.context.consumer.identifier_field
+        identifier_field = self.resource.lti_contexts().first().consumer.identifier_field
         if identifier_field == 'username':
             return self.get_source_id()
         elif identifier_field == 'email':
@@ -708,12 +912,31 @@ class LTIUserData(models.Model):
         else:
             return ''
 
+class LTI_11_UserData(models.Model):
+    user_data = models.OneToOneField(LTIUserData, on_delete=models.CASCADE, related_name='lti_11')
+    lis_result_sourcedid = models.CharField(max_length=1000,default='',blank=True,null=True)
+    lis_outcome_service_url = models.TextField(default='',blank=True,null=True)
+    lis_person_sourcedid = models.CharField(max_length=1000,blank=True,default='',null=True)
+
+LAUNCH_ROLE_CHOICES = [
+    ('', _('Unknown')),
+    ('teacher', _('Teacher')),
+    ('student', _('Student')),
+]
+
 class LTILaunch(models.Model):
+    """
+        Record when a user launches a resource.
+    """
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='lti_launches')
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE, related_name='launches')
     time = models.DateTimeField(auto_now_add=True)
     user_agent = models.CharField(max_length=500)
     ip_address = models.CharField(max_length=100)
+
+    role = models.CharField(max_length=20, choices=LAUNCH_ROLE_CHOICES, default='', blank=True)
+    lti_11_resource_link = models.ForeignKey(LTI_11_ResourceLink, on_delete=models.SET_NULL, related_name='launches', null=True)
+    lti_13_resource_link = models.ForeignKey(LTI_13_ResourceLink, on_delete=models.SET_NULL, related_name='launches', null=True)
 
     def __str__(self):
         return 'Launch by "{}" on "{}" at {}'.format(self.user, self.resource, self.time)
@@ -808,11 +1031,12 @@ class Attempt(models.Model):
         remarked_parts = self.remarked_parts.all()
         discounted_parts = self.resource.discounted_parts.all()
 
+
         data = {
             'attempt': self.pk,
             'resource': {
                 'title': self.resource.title,
-                'context': self.resource.context.name,
+                'contexts': [c.name for c in self.resource.lti_contexts()],
             },
             'exam': self.exam.pk,
             'user': {
@@ -988,7 +1212,7 @@ class Attempt(models.Model):
                 }
         """
         paths = sorted(self.part_paths(),key=lambda x:(len(x),x))
-        re_path = re.compile('q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
+        re_path = re.compile(r'q(\d+)p(\d+)(?:g(\d+)|s(\d+))?')
         out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
         for path in paths:
             m = re_path.match(path)
@@ -1411,7 +1635,7 @@ class EditorLink(models.Model):
 
         if self.projects.exists():
             project_pks = [str(p.remote_id) for p in self.projects.all()]
-            r = requests.get('{}/api/available-exams'.format(self.url),{'projects':project_pks})
+            r = requests.get('{}/api/available-exams'.format(self.url), params={'projects':project_pks})
 
             self.cached_available_exams = r.text
         else:

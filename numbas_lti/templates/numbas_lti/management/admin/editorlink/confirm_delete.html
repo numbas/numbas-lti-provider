@@ -1,26 +1,22 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
 
-{% block title %}{% blocktrans with name=object.name %}Delete link to editor "{{name}}"{% endblocktrans %} - {{block.super}}{% endblock %}
+{% block title %}{% blocktranslate with name=object.name %}Delete link to editor "{{name}}"{% endblocktranslate %} - {{block.super}}{% endblock %}
+
+{% block management_header %}
+    <h1>{% translate "Delete an editor connection" %}</h1>
+{% endblock management_header %}
 
 {% block management_content %}
-<div class="container">
-    <header>
-        <h1>Delete an editor connection</h1>
-    </header>
-
-    <main>
+    <p>
+        {% blocktranslate with name=editorlink.name%}Are you sure you want to delete the connection to {{name}}?{% endblocktranslate %}
+    </p>
+    <form method="POST" action="">
+        {% csrf_token %}
         <p>
-            {% blocktrans with name=editorlink.name%}Are you sure you want to delete the connection to {{name}}?{% endblocktrans %}
+            <button type="submit" class="button danger">{% icon 'trash' %} {% translate "Delete this connection" %}</button>
+            <a class="button link" href="{% url 'list_editorlinks' %}">Cancel</a>
         </p>
-        <form method="POST" action="">
-            {% csrf_token %}
-            <p>
-                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this connection" %}</button>
-                <a class="btn btn-link" href="{% url 'list_editorlinks' %}">Cancel</a>
-            </p>
-        </form>
-    </main>
-</div>
+    </form>
 {% endblock management_content %}

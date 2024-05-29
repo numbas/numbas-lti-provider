@@ -35,3 +35,7 @@
 .attempt:not(.saved) .saved {
     display: none;
 }
+
+.controls > div {
+    display: flex;
+}

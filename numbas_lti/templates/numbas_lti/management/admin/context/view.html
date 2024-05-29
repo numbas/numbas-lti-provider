@@ -1,41 +1,49 @@
 {% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
+{% load time_tag %}
 
 {% block title %}{{context.name|default:"Unnamed course"}} - {{block.super}}{% endblock %}
 
+{% block management_header %}
+    <h1>{{context.name|default:"Unnamed course"}} {% if context.label and context.label != context.name %}({{context.label}}){% endif %}</h1>
+{% endblock management_header %}
+
 {% block management_content %}
-    <header>
-        <h1 id="context-{{context.pk}}">{{context.name|default:"Unnamed course"}} {% if context.label and context.label != context.name %}({{context.label}}){% endif %}</h1>
-    </header>
 
-    <p>A context in <a href="{% url 'view_consumer' context.consumer.pk %}"><code>{{context.consumer.key}}</code></a></p>
+    <p>{% translate "A context in" %} <a href="{% url 'view_consumer' context.consumer.pk %}">{{context.consumer.title}}</a>.</p>
 
-    <p><a href="{% url 'delete_context' context.pk %}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> {% trans "Delete this context" %}</a></p>
+    <p><a href="{% url 'delete_context' context.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this context" %}</a></p>
 
-    {% if context.resources.exists %}
-    <table class="table">
-        {% for resource in context.resources.all %}
-        <tr class="resource{% if resource.is_old %} old{% endif %}{% if resource.is_new %} new warning{% endif %}">
-            <td>
-                <a href="{% url 'resource_dashboard' resource.pk %}" target="_blank">{{resource.title|default:"Unnamed resource"}} {% if resource.exam.title and resource.title != resource.exam.title %}<small class="text-muted">({{resource.exam.title}})</small>{% endif %}</a>
-            </td>
-            <td>
-                {% if resource.is_available %}
-                <span class="text-success"><span class="glyphicon glyphicon-eye-open"></span> {% trans "Open" %}</span>
-                {% else %}
-                <span class="text-muted"><span class="glyphicon glyphicon-eye-close"></span> {% trans "Closed" %}</span>
-                {% endif %}</td>
-            <td>{% trans "Created" %} {{resource.creation_time}}</td>
-            <td>
-                {% blocktrans count num_attempts=resource.unbroken_attempts.count %}
-                1 attempt.
-                {% plural %}
-                {{num_attempts}} attempts.
-                {% endblocktrans %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
+    <section id="resources">
+        <h2>{% translate "Resources" %}</h2>
+        {% if context.resources.exists %}
+        <table>
+            {% for resource in context.resources.all %}
+            <tr class="resource{% if resource.is_old %} old{% endif %}{% if resource.is_new %} new warning{% endif %}">
+                <td>
+                    <a href="{% url 'resource_dashboard' resource.pk %}" target="_blank">{{resource.title|default:"Unnamed resource"}} {% if resource.exam.title and resource.title != resource.exam.title %}<small class="muted">({{resource.exam.title}})</small>{% endif %}</a>
+                </td>
+                <td>
+                    {% if resource.is_available %}
+                    <span class="success">{% icon 'eye-open' %} {% translate "Open" %}</span>
+                    {% else %}
+                    <span class="muted">{% icon 'eye-close' %} {% translate "Closed" %}</span>
+                    {% endif %}</td>
+                <td>{% translate "Created" %} {% time_tag resource.creation_time %}</td>
+                <td>
+                    {% blocktranslate count num_attempts=resource.unbroken_attempts.count %}
+                    1 attempt.
+                    {% plural %}
+                    {{num_attempts}} attempts.
+                    {% endblocktranslate %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        {% else %}
+            <p>{% translate "This context is not associated with any resources." %}</p>
+        {% endif %}
+    </section>
 {% endblock management_content %}

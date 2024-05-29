@@ -1,91 +1,23 @@
+import {createApp} from './vue.js';
+
 const BATCH_SIZE = 50;
 
-Vue.filter('duration', function (value) {
-    const d = luxon.Duration.fromMillis(value);
-    return d.toFormat('mm:ss');
-})
-
-Vue.filter('percent', function (value) {
-    const pc = Math.floor(100*value);
-    return pc;
-})
-
-Vue.filter('pluralize', function (str, number) {
-    return str + (Math.abs(number)==1 ? '' : 's');
-})
-
-function todp(n,p) {
-    const s = n.toFixed(p);
-    return s.replace(/\.?0+$/,'')
-}
-
-Vue.filter('dp', function(n,p) {
-    if(isNaN(n) || typeof(n)!='number') {
-        return n;
-    }
-    return todp(n,p);
-})
-
-Vue.filter('change', function(n) {
-    const sn = todp(n,3)
-    if(n>=0) {
-        return '+'+sn;
-    } else {
-        return sn;
-    }
-})
-
-Vue.filter('change_class', function(a,b) {
-    if(a === null) {
-        return {};
-    }
-    return {
-        'score-change': true,
-        'decreased': a<b,
-        'unchanged': a==b,
-        'increased': a>b
-    };
-});
-
-Vue.filter('datetime', function(t) {
-    return t.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
-});
-
-Vue.component('score-change', {
-    props: ['from', 'to'],
-    computed: {
-        classes: function() {
-            const a = this.to;
-            const b = this.from;
-            if(a === null) {
-                return {};
-            }
-            return {
-                'score-change': true,
-                'decreased': a<b,
-                'unchanged': a==b,
-                'increased': a>b
-            };
-        }
-    },
-    template: `
-<div :class="classes">
-    {{(to - from) | change}}
-</div>`
-});
-
-
+/**
+ * A representation of an attempt, containing all its SCORM data and metadata.
+ * The SCORM data is loaded asynchronously.
+ */
 class Attempt {
-    constructor(data) {
+    constructor(metadata) {
         const a = this;
-        this.pk = data.pk;
-        this.data = data;
-        this.start_time = DateTime.fromISO(data.start_time);
-        this.completion_status = data.completion_status;
-        this.user = data.user;
+        this.pk = metadata.pk;
+        this.metadata = metadata;
+        this.start_time = DateTime.fromISO(metadata.start_time);
+        this.completion_status = metadata.completion_status;
+        this.user = metadata.user;
         this.status = 'not loaded';
         this.original_raw_score = null;
         this.remarked_raw_score = null;
+        this.saved_raw_score = null;
         this.is_changed = false;
         this.remark_error = null;
         this.fetch_error = null;
@@ -98,16 +30,9 @@ class Attempt {
          */
 
         this.changed_keys = {};
-        this.load_data = new Promise((resolve,reject) => {
-            a.load_data_resolve = resolve;
+        this.load_scorm_data = new Promise((resolve,reject) => {
+            a.load_scorm_data_resolve = resolve;
         });
-        this.load_data.then(data => {
-            this.cmi = data.cmi;
-            this.status = 'loaded';
-            this.max_score = parseFloat((this.cmi['cmi.score.max'] || {}).value || 0);
-            this.original_raw_score = parseFloat((this.cmi['cmi.score.raw'] || {}).value || 0);
-            this.saved_raw_score = data.raw_score;
-        })
     }
 
     get is_loaded() {
@@ -115,7 +40,7 @@ class Attempt {
     }
 
     get is_remarked() {
-        return this.status=='remarked';
+        return this.status=='remarked' || this.status == 'error';
     }
 
     get review_url() {
@@ -160,42 +85,68 @@ if(location.search) {
     const bits = location.search.slice(1).split('&');
     bits.forEach(bit => {
         const [k,v] = bit.split('=');
-        if(k=='resource_link_id') {
+        if(k=='resource_link_id' || k=='lti_13_launch_id') {
             resource_link_id = bit;
         }
     });
 }
 const resource_link_id_query = resource_link_id ? '?'+resource_link_id : '';
 
-const app = new Vue({
+const app = createApp({
     delimiters: ['[[',']]'],
-    el: '#app',
-    data: {
-        attempts: attempts,
-        apis: {},
-        remarking_all: false,
-        start_remark_all: new Date(),
-        end_remark_all: 0,
-        stopping_marking: false,
-        use_unsubmitted: false,
-        show_only: 'all',
-        save_url: parameters['save_url'],
-        saving: false,
-        save_error: null,
-        sort_by: 'name'
+    data() {
+        return {
+            attempts: attempts,
+            apis: {},
+            is_remarking_batch: false,
+            remarking_batch: [],
+            start_remark_batch: new Date(),
+            end_remark_batch: 0,
+            stopping_marking: false,
+            use_unsubmitted: false,
+            show_only: 'all',
+            name_search: '',
+            save_url: parameters['save_url'],
+            saving: false,
+            save_error: null,
+            sort_by: 'name',
+            sort_direction: 'ascending',
+            page_number: 0,
+            num_attempts_per_page: 100,
+        }
     },
+
+    mounted() {
+        this.attempts.forEach(async attempt => {
+            const data = await attempt.load_scorm_data;
+            attempt.cmi = data.cmi;
+            attempt.status = 'loaded';
+            attempt.max_score = parseFloat((attempt.cmi['cmi.score.max'] || {}).value || 0);
+            attempt.original_raw_score = parseFloat((attempt.cmi['cmi.score.raw'] || {}).value || 0);
+            attempt.saved_raw_score = data.raw_score;
+        });
+
+        window.attempts = this.attempts;
+
+        //this.fetch_all_attempt_data();
+
+        window.addEventListener('message',(event) => {
+            this.get_remarking_results(event.data);
+        });
+    },
+
     methods: {
         stop_marking: function() {
             this.stopping_marking = true;
             this.attempts.forEach(a=>a.await_remark=false);
         },
-        fetch_all_attempt_data: function() {
-            const promise = this.fetch_attempt_data();
-            if(promise) {
-                promise.then(d=>{ this.fetch_all_attempt_data() })
+        fetch_all_attempt_data: async function() {
+            let fetch_again = true;
+            while(fetch_again) {
+                fetch_again = await this.fetch_attempt_data();
             }
         },
-        fetch_attempt_data: function(include_attempt) {
+        fetch_attempt_data: async function(include_attempt) {
             const unloaded_attempts = this.attempts.filter(a=>a.status=='not loaded');
             const batch = unloaded_attempts.slice(0,BATCH_SIZE);
             if(include_attempt && include_attempt.status=='not loaded' && batch.indexOf(include_attempt)==-1) {
@@ -203,29 +154,34 @@ const app = new Vue({
             }
             const pks = batch.map(a=>a.pk);
             if(!pks.length) { 
-                return;
+                return false;
             }
-            let query_params = [
-                'attempt_pks='+pks.join(',')
-            ];
+
+            const url = new URL('remark/attempt_data', window.location);
+            url.searchParams.append('attempt_pks', pks.join(','));
+
             if(resource_link_id) {
-                query_params.push(resource_link_id);
+                url.searchParams.append(...resource_link_id.split('='));
             }
-            return fetch('remark/attempt_data?'+query_params.join('&'),{method:'GET',credentials:'same-origin'}).then(r=>r.json()).then(d => {
+            try {
+                const response = await fetch(url,{method:'GET',credentials:'same-origin'});
+                const d = await response.json();
                 d.cmis.forEach(cd=>{
                     const a = this.attempts.find(a=>a.pk==cd.pk);
-                    a.load_data_resolve(cd);
+                    a.load_scorm_data_resolve(cd);
                 });
-            }).catch(e=>{
+                return true;
+            } catch(e) {
                 batch.forEach(a=>{
                     a.fetch_error = e.message;
                     a.status = 'error';
                 });
                 console.error("Error getting attempt data:",e);
-            });
+                return false;
+            }
         },
         remark_single_attempt: function(attempt) {
-            this.remarking_all = false;
+            this.remarking_batch = false;
             this.remark_attempt(attempt);
         },
         remark_attempt: function(attempt) {
@@ -239,7 +195,7 @@ const app = new Vue({
                 this.await_remark = true;
                 return;
             }
-            attempt.load_data.then(data => {
+            attempt.load_scorm_data.then(data => {
                 const api = this.apis[attempt.pk] = window.API_1484_11 = new SCORM_API({
                     offline: true,
                     scorm_cmi: attempt.cmi
@@ -328,42 +284,90 @@ const app = new Vue({
             if(!attempt.remark_success) {
                 attempt.status = 'error';
             }
-            
-            const next_to_remark = this.attempts.find(a=>a.await_remark);
+         
+            this.remark_next();
+        },
+
+
+        remark_next: function() {
+            const next_to_remark = this.attempts.find(a => a.await_remark);
             if(!this.stopping_marking && next_to_remark) {
                 this.remark_attempt(next_to_remark);
             } else {
-                this.end_remark_all = new Date();
-                this.remarking_all = false;
+                this.end_remark_batch = new Date();
             }
         },
 
+        remark_current_page: function() {
+            this.batch_remark(this.current_page);
+        },
+
         remark_all: function() {
+            this.batch_remark(this.shown_attempts);
+        },
+
+        batch_remark(attempts) {
             this.stopping_marking = false;
-            this.attempts.forEach(a=> a.await_remark = true);
-            const first = this.attempts[0];
+            attempts.forEach(a => a.await_remark = true);
+            const first = attempts[0];
             if(!first) {
                 return;
             }
-            this.start_remark_all = new Date();
-            this.remarking_all = true;
+            this.start_remark_batch = new Date();
+            this.end_remark_batch = new Date();
+            this.remarking_batch = attempts;
+            this.is_remarking_batch = true;
             this.remark_attempt(first);
+        },
+
+        prev_page: function() {
+            this.page_number = Math.max(this.page_number - 1, 0);
+        },
+        next_page: function() {
+            this.page_number = Math.min(this.page_number + 1, this.num_pages - 1);
+        },
+
+        clear_filters: function() {
+            this.show_only = 'all';
+            this.name_search = '';
+        }
+    },
+    watch: {
+        name_search(value) {
+            if(value.trim() != '') {
+                this.show_only = 'all';
+            }
         }
     },
     computed: {
-        num_attempts: function() { return this.attempts.length; },
-        remarking_progress: function() { 
-            this.end_remark_all = new Date();
-            return this.attempts.filter(a=>a.is_remarked).length / this.attempts.length; 
+        users: function() {
+            const users = new Set();
+            this.attempts.forEach(attempt => {
+                users.add(`${attempt.user.full_name} ${attempt.user.identifier}`);
+            });
+            return users;
         },
-        remark_all_time: function() {
-            return this.end_remark_all-this.start_remark_all;
+        num_attempts: function() { return this.attempts.length; },
+        remarked_attempts: function() {
+            return this.attempts.filter(a=>a.is_remarked);
+        },
+        remarking_progress: function() { 
+            this.end_remark_batch = new Date();
+            if(this.remarking_batch.length == 0) {
+                return 1;
+            }
+            return this.remarking_batch.filter(a => a.is_remarked && !a.await_remark).length / this.remarking_batch.length;
+        },
+        remark_batch_time: function() {
+            return this.end_remark_batch-this.start_remark_batch;
         },
         estimated_end: function() {
-            const total = this.remark_all_time/this.remarking_progress;
-            return total - this.remark_all_time;
+            const total = this.remark_batch_time/this.remarking_progress;
+            return total - this.remark_batch_time;
         },
-        shown_attempts: function() {
+        sorted_attempts: function() {
+            const direction = {'ascending': 1, 'descending': -1}[this.sort_direction] || 1;
+
             const [sort_key,sort_dir] = {
                 'name': [a => a.user.full_name, 1],
                 'identifier': [a => a.user.identifier, 1],
@@ -374,9 +378,15 @@ const app = new Vue({
             }[this.sort_by];
             function compare_attempts(a,b) {
                 [a,b] = [sort_key(a), sort_key(b)];
-                return (a>b ? 1 : a<b ? -1 : 0)*sort_dir;
+                return (a>b ? 1 : a<b ? -1 : 0)*sort_dir*direction;
             }
-            return this.attempts.filter(a=>{
+            return this.attempts.sort(compare_attempts);
+        },
+
+        /** Attempts which should be shown, after applying the selected filters.
+         */
+        shown_attempts: function() {
+            let list = this.sorted_attempts.filter(a=>{
                 switch(this.show_only) {
                     case 'all':
                         return true;
@@ -389,18 +399,111 @@ const app = new Vue({
                     case 'decreased':
                         return a.remarked_raw_score !== null && a.original_raw_score > a.remarked_raw_score;
                 }
-            }).sort(compare_attempts);
+            });
+
+            const search = this.name_search.trim().toLowerCase();
+            if(search != '') {
+                list = list.filter(attempt => `${attempt.user.full_name} ${attempt.user.identifier}`.includes(search));
+            }
+            return list;
+        },
+
+        /** The number of pages of attempts to be shown.
+         */
+        num_pages: function() {
+            return Math.ceil(this.shown_attempts.length / this.num_attempts_per_page);
+        },
+
+        /** Attempts on the current page.
+         */
+        current_page: function() {
+            const page = Math.min(this.page_number, Math.floor(this.shown_attempts.length / this.num_attempts_per_page));
+            return this.shown_attempts.slice(page * this.num_attempts_per_page, (page + 1) * this.num_attempts_per_page);
+        },
+        /* The index of the first attempt on the page.
+         */
+        first_on_page: function() {
+            return Math.min(this.page_number * this.num_attempts_per_page, this.shown_attempts.length-1);
+        },
+        /* The index of the last attempt on the page.
+         */
+        last_on_page: function() {
+            return Math.min((this.page_number+1) * this.num_attempts_per_page-1, this.shown_attempts.length-1);
         },
         num_attempts_hidden: function() {
             return this.attempts.length - this.shown_attempts.length;
         },
         changed_attempts: function() {
             return this.shown_attempts.filter(a=>a.can_save);
-        }
+        },
     }
 });
-app.fetch_all_attempt_data();
 
-window.addEventListener('message',(event) => {
-    app.get_remarking_results(event.data);
+function todp(n,p) {
+    const s = n.toFixed(p);
+    return s.replace(/\.?0+$/,'')
+}
+
+app.config.globalProperties.$filters = {
+    duration: function(value) {
+        const d = luxon.Duration.fromMillis(value);
+        return d.toFormat('mm:ss');
+    },
+
+    percent: function(value) {
+        const pc = Math.floor(100*value);
+        return pc;
+    },
+
+    pluralize: function(str, number) {
+        return str + (Math.abs(number)==1 ? '' : 's');
+    },
+
+    dp: function(n,p) {
+        if(isNaN(n) || typeof(n)!='number') {
+            return n;
+        }
+        return todp(n,p);
+    },
+
+    datetime: function(t) {
+        return t.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
+    },
+};
+
+app.component('ScoreChange', {
+    data() {
+        return {}
+    },
+    props: ['from', 'to'],
+    computed: {
+        classes: function() {
+            const a = this.to;
+            const b = this.from;
+            if(a === null) {
+                return {};
+            }
+            return {
+                'score-change': true,
+                'decreased': a<b,
+                'unchanged': a==b,
+                'increased': a>b
+            };
+        },
+        change: function() {
+            const diff = this.to - this.from;
+            const sn = todp(diff, 3)
+            if(diff >= 0) {
+                return '+'+sn;
+            } else {
+                return sn;
+            }
+        }
+    },
+    template: `
+<div :class="classes">
+    {{change}}
+</div>`
 });
+
+window.app = app.mount('#app');

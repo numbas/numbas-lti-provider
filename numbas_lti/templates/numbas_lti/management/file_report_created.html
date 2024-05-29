@@ -1,1 +1,2 @@
-The {{report.name}} report is being created. When it's complete, you'll be able to <a href="{% url 'resource_reports' report.resource.pk %}">download it from the Reports tab</a>.
+{% load querystring %}
+The {{report.name}} report is being created. When it's complete, you'll be able to <a href="{% url_with_lti 'resource_reports' report.resource.pk %}">download it from the Reports tab</a>.

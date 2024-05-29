@@ -24,14 +24,6 @@ class ListConsumersView(HelpLinkMixin, ConsumerManagementMixin, generic.list.Lis
     template_name = 'numbas_lti/management/admin/consumer/list.html'
     helplink = 'admin/consumers.html'
 
-    def get_context_data(self,*args,**kwargs):
-        context = super(ListConsumersView,self).get_context_data(*args,**kwargs)
-        context['entry_url'] = get_lti_entry_url(self.request)
-        context['config_url'] = get_config_url(self.request)
-        context['icon_url'] = self.request.build_absolute_uri(static('icon.png'))
-
-        return context
-
 class CreateConsumerView(HelpLinkMixin, ConsumerManagementMixin, generic.edit.CreateView):
     model = LTIConsumer
     template_name = 'numbas_lti/management/admin/consumer/create.html'
@@ -59,9 +51,14 @@ class ManageConsumerView(HelpLinkMixin, ConsumerManagementMixin,generic.detail.D
     helplink = 'admin/consumers.html#managing-a-consumer'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ManageConsumerView,self).get_context_data(*args,**kwargs)
+        context = super().get_context_data(*args,**kwargs)
         
         consumer = self.get_object()
+
+        context['entry_url'] = get_lti_entry_url(self.request)
+        context['config_url'] = get_config_url(self.request)
+        context['icon_url'] = self.request.build_absolute_uri(static('icon.png'))
+
         context['unnamed_contexts'] = consumer.contexts.filter(name='').all()
         context['named_contexts'] = sorted(consumer.contexts.exclude(name='').all(),key=lambda c: c.name.upper())
         context['period_groups'] = consumer.contexts_grouped_by_period()

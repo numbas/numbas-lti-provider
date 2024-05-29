@@ -14,7 +14,7 @@ from zipfile import ZipFile
 from . import tasks
 from .groups import group_for_resource, group_for_attempt
 from .report_outcome import report_outcome
-from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileReport
+from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileReport, LTI_13_Context
 
 
 logger = logging.getLogger(__name__)

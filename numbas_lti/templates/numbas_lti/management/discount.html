@@ -4,19 +4,25 @@
 {% load static %}
 {% load statici18n %}
 
+{% block title %}{% translate "Discount question parts" %} - {{block.super}}{% endblock title %}
+
 {% block stylesheets %}
 {{block.super}}
 <link rel="stylesheet" href="{% static "resource_discount.css" %}">
 {% endblock stylesheets %}
 
+{% block management_header %}
+    <h1>{% translate "Discount question parts" %}</h1>
+{% endblock management_header %}
+
+
 {% block management_content %}
-    <h2>{% trans "Discount question parts" %}</h2>
 
-    <p>{% blocktrans %}For each part that you want to discount, select whether to remove its marks from the total, or to give everyone full marks for that part.{% endblocktrans %}</p>
+    <p>{% blocktranslate %}For each part that you want to discount, select whether to remove its marks from the total, or to give everyone full marks for that part.{% endblocktranslate %}</p>
 
-    <form method="POST" class="form-inline">
+    <form method="POST">
         {% csrf_token %}
-        <table id="parts" class="table table-hover table-condensed">
+        <table id="parts" class="table-condensed">
             <colgroup>
                 <col class="question">
                 <col class="part">
@@ -25,21 +31,21 @@
             </colgroup>
             <thead>
                 <tr>
-                    <th>{% trans "Question" %}</th>
-                    <th>{% trans "Part" %}</th>
-                    <th>{% trans "Gap" %}</th>
-                    <th>{% trans "Discount?" %}</th>
+                    <th scope="col">{% translate "Question" %}</th>
+                    <th scope="col">{% translate "Part" %}</th>
+                    <th scope="col">{% translate "Gap" %}</th>
+                    <th scope="col">{% translate "Discount?" %}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for part in parts %}
                 <tr class="{% if part.p == None %}info{% endif %} {% if part.discount %}warning{% endif %}">
-                    <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}not-first-appearance{% endif %}">{{part.q}}</td>
-                    <td class="{% if part.p and part.g %}not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
+                    <td class="{% if part.p == None %}question-id{% endif %} {% if part.p %}muted not-first-appearance{% endif %}">{{part.q}}</td>
+                    <td class="{% if part.p and part.g %}muted not-first-appearance{% endif %}">{% if part.p %}{{part.p}}{% endif %}</td>
                     <td>{% if part.g %}{{part.g}}{% endif %}</td>
                     <td class="part-control">
                         {% if part.p %}
-                        <select class="form-control" name="discount-{{part.path}}">
+                        <select name="discount-{{part.path}}">
                             <option value=""></option>
                             {% for value,label in discount_behaviours %}
                             <option value="{{value}}" {% if part.discount and part.discount.behaviour == value %}selected="selected"{% endif %}>{{label}}</option>
@@ -51,6 +57,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        <button class="btn btn-primary btn-lg" type="submit">{% trans "Save" %}</button>
+        <button class="button primary large" type="submit">{% translate "Save" %}</button>
     </form>
 {% endblock management_content %}

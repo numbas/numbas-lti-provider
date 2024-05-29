@@ -1,19 +1,23 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
-{% load bootstrap %}
+{% load icon %}
+
+{% block body_class %}login centered{{block.super}}{% endblock body_class %}
+
+{% block title %}{% translate "Log in as an administrator" %} - {{block.super}}{% endblock %}
 
 {% block content %}
-<div class="container">
     <header>
-        <h1>Log in</h1>
+        <h1>{% translate "Log in as an administrator" %}</h1>
     </header>
 
     <main>
         <form method="POST" action="">
             {% csrf_token %}
-            {{form|bootstrap}}
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-log-in"></span> {% trans "Log in" %}</button>
+            {{form}}
+            <button type="submit" class="button primary">{% icon 'log-in' %} {% translate "Log in" %}</button>
         </form>
     </main>
-</div>
+
+    {% include "numbas_lti/footer.html" %}
 {% endblock content %}
