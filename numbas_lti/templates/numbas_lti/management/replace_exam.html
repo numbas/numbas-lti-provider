@@ -62,6 +62,11 @@
                 <p>
                     {{field.label_tag}}
                     {{field}}
+                    {% if field.errors %}
+                    <div class="alert danger">
+                        {{field.errors}}
+                    </div>
+                    {% endif %}
                 </p>
             {% endfor %}
             <p><button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace" %}</button></p>
