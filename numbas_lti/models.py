@@ -26,6 +26,7 @@ from pylti1p3.assignments_grades import AssignmentsGradesService
 from pylti1p3.names_roles import NamesRolesProvisioningService
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
+from pylti1p3.exception import LtiException
 from pylti1p3.lineitem import LineItem
 import pylti1p3.roles
 from pylti1p3.service_connector import ServiceConnector, REQUESTS_USER_AGENT
@@ -347,8 +348,12 @@ class LTI_13_Context(models.Model):
         if members is not None:
             return members
 
-        nrps = self.get_nrps()
-        raw_members = nrps.get_members()
+        try:
+            nrps = self.get_nrps()
+            raw_members = nrps.get_members()
+        except LtiException:
+            return []
+
         members = [
             {
                 'name': m['name'],
