@@ -86,6 +86,6 @@
 
     <section id="management">
         <h2>{% translate "Management" %}</h2>
-        <p href="{% url 'delete_consumer' consumer.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</p>
+        <p><a href="{% url 'delete_consumer' consumer.pk %}" class="button danger">{% icon 'trash' %} {% translate "Delete this consumer" %}</a></p>
     </section>
 {% endblock management_content %}
