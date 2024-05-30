@@ -2,6 +2,7 @@ import string
 import re
 from datetime import timedelta
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
+from django.http import QueryDict
 
 def letter_ordinal(n):
     if n==0:
@@ -77,13 +78,11 @@ def parse_scorm_timeinterval(s):
 
 def add_query_param(url,extras):
     parsed = urlparse(url)
-    query = parse_qs(parsed.query)
-    for k,v in extras.items():
-        if k not in query:
-            query[k] = [v]
+    query = QueryDict(parsed.query, mutable=True)
+    query.update(extras)
     url = urlunparse(
         (parsed.scheme, parsed.netloc, parsed.path, parsed.params,
-         urlencode(query,doseq=True), parsed.fragment)
+         query.urlencode(), parsed.fragment)
     )
     return url
     

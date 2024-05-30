@@ -30,12 +30,14 @@ def encrypt(password, message):
 
 
 def make_link(request):
+    params = request.GET.copy()
+    params.update({
+        'session_key': request.session.session_key,
+    })
+
     launch_url = add_query_param(
         request.build_absolute_uri(reverse('lockdown_launch')),
-        {
-            'session_key': request.session.session_key,
-            'resource_link_id': request.GET.get('resource_link_id'),
-        }
+        params
     )
 
     token = token_for_request(request)

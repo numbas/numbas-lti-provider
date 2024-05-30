@@ -161,6 +161,10 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
         except Exception as e:
             return render(self.request, 'numbas_lti/launch_errors/login_error.html', {'error': e})
 
+        return self.do_lti_entry()
+
+    def do_lti_entry(self):
+
         lti_context, resource_link_id = self.get_lti_context()
 
         message_launch = self.get_message_launch()
@@ -369,6 +373,11 @@ class ResourceLaunchView(mixins.LTI_13_Mixin):
             return resource_link
         except LTI_11_ResourceLink.DoesNotExist:
             return None
+
+def do_lti_entry(request):
+    view = LaunchView()
+    view.setup(request)
+    return view.do_lti_entry()
 
 class TeacherLaunchView(ResourceLaunchView, View):
 

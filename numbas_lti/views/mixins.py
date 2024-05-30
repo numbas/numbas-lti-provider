@@ -113,7 +113,7 @@ class LTI_13_Mixin:
                 message_launch.validate()
                 self.request.lti_13_message_launch = message_launch
             except Exception:
-                self.request.lti_13_message_launch = None
+                pass
 
         return self.request.lti_13_message_launch
 

@@ -2,11 +2,12 @@ from django.urls import path, include
 from django.contrib import auth
 
 from . import views
+
 urlpatterns = [
     # Top-level views: no authentication required
     path('', views.entry.index, name='index'),
     path('css-test', views.entry.css_test, name='css_test'),
-    path('config.xml', views.entry.config_xml, name='config_xml'),
+    path('config.xml', views.lti_11.config_xml, name='config_xml'),  # LTI 1.1 config XML
 
     # Admin views: should be locally authenticated as a superuser
     path('login', auth.views.LoginView.as_view(), name='login'),
@@ -41,12 +42,14 @@ urlpatterns = [
 
 
     # LTI entry views: handling LTI launch data
-    path('lti_entry', views.entry.lti_entry, name='lti_entry'),
-    path('check_cookie_entry', views.entry.check_cookie_entry, name='check_cookie_entry'),
     path('set_cookie_entry', views.entry.set_cookie_entry, name='set_cookie_entry'),
+    path('check_cookie_entry', views.entry.check_cookie_entry, name='check_cookie_entry'),
     path('no-websockets', views.entry.no_websockets, name='no_websockets'),
     path('not-authorized', views.entry.not_authorized, name='not_authorized'),
     path('lti13/', include('numbas_lti.lti_13_urls', namespace='lti_13')),
+
+    # LTI 1.1 views
+    path('lti_entry', views.lti_11.lti_entry, name='lti_entry'),
 
     # Resource management views: either locally authenticated as superuser, or authenticated through LTI launch and carrying role information.
     path('resource/<int:pk>/create_exam', views.resource.LTI_11_CreateExamView.as_view(), name='create_exam'),
