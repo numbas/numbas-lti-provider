@@ -468,6 +468,10 @@ body.error-message main {
     margin: 0 auto;
 }
 
+body.test-run {
+    grid-template: "top-nav" min-content "exam" 1fr;
+}
+
 #top-nav .navbar-brand .context-name {
     font-style: italic;
 }
