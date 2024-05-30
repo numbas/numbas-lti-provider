@@ -556,7 +556,7 @@ A value of zero in this field does not mean "no change", it means that the affec
 Lockdown app
 ^^^^^^^^^^^^
 
-The :guilabel:`Require a lockdown app?` field override the resource's :ref:`require-lockdown-app` field.
+The :guilabel:`Require a lockdown app?` field overrides the resource's :ref:`require-lockdown-app` field.
 
 The settings behave as follows:
 
