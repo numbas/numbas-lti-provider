@@ -155,7 +155,7 @@ class LTI_11_Consumer(models.Model):
 class LTI_11_UserAlias(models.Model):
     consumer = models.ForeignKey(LTIConsumer, related_name='lti_11_user_aliases', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='lti_11_aliases', on_delete=models.CASCADE)
-    consumer_user_id = models.TextField()
+    consumer_user_id = models.TextField(blank=True, null=True)
 
 class LTI_13_Consumer(models.Model):
     consumer = models.OneToOneField(LTIConsumer, related_name='lti_13', on_delete=models.CASCADE)

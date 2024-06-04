@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
             name='LTI_11_UserAlias',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('consumer_user_id', models.TextField()),
+                ('consumer_user_id', models.TextField(blank=True, null=True)),
                 ('consumer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_aliases', to='numbas_lti.lticonsumer')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lti_11_aliases', to=settings.AUTH_USER_MODEL)),
             ],
