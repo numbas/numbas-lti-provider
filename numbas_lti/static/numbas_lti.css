@@ -294,6 +294,7 @@ form label {
 fieldset {
     border: thin solid;
     margin: var(--half-space);
+    background: var(--th-bg);
 }
 
 form.big {
