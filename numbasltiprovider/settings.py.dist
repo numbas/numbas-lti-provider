@@ -37,8 +37,6 @@ INSTALLED_APPS = [
     'statici18n',
     'huey.contrib.djhuey',
     'numbas_lti',
-    'bootstrapform',
-    'bootstrap_datepicker_plus',
 ]
 
 MIDDLEWARE = [
