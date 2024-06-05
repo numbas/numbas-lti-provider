@@ -28,25 +28,25 @@ class CreateView(HelpLinkMixin, SebSettingsManagementMixin, generic.edit.CreateV
     template_name = 'numbas_lti/management/admin/seb_settings/create.html'
     form_class = forms.CreateSebSettingsForm
     success_url = reverse_lazy('list_seb_settings')
-    helplink = 'admin/lockdown/seb_settings.html#adding-seb-settings'
+    helplink = 'admin/lockdown-apps.html#adding-a-safe-exam-browser-settings-file'
 
 class UpdateView(HelpLinkMixin, SebSettingsManagementMixin, generic.edit.UpdateView):
     model = SebSettings
     template_name = 'numbas_lti/management/admin/seb_settings/edit.html'
     form_class = forms.CreateSebSettingsForm
     success_url = reverse_lazy('list_seb_settings')
-    helplink = 'admin/lockdown/seb_settings.html#adding-seb-settings'
+    helplink = 'admin/lockdown-apps.html#adding-a-safe-exam-browser-settings-file'
 
 class ListView(HelpLinkMixin, SebSettingsManagementMixin, generic.list.ListView):
     model = SebSettings
     template_name = 'numbas_lti/management/admin/seb_settings/list.html'
-    helplink = 'admin/lockdown/seb_settings.html'
+    helplink = 'admin/lockdown-apps.html#safe-exam-browser'
 
 class DeleteView(HelpLinkMixin, SebSettingsManagementMixin, generic.edit.DeleteView):
     model = SebSettings
     template_name = 'numbas_lti/management/admin/seb_settings/delete.html'
     success_url = reverse_lazy('list_seb_settings')
-    helplink = 'admin/lockdown/seb_settings.html'
+    helplink = 'admin/lockdown-apps.html#safe-exam-browser'
 
 class QuitView(generic.base.TemplateView):
     template_name = 'numbas_lti/seb_quit.html'

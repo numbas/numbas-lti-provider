@@ -77,7 +77,7 @@ class GlobalUserInfoView(HelpLinkMixin, ManagementViewMixin, generic.DetailView)
 class LockdownDashboardView(HelpLinkMixin, ManagementViewMixin, generic.TemplateView):
     template_name = 'numbas_lti/management/admin/lockdown_dashboard.html'
     management_tab = 'lockdown'
-    helplink = 'admin/lockdown/index.html'
+    helplink = 'admin/lockdown-apps.html'
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)

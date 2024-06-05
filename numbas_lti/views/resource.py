@@ -534,7 +534,7 @@ class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,Mus
     model = Resource
     template_name = 'numbas_lti/management/resource_remark.html'
     management_tab = 'remark'
-    helplink = 'instructor/resources.html#remark'
+    helplink = 'instructor/resources.html#re-mark'
 
     def get(self, request, *args, **kwargs):
         resource = self.object = self.get_object()

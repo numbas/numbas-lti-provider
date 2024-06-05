@@ -22,14 +22,14 @@ class ConsumerManagementMixin(PermissionRequiredMixin,LoginRequiredMixin,Managem
 class ListConsumersView(HelpLinkMixin, ConsumerManagementMixin, generic.list.ListView):
     model = LTIConsumer
     template_name = 'numbas_lti/management/admin/consumer/list.html'
-    helplink = 'admin/consumers.html'
+    helplink = 'admin/consumers/management.html'
 
 class CreateConsumerView(HelpLinkMixin, ConsumerManagementMixin, generic.edit.CreateView):
     model = LTIConsumer
     template_name = 'numbas_lti/management/admin/consumer/create.html'
     form_class = forms.CreateConsumerForm
     success_url = reverse_lazy('list_consumers')
-    helplink = 'admin/consumers.html#adding-a-consumer'
+    helplink = 'admin/consumers/lti_11.html'
 
 class DeleteConsumerView(ConsumerManagementMixin,generic.edit.DeleteView):
     model = LTIConsumer
@@ -48,7 +48,7 @@ class ManageConsumerView(HelpLinkMixin, ConsumerManagementMixin,generic.detail.D
     model = LTIConsumer
     context_object_name = 'consumer'
     template_name = 'numbas_lti/management/admin/consumer/view.html'
-    helplink = 'admin/consumers.html#managing-a-consumer'
+    helplink = 'admin/consumers/management.html#managing-a-consumer'
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args,**kwargs)
@@ -70,7 +70,7 @@ class ManageTimePeriodsView(HelpLinkMixin, ConsumerManagementMixin,generic.edit.
     context_object_name = 'consumer'
     template_name = 'numbas_lti/management/admin/consumer/manage_time_periods.html'
     form_class = forms.ConsumerTimePeriodFormSet
-    helplink = 'admin/consumers.html#time-periods'
+    helplink = 'admin/consumers/management.html#time-periods'
     
     def get_success_url(self):
         return reverse('view_consumer',args=(self.get_object().pk,))
