@@ -3,11 +3,6 @@ body.loaded #loading {
     display: none;
 }
 
-#timeline thead th {
-  position: sticky;
-  top: 0;
-}
-
 .item .exam-score {
     text-align: right;
 }

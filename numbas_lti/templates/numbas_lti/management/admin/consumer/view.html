@@ -5,6 +5,8 @@
 
 {% block title %}{{consumer.title}} - {{block.super}}{% endblock %}
 
+{% block body_class %}manage-consumer {{block.super}}{% endblock %}
+
 {% block stylesheets %}
     {{block.super}}
 {%endblock stylesheets %}
@@ -26,7 +28,7 @@
         {% if not consumer.contexts.count %}
             <p>{% translate "This consumer has not created any resources yet." %}</p>
         {% else %}
-            <table class="periods">
+            <table class="periods sticky-header">
                 <colgroup>
                     <col style="width: 10em;"/>
                     <col/>
@@ -43,7 +45,11 @@
                 {% for period,contexts in period_groups %}
                     {% for context in contexts %}
                     <tr>
-                        {% if forloop.first %}<td rowspan="{{contexts|length}}">{% if period %}{{period.name}}{% else %}{% translate "Not in a defined time period" %}{% endif %}</td>{% endif %}
+                        {% if forloop.first %}
+                        <td class="period" rowspan="{{contexts|length}}">
+                            <div class="period-name">{% if period %}{{period.name}}{% else %}{% translate "Not in a defined time period" %}{% endif %}</div>
+                        </td>
+                        {% endif %}
                         <td><a href="{% url 'view_context' context.pk %}">{{context.name}}{% if context.label and context.label != context.name %} ({{context.label}}){% endif %}</a></td>
                         <td class="number">{{context.resources.count}}</td>
                         <td class="number">{{context.num_attempts}}</td>

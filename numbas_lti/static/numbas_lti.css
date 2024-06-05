@@ -228,6 +228,12 @@ table.fixed {
     width: 100%;
 }
 
+table.sticky-header thead th {
+  position: sticky;
+  top: 0;
+}
+
+
 .scrolling-table {
     max-width: 100%;
     overflow: scroll auto;
@@ -527,6 +533,14 @@ body.deep-link #existing-resources p {
 
 body.remark-attempt #parts input {
     width: revert;
+}
+
+body.manage-consumer .period {
+    vertical-align: top;
+}
+body.manage-consumer .period-name {
+    position: sticky;
+    top: 3em;
 }
 
 .card-list {
