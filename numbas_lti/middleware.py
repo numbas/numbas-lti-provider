@@ -146,6 +146,9 @@ class NumbasLTIResourceMiddleware(object):
 
         message_launch = get_cached_lti_13_message_launch(request, launch_id, self.tool_conf, self.launch_data_storage)
 
+        if message_launch is None:
+            return
+
         lti_context, resource_link_id = get_lti_13_context(message_launch)
         resource_link = LTI_13_ResourceLink.objects.filter(resource_link_id=resource_link_id, context=lti_context).last()
 
