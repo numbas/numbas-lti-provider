@@ -54,6 +54,8 @@ def canvas_config_json(request):
     platform = urllib.parse.urlparse(iss).netloc
     iss = urllib.parse.quote_plus(iss)
 
+    selection_width, selection_height = (800, 800)
+
     config = {
         "title": "Numbas",
         "description": _("Numbas assessments"),
@@ -83,7 +85,9 @@ def canvas_config_json(request):
                             "placement": "editor_button",
                             "message_type": "LtiDeepLinkingRequest",
                             "target_link_uri": request.build_absolute_uri(reverse('lti_13:launch')),
-                            "canvas_icon_class": "icon-lti"
+                            "canvas_icon_class": "icon-lti",
+                            "selection_width": selection_width,
+                            "selection_height": selection_height,
                         },
                         {
                             "text": "Numbas",
@@ -92,7 +96,17 @@ def canvas_config_json(request):
                             "placement": "link_selection",
                             "message_type": "LtiDeepLinkingRequest",
                             "target_link_uri": request.build_absolute_uri(reverse('lti_13:launch')),
-                            "canvas_icon_class": "icon-lti"
+                            "canvas_icon_class": "icon-lti",
+                            "selection_width": selection_width,
+                            "selection_height": selection_height,
+                        },
+                        {
+                            "placement": "assignment_selection",
+                            "text": "Numbas",
+                            "enabled": True,
+                            "message_type": "LtiDeepLinkingRequest",
+                            "selection_width": selection_width,
+                            "selection_height": selection_height,
                         }
                     ]
                 }
