@@ -1,0 +1,54 @@
+{% extends "numbas_lti/lti_13/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Connect to Blackboard" %}{% endblock %}
+
+{% block main %}
+
+<p><strong>TODO: instructions about registering with Anthology</strong></p>
+
+<p>Blackboard expects most LTI tools to run on a single domain, which serves every institution using it.</p>
+
+<p>Because each institution runs their own instance of the Numbas LTI tool, each instance must be registered separately with Anthology.</p>
+
+<ol>
+<li><a href="https://docs.anthology.com/docs/lti/getting-started-with-lti#registering-your-application">{% blocktranslate %}Register this server as an application with Anthology{% endblocktranslate %}</a>.</li>
+
+<li>
+    <p><a href="{% url 'lti_13:new_dynamic_registration_token' %}">{% translate "Create a dynamic registration token" %}</a>.<p>
+
+    <p>{% blocktranslate %}In the Anthology Developer portal, use <strong>Dynamic Registration</strong> with the token URL you created, to initiate tool registration.{% endblocktranslate %}</p>
+
+    <p>{% blocktranslate %}Record the <em>Application ID</em> and the <em>Application Key</em> that were created.{% endblocktranslate %}</p>
+
+</li>
+
+<li>
+    <p>{% blocktranslate %}Follow <a href="https://help.blackboard.com/Learn/Administrator/SaaS/Integrations/Learning_Tools_Interoperability#add_lti13">the Blackboard instructions for adding an LTI 1.3 tool</a>.{% endblocktranslate %}</p>
+
+    <p>{% blocktranslate %}For the <strong>Client ID</strong>, use the <strong>Application ID</strong> that you were given when registering the application.{% endblocktranslate %}</p>
+
+    <p>{% blocktranslate %}The tool needs access to the <strong>Membership Service</strong>.{% endblocktranslate %}</p>
+</li>
+
+<li>
+    <p>{% blocktranslate %}Once you have added the app, follow <a href="https://help.blackboard.com/Learn/Administrator/SaaS/Integrations/Learning_Tools_Interoperability#create_placements">the instructions to create a placement</a>.{% endblocktranslate %}</p>
+
+    <p>{% blocktranslate %}For <strong>Type</strong>, select <em>Deep Linking content tool</em>.{% endblocktranslate %}</p>
+
+    <p>{% blocktranslate %}Use the following icon image:{% endblocktranslate %}</p>
+    <p><img src="{{icon_url}}" alt="{% translate "Numbas icon" %}"> <code>{{icon_url}}</code></p>
+</li>
+
+<li>
+    <p>To finish registration, put the deployment ID here:</p>
+    <form >
+        {% csrf_token %}
+        {{form}}
+
+        <p><button type="submit" class="primary">{% translate "Register" %}</button></p>
+    </form>
+</li>
+</ol>
+
+{% endblock main %}

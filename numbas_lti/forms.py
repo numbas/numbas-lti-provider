@@ -25,6 +25,8 @@ from django.utils.crypto import get_random_string
 from django.utils.formats import get_format
 import string
 
+from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
+
 datetime_format = get_format('DATETIME_INPUT_FORMATS')[0]
 
 def split_newlines_commas(text):
@@ -110,12 +112,13 @@ class AccessChangeForm(ModelForm):
         return ac
 
 class FieldsetFormMixin:
+    template_name = 'numbas_lti/fieldset_form.html'
+
     def fieldsets(self):
         for label, fieldnames in self.Meta.fieldsets:
             yield (label, [self[fieldname] for fieldname in fieldnames if fieldname in self.fields])
 
 class ResourceSettingsForm(FieldsetFormMixin, ModelForm):
-    template_name = 'numbas_lti/management/resource_settings_form.html'
     class Meta:
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
@@ -311,3 +314,32 @@ class CreateSebSettingsForm(ModelForm):
     class Meta:
         model = SebSettings
         fields = ('name', 'config_key_hash', 'password', 'settings_file')
+
+
+class CanvasLti13RegistrationForm(FieldsetFormMixin, ModelForm):
+    preset = forms.ChoiceField(
+        choices=[
+            ('canvas', _('Production')),
+            ('canvas_beta', _('Beta')),
+            ('canvas_test', _('Test')),
+            ('custom', _('Custom'))
+        ],
+        label=_('Preset')
+    )
+    issuer = forms.CharField(required=False, label=_('Issuer'))
+    key_set_url = forms.URLField(required=False, label=_('Keyset URL'))
+    auth_login_url = forms.URLField(required=False, label=_('Login URL'))
+    client_id = forms.CharField(label=_('Client ID'))
+    deployment_id = forms.CharField(label=_('Deployment ID'))
+
+    class Meta:
+        model = LTIConsumer
+        fields = []
+
+        fieldsets = [
+            (_('Issuer settings'), ('preset', 'issuer', 'key_set_url', 'auth_login_url')),
+            (_('IDs'), ('client_id', 'deployment_id',)),
+        ]
+
+class BlackboardLti13RegistrationForm(Form):
+    deployment_id = forms.CharField(label=_('Deployment ID'))

@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequ
 from django.shortcuts import render, redirect
 from django.template import loader
 from django.templatetags.static import static
-from django.views import View
+from django.views import View, generic
 from django.views.generic import TemplateView, FormView, RedirectView, edit, detail
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -14,6 +14,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _, gettext
 from . import mixins, resource
+from .consumer import ConsumerManagementMixin
 from numbas_lti.backends import new_lti_user
 from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData, LTIConsumerRegistrationToken
 import numbas_lti.forms
@@ -23,6 +24,7 @@ from pylti1p3.deep_link_resource import DeepLinkResource
 from pylti1p3.contrib.django import DjangoOIDCLogin
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.dynamic_registration import DjangoDynamicRegistration
+from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
 from pylti1p3.exception import LtiException
 import urllib.parse
 
@@ -30,19 +32,16 @@ INSTANCE_NAME = settings.INSTANCE_NAME
 PAGE_TITLE = gettext('{INSTANCE_NAME} Numbas').format(INSTANCE_NAME=INSTANCE_NAME)
 PAGE_DESCRIPTION = gettext('The Numbas LTI provider at {INSTANCE_NAME}.').format(INSTANCE_NAME=INSTANCE_NAME)
 
-class RegisterView(TemplateView):
+class RegisterView(mixins.HelpLinkMixin, TemplateView):
     template_name ='numbas_lti/lti_13/registration/begin.html'
+    helplink = 'admin/consumers/lti_13.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['domain'] = self.request.get_host().split(':')[0]
-        #context['register_url'] = self.request.build_absolute_uri(reverse('lti_13:dynamic_registration'))
-        context['email_address'] = settings.DEFAULT_FROM_EMAIL
         context['launch_url'] = self.request.build_absolute_uri(reverse('lti_13:launch'))
         context['jwks_url'] = self.request.build_absolute_uri(reverse('lti_13:jwks'))
         context['login_url'] = self.request.build_absolute_uri(reverse('lti_13:login'))
-        context['canvas_config_url'] = self.request.build_absolute_uri(reverse_lazy('lti_13:canvas_config_json'))
         context['icon_url'] = self.request.build_absolute_uri(static("icon.png"))
 
         return context
@@ -116,6 +115,41 @@ def canvas_config_json(request):
         "public_jwk": {},
     }
     return JsonResponse(config)
+
+class CanvasRegistrationView(ConsumerManagementMixin, edit.CreateView):
+    form_class = numbas_lti.forms.CanvasLti13RegistrationForm
+    model = LTIConsumer
+    template_name = 'numbas_lti/lti_13/registration/canvas.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['email_address'] = settings.DEFAULT_FROM_EMAIL
+        context['launch_url'] = self.request.build_absolute_uri(reverse('lti_13:launch'))
+        context['canvas_config_url'] = self.request.build_absolute_uri(reverse_lazy('lti_13:canvas_config_json'))
+
+        return context
+
+    def form_valid(self, form):
+        pass
+
+class BlackboardRegistrationView(ConsumerManagementMixin, generic.FormView):
+    form_class = numbas_lti.forms.BlackboardLti13RegistrationForm
+    template_name = 'numbas_lti/lti_13/registration/blackboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['launch_url'] = self.request.build_absolute_uri(reverse('lti_13:launch'))
+        context['jwks_url'] = self.request.build_absolute_uri(reverse('lti_13:jwks'))
+        context['login_url'] = self.request.build_absolute_uri(reverse('lti_13:login'))
+        context['icon_url'] = self.request.build_absolute_uri(static("icon.png"))
+
+
+        return context
+
+    def form_valid(self, form):
+        pass
 
 class LoginView(mixins.LTI_13_Mixin, View):
     """

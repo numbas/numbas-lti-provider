@@ -1,0 +1,37 @@
+{% extends "numbas_lti/lti_13/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Connect to Canvas" %}{% endblock %}
+
+{% block main %}
+
+<p>{% blocktranslate %}Follow <a href="https://community.canvaslms.com/t5/Admin-Guide/How-do-I-configure-an-LTI-key-for-an-account/ta-p/140">the Canvas instructions to create an LTI developer key</a>, with the following parameters:{% endblocktranslate %}</p>
+
+<dl>
+    <dt>{% translate "Key Name" %}</dt>
+    <dd>Numbas</dd>
+
+    <dt>{% translate "Owner Email" %}</dt>
+    <dd><code>{{email_address}}</code></dd>
+
+    <dt>{% translate "Redirect URIs" %}</dt>
+    <dd><code>{{launch_url}}</code></dd>
+</dl>
+
+<p>{% blocktranslate %}Then for <strong>Method</strong> select <em>Enter URL</em> and enter this URL:{% endblocktranslate %}</p>
+<pre>{{canvas_config_url}}</pre>
+
+<p>{% blocktranslate %}Click <strong>Save</strong>, and copy the key that Canvas has generated: this is your <em>Client ID</em>.{% endblocktranslate %}</p>
+
+<p>{% blocktranslate %}Next, you must enable the app for your account, following <a href="https://community.canvaslms.com/t5/Admin-Guide/How-do-I-configure-an-external-app-for-an-account-using-a-client/ta-p/202">the Canvas instructions on configuring an LTI key for an account</a>.{% endblocktranslate %}</p>
+
+<p>{% blocktranslate %}Enter the client ID that you got after creating the developer key, and install the app. Then, click on the settings icon for the app and get the <strong>Deployment ID</strong>.{% endblocktranslate %}</p>
+
+<form class="big" method="POST">
+    {% csrf_token %}
+    {{form}}
+
+    <p><button type="submit" class="primary">{% translate "Register" %}</button></p>
+</form>
+
+{% endblock main %}

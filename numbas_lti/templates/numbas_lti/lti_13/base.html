@@ -1,9 +1,15 @@
 {% extends "numbas_lti/base.html" %}
 {% load i18n %}
+{% load helplink %}
 
 {% block content %}
     <header>
-        <h1>{% translate "Numbas" %}</h1>
+        {% if page_helplink %}
+            {% helplink page_helplink %}
+        {% endif %}
+
+        <h1>{% block title %}{% translate "Numbas" %}{% endblock %}</h1>
+
     </header>
     <main>{% block main %}{% endblock main %}</main>
 
