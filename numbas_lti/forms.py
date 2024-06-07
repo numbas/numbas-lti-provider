@@ -49,8 +49,8 @@ class AccessChangeForm(ModelForm):
     nrps_applies_to = MultipleStringField(required=False, label=_('Usernames'))
     usernames = forms.CharField(required=False, label=_('Usernames'), widget=forms.Textarea(attrs={'rows':5}), help_text=_('Enter usernames, separated by commas or one on each line.'))
     emails = forms.CharField(required=False, label=_('Email addresses'), widget=forms.Textarea(attrs={'rows':5}), help_text=_('Enter email addresses, separated by commas or one on each line.'))
-    extend_deadline_days = forms.IntegerField(required=False, label=_('days'), widget=forms.NumberInput(attrs={'class':'form-control'}))
-    extend_deadline_minutes = forms.IntegerField(required=False, label=_('minutes'), widget=forms.NumberInput(attrs={'class':'form-control'}))
+    extend_deadline_days = forms.IntegerField(required=False, label=_('days'), widget=forms.NumberInput())
+    extend_deadline_minutes = forms.IntegerField(required=False, label=_('minutes'), widget=forms.NumberInput())
 
     class Meta:
         model = AccessChange
@@ -71,8 +71,8 @@ class AccessChangeForm(ModelForm):
             'description': forms.TextInput(),
             'available_from': DateTimeInput(format=datetime_format),
             'available_until': DateTimeInput(format=datetime_format),
-            'extend_duration': forms.TextInput(attrs={'class':'form-control'}),
-            'extend_duration_units': forms.Select(attrs={'class':'form-control'}),
+            'extend_duration': forms.TextInput(),
+            'extend_duration_units': forms.Select(),
             'resource': forms.HiddenInput(),
         }
 
@@ -133,7 +133,7 @@ class ResourceSettingsForm(FieldsetFormMixin, ModelForm):
             'allow_review_from': DateTimeInput(format=datetime_format),
             'available_from': DateTimeInput(format=datetime_format),
             'available_until': DateTimeInput(format=datetime_format),
-            'lockdown_app_password': forms.TextInput(attrs={'class':'form-control', 'placeholder': getattr(settings,'LOCKDOWN_APP',{}).get('password','')}),
+            'lockdown_app_password': forms.TextInput(attrs={'placeholder': getattr(settings,'LOCKDOWN_APP',{}).get('password','')}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -165,7 +165,7 @@ class CreateSuperuserForm(UserCreationForm):
         return user
 
 class CreateConsumerForm(ModelForm):
-    key = forms.CharField(strip=True,widget=forms.TextInput(attrs={'class':'form-control'}))
+    key = forms.CharField(strip=True,widget=forms.TextInput())
 
     class Meta:
         model = LTIConsumer
@@ -300,46 +300,67 @@ class ConsumerTimePeriodForm(ModelForm):
         model = ConsumerTimePeriod
         fields = ['name','start','end']
         widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control'}),
-            'start': forms.DateInput(attrs={'class':'form-control','type':'date'}),
-            'end': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'name': forms.TextInput(),
+            'start': forms.DateInput(attrs={'type':'date'}),
+            'end': forms.DateInput(attrs={'type':'date'}),
         }
 
 ConsumerTimePeriodFormSet = forms.inlineformset_factory(LTIConsumer, ConsumerTimePeriod, form=ConsumerTimePeriodForm, can_delete=False)
 
 class ValidateReceiptForm(Form):
-    code = forms.CharField(strip=True,widget=forms.Textarea(attrs={'class':'form-control'}))
+    code = forms.CharField(strip=True,widget=forms.Textarea())
 
 class CreateSebSettingsForm(ModelForm):
     class Meta:
         model = SebSettings
         fields = ('name', 'config_key_hash', 'password', 'settings_file')
 
+class DeploymentIdWidget(forms.TextInput):
+    def format_value(self, value):
+        if value is None:
+            return ''
+        value = json.loads(value)
+        if len(value) > 0:
+            return value[0]
+        else:
+            return ''
+
+    def value_from_datadict(self, data, files, name):
+        return [data[name]]
+
+    def value(self):
+        value = super().value()
+        return [value]
 
 class CanvasLti13RegistrationForm(FieldsetFormMixin, ModelForm):
     preset = forms.ChoiceField(
-        choices=[
-            ('canvas', _('Production')),
-            ('canvas_beta', _('Beta')),
-            ('canvas_test', _('Test')),
-            ('custom', _('Custom'))
-        ],
+        choices=[(k, v['label']) for k,v in settings.CANVAS_LTI_13_PRESETS.items()] + [('custom', _('Custom'))],
         label=_('Preset')
     )
-    issuer = forms.CharField(required=False, label=_('Issuer'))
-    key_set_url = forms.URLField(required=False, label=_('Keyset URL'))
-    auth_login_url = forms.URLField(required=False, label=_('Login URL'))
-    client_id = forms.CharField(label=_('Client ID'))
-    deployment_id = forms.CharField(label=_('Deployment ID'))
 
     class Meta:
-        model = LTIConsumer
-        fields = []
+        model = LtiTool
+        fields = ['issuer', 'auth_login_url', 'key_set_url', 'client_id','deployment_ids', 'title',]
 
         fieldsets = [
             (_('Issuer settings'), ('preset', 'issuer', 'key_set_url', 'auth_login_url')),
-            (_('IDs'), ('client_id', 'deployment_id',)),
+            (_('IDs'), ('title', 'client_id', 'deployment_ids',)),
         ]
 
+        widgets = {
+            'deployment_ids': DeploymentIdWidget()
+        }
+
 class BlackboardLti13RegistrationForm(Form):
+    client_id = forms.CharField(label=_('Client ID'))
     deployment_id = forms.CharField(label=_('Deployment ID'))
+
+    def clean_client_id(self):
+        client_id = self.cleaned_data['client_id']
+        try:
+            tool = LtiTool.objects.get(issuer='https://blackboard.com', client_id=client_id)
+            self.cleaned_data['tool'] = tool
+        except LtiTool.DoesNotExist:
+            raise forms.ValidationError(_("An LTI tool with that client ID has not been registered. Check that you have completed the dynamic registration process."))
+
+        return client_id

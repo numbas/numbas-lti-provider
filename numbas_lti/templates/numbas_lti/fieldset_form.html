@@ -4,10 +4,10 @@
         <legend>{{fieldset}}</legend>
 
         {% for field in fields %}
-        <p>
+        <p data-form-field="{{field.name}}">
         {{field.label_tag}}
         {{field}}
-        {{errors}}
+        {{field.errors}}
         </p>
         {% endfor %}
     </fieldset>

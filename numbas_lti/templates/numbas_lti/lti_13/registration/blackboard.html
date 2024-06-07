@@ -1,9 +1,15 @@
-{% extends "numbas_lti/lti_13/base.html" %}
+{% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Connect to Blackboard" %}{% endblock %}
+{% block title %}{% translate "Connect to Blackboard" %} - {{block.super}}{% endblock %}
 
-{% block main %}
+{% block management_header %}
+    <p><a class="button link" href="{% url 'lti_13:register' %}">← {% translate "Back" %}</a></p>
+
+    <h1>{% translate "Connect to Blackboard" %}</h1>
+{% endblock %}
+
+{% block management_content %}
 
 <p><strong>TODO: instructions about registering with Anthology</strong></p>
 
@@ -42,13 +48,14 @@
 
 <li>
     <p>To finish registration, put the deployment ID here:</p>
-    <form >
+    <form method="POST">
         {% csrf_token %}
         {{form}}
+        {{form.non_field_errors}}
 
         <p><button type="submit" class="primary">{% translate "Register" %}</button></p>
     </form>
 </li>
 </ol>
 
-{% endblock main %}
+{% endblock management_content %}

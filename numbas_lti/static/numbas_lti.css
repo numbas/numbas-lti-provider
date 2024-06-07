@@ -363,7 +363,7 @@ code {
     --muted-color: var(--top-nav-muted-color);
     background: var(--top-nav-bg);
     border-bottom: var(--spacing) solid var(--top-nav-border);
-    grid-template-columns: repeat(auto-fill,10em) [last-start] 10em [last-end];
+    grid-template-columns: repeat(auto-fill,calc(10em + 2 * var(--spacing))) [last-start] 10em [last-end];
     grid-area: top-nav;
 }
 
@@ -396,6 +396,15 @@ body:not(.admin, .resource-management) > header {
 }
 #top-nav > #admin-link {
     grid-column: last;
+}
+
+#top-nav > a {
+    padding: var(--half-space) var(--spacing);
+}
+
+#top-nav a[aria-current="page"] {
+    font-weight: bold;
+    background: var(--background-color);
 }
 
 .icon {

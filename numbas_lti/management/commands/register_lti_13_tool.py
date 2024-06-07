@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django_auth_lti.patch_reverse import reverse
 import json
@@ -9,24 +10,6 @@ from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool, LtiToolKe
 class Command(BaseCommand):
     help = 'Register a new LTI 1.3 platform.'
 
-    known_settings = {
-        'canvas': {
-            'issuer': 'https://canvas.instructure.com',
-            'key_set_url': 'https://canvas.instructure.com/api/lti/security/jwks',
-            'auth_login_url': 'https://canvas.instructure.com/api/lti/authorize_redirect',
-        },
-        'canvas_beta': {
-            'issuer': 'https://canvas.beta.instructure.com',
-            'key_set_url': 'https://canvas.beta.instructure.com/api/lti/security/jwks',
-            'auth_login_url': 'https://canvas.beta.instructure.com/api/lti/authorize_redirect',
-        },
-        'canvas_test': {
-            'issuer': 'https://canvas.test.instructure.com',
-            'key_set_url': 'https://canvas.test.instructure.com/api/lti/security/jwks',
-            'auth_login_url': 'https://canvas.test.instructure.com/api/lti/authorize_redirect',
-        },
-    }
-
     def add_arguments(self, parser):
         parser.add_argument('--issuer')
         parser.add_argument('--title')
@@ -37,6 +20,8 @@ class Command(BaseCommand):
         parser.add_argument('--deployment-id')
 
     def handle(self, *args, **options):
+        known_settings = settings.CANVAS_LTI_13_PRESETS
+
         preset = options['preset']
         if preset:
             settings = self.known_settings[preset]

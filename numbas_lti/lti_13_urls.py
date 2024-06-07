@@ -10,6 +10,7 @@ urlpatterns = [
     path(r'register/dynamic/<uuid:pk>/use/', views.UseRegistrationTokenView.as_view(), name='use_dynamic_registration_token'),
     path(r'register/canvas', views.CanvasRegistrationView.as_view(), name='register_canvas'),
     path(r'register/blackboard', views.BlackboardRegistrationView.as_view(), name='register_blackboard'),
+    path(r'register/generic', views.GenericRegistrationView.as_view(), name='register_generic'),
     path(r'register/canvas_config.json', views.canvas_config_json, name='canvas_config_json'),
 
     path(r'login/', views.LoginView.as_view(), name='login'),

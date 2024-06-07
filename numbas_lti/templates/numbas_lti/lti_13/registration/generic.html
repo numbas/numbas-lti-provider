@@ -1,0 +1,46 @@
+{% extends "numbas_lti/management/admin/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Connect to an LTI 1.3 platform" %} - {{block.super}}{% endblock %}
+
+{% block management_header %}
+    <p><a class="button link" href="{% url 'lti_13:register' %}">← {% translate "Back" %}</a></p>
+
+    <h1>{% translate "Connect to an LTI 1.3 platform" %}</h1>
+{% endblock %}
+
+
+{% block management_content %}
+
+<h2>{% translate "Dynamic registration" %}</h2>
+<p>{% blocktranslate %}If your platform supports it, dynamic registration is the easiest.{% endblocktranslate %}</p>
+<p><a href="{% url 'lti_13:new_dynamic_registration_token' %}">{% translate "Create a dynamic registration token" %}</a>.</p>
+
+<h2>{% translate "Manual registration" %}</h2>
+
+<p>{% translate "Use the following details:" %}</p>
+
+<dl>
+    <dt>{% translate "Tool URL" %}</dt>
+    <dd><code>{{launch_url}}</code></dd>
+
+    <dt>{% translate "Public keyset URL" %}</dt>
+    <dd><code>{{jwks_url}}</code></dd>
+
+    <dt>{% translate "Login URL" %}</dt>
+    <dd><code>{{login_url}}</code></dd>
+
+    <dt>{% translate "Redirection URIs" %}</dt>
+    <dd><code>{{launch_url}}</code></dd>
+
+    <dt>{% translate "Content selection URL" %}</dt>
+    <dd><code>{{launch_url}}</code></dd>
+
+    <dt>{% translate "Icon URL" %}</dt>
+    <dd><code>{{icon_url}}</code></dd>
+</dl>
+
+<p><strong>TODO: a form for creating a consumer, given client ID and deployment ID</strong></p>
+
+{% endblock management_content %}

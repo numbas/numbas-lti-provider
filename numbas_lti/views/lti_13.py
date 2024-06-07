@@ -24,7 +24,8 @@ from pylti1p3.deep_link_resource import DeepLinkResource
 from pylti1p3.contrib.django import DjangoOIDCLogin
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.dynamic_registration import DjangoDynamicRegistration
-from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
+from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool, LtiToolKey
+from pylti1p3.dynamic_registration import generate_key_pair
 from pylti1p3.exception import LtiException
 import urllib.parse
 
@@ -32,7 +33,7 @@ INSTANCE_NAME = settings.INSTANCE_NAME
 PAGE_TITLE = gettext('{INSTANCE_NAME} Numbas').format(INSTANCE_NAME=INSTANCE_NAME)
 PAGE_DESCRIPTION = gettext('The Numbas LTI provider at {INSTANCE_NAME}.').format(INSTANCE_NAME=INSTANCE_NAME)
 
-class RegisterView(mixins.HelpLinkMixin, TemplateView):
+class RegisterView(mixins.HelpLinkMixin, ConsumerManagementMixin, TemplateView):
     template_name ='numbas_lti/lti_13/registration/begin.html'
     helplink = 'admin/consumers/lti_13.html'
 
@@ -127,15 +128,75 @@ class CanvasRegistrationView(ConsumerManagementMixin, edit.CreateView):
         context['email_address'] = settings.DEFAULT_FROM_EMAIL
         context['launch_url'] = self.request.build_absolute_uri(reverse('lti_13:launch'))
         context['canvas_config_url'] = self.request.build_absolute_uri(reverse_lazy('lti_13:canvas_config_json'))
+        context['canvas_presets'] = settings.CANVAS_LTI_13_PRESETS
 
         return context
 
     def form_valid(self, form):
-        pass
+        data = form.cleaned_data
+
+        consumer = register_canvas_lti_13_consumer(**data)
+
+        return redirect(consumer.get_absolute_url())
+
+    def form_invalid(self, form):
+        print(form.data)
+        return super().form_invalid(form)
+
+def register_canvas_lti_13_consumer(issuer, key_set_url, auth_login_url, title, client_id, deployment_ids, **kwargs) -> LTIConsumer:
+    private_key, public_key = generate_key_pair()
+
+    key, created_key = LtiToolKey.objects.get_or_create(name=issuer, defaults = {'private_key': private_key, 'public_key': public_key})
+
+    tool = LtiTool.objects.create(
+        title=title,
+        issuer=issuer,
+        auth_login_url=auth_login_url,
+        key_set_url=key_set_url,
+        tool_key=key,
+        client_id=client_id,
+        deployment_ids = deployment_ids
+    )
+
+    consumer = LTIConsumer.objects.create()
+    lti_13_consumer = LTI_13_Consumer.objects.create(consumer=consumer, tool=tool)
+    
+    return consumer
 
 class BlackboardRegistrationView(ConsumerManagementMixin, generic.FormView):
     form_class = numbas_lti.forms.BlackboardLti13RegistrationForm
     template_name = 'numbas_lti/lti_13/registration/blackboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['launch_url'] = self.request.build_absolute_uri(reverse('lti_13:launch'))
+        context['jwks_url'] = self.request.build_absolute_uri(reverse('lti_13:jwks'))
+        context['login_url'] = self.request.build_absolute_uri(reverse('lti_13:login'))
+        context['icon_url'] = self.request.build_absolute_uri(static("icon.png"))
+
+
+        return context
+
+    def form_valid(self, form):
+        client_id = form.cleaned_data['client_id']
+        deployment_id = form.cleaned_data['deployment_id']
+        tool = form.cleaned_data['tool']
+
+        if deployment_id not in tool.deployment_ids:
+            tool.deployment_ids.append(deployment_id)
+            tool.save(update_fields=('deployment_ids',))
+
+        try:
+            lti_13_consumer = LTI_13_Consumer.objects.get(tool=tool)
+            consumer = lti_13_consumer.consumer
+        except LTI_13_Consumer.DoesNotExist:
+            consumer = LTIConsumer.objects.create()
+    
+        return redirect(consumer.get_absolute_url())
+
+class GenericRegistrationView(ConsumerManagementMixin, TemplateView):
+    template_name = 'numbas_lti/lti_13/registration/generic.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -262,6 +323,19 @@ class CreateRegistrationTokenView(edit.CreateView):
     model = LTIConsumerRegistrationToken
     template_name = 'numbas_lti/lti_13/registration/create_token.html'
     form_class = numbas_lti.forms.CreateRegistrationTokenForm
+
+    def get_initial(self):
+        platform_name = self.request.GET.get('platform', '')
+        return {
+            'name': platform_name,
+        }
+
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        context['platform_name'] = self.request.GET.get('platform')
+        return context
 
 class RegistrationTokenView(detail.DetailView):
     model = LTIConsumerRegistrationToken

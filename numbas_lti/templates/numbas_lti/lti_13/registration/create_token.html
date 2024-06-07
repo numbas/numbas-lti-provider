@@ -1,16 +1,22 @@
-{% extends "numbas_lti/lti_13/base.html" %}
+{% extends "numbas_lti/management/admin/base.html" %}
 {% load i18n %}
-
-{% block body_class %}login{% endblock %}
 
 {% block title %}{% translate "Create a consumer registration token" %} - {{block.super}}{% endblock %}
 
-{% block main %}
+{% block management_header %}
+    <h1>{% translate "Create a consumer registration token" %}</h1>
+{% endblock %}
+
+{% block management_content %}
+    {% if platform_name %}
+    <p>{% blocktranslate with platform_name=platform_name %}Create a registration token in order to register {{platform_name}} with this tool, using dynamic registration.{% endblocktranslate %}</p>
+    {% else %}
     <p>{% blocktranslate %}Create a registration token in order to register your platform with this tool, using dynamic registration.{% endblocktranslate %}</p>
+    {% endif %}
 
     <form method="POST">
         {% csrf_token %}
         {{form}}
         <button class="primary" type="submit">{% translate "Create" %}</button>
     </form>
-{% endblock main %}
+{% endblock management_content %}

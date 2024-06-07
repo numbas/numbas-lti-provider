@@ -74,7 +74,7 @@ class LTIConsumer(models.Model):
         verbose_name_plural = _('LTI consumers')
 
     def __str__(self):
-        return f'Consumer {self.url} (ID: {self.pk})'
+        return f'Consumer "{self.title}" (ID: {self.pk})'
 
     def get_absolute_url(self):
         return reverse('view_consumer', args=(self.pk,))
