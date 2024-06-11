@@ -139,10 +139,6 @@ class CanvasRegistrationView(ConsumerManagementMixin, edit.CreateView):
 
         return redirect(consumer.get_absolute_url())
 
-    def form_invalid(self, form):
-        print(form.data)
-        return super().form_invalid(form)
-
 def register_canvas_lti_13_consumer(issuer, key_set_url, auth_login_url, title, client_id, deployment_ids, **kwargs) -> LTIConsumer:
     private_key, public_key = generate_key_pair()
 

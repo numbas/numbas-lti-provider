@@ -340,10 +340,10 @@ class CanvasLti13RegistrationForm(FieldsetFormMixin, ModelForm):
 
     class Meta:
         model = LtiTool
-        fields = ['issuer', 'auth_login_url', 'key_set_url', 'client_id','deployment_ids', 'title',]
+        fields = ['issuer', 'auth_login_url', 'auth_token_url', 'key_set_url', 'client_id','deployment_ids', 'title',]
 
         fieldsets = [
-            (_('Issuer settings'), ('preset', 'issuer', 'key_set_url', 'auth_login_url')),
+            (_('Issuer settings'), ('preset', 'issuer', 'key_set_url', 'auth_login_url', 'auth_token_url',)),
             (_('IDs'), ('title', 'client_id', 'deployment_ids',)),
         ]
 

@@ -274,3 +274,32 @@ LOCKDOWN_APP = {
 
 # The User-Agent header string to use for any requests made by this tool. The version of the software is appended to the string given here.
 REQUESTS_USER_AGENT = 'Numbas LTI provider'
+
+# The root URL of the documentation. If not set here, it's set based on the current version, relative to docs.numbas.org.uk.
+#HELP_URL = 'https://docs.numbas.org/uk/lti/latest/'
+
+# Presets for Canvas LTI 1.3 settings.
+CANVAS_LTI_13_PRESETS = {
+    'canvas': {
+        'label': 'Production',
+        'issuer': 'https://canvas.instructure.com',
+        'key_set_url': 'https://canvas.instructure.com/api/lti/security/jwks',
+        'auth_login_url': 'https://canvas.instructure.com/api/lti/authorize_redirect',
+        'auth_token_url': 'http://canvas.instructure.com/login/oauth2/token',
+    },
+    'canvas_beta': {
+        'label': 'Beta',
+        'issuer': 'https://canvas.beta.instructure.com',
+        'key_set_url': 'https://canvas.beta.instructure.com/api/lti/security/jwks',
+        'auth_login_url': 'https://canvas.beta.instructure.com/api/lti/authorize_redirect',
+        'auth_token_url': 'http://canvas.beta.instructure.com/login/oauth2/token',
+    },
+    'canvas_test': {
+        'label': 'Test',
+        'issuer': 'https://canvas.test.instructure.com',
+        'key_set_url': 'https://canvas.test.instructure.com/api/lti/security/jwks',
+        'auth_login_url': 'https://canvas.test.instructure.com/api/lti/authorize_redirect',
+        'auth_token_url': 'http://canvas.test.instructure.com/login/oauth2/token',
+    },
+}
+
