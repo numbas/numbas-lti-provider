@@ -106,12 +106,11 @@ class LTI_11_AuthBackend(backends.LTIAuthBackend):
         user_id = request.POST.get('user_id')
 
         # If there's a recorded alias to a User object with this consumer and user_id, return that user
-        try:
-            alias = LTI_11_UserAlias.objects.get(consumer__lti_11__key=request_key, consumer_user_id=user_id)
+        alias = LTI_11_UserAlias.objects.filter(consumer__lti_11__key=request_key, consumer_user_id=user_id).last()
+        if alias is not None:
             user = alias.user
-
         # If no alias exists, get or create a user and make an alias record.
-        except LTI_11_UserAlias.DoesNotExist:
+        else:
             consumer = LTIConsumer.objects.get(lti_11__key=request_key)
 
             user = new_lti_user()
