@@ -23,7 +23,10 @@ class ReportOutcomeException(Exception):
             'user_name': user_data.user.get_full_name(), 
             'error': self.error,
         }
-        self.message = _('There was an error reporting data for user {user_name} back to the LTI consumer: {error}').format(**ctx)
+        self.message = _('There was an error reporting data for user {user_name} back to the LTI consumer:\n{error}').format(**ctx)
+
+    def __str__(self):
+        return self.message
 
 class ReportAnonymousUserException(Exception):
     def __init__(self):
@@ -59,11 +62,11 @@ def report_outcome(resource, user):
         if resource.lti_13_links.exists():
             report_outcome_lti_13(resource, user_data)
     except requests.exceptions.ConnectionError as e:
-        raise ReportOutcomeConnectionError(e)
+        raise ReportOutcomeConnectionError(e) from e
     except requests.exceptions.Timeout as e:
-        raise ReportOutcomeTimeoutError(e)
+        raise ReportOutcomeTimeoutError(e) from e
     except Exception as e:
-        raise ReportOutcomeException(user_data,e)
+        raise ReportOutcomeException(user_data,e) from e
 
 def report_outcome_lti_13(resource, user_data):
     tool_conf = DjangoDbToolConf()
@@ -157,9 +160,6 @@ def report_outcome_lti_11(resource,user_data):
                 timeout = getattr(settings,'REQUEST_TIMEOUT',60)
             )
 
-        if r.status_code!=200:
-            raise ReportOutcomeFailure(user_data,r.text)
-
         namespaces = {'ims':'http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0'}
         try:
             xml = etree.fromstring(r.content)
@@ -169,7 +169,7 @@ def report_outcome_lti_11(resource,user_data):
             raise ReportOutcomeFailure(user_data,'{}\n\n{}'.format(e,r.text))
         status = xml.find('./ims:imsx_POXHeader/ims:imsx_POXResponseHeaderInfo/ims:imsx_statusInfo',namespaces=namespaces)
         code = status.find('ims:imsx_codeMajor',namespaces=namespaces).text
-        if code=='success':
+        if code=='success' and r.status_code == 200:
             user_data.last_reported_score = result
             user_data.save()
             return r
