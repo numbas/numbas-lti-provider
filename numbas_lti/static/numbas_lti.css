@@ -346,6 +346,10 @@ progress {
 code, pre {
     background: var(--th-bg);
     padding: 0 var(--half-space);
+    color: var(--text-color);
+}
+pre {
+    overflow: auto;
 }
 code {
     word-break: break-all;
