@@ -356,16 +356,16 @@ class LTI_13_Context(models.Model):
 
         members = [
             {
-                'name': m['name'],
-                'given_name': m['given_name'],
-                'family_name': m['family_name'],
-                'active': m['status'] == 'Active',
+                'name': m.get('name'),
+                'given_name': m.get('given_name'),
+                'family_name': m.get('family_name'),
+                'active': m.get('status') == 'Active',
                 'student': pylti1p3.roles.StudentRole({"https://purl.imsglobal.org/spec/lti/claim/roles": m['roles']}).check(),
                 'user_id': m['user_id'],
-                'ext_user_username': m['ext_user_username'],
-                'email': m['email'],
+                'ext_user_username': m.get('ext_user_username'),
+                'email': m.get('email'),
             }
-            for m in sorted(raw_members, key=lambda x: (x['family_name'], x['given_name']))
+            for m in sorted(raw_members, key=lambda x: (x.get('family_name',''), x.get('given_name',''), x.get('user_id')))
         ]
         cache.set(cache_key, members, 60)
 
