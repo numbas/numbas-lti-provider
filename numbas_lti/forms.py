@@ -326,7 +326,7 @@ class DeploymentIdWidget(forms.TextInput):
             return ''
 
     def value_from_datadict(self, data, files, name):
-        return [data[name]]
+        return json.dumps([data[name]])
 
     def value(self):
         value = super().value()
