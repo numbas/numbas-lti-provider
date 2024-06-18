@@ -9,6 +9,7 @@ django-statici18n==2.0.1
 huey==2.5.0
 lxml==5.2.2
 oauthlib==3.2.2
+packaging==24.0
 pycryptodome==3.20.0
 requests==2.31.0
 requests-oauthlib==2.0.0

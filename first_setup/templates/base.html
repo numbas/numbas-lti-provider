@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/static/style.css">
+        <title>{% block title %}Numbas LTI provider setup{% endblock title %}</title>
+        {% block head %}
+        {% endblock head %}
+    </head>
+    <body class="{% block body_class %}{% endblock %}">
+        <header>
+            <h1>Numbas LTI provider setup</h1>
+        </header>
+
+        <main>
+            {% block main %}
+            {% endblock main %}
+        </main>
+    </body>
+</html>
+
