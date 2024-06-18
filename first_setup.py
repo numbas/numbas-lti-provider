@@ -8,7 +8,24 @@ import sys
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path, PurePath
-import packaging.version
+
+def import_hint(package):
+    print(f"""Couldn't import the Python package '{package}'. Have you installed it, and is the virtual environment active?
+Try running:
+    pip install -r requirements.txt""", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    import packaging.version
+except ImportError:
+    import_hint('packaging')
+    
+try:
+    import django
+    import django.conf
+    from django.template.loader import render_to_string
+except ImportError:
+    import_hint('Django')
 
 PYTHON_EXEC_PATH = sys.executable
 
@@ -17,14 +34,6 @@ MIN_PYTHON_VERSION = packaging.version.parse("3.10")
 root_dir = Path.cwd() / 'first_setup'
 
 settings_dir = Path.cwd() / 'numbasltiprovider'
-
-try:
-    import django
-    import django.conf
-    from django.template.loader import render_to_string
-except ImportError:
-    print("Couldn't import the Python package Django. Have you installed it, and is the virtual environment active?", file=sys.stderr)
-    sys.exit(1)
 
 
 class ValidationError(Exception):
@@ -311,6 +320,8 @@ class Command:
 
         print("Run setup")
         self.run_setup()
+        
+        self.server.dev = self.dev
 
     def get_value(self, key):
         return self.question_dict[key].value
@@ -564,6 +575,11 @@ class SetupHTTPServer(HTTPServer):
             return
 
         print("Setup is finished")
+        if self.dev:
+            print('Now run the development server with')
+            print('    python manage.py runserver')
+        else:
+            print('''Once you've configured your web server proxy, it'll be ready to use.''')
 
         stdout_data, stderr_data = self.setup_process.communicate()
         stdout = stdout_data.decode('utf-8')
@@ -588,9 +604,12 @@ class SetupHTTPServer(HTTPServer):
 def serve_web(port):
     with SetupHTTPServer(("", port), RequestHandler) as httpd:
         print(f"Please open http://localhost:{port} to set up this Numbas LTI provider.")
-        while True:
-            httpd.handle_request()
-            httpd.poll_setup()
+        try:
+            while True:
+                httpd.handle_request()
+                httpd.poll_setup()
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == '__main__':
