@@ -15,9 +15,7 @@ v4.0
 Docker installation
 ^^^^^^^^^^^^^^^^^^^
 
-.. todo::
-
-    Does the INSTRUCTOR_ROLES setting need to be updated?
+There are no special upgrade steps for Docker installations for this version.
 
 Non-Docker installation
 ^^^^^^^^^^^^^^^^^^^^^^^
