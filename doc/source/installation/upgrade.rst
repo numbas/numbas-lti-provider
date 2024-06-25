@@ -34,6 +34,7 @@ Copy the values of the following objects from :file:`numbasltiprovider/settings.
 * ``LTI_INSTRUCTOR_ROLES`` (there are separate lists for LTI 1.1 and LTI 1.3)
 * ``CACHES`` (new setting)
 * ``REQUESTS_USER_AGENT`` (new setting)
+* ``CANVAS_LTI_13_PRESETS`` (new setting)
 
 v3.2
 ----
