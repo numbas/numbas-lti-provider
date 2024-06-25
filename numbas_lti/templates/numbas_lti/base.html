@@ -1,8 +1,9 @@
 {% load i18n %}
 {% load static %}
+{% get_current_language as LANGUAGE_CODE %}
 
 <!doctype html>
-<html>
+<html lang="{{LANGUAGE_CODE}}">
     <head>
         <title>{% block title %}{{INSTANCE_NAME}} {% translate "Numbas LTI Provider" %}{% endblock %}</title>
         {% block meta %}
