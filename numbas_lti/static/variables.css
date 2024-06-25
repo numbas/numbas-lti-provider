@@ -33,7 +33,7 @@
     --border-color: currentColor;
 
     --success-color: #008000;
-    --warning-color: #9d6b00;
+    --warning-color: #996700;
     --danger-color: #d40000;
     --muted-color: #636363;
     --info-color: #0c6dcf;
@@ -93,6 +93,7 @@
 
     --th-bg: #e6e6e6;
     --td-bg: #f8f8f8;;
+    --td-warning-color: #996700;
     --table-border-color: #ccc;
 }
 
