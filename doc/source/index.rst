@@ -21,6 +21,7 @@ Contents
     how-it-works
     data-handling
     getting-started
+    vpat
 
 .. toctree::
     :caption: Installation
