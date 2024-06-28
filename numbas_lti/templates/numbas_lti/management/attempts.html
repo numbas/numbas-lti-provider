@@ -3,6 +3,7 @@
 {% load icon %}
 {% load percentage %}
 {% load querystring %}
+{% load score_doughnut %}
 {% load static %}
 {% load time_tag %}
 
@@ -61,7 +62,7 @@
                         <th scope="col">{% translate "Start time" %}</th>
                         <th scope="col" aria-label="{% translate "Controls" %}"></th>
                         <th scope="col">{% translate "Completion status" %}</th>
-                        <th scope="col" colspan="2">{% translate "Score" %}</th>
+                        <th scope="col">{% translate "Score" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -91,16 +92,8 @@
                             {% endif %}
                         </td>
                         <td class="attempt-score">
-                            {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}
-                        </td>
-                        <td>
-                            <ul class="score-info">
-                                {% for aqs in attempt.question_scores %}
-                                {% if aqs.max_score %}
-                                <li class="question {{aqs.completion_status|slugify}} scaled_score_{{aqs.scaled_score|percentage_bin}}" style="flex-grow: {{aqs.max_score}}; height: {{aqs.scaled_score|percentage:"10"}}" title="{% blocktranslate with number=aqs.number|add:"1" %}Question {{number}}:{% endblocktranslate %} {% if aqs.completion_status == 'not attempted' %}{% translate "not attempted" %}{% else %}{{aqs.raw_score}} / {{aqs.max_score}}{% endif %}"></li>
-                                {% endif %}
-                                {% endfor %}
-                            </ul>
+                            {% score_doughnut attempt %}
+                            <p class="score-text">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}</p>
                         </td>
                     </tr>
                     {% endfor %}

@@ -437,6 +437,37 @@ body:not(.admin, .resource-management) > header {
     flex-wrap: wrap;
 }
 
+.score-doughnut {
+    height: 2em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.score-doughnut .question {
+}
+.score-doughnut .question[data-correctness="correct"] .wedge {
+        fill: var(--success-color);
+    }
+}
+.score-doughnut .question[data-correctness="partially correct"] .wedge {
+    fill: var(--warning-color);
+}
+
+.score-doughnut .question:not(.answered) {
+    opacity: 0.4;
+}
+
+.score-doughnut .question .outline {
+    fill: var(--background-color);
+    paint-order: stroke fill;
+    stroke: currentColor;
+}
+
+.score-doughnut .question .ticks {
+    stroke: currentColor;
+    opacity: var(--doughnut-tick-opacity);
+}
+
 body > header {
     padding: var(--spacing);
     margin: var(--double-space) 0;

@@ -1,0 +1,12 @@
+<svg class="score-doughnut" viewBox="-11 -11 22 12">
+    <desc>{{long_description}}</desc>
+    {% for question in questions %}
+    <g class="question{% if question.answered %} answered{% endif %}" data-correctness="{{question.correctness}}">
+        <title>{{question.title}}</title>
+        <path class="outline" d="{{question.outline_path}}" stroke-width="{{stroke_width}}"></path>
+        <path class="wedge" d="{{question.wedge_path}}"></path>
+        <path class="ticks" d="{{question.ticks_path}}" stroke-width="{{question.tick_width}}"></path>
+    </g>
+    {% endfor %}
+</svg>
+

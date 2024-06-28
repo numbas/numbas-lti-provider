@@ -1,25 +1,12 @@
 .identifier {
     font-family: monospace;
 }
-.score-info {
-    width: 15em;
-    margin: 0;
-    display: flex;
-    height: 2em;
-    padding: 0;
-    list-style: none;
-    align-items: flex-end;
+
+.attempt-score {
+    text-align: center;
 }
-.score-info .question {
-    flex-basis: 3px;
+
+.attempt-score .score-text {
+    display: inline-block;
+    margin: 0 0 0 var(--spacing);
 }
-.score-info .question ~ .question {
-    margin-left: 2px;
-}
-.score-info .question.not-attempted {
-    background: var(--muted-color);
-}
-/* generated with http://tristen.ca/hcl-picker/#/hlc/3/1.46/7E4813/4AD269 */
-.scaled_score_0 { background-color: var(--danger-button-bg); color: var(--danger-button-color);}
-.scaled_score_1 { background-color: var(--warning-button-bg); color: var(--warning-button-color);}
-.scaled_score_2 { background-color: var(--success-button-bg); color: var(--success-button-color); }
