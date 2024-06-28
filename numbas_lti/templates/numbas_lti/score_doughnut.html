@@ -1,5 +1,5 @@
 <svg class="score-doughnut" viewBox="-11 -11 22 12">
-    <desc>{{long_description}}</desc>
+    <title>{{long_description}}</title>
     {% for question in questions %}
     <g class="question{% if question.answered %} answered{% endif %}" data-correctness="{{question.correctness}}">
         <title>{{question.title}}</title>
