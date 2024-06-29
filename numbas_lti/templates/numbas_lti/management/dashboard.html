@@ -36,14 +36,14 @@
             {% elif last_report_process.status == 'complete' %}
                 <div class="alert success">
                     <p>{% translate "Scores were successfully reported back to the grade book." %}</p>
-                    <p><a class="button success small" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
+                    <p><a class="button success" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
                 </div>
             {% elif last_report_process.status == 'error' %}
                 <div class="alert danger">
                     <p>{% translate "An error was encountered while reporting scores back to the grade book:" %}</p>
                     <pre>{{last_report_process.response}}</pre>
                     <p>{% translate "Report this error to your VLE's administrator." %}</p>
-                    <p><a class="button danger small" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
+                    <p><a class="button danger" href="{% url_with_lti 'dismiss_report_process' last_report_process.pk %}">{% translate "Dismiss this message" %}</a></p>
                 </div>
             {% endif %}
         </section>

@@ -121,7 +121,7 @@ body {
 input:not([type="hidden"]), select, textarea {
     font-family: inherit;
     font-size: inherit;
-    padding: var(--half-space) var(--spacing);
+    padding: var(--spacing) var(--spacing);
     line-height: calc(1em + var(--spacing));
     border-radius: var(--button-radius);
     color: var(--text-color);
@@ -151,7 +151,7 @@ button, .button {
     display: inline-block;
     font-family: inherit;
     font-size: inherit;
-    padding: var(--half-space) var(--spacing);
+    padding: var(--spacing) var(--spacing);
     margin: var(--spacing);
     line-height: calc(1em + var(--spacing));
     border-radius: var(--button-radius);

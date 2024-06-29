@@ -27,7 +27,7 @@
                 <td>
                     <form method="POST" action="{% url 'delete_stresstest' test.pk %}">
                         {% csrf_token %}
-                        <button class="button danger small">{% translate "Delete" %}</button>
+                        <button class="button danger">{% translate "Delete" %}</button>
                     </form>
                 </td>
             </tr>
