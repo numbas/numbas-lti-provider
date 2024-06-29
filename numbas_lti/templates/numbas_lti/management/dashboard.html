@@ -96,7 +96,7 @@
 
         <p>{% blocktranslate %}Students will be shown the following information:{% endblocktranslate %}</p>
 
-        <table id="settings-table">
+        <table class="settings-table">
             <thead>
                 <tr>
                     <td class="empty"></td>
@@ -151,68 +151,90 @@
             </tbody>
         </table>
 
-        {% if exam_info.startPassword %}
-        <p>{% blocktranslate %}Students <strong>must</strong> enter a password to begin this exam.{% endblocktranslate %}</p>
-        {% else %}
-        <p>{% blocktranslate %}Students <strong>do not</strong> need to enter a password to begin this exam.{% endblocktranslate %}</p>
-        {% endif %}
-
-        {% if exam_info.hasPercentPass %}
-        <p>{% blocktranslate with threshold=exam_info.percentPass%}There is a pass threshold of <strong>{{threshold}}%</strong>.{% endblocktranslate %}</p>
-        {% endif %}
-
-        {% if exam_info.hasTimeLimit %}
-        <p>{% blocktranslate with duration=exam_info.duration|floatformat %}There is a time limit of <strong>{{duration}} minutes</strong>.{% endblocktranslate %}</p>
-        {% else %}
-        <p>{% blocktranslate %}This exam has no time limit.{% endblocktranslate %}</p>
-        {% endif %}
-
         <p>{% blocktranslate %}During an attempt, students:{% endblocktranslate %}</p>
-        <ul>
-            <li>{% if exam_info.allowRegen %}{% blocktranslate %}<strong>may</strong> regenerate questions.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> regenerate questions.{% endblocktranslate %}{% endif %}</li>
-            <li>{% if exam_info.allowBrowse %}{% blocktranslate %}may <strong>move freely between questions</strong>.{% endblocktranslate %}{% else %}{% if exam_info.allowReverse %}{% blocktranslate %}may <strong>move to the next question or previous questions</strong>.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> return to questions.{% endblocktranslate %}{% endif %}{% endif %}</li>
-            {% if exam_info.hasTimeLimit %}
-            <li>{% if exam_info.allowPause %}{% blocktranslate %}<strong>may</strong> pause the timer.{% endblocktranslate %}{% else %}{% blocktranslate %}<strong>may not</strong> pause the timer.{% endblocktranslate %}{% endif %}</li>
-            {% endif %}
-            <li>{% blocktranslate %}<strong>may</strong> leave the attempt and resume later.{% endblocktranslate %}</li>
-        </ul>
 
-        <table>
-            <thead>
-                <tr>
-                    <th scope="col">{% translate "This will happen" %}</th>
-                    <th scope="col">{% translate "When" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{% blocktranslate %}Students may attempt the exam{% endblocktranslate %}</td>
-                    <td>
-                        {% if resource.available_from == None %}
-                        {% if resource.available_until == None %}{% translate "any time" %}{% else %}{% blocktranslate with available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}until <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}{% endif %}
-                        {% else %}
-                            {% if resource.available_until == None %}
-                                {% blocktranslate with available_from=resource.available_from available_from_iso=resource.available_from|date:"c" %}from <time datetime="{{available_from_iso}}">{{available_from}}</time>{% endblocktranslate %}
+        <div class="flex-row">
+            <table class="settings-table">
+                <thead>
+                    <tr>
+                        <th scope="col">{% translate "Action" %}</th>
+                        <th scope="col">{% translate "Policy" %}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>{% translate "Enter a password to begin" %}</td>
+                        {% if exam_info.startPassword %}<td class="success">{% translate "Required" %}</td>{% else %}<td class="danger">{% translate "Not required" %}</td>{% endif %}
+                    </tr>
+                    <tr>
+                        <td>{% translate "Pass threshold" %}</td>
+                        {% if exam_info.hasPercentPass %}<td class="success">{{exam_info.percentPass}}</td>{% else %}<td>{% translate "Not set" %}</td>{% endif %}
+                    </tr>
+                    <tr>
+                        <td>{% translate "Time limit" %}</td>
+                        {% if exam_info.hasTimeLimit %}<td class="success">{% blocktranslate with duration=exam_info.duration|floatformat %}{{duration}} minutes{% endblocktranslate %}</td>{% else %}<td>{% translate "No time limit" %}</td>{% endif %}
+                    </tr>
+                    <tr>
+                        <td>{% translate "Regenerate questions" %}</td>
+                        {% if exam_info.allowRegen %}<td class="danger">{% translate "Allowed" %}</td>{% else %}<td class="success">{% translate "Not allowed" %}</td>{% endif %}
+                    </tr>
+                    <tr>
+                        <td>{% translate "Move to any question" %}</td>
+                        {% if exam_info.allowBrowse %}<td>{% translate "Allowed" %}</td>{% else %}<td>{% translate "Not allowed" %}</td>{% endif %}
+                    </tr>
+                    <tr>
+                        <td>{% translate "Move to previous questions" %}</td>
+                        {% if exam_info.allowBrowse or exam_info.allowReverse %}<td>{% translate "Allowed" %}</td>{% else %}<td>{% translate "Not allowed" %}</td>{% endif %}
+                    </tr>
+                    <tr>
+                        <td>{% translate "Pause the timer" %}</td>
+                        {% if exam_info.allowPause %}<td class="danger">{% translate "Allowed" %}</td>{% else %}<td class="success">{% translate "Not allowed" %}</td>{% endif %}
+                    </tr>
+                    <tr>
+                        <td>{% translate "Leave the attempt and come back later" %}</td>
+                        <td class="success">{% translate "Allowed" %}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="settings-table">
+                <thead>
+                    <tr>
+                        <th scope="col">{% translate "This will happen" %}</th>
+                        <th scope="col">{% translate "When" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{% blocktranslate %}May attempt the exam{% endblocktranslate %}</td>
+                        <td>
+                            {% if resource.available_from == None %}
+                            {% if resource.available_until == None %}{% translate "any time" %}{% else %}{% blocktranslate with available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}until <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}{% endif %}
                             {% else %}
-                                {% if resource.available_from < resource.available_until %}
-                                    {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}between <time datetime="{{available_from_iso}}">{{available_from}}</time> and <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
+                                {% if resource.available_until == None %}
+                                    {% blocktranslate with available_from=resource.available_from available_from_iso=resource.available_from|date:"c" %}from <time datetime="{{available_from_iso}}">{{available_from}}</time>{% endblocktranslate %}
                                 {% else %}
-                                    {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}before <time datetime="{{available_from_iso}}">{{available_from}}</time>, or after <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
+                                    {% if resource.available_from < resource.available_until %}
+                                        {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}between <time datetime="{{available_from_iso}}">{{available_from}}</time> and <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
+                                    {% else %}
+                                        {% blocktranslate with available_from_iso=resource.available_from|date:"c" available_from=resource.available_from available_until=resource.available_until available_until_iso=resource.available_until|date:"c" %}before <time datetime="{{available_from_iso}}">{{available_from}}</time>, or after <time datetime="{{available_until_iso}}">{{available_until}}</time>{% endblocktranslate %}
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td>{% translate "Students may review their attempts" %}</td>
-                    <td>{% if resource.allow_review_from == None %}{% translate "immediately after finishing an attempt" %}{% else %}{% translate "from" %} {% time_tag resource.allow_review_from %}{% endif %}</td>
-                </tr>
-                <tr>
-                    <td>{% blocktranslate %}Each student's score will be reported back to the consumer{% endblocktranslate %}</td>
-                    <td>{% if resource.report_mark_time == 'immediately' %}{% translate "as soon as it changes" %}{% elif resource.report_mark_time == 'oncompletion' %}{% translate "immediately after each attempt is completed" %}{% else %}{% translate "when the instructor requests it" %}{% endif %}</td>
-                </tr>
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{% translate "May review their attempts" %}</td>
+                        <td>{% if resource.allow_review_from == None %}{% translate "immediately after finishing an attempt" %}{% else %}{% translate "from" %} {% time_tag resource.allow_review_from %}{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>{% blocktranslate %}Each student's score will be reported back to the consumer{% endblocktranslate %}</td>
+                        <td>{% if resource.report_mark_time == 'immediately' %}{% translate "as soon as it changes" %}{% elif resource.report_mark_time == 'oncompletion' %}{% translate "immediately after each attempt is completed" %}{% else %}{% translate "when the instructor requests it" %}{% endif %}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
     {% endif %}
 

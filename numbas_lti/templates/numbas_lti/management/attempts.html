@@ -78,17 +78,17 @@
                         {% endif %}
                         <td>{% time_tag attempt.start_time %}</td>
                         <td>
-                            <a class="button link" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
-                            <a class="button link" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>
-                            <a class="button link" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
-                            <a class="button link" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="danger">{% icon 'trash' %} {% translate "Delete" %}</span></a>
+                            <a class="button link" title="{% blocktranslate with identifier=attempt.user.get_full_name start_time=attempt.start_time %}Review attempt by {{identifier}} started at {{start_time}}{% endblocktranslate %}" target="review_attempt" href="{% url_with_lti 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>{% if attempt.exam != resource.exam %} {% translate "(old exam)" %}{% endif %}
+                            <a class="button link" title="{% blocktranslate with identifier=attempt.user.get_full_name start_time=attempt.start_time %}Change score for attempt by {{identifier}} started at {{start_time}}{% endblocktranslate %}" href="{% url_with_lti 'remark_parts' attempt.pk %}"><span class="warning">{% icon 'pencil' %} {% translate "Change score" %}</span></a>
+                            <a class="button link" title="{% blocktranslate with identifier=attempt.user.get_full_name start_time=attempt.start_time %}Data for attempt by {{identifier}} started at {{start_time}}{% endblocktranslate %}" href="{% url_with_lti 'attempt_timeline' attempt.pk %}"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                            <a class="button link" title="{% blocktranslate with identifier=attempt.user.get_full_name start_time=attempt.start_time %}Delete attempt by {{identifier}} started at {{start_time}}{% endblocktranslate %}" href="{% url_with_lti 'delete_attempt' attempt.pk %}"><span class="danger">{% icon 'trash' %} {% translate "Delete" %}</span></a>
                         </td>
                         <td>
                             {% if attempt.broken %}
                                 <span class="danger">{% translate "Broken" %}</span>
                             {% else %}
                                 <span class="{% if attempt.completed %}success{% endif %}">{{attempt.get_completion_status_display}}</span>
-                                {% if attempt.completed %}<a class="button link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}"><span class="warning">{% icon 'eye-open' %} {% translate "Reopen" %}</span></a>{% endif %}
+                                {% if attempt.completed %}<a title="{% blocktranslate with identifier=attempt.user.get_full_name start_time=attempt.start_time %}Reopen attempt by {{identifier}} started at {{start_time}}{% endblocktranslate %}" class="button link" href="{% url_with_lti 'reopen_attempt' attempt.pk %}"><span class="warning">{% icon 'eye-open' %} {% translate "Reopen" %}</span></a>{% endif %}
                             {% endif %}
                         </td>
                         <td class="attempt-score">

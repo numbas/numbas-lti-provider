@@ -72,7 +72,7 @@
                     <td>
                         {% if attempt.completed %}
                             {% if attempt.review_allowed %}
-                                <a class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                            <a title="{% blocktranslate with start_time=attempt.start_time %}Review attempt started at {{start_time}}{% endblocktranslate %}" class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                     {% icon 'play' %} {% translate "Review this attempt" %}
                                 </a>
                             {% else %}
@@ -82,7 +82,7 @@
                             {% endif %}
                         {% else %}
                             {% if attempt.resume_allowed %}
-                                <a class="button {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
+                                <a title="{% blocktranslate with start_time=attempt.start_time %}Continue attempt started at {{start_time}}{% endblocktranslate %}" class="button {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                     {% icon 'play' %} {% translate "Continue" %}
                                 </a>
                             {% endif %}

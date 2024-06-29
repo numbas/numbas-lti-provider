@@ -112,10 +112,10 @@
                 {% for exam,num_attempts in exams %}
                 <tr class="{% if exam.is_active %}active{% endif %}">
                     <td>
-                        <a target="_blank" href="{% url_with_lti 'run_exam' exam.pk %}">{% icon 'play' %} {% translate "Test run" %}</a>
+                        <a target="_blank" title="{% blocktranslate with title=exam.title creation_time=exam.creation_time %}Test run &ldquo;{{title}}&rdquo; uploaded at {{creation_time}}{% endblocktranslate %}" href="{% url_with_lti 'run_exam' exam.pk %}">{% icon 'play' %} {% translate "Test run" %}</a>
                     </td>
                     <td>
-                        <a href="{{exam.package.url}}">{% icon 'save' %} {% translate "Download" %}</a>
+                        <a  title="{% blocktranslate with title=exam.title creation_time=exam.creation_time %}Download &ldquo;{{title}}&rdquo; uploaded at {{creation_time}}{% endblocktranslate %}" href="{{exam.package.url}}">{% icon 'save' %} {% translate "Download" %}</a>
                     </td>
                     <td>{{exam.title}}</td>
                     <td>{% time_tag exam.creation_time %}</td>
@@ -125,7 +125,7 @@
                         <form method="POST" action="{% url_with_lti 'restore_exam' resource.pk %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="exam" value="{{exam.pk}}">
-                                <button type="submit" class="button default">{% icon 'thumbs-up' %} {% translate "Use this version" %}</button>
+                                <button title="{% blocktranslate with title=exam.title creation_time=exam.creation_time %}Use the version &ldquo;{{title}}&rdquo; uploaded at {{creation_time}}{% endblocktranslate %}" type="submit" class="button default">{% icon 'thumbs-up' %} {% translate "Use this version" %}</button>
                             </form>
                         {% else %}
                             {% translate "This version is in use now." %}

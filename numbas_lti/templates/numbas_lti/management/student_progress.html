@@ -50,8 +50,10 @@
                     {% if not unlimited_attempts %}
                     <td>{{data.access_tokens}}</td>
                     <td>
-                        <a class="button warning small" href="{% url_with_lti 'grant_access_token' resource.pk data.student.pk %}" title="{% translate "Grant an access token" %}">{% icon 'plus' %}</a>
-                        {% if data.access_tokens %}<a class="button danger small" href="{% url_with_lti 'remove_access_token' resource.pk data.student.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
+                        {% if data.pk %}
+                        <a class="button warning small" href="{% url_with_lti 'grant_access_token' resource.pk data.pk %}" title="{% blocktranslate with user_name=data.full_name %}Grant an access token to {{user_name}}{% endblocktranslate %}">{% icon 'plus' %}</a>
+                        {% if data.access_tokens %}<a class="button danger small" href="{% url_with_lti 'remove_access_token' resource.pk data.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
+                        {% endif %}
                     </td>
                     {% endif %}
                 </tr>

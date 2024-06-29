@@ -419,6 +419,13 @@ body:not(.admin, .resource-management) > header {
     vertical-align: text-bottom;
 }
 
+.flex-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing);
+    align-items: start;
+}
+
 .list-unstyled {
     list-style: none;
     padding-left: 0;
@@ -510,7 +517,7 @@ body.dashboard .actions {
     gap: var(--spacing) var(--quad-space);
 }
 
-body.dashboard #settings-table .danger {
+body.dashboard .settings-table .danger {
     text-decoration: dotted underline;
     font-style: italic;
 }

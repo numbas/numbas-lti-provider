@@ -47,7 +47,7 @@
             <td><a href="{% url 'attempt_timeline' attempt.pk %}">{{attempt.resource.title}}</a> - <span class="muted">{{attempt.resource.lti_contexts.first.name}}</span></td>
             <td>{% time_tag attempt.start_time %}</td>
             <td>
-                <a class="button link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
+                <a title="{% blocktranslate with title=attempt.resource.title %}Review {{title}}{% endblocktranslate %}" class="button link" target="review_attempt" href="{% url 'run_attempt' attempt.pk %}"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
             </td>
         </tr>
         {% endfor %}

@@ -27,7 +27,7 @@
             <tbody>
                 {% for report in resource.file_reports.all %}
                 <tr>
-                    <td>{% if report.status == 'complete' %}<a download href="{{ report.outfile.url }}">{{report.name}}</a>{% else %}{{report.name}}{% endif %}</td>
+                    <td>{% if report.status == 'complete' %}<a title="{% blocktranslate with name=report.name creation_time=report.creation_time created_by=report.created_by.get_full_name %}Download {{name}} created at {{creation_time}} by {{created_by}}{% endblocktranslate %}" download href="{{ report.outfile.url }}">{{report.name}}</a>{% else %}{{report.name}}{% endif %}</td>
                     <td>{{report.get_status_display}}</td>
                     <td>{% time_tag report.creation_time %}</td>
                     <td>{{report.expiry_date}}</td>

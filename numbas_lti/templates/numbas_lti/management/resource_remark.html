@@ -193,10 +193,10 @@
                             </td>
                             <td class="controls">
                                 <div>
-                                    <button class="button default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)">{% icon 'repeat' %} {% translate "Re-mark" %}</button>
-                                    <button class="button danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)">{% icon 'save' %} {% translate "Save" %}</button>
-                                    <a class="button link" target="review_attempt" :href="attempt.review_url"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
-                                    <a class="button link" target="_blank" :href="attempt.timeline_url"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
+                                    <button :title="attempt.remark_button_title" class="button default" type="button" :disabled="attempt.status=='remarking'" @click="remark_single_attempt(attempt)">{% icon 'repeat' %} {% translate "Re-mark" %}</button>
+                                    <button :title="attempt.save_button_title" class="button danger save" type="button" :disabled="saving || !attempt.can_save" @click="save_single_attempt(attempt)">{% icon 'save' %} {% translate "Save" %}</button>
+                                    <a :title="attempt.review_link_title" class="button link" target="review_attempt" :href="attempt.review_url"><span class="success">{% icon 'play' %} {% translate "Review" %}</span></a>
+                                    <a :title="attempt.data_link_title" class="button link" target="_blank" :href="attempt.timeline_url"><span class="info">{% icon 'list' %} {% translate "Data" %}</span></a>
                                 </div>
                             </td>
                         </tr>

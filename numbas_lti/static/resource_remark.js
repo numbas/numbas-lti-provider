@@ -2,6 +2,12 @@ import {createApp} from './vue.js';
 
 const BATCH_SIZE = 50;
 
+const _ = gettext;
+
+function format_datetime(t) {
+    return t.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
+}
+
 /**
  * A representation of an attempt, containing all its SCORM data and metadata.
  * The SCORM data is loaded asynchronously.
@@ -64,6 +70,22 @@ class Attempt {
             case 'completed':
                 return gettext('Complete');
         }
+    }
+
+    get remark_button_title() {
+        return interpolate(_('Re-mark attempt by %s started at %s'), [this.user.full_name, format_datetime(this.start_time)]);
+    }
+
+    get save_button_title() {
+        return interpolate(_('Save changes to attempt by %s started at %s'), [this.user.full_name, format_datetime(this.start_time)]);
+    }
+
+    get review_link_title() {
+        return interpolate(_('Review attempt by %s started at %s'), [this.user.full_name, format_datetime(this.start_time)]);
+    }
+
+    get data_link_title() {
+        return interpolate(_('Data for attempt by %s started at %s'), [this.user.full_name, format_datetime(this.start_time)]);
     }
 }
 
@@ -466,9 +488,7 @@ app.config.globalProperties.$filters = {
         return todp(n,p);
     },
 
-    datetime: function(t) {
-        return t.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
-    },
+    datetime: format_datetime,
 };
 
 app.component('ScoreChange', {

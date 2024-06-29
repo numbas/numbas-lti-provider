@@ -1,4 +1,4 @@
-from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required
+from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required, reverse_with_lti
 from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
 from numbas_lti.models import \
@@ -243,6 +243,7 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
                 reported_score = lti_data.last_reported_score
 
             return {
+                'pk': student.pk,
                 'last_name': student.last_name,
                 'first_name': student.first_name,
                 'full_name': student.get_full_name(),
@@ -415,7 +416,7 @@ def grant_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.create(user=user,resource=resource)
 
-    return redirect(self.reverse_with_lti('resource_dashboard',args=(resource.pk,)))
+    return redirect(reverse_with_lti(request, 'resource_dashboard',args=(resource.pk,)))
 
 @lti_role_or_superuser_required(INSTRUCTOR_ROLES)
 def remove_access_token(request,resource_id,user_id):
@@ -423,7 +424,7 @@ def remove_access_token(request,resource_id,user_id):
     user = User.objects.get(id=user_id)
     AccessToken.objects.filter(user=user,resource=resource).first().delete()
 
-    return redirect(self.reverse_with_lti('resource_dashboard',args=(resource.pk,)))
+    return redirect(reverse_with_lti(request, 'resource_dashboard',args=(resource.pk,)))
 
 class DismissReportProcessView(MustBeInstructorMixin,generic.detail.DetailView):
     model = ReportProcess

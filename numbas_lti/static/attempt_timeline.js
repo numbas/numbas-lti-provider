@@ -334,7 +334,7 @@ const app = createApp({
             if(launch.user!=null) {
                 msg = interpolate(_('Launched in %s mode by %s.'), [launch.mode,launch.user]);
             } else {
-                msg = interpolate(_('Launched in %s mode.'), launch.mode);
+                msg = interpolate(_('Launched in %s mode.'), [launch.mode]);
             }
             this.add_timeline_item(new TimelineItem(
                 msg,
@@ -384,6 +384,7 @@ function TimelineItem(message,element,kind,icon) {
     this.time = DateTime.fromISO(element.time);
     this.time_iso = this.time.toISO();
     this.time_string = this.time.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
+    this.review_title = interpolate(_('Review the attempt as it was at %s'), [this.time_string]);
     this.review_url = metadata.review_url + (metadata.review_url.match(/\?/) ? '&' : '?')+'at_time='+encodeURIComponent(this.time.toISO());
     this.kind = kind;
     this.css = {};

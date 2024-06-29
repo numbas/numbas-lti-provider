@@ -45,7 +45,7 @@
                     <tr class="item" v-for="(item, index) in group.items" :class="item.css">
                         <td class="time" :rowspan="group.items.length" v-if="index == 0">
                             <p>
-                            <a v-if="group.seen_location" title="{% translate "View the attempt at this point in time" %}" target="review_attempt" :href="item.review_url"><time :datetime="item.time_iso">[[item.time_string]]</time></a>
+                            <a v-if="group.seen_location" :title="item.review_title" target="review_attempt" :href="item.review_url"><time :datetime="item.time_iso">[[item.time_string]]</time></a>
                             <span v-else><time :datetime="item.time_iso">[[item.time_string]]</time></span>
                             </p>
                             <p v-if="group.remarked_by" class="remarked-by small">

@@ -20,11 +20,13 @@
     </header>
 
     <main>
-        {% for message in messages %}
-        <div class="alert info">
-            {{message}}
-        </div>
-        {% endfor %}
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert {{message.tags}}">
+                    {{message}}
+                </div>
+            {% endfor %}
+        {% endif %}
 
         {% block management_content %}{% endblock %}
     </main>
