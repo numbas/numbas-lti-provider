@@ -7,6 +7,8 @@ Numbas supports two kinds of lockdown app, to ensure students can only access re
 
 The :guilabel:`Lockdown apps` admin page allows you to configure these apps.
 
+.. _numbas-lockdown-app:
+
 Numbas lockdown app
 ===================
 
@@ -20,6 +22,8 @@ When a student launches a resource which requires the Numbas app, they will be p
 
 The default password is defined by the ``LOCKDOWN_APP['password']`` setting in :file:`numbasltiprovider/settings.py`.
 Instructors can specify a different password on individual resources.
+
+.. _safe-exam-browser:
 
 Safe Exam Browser
 =================
