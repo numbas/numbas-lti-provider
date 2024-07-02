@@ -903,9 +903,12 @@ class LTIUserData(models.Model):
         verbose_name_plural = _('LTI user data')
 
     def get_source_id(self):
-        if self.lti_11 and self.lti_11.lis_person_sourcedid:
-            return self.lti_11.lis_person_sourcedid
-        else:
+        try:
+            if self.lti_11 and self.lti_11.lis_person_sourcedid:
+                return self.lti_11.lis_person_sourcedid
+            else:
+                return self.consumer_user_id
+        except LTI_11_UserData.DoesNotExist:
             return self.consumer_user_id
 
     def identifier(self):
