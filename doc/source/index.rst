@@ -21,7 +21,12 @@ Contents
     how-it-works
     data-handling
     getting-started
-    vpat
+
+.. toctree:: 
+    :caption: Accessibility
+    :maxdepth: 1
+
+    accessibility/index
 
 .. toctree::
     :caption: Installation

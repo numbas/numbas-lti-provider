@@ -278,6 +278,8 @@ The next time that they launch the activity, they will be able to resume the att
 Beware that the standard Numbas settings allow a student to see the correct answers to every question once they have finished their attempt.
 If you're concerned about this, it's often better to make the student start a new attempt, rather than reopen the previous one.
 
+.. _resource-statistics:
+
 Statistics
 ----------
 
