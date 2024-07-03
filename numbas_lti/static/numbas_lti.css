@@ -453,11 +453,10 @@ body:not(.admin, .resource-management) > header {
 .score-doughnut .question {
 }
 .score-doughnut .question[data-correctness="correct"] .wedge {
-        fill: var(--success-color);
-    }
+    fill: var(--score-correct-color);
 }
 .score-doughnut .question[data-correctness="partially correct"] .wedge {
-    fill: var(--warning-color);
+    fill: var(--score-partial-color);
 }
 
 .score-doughnut .question:not(.answered) {

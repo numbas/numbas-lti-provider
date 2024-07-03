@@ -95,6 +95,9 @@
     --td-bg: #f8f8f8;;
     --td-warning-color: #996700;
     --table-border-color: #ccc;
+
+    --score-correct-color: var(--success-color);
+    --score-partial-color: #bc8929;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -170,8 +173,11 @@
         --info-alert-color: #e6f8ff;
 
         --th-bg: #222;
-        --td-bg: #151515;
+        --td-bg: #1f1f1f;
         --table-border-color: #666;
+
+        --score-correct-color: #00e254;
+        --score-partial-color: #d1992e;
     }
 }
 
