@@ -12,6 +12,23 @@
 {% endblock management_header %}
 
 {% block management_content %}
+
+    {% if no_lineitem and resource.report_mark_time != 'manually' %}
+    <div class="alert warning">
+        <p>{% blocktranslate %}This resource does not have a line item in the learning platform's grade service.{% endblocktranslate %}</p>
+        <p>{% blocktranslate %}Scores can't currently be reported back automatically to the learning platform.{% endblocktranslate %}</p>
+        <form action="{% url_with_lti 'resource_create_lineitem' resource.pk %}" method="POST">
+            {% csrf_token %}
+            <button type="submit">{% translate "Create a line item" %}</button>
+        </form>
+        <form action="{% url_with_lti 'resource_unwanted_lineitem' resource.pk %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="lineitem_unwanted" value="on">
+            <button type="submit">{% translate "That's OK, I don't need scores reported back." %}</button>
+        </form>
+    </div>
+    {% endif %}
+
     <section id="availability">
         {% if resource.is_available %}
             <p class="info">{% translate "This resource is currently available to students." %}</p>

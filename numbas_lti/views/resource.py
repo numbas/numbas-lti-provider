@@ -5,7 +5,7 @@ from numbas_lti.models import \
         Resource, LTI_13_ResourceLink, AccessToken, Exam, Attempt, \
         ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, \
         LTIUserData, ScormElement, RemarkedScormElement, AccessChange, \
-        DISCOUNT_BEHAVIOURS, LTIContext
+        DISCOUNT_BEHAVIOURS, LTIContext, LineItemDoesNotExist
 from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
@@ -192,6 +192,16 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
 
         context['num_unbroken_attempts'] = resource.attempts.exclude(broken=True).count()
 
+        if not resource.lineitem_unwanted and resource.lti_13_links.exists():
+            lti_context = resource.lti_13_contexts().first()
+            if lti_context:
+                ags = lti_context.get_ags()
+                try:
+                    lineitem = resource.get_lti_13_lineitem(ags)
+                except LineItemDoesNotExist:
+                    context['no_lineitem'] = True
+
+
         context['students'] = User.objects.filter(attempts__resource=resource).exclude(attempts__deleted=True).distinct()
         last_report_process = resource.report_processes.first()
         if last_report_process and last_report_process.dismissed and last_report_process.status == 'reporting':
@@ -200,6 +210,33 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
             context['last_report_process'] = last_report_process
 
         return context
+
+class CreateLineitemView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+    model = Resource
+    fields = []
+
+    def form_valid(self, form):
+        resource = self.get_object()
+        resource.lineitem_unwanted = False
+        resource.save(update_fields=('lineitem_unwanted',))
+        lti_context = resource.lti_13_contexts().first()
+        if not lti_context:
+            raise Exception(_("This resource is not linked to any LTI 1.3 contexts."))
+        ags = lti_context.get_ags()
+        resource.get_lti_13_lineitem(ags, create=True)
+
+        return http.HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return self.reverse_with_lti('resource_dashboard',args=(self.get_object().pk,))
+
+
+class UnwantedLineitemView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.edit.UpdateView):
+    model = Resource
+    fields = ['lineitem_unwanted']
+
+    def get_success_url(self):
+        return self.reverse_with_lti('resource_dashboard',args=(self.get_object().pk,))
 
 class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Resource

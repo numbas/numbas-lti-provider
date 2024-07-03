@@ -42,6 +42,10 @@ from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOu
 from .diff import make_diff, apply_diff
 from .util import parse_scorm_timeinterval
 
+class LineItemDoesNotExist(Exception):
+    def __init__(self, resource):
+        self.resource = resource
+
 
 requests = requests_session.get_session()
 
@@ -390,6 +394,12 @@ class SebSettings(models.Model):
     def get_absolute_url(self):
         return reverse('edit_seb_settings',args=(self.pk,))
 
+LINEITEM_CHOICES = [
+    ('no', _('No')),
+    ('yes', _('Yes')),
+    ('unwanted', _('Not wanted')),
+]
+
 class Resource(models.Model):
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL,related_name='main_exam_of')
     title = models.CharField(max_length=300,default='')
@@ -416,6 +426,8 @@ class Resource(models.Model):
     show_lockdown_app_password = models.BooleanField(default=False, verbose_name=_('Show the password for the lockdown app on the launch page?'))
 
     seb_settings = models.ForeignKey(SebSettings, blank=True, null=True, on_delete=models.SET_NULL, related_name='resources')
+
+    lineitem_unwanted = models.BooleanField(default=False, verbose_name=_('Grades service line item unwanted?'))
 
     class Meta:
         verbose_name = _('resource')
@@ -671,6 +683,10 @@ class Resource(models.Model):
 
         process = ReportProcess.objects.create(resource=self)
 
+        if self.lti_13_links.exists():
+            ags = self.lti_13_contexts().first().get_ags()
+            self.get_lti_13_lineitem(ags, create=True)
+
         errors = []
         for user in User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct():
             try:
@@ -730,17 +746,20 @@ class Resource(models.Model):
         """
         try:
             attempt = self.attempts.first()
+            if attempt is None:
+                return 1
             return attempt.max_score
         except Attempt.DoesNotExist:
             return 1
 
-    def get_lti_13_lineitem(self, ags):
-        lineitem = LineItem({
+    def get_lti_13_lineitem(self, ags, create = False):
+        lineitem_dict = {
             "scoreMaximum": self.estimate_max_score(),
             "tag": "grade",
             "label": self.title,
             "resourceId": f"resource-{self.pk}",
-        })
+        }
+        lineitem = LineItem(lineitem_dict)
 
         if self.available_from is not None:
             lineitem.set_start_date_time(self.available_from.isoformat())
@@ -749,7 +768,15 @@ class Resource(models.Model):
 
         resource_link_ids = self.lti_13_links.values_list('resource_link_id', flat=True)
 
-        saved_lineitem = ags.find_or_create_lineitem(lineitem, condition = lambda l: l.get_resource_link_id() in resource_link_ids or (l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id()))
+        condition = lambda l: l.get('resourceLinkId') in resource_link_ids or (l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id())
+
+        if create:
+            saved_lineitem = ags.find_or_create_lineitem(lineitem, condition = condition)
+        else:
+            saved_lineitem = ags.find_lineitem_satisfying(condition)
+            if not saved_lineitem:
+                raise LineItemDoesNotExist(self)
+
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
             or saved_lineitem.get_start_date_time() != lineitem.get_start_date_time()
             or saved_lineitem.get_end_date_time() != lineitem.get_end_date_time()
@@ -764,12 +791,28 @@ class Resource(models.Model):
         return saved_lineitem
 
     def update_lti_13_lineitem(self, ags, lineitem=None):
+        """
+            Update the AGS line item for this resource on the platform.
+
+            If ``lineitem`` isn't given, the default line item is created by ``get_lti_13_lineitem``.
+        """
+
         if lineitem is None:
             lineitem = self.get_lti_13_lineitem(ags)
+
         scope = ags._service_data['scope']
+
         access_token = ags._service_connector.get_access_token(scope)
 
-        ags._service_connector._requests_session.put(lineitem.get_id(), data=lineitem.get_value(), headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json', 'Content-Type': 'application/vnd.ims.lis.v2.lineitem+json'})
+        ags._service_connector._requests_session.put(
+            lineitem.get_id(),
+            data=lineitem.get_value(),
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/vnd.ims.lis.v2.lineitem+json'
+            }
+        )
 
         return lineitem
 

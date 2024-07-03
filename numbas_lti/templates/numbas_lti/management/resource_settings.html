@@ -37,6 +37,18 @@
             <p class="submit-buttons"><button class="button primary" type="submit">{% translate "Save" %}</button> <a class="button link" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{% translate "Cancel" %}</a></p>
         </form>
     </section>
+
+    <hr>
+
+    {% if resource.lineitem_unwanted %}
+    <p>{% blocktranslate %}You have said that scores for this resource don't need to be reported back to the learning platform.{% endblocktranslate %}
+    <p>{% blocktranslate %}To allow scores to be reported back, you can create a line item.{% endblocktranslate %}</p>
+    <form action="{% url_with_lti 'resource_create_lineitem' resource.pk %}" method="POST">
+        {% csrf_token %}
+        <button class="warning" type="submit">{% translate "Create a line item" %}</button>
+    </form>
+    {% endif %}
+
 {% endblock management_content %}
 
 {% block javascripts %}
