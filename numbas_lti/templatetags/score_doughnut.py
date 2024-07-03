@@ -30,6 +30,9 @@ def score_doughnut(attempt):
     for i, q in enumerate(questions):
         max_score = q.max_score
 
+        if max_score == 0:
+            continue
+
         score = min(q.raw_score, max_score)
 
         dan = max_score/total * usable_angle
