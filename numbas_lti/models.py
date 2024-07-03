@@ -747,14 +747,18 @@ class Resource(models.Model):
         if self.available_until is not None:
             lineitem.set_end_date_time(self.available_until.isoformat())
 
-        saved_lineitem = ags.find_or_create_lineitem(lineitem, condition = lambda l: l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id())
+        resource_link_ids = self.lti_13_links.values_list('resource_link_id', flat=True)
+
+        saved_lineitem = ags.find_or_create_lineitem(lineitem, condition = lambda l: l.get_resource_link_id() in resource_link_ids or (l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id()))
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
             or saved_lineitem.get_start_date_time() != lineitem.get_start_date_time()
             or saved_lineitem.get_end_date_time() != lineitem.get_end_date_time()
+            or saved_lineitem.get_tag() != lineitem.get_tag()
             ):
             saved_lineitem.set_score_maximum(lineitem.get_score_maximum())
             saved_lineitem.set_start_date_time(lineitem.get_start_date_time())
             saved_lineitem.set_end_date_time(lineitem.get_end_date_time())
+            saved_lineitem.set_tag(lineitem.get_tag())
             self.update_lti_13_lineitem(ags, saved_lineitem)
 
         return saved_lineitem
