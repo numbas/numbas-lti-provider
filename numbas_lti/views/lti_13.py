@@ -71,6 +71,7 @@ def canvas_config_json(request):
             {
                 "domain": request.get_host(),
                 "tool_id": "numbas_lti_13",
+                "privacy_level": "public",
                 "platform": platform,
                 "settings": {
                     "text": "Numbas",
