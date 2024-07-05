@@ -81,14 +81,20 @@ class LTI_13_Mixin:
         The message launch data is loaded from cache by the middleware, or POST parameters if the request is part of a launch.
     """
 
-    tool_conf = DjangoDbToolConf()
-    launch_data_storage = DjangoCacheDataStorage()
+    tool_conf_cls = DjangoDbToolConf
+    launch_data_storage_cls = DjangoCacheDataStorage
 
     message_launch_cls = DjangoMessageLaunch
 
     must_have_message_launch = False    # If True, then an error will be shown if no LTI launch data can be found for this request.
 
     launch_error_template = 'numbas_lti/launch_errors/not_an_lti_launch.html'
+
+    def __init__(self, *args, **kwargs):
+        self.tool_conf = self.tool_conf_cls()
+        self.launch_data_storage = self.launch_data_storage_cls()
+
+        return super().__init__(*args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
         try:
