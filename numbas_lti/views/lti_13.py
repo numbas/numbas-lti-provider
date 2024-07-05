@@ -24,8 +24,7 @@ from pylti1p3.deep_link_resource import DeepLinkResource
 from pylti1p3.contrib.django import DjangoOIDCLogin
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.dynamic_registration import DjangoDynamicRegistration
-from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool, LtiToolKey
-from pylti1p3.dynamic_registration import generate_key_pair
+from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
 from pylti1p3.exception import LtiException
 import urllib.parse
 
@@ -135,29 +134,12 @@ class CanvasRegistrationView(ConsumerManagementMixin, edit.CreateView):
     def form_valid(self, form):
         data = form.cleaned_data
 
-        consumer = register_canvas_lti_13_consumer(**data)
+        tool = register_lti_13_tool(**data)
+
+        consumer = LTIConsumer.objects.create()
+        lti_13_consumer = LTI_13_Consumer.objects.create(consumer=consumer, tool=tool)
 
         return redirect(consumer.get_absolute_url())
-
-def register_canvas_lti_13_consumer(issuer, key_set_url, auth_login_url, title, client_id, deployment_ids, **kwargs) -> LTIConsumer:
-    private_key, public_key = generate_key_pair()
-
-    key, created_key = LtiToolKey.objects.get_or_create(name=issuer, defaults = {'private_key': private_key, 'public_key': public_key})
-
-    tool = LtiTool.objects.create(
-        title=title,
-        issuer=issuer,
-        auth_login_url=auth_login_url,
-        key_set_url=key_set_url,
-        tool_key=key,
-        client_id=client_id,
-        deployment_ids = deployment_ids
-    )
-
-    consumer = LTIConsumer.objects.create()
-    lti_13_consumer = LTI_13_Consumer.objects.create(consumer=consumer, tool=tool)
-    
-    return consumer
 
 class BlackboardRegistrationView(ConsumerManagementMixin, generic.FormView):
     form_class = numbas_lti.forms.BlackboardLti13RegistrationForm
@@ -188,6 +170,7 @@ class BlackboardRegistrationView(ConsumerManagementMixin, generic.FormView):
             consumer = lti_13_consumer.consumer
         except LTI_13_Consumer.DoesNotExist:
             consumer = LTIConsumer.objects.create()
+            lti_13_consumer = LTI_13_Consumer.objects.create(consumer=consumer, tool=tool)
     
         return redirect(consumer.get_absolute_url())
 
@@ -442,8 +425,7 @@ class UseRegistrationTokenView(edit.DeleteView):
             return self.show_error(e)
 
         consumer = LTIConsumer.objects.create()
-
-        LTI_13_Consumer.objects.create(consumer=consumer, tool=lti_tool)
+        lti_13_consumer = LTI_13_Consumer.objects.create(consumer=consumer, tool=lti_tool)
 
         return HttpResponse(registration.complete_html())
 

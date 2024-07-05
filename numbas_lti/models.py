@@ -25,7 +25,8 @@ from pathlib import Path
 from pylti1p3.assignments_grades import AssignmentsGradesService
 from pylti1p3.names_roles import NamesRolesProvisioningService
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
-from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool
+from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool, LtiToolKey
+from pylti1p3.dynamic_registration import generate_key_pair
 from pylti1p3.exception import LtiException
 from pylti1p3.lineitem import LineItem
 import pylti1p3.roles
@@ -150,6 +151,24 @@ class LTIConsumerRegistrationToken(models.Model):
 
     def get_absolute_url(self):
         return reverse('lti_13:view_dynamic_registration_token', kwargs={'pk':self.uid})
+
+
+def register_lti_13_tool(issuer, key_set_url, auth_login_url, title, client_id, deployment_ids, **kwargs) -> LTIConsumer:
+    private_key, public_key = generate_key_pair()
+
+    key, created_key = LtiToolKey.objects.get_or_create(name=issuer, defaults = {'private_key': private_key, 'public_key': public_key})
+
+    tool = LtiTool.objects.create(
+        title=title,
+        issuer=issuer,
+        auth_login_url=auth_login_url,
+        key_set_url=key_set_url,
+        tool_key=key,
+        client_id=client_id,
+        deployment_ids = deployment_ids
+    )
+
+    return tool
 
 class LTI_11_Consumer(models.Model):
     consumer = models.OneToOneField(LTIConsumer, related_name='lti_11', on_delete=models.CASCADE)

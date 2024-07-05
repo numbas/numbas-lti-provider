@@ -50,7 +50,7 @@
     <p>To finish registration, put the deployment ID here:</p>
     <form method="POST">
         {% csrf_token %}
-        {{form}}
+        {{form.as_p}}
         {{form.non_field_errors}}
 
         <p><button type="submit" class="primary">{% translate "Register" %}</button></p>

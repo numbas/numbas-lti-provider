@@ -8,7 +8,7 @@ from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
 from . import requests_session
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTIConsumerRegistrationToken, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTIConsumerRegistrationToken, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink, register_lti_13_tool
 from .test_exam import test_zipfile, ExamTestException
 
 from django.core.files import File
@@ -361,6 +361,20 @@ class BlackboardLti13RegistrationForm(Form):
             tool = LtiTool.objects.get(issuer='https://blackboard.com', client_id=client_id)
             self.cleaned_data['tool'] = tool
         except LtiTool.DoesNotExist:
-            raise forms.ValidationError(_("An LTI tool with that client ID has not been registered. Check that you have completed the dynamic registration process."))
+            try:
+                dev_tool = LtiTool.objects.get(issuer='https://developer.blackboard.com', client_id=client_id)
+
+                tool = register_lti_13_tool(
+                    'https://blackboard.com', 
+                    key_set_url=dev_tool.key_set_url,
+                    auth_login_url=dev_tool.auth_login_url,
+                    title=dev_tool.title,
+                    client_id=client_id,
+                    deployment_ids = []
+                )
+                self.cleaned_data['tool'] = tool
+
+            except LtiTool.DoesNotExist:
+                raise forms.ValidationError(_("An LTI tool with that client ID has not been registered. Check that you have completed the dynamic registration process."))
 
         return client_id
