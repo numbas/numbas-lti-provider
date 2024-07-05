@@ -21,18 +21,22 @@ Obtain the Docker compose recipe and its associated files either by `downloading
 
     git clone https://github.com/numbas/numbas-lti-provider-docker.git
 
+Build the docker image::
+
+    docker build . -t numbas/numbas-lti-provider
+
 Copy the file :file:`settings.env.dist` to :file:`settings.env` and write your own values for each of the variables inside.
 
 Run the ``get_secret_key`` script to generate a value for the ``SECRET_KEY`` environment variable, and put that in :file:`settings.env`::
 
-    docker-compose run --rm numbas-setup python ./get_secret_key
+    docker compose run --rm numbas-setup python ./get_secret_key
 
 Obtain an SSL certificate and key for the domain you will access the Numbas LTI provider from. 
 Copy the key to :file:`files/ssl/numbas-lti.key` and the certificate to :file:`files/ssl/numbas-lti.pem`.
 
 Run the installation script, to set up the database and create the superuser account::
 
-    docker-compose run --rm numbas-setup python ./install
+    docker compose run --rm numbas-setup python ./install
 
 The LTI provider is ready to start.
 
@@ -41,7 +45,7 @@ Starting
 
 Run the following command::
 
-    docker-compose up --scale daphne=4 --scale huey=2
+    docker compose up --scale daphne=4 --scale huey=2
 
 You can customise the number of each of the kinds of process by changing the numbers in the `--scale` arguments.
 You'll have to establish how many of each you need by experimentation.
@@ -53,27 +57,33 @@ Stopping
 
 Stop the containers with::
 
-    docker-compose down
+    docker compose down
 
 This does not delete any permanent data such as the database, settings file or uploaded files.
 
 Upgrading
 ---------
 
+When there is a new version of the Numbas LTI provider, you must rebuild the Docker image and apply any database migrations.
+
+If any other changes are required when moving to a particular version, they will be listed on the :ref:`upgrading-installation` page.
+
 First, update the files in the Docker repository.
 If you used git, run::
 
     git pull
 
-Upgrade to a new version of the Numbas LTI provider with the following commands::
+Remake the container image::
 
-    docker-compose build --no-cache numbas-setup
-    docker-compose build --no-cache daphne
-    docker-compose build --no-cache huey
-    docker-compose run --rm numbas-setup python ./install
-    docker-compose restart
+    docker build . --no-cache -t numbas/numbas-lti-provider
 
-Occasionally there are other changes that must be made; check the :ref:`upgrade instructions <upgrading-installation>` for the version you are upgrading to.
+Then run the installation script again:
+
+    docker compose run --rm numbas-setup python ./install
+
+Finally, restart the containers::
+
+    docker compose restart
 
 Running in the cloud
 --------------------
