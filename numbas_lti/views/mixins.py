@@ -19,7 +19,7 @@ from numbas_lti.middleware import get_lti_13_context
 import pylti1p3.roles
 from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
-from pylti1p3.exception import LtiException
+from pylti1p3.exception import LtiException, LtiMessageValidationException
 import urllib.parse
 
 INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES', {})
@@ -93,6 +93,8 @@ class LTI_13_Mixin:
     def dispatch(self, request, *args, **kwargs):
         try:
             self.check_message_launch()
+        except LtiMessageValidationException as exception:
+            return render(self.request, 'numbas_lti/launch_errors/message_validation_error.html', {'exception': exception})
         except Exception as exception:
             return render(self.request, self.launch_error_template, {'exception': exception, 'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 
@@ -103,17 +105,15 @@ class LTI_13_Mixin:
             return
 
         message_launch = self.get_message_launch()
-        if self.must_have_message_launch and not message_launch:
+
+        if not message_launch:
             raise SuspiciousOperation(_("This URL is supposed to be used to launch an LTI activity, but no LTI data was found."))
 
     def get_message_launch(self):
         if not hasattr(self.request, 'lti_13_message_launch'):
             message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage, requests_session=requests_session.get_session())
-            try:
-                message_launch.validate()
-                self.request.lti_13_message_launch = message_launch
-            except Exception:
-                return None
+            message_launch.validate()
+            self.request.lti_13_message_launch = message_launch
 
         return self.request.lti_13_message_launch
 

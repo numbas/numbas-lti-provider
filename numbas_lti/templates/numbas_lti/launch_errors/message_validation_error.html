@@ -1,0 +1,11 @@
+{% extends "numbas_lti/error_message.html" %}
+{% load i18n %}
+
+{% block body_class %}{{block.super}} launch-error message-validation-error{% endblock %}
+
+{% block title %}{% translate "The LTI launch message is invalid" %} - {{block.super}}{% endblock %}
+{% block header_message %}{% translate "The LTI launch message is invalid" %}{% endblock %}
+
+{% block main %}
+    <p>{{exception}}</p>
+{% endblock main %}
