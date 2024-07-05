@@ -20,21 +20,21 @@ class Command(BaseCommand):
         parser.add_argument('--deployment-id')
 
     def handle(self, *args, **options):
-        known_settings = settings.CANVAS_LTI_13_PRESETS
+        presets = settings.CANVAS_LTI_13_PRESETS
 
         preset = options['preset']
         if preset:
-            settings = self.known_settings[preset]
+            consumer_settings = self.presets[preset]
         else:
-            settings = {
+            consumer_settings = {
                 'issuer': options['issuer'],
                 'key_set_url': options['key_set_url'],
                 'auth_login_url': options['auth_login_url'],
             }
 
-        issuer = settings['issuer']
-        key_set_url = settings['key_set_url']
-        auth_login_url = settings['auth_login_url']
+        issuer = consumer_settings['issuer']
+        key_set_url = consumer_settings['key_set_url']
+        auth_login_url = consumer_settings['auth_login_url']
 
         title = options['title']
         client_id = options['client_id']
