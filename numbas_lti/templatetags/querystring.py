@@ -74,3 +74,19 @@ def url_with_lti(context, view_name, *args, **kwargs):
         url += '?' + query
     
     return url
+
+
+@register.inclusion_tag('numbas_lti/lti_form_fields.html', takes_context=True)
+def lti_launch_fields(context):
+    """
+        Output hidden form inputs containing the GET parameters for identifying an LTI session.
+    """
+    out = {}
+    if hasattr(context.request, 'lti_13_message_launch') and context.request.lti_13_message_launch is not None:
+        out['param_name'] = 'lti_13_launch_id'
+        out['param_value'] = context.request.lti_13_message_launch.get_launch_id()
+    else:
+        out['param_name'] = resource_link_id
+        out['param_value'] = context.request.GET.get('resource_link_id')
+
+    return out

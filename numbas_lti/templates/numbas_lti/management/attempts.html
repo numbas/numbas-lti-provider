@@ -25,7 +25,7 @@
         <p><form method="POST" action="{% url_with_lti 'resource_json_dump' resource.pk %}">{% csrf_token %}<button type="submit" class="button info">{% icon 'save' %} {% translate "Download all attempt data as JSON" %}</button></form></p>
 
         <form method="GET" class="form-inline">
-            <input type="hidden" value="{{request.GET.resource_link_id}}" name="resource_link_id">
+            {% lti_launch_fields %}
             {% csrf_token %}
             <label for="query">
                 {% translate "Search for a student:" %} 
