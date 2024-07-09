@@ -602,7 +602,7 @@ class SetupHTTPServer(HTTPServer):
         self.setup_process = None
 
 def serve_web(port):
-    with SetupHTTPServer(("", port), RequestHandler) as httpd:
+    with SetupHTTPServer(("0.0.0.0", port), RequestHandler) as httpd:
         print(f"Please open http://localhost:{port} to set up this Numbas LTI provider.")
         try:
             while True:
