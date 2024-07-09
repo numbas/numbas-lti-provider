@@ -77,7 +77,7 @@ Run the following commands as root::
     # get the numbas-lti-provider code
     git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
     cd /srv/numbas-lti-provider
-    git checkout v3_STABLE
+    git checkout v4_STABLE
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
     # create the virtualenv for the python modules

@@ -41,14 +41,13 @@ First, install packages, set up users, and create the required paths (you can sa
     # install packages
     apt update
     apt install \
-        git redis-server postgresql postgresql-server-dev-all \
+        git redis-server postgresql postgresql-server-dev-all python3-virtualenv \
         libxml2-dev libxslt1-dev python3-dev lib32z1-dev python3-pip supervisor
-    pip3 install virtualenv
 
     # get the numbas-lti-provider code
     git clone https://github.com/numbas/numbas-lti-provider.git /srv/numbas-lti-provider
     cd /srv/numbas-lti-provider
-    git checkout v3_STABLE
+    git checkout v4_STABLE
     chown -R numbas_lti:numbas_lti /srv/numbas-lti-provider
 
     # create media and static file directories
