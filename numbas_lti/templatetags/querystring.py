@@ -86,7 +86,7 @@ def lti_launch_fields(context):
         out['param_name'] = 'lti_13_launch_id'
         out['param_value'] = context.request.lti_13_message_launch.get_launch_id()
     else:
-        out['param_name'] = resource_link_id
+        out['param_name'] = 'resource_link_id'
         out['param_value'] = context.request.GET.get('resource_link_id')
 
     return out
