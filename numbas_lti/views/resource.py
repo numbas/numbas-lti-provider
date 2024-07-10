@@ -202,7 +202,7 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
                     context['no_lineitem'] = True
 
 
-        context['students'] = User.objects.filter(attempts__resource=resource).exclude(attempts__deleted=True).distinct()
+        context['students'] = User.objects.filter(attempts__resource=resource,attempts__deleted=False).distinct()
         last_report_process = resource.report_processes.first()
         if last_report_process and last_report_process.dismissed and last_report_process.status == 'reporting':
             context['dismissed_report_process'] = last_report_process
