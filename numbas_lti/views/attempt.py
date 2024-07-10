@@ -158,14 +158,14 @@ class DeleteAttemptView(MustHaveExamMixin,MustBeInstructorMixin,ResourceManageme
     def get_resource(self):
         return self.get_object().resource
 
-    def delete(self,request,*args,**kwargs):
+    def form_valid(self, form):
         self.object = self.get_object()
         self.object.deleted = True
         self.object.save()
         return http.HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return self.reverse_with_lti('manage_attempts',args=(self.request.resource.pk,))
+        return self.reverse_with_lti('manage_attempts',args=(self.object.resource.pk,))
 
 
 class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
