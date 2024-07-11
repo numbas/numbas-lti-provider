@@ -362,16 +362,12 @@ class BlackboardLti13RegistrationForm(Form):
             self.cleaned_data['tool'] = tool
         except LtiTool.DoesNotExist:
             try:
-                dev_tool = LtiTool.objects.get(issuer='https://developer.blackboard.com', client_id=client_id)
+                tool = LtiTool.objects.get(issuer='https://developer.blackboard.com/', client_id=client_id)
+                tool.pk = None
+                tool.issuer = 'https://blackboard.com'
+                tool.deployment_ids = []
+                tool.save()
 
-                tool = register_lti_13_tool(
-                    'https://blackboard.com', 
-                    key_set_url=dev_tool.key_set_url,
-                    auth_login_url=dev_tool.auth_login_url,
-                    title=dev_tool.title,
-                    client_id=client_id,
-                    deployment_ids = []
-                )
                 self.cleaned_data['tool'] = tool
 
             except LtiTool.DoesNotExist:
