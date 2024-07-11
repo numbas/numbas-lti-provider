@@ -20,6 +20,8 @@ There are no special upgrade steps for Docker installations for this version.
 Non-Docker installation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+The stable git branch for this version is ``v4_STABLE``.
+
 The minimum required version of Python is now 3.10.
 
 There are changes to some values in :file:`settings.py`, and new settings ``CACHES`` and ``REQUESTS_USER_AGENT``.
