@@ -68,7 +68,7 @@ First, install packages, set up users, and create the required paths (you can sa
     cd /srv/numbas-lti-provider
     source /opt/numbas_lti_python/bin/activate
     pip install -r requirements.txt
-    pip install channels_redis==3.3.0 psycopg2==2.8.6 redis==3.5.3
+    pip install channels_redis==4.2.0 psycopg2==2.9.9 redis==5.0.4
 
 Next, create a database and set a password to access it (replace ``$password`` with your chosen password in the following script)::
 
