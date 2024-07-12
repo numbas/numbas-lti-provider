@@ -237,7 +237,7 @@ const app = createApp({
             if(key=='cmi.completion_status') {
                 this.completion_status = element.value;
                 var messages = {
-                    'incomplete': _('Started the attempt.'),
+                    'incomplete': element.remarked ? _('Re-opened the attempt.') : _('Started the attempt.'),
                     'completed': _('Ended the attempt.'),
                 };
                 var message = messages[element.value];

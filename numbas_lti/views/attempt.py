@@ -99,15 +99,16 @@ class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
 
     def get(self, request, *args, **kwargs):
         attempt = self.get_object()
-        e = ScormElement.objects.create(
-                attempt=attempt,
-                key='cmi.completion_status',
-                value='incomplete',
-                time=timezone.now(),
-                counter=1
-            )
-        messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
-        return redirect(self.reverse_with_lti('manage_attempts',args=(attempt.resource.pk,)))
+
+        attempt.reopen(reopened_by=self.request.user)
+
+        if self.request.user != attempt.user:
+            messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
+            next_url = self.reverse_with_lti('manage_attempts',args=(attempt.resource.pk,)) 
+        else:
+            next_url = self.reverse_with_lti('show_attempts')
+
+        return redirect(next_url)
 
 class AttemptSCORMListing(MustHaveExamMixin,MustBeInstructorMixin,ResourceManagementViewMixin,generic.detail.DetailView):
     model = Attempt

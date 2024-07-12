@@ -38,14 +38,15 @@
             <thead>
                 <tr>
                     <th scope="col">{% translate "Start time" %}</th>
+                    <th scope="col">{% translate "Status" %}</th>
                     <th scope="col">{% translate "Score" %}</th>
-                    <th scope="col"></th>
+                    <th scope="col"><span class="sr-only">{% translate "Controls" %}</span></th>
                 </tr>
             </thead>
             <tbody>
                 {% if can_start_new_attempt %}
                 <tr>
-                    <td colspan="2">
+                    <td colspan="3">
                     <td>
                         <a class="button warning" href="{% url_with_lti 'new_attempt' %}">{% icon 'plus' %} {% translate "Start a new attempt" %}</a>
                     </td>
@@ -54,15 +55,10 @@
                 {% for attempt in object_list %}
                 <tr>
                     <td>{% time_tag attempt.start_time %}</td>
+                    <td>{{attempt.get_completion_status_display}}</td>
                     <td>
                         {% if attempt.should_show_scores %}
                             {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})
-                        {% else %}
-                            {% if attempt.completed %}
-                                {% translate "Completed" %}
-                            {% else %}
-                                <em>{% translate "In progress" %}</em>
-                            {% endif %}
                         {% endif %}
                         {% if attempt.is_remarked %}
                             <br>

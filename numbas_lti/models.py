@@ -897,8 +897,8 @@ class ReportProcess(models.Model):
         ordering = ['-time',]
 
 COMPLETION_STATUSES = [
-    ('not attempted',_('Not attempted')),
-    ('incomplete',_('Incomplete')),
+    ('not attempted',_('Not started')),
+    ('incomplete',_('In progress')),
     ('completed',_('Complete')),
 ]
 
@@ -1292,6 +1292,23 @@ class Attempt(models.Model):
                 'type': 'completion_status.changed',
                 'completion_status':'completed',
             })
+
+    def reopen(self, reopened_by=None):
+        e = ScormElement.objects.create(
+                attempt=self,
+                key='cmi.completion_status',
+                value='incomplete',
+                time=timezone.now(),
+                counter=1
+            )
+
+        if reopened_by:
+            RemarkedScormElement.objects.create(element=e, user=reopened_by)
+
+        self.completion_status = 'incomplete'
+        self.sent_receipt = False
+        self.receipt_time = None
+        self.save(update_fields=('completion_status', 'sent_receipt', 'receipt_time',))
 
     @property
     def raw_score(self):
