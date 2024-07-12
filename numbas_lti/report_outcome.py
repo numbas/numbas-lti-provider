@@ -73,7 +73,7 @@ def report_outcome_lti_13(resource, user_data):
 
     user = user_data.user
 
-    attempt = resource.grade_user(user)
+    attempt, completion_status = resource.grade_user(user)
 
     if attempt.end_time is not None:
         time = attempt.end_time
@@ -84,11 +84,11 @@ def report_outcome_lti_13(resource, user_data):
         'not attempted': 'Initialized',
         'incomplete': 'InProgress',
         'completed': 'Completed',
-    }[attempt.completion_status]
+    }[completion_status]
 
-    if attempt.completion_status == 'completed':
+    if completion_status == 'completed':
         grading_progress = 'FullyGraded'
-    elif attempt.completion_status == 'incomplete':
+    elif completion_status == 'incomplete':
         grading_progress = 'Pending'
     else:
         grading_progress = 'NotReady'
@@ -147,7 +147,7 @@ def report_outcome_lti_11(resource,user_data):
     if user.is_anonymous:
         raise ReportOutcomeException(None,'User is anonymous')
     message_identifier = uuid.uuid4().int & (1<<64)-1
-    attempt = resource.grade_user(user)
+    attempt, completion_status = resource.grade_user(user)
     result = attempt.scaled_score
 
     if user_data.lti_11.lis_result_sourcedid:

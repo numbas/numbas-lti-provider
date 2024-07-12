@@ -493,17 +493,24 @@ class Resource(models.Model):
             Find the attempt representing the user's grade at this resource.
             Depends on ``grading_method``.
         """
+        
         methods = {
             'highest': '-scaled_score',
             'last': '-start_time',
         }
+
+        
         attempts = self.attempts.filter(user=user)
         if not self.include_incomplete_attempts:
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():
             return None
+
         attempt = attempts.order_by(methods[self.grading_method]).first()
-        return attempt
+
+        completion_status = attempt.completion_status if self.is_available(user) else 'completed'
+
+        return attempt, completion_status
 
     def students(self):
         return User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct().order_by('last_name','first_name')

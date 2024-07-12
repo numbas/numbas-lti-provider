@@ -266,7 +266,7 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
             }
 
         def summarise_student(student):
-            attempt = resource.grade_user(student)
+            attempt, completion_status = resource.grade_user(student)
             score = attempt.scaled_score if attempt else 0
             lti_data = student.lti_data.filter(resource=resource).last()
 
