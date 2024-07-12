@@ -7,6 +7,8 @@
 
 {% block title %}{{resource.title}} - {{block.super}}{% endblock title %}
 
+{% block body_class %}show-attempts {{block.super}}{% endblock %}
+
 {% block content %}
     <header>
         <h1>
@@ -28,13 +30,25 @@
         </div>
         {% endif %}
 
+        {% if is_available %}
+            {% if due_date_passed %}
+            <div class="alert info">
+                <p>{% blocktranslate %}The due date for this activity has passed, but it is still open. You can continue to attempt this activity, subject to any late work policy.{% endblocktranslate %}</p>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="alert info">
+                <p>{% blocktranslate %}This activity is now closed.{% endblocktranslate %}{% if object_list.exists %} {% blocktranslate %}You can review your existing attempts.{% endblocktranslate %}{% endif %}</p>
+            </div>
+        {% endif %}
+
         {% for message in messages %}
         <div class="alert info">
             {{message}}
         </div>
         {% endfor %}
 
-        <table>
+        <table class="attempts">
             <thead>
                 <tr>
                     <th scope="col">{% translate "Start time" %}</th>
@@ -70,6 +84,16 @@
                             <a title="{% blocktranslate with start_time=attempt.start_time %}Review attempt started at {{start_time}}{% endblocktranslate %}" class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                 {% icon 'play' %} {% translate "Review this attempt" %}
                             </a>
+
+                            {% if attempt.student_can_reopen %}
+                            <form action="{% url_with_lti 'reopen_attempt' attempt.pk %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="button warning">
+                                    {% icon 'eye-open' %}
+                                    {% translate "Re-open this attempt" %}
+                                </button>
+                            </form>
+                            {% endif %}
                         {% else %}
                             {% if attempt.resume_allowed %}
                                 <a title="{% blocktranslate with start_time=attempt.start_time %}Continue attempt started at {{start_time}}{% endblocktranslate %}" class="button {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
@@ -84,7 +108,11 @@
         </table>
 
         {% if resource.show_marks_when == 'review' and resource.allow_review_from %}
-            <p class="warning">{% blocktranslate with time_iso=resource.allow_review_from|date:"c" time=resource.allow_review_from %}Full review will be available from <time datetime="{{time_iso}}">{{time}}</time>.{% endblocktranslate %}</p>
+            {% if review_allowed %}
+                <p class="info">{% blocktranslate %}Full review is now allowed.{% endblocktranslate %}</p>
+            {% else %}
+                <p class="warning">{% blocktranslate with time_iso=resource.allow_review_from|date:"c" time=resource.allow_review_from %}Full review will be available from <time datetime="{{time_iso}}">{{time}}</time>.{% endblocktranslate %}</p>
+            {% endif %}
         {% endif %}
 
         <p>{% blocktranslate %}These are the feedback settings for this activity:{% endblocktranslate %}</p>

@@ -121,17 +121,34 @@ class FieldsetFormMixin:
 class ResourceSettingsForm(FieldsetFormMixin, ModelForm):
     class Meta:
         model = Resource
-        fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
+        fields = [
+            'grading_method',
+            'include_incomplete_attempts',
+            'max_attempts',
+            'show_marks_when',
+            'report_mark_time',
+            'allow_review_from',
+            'allow_student_reopen',
+            'available_from',
+            'due_date',
+            'available_until',
+            'email_receipts',
+            'require_lockdown_app',
+             'lockdown_app_password',
+             'seb_settings',
+             'show_lockdown_app_password'
+        ]
         fieldsets = [
-            (_('Availability'), ('available_from', 'available_until')),
+            (_('Availability'), ('available_from', 'due_date', 'available_until')),
             (_('Feedback'), ('show_marks_when', 'report_mark_time', 'allow_review_from', 'email_receipts',)),
-            (_('Attempts'), ('max_attempts',)),
+            (_('Attempts'), ('max_attempts', 'allow_student_reopen',)),
             (_('Grading'), ('grading_method', 'include_incomplete_attempts',)),
             (_('Lockdown app'), ('require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password')),
         ]
         widgets = {
             'allow_review_from': DateTimeInput(format=datetime_format),
             'available_from': DateTimeInput(format=datetime_format),
+            'due_date': DateTimeInput(format=datetime_format),
             'available_until': DateTimeInput(format=datetime_format),
             'lockdown_app_password': forms.TextInput(attrs={'placeholder': getattr(settings,'LOCKDOWN_APP',{}).get('password','')}),
         }

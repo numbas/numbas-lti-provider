@@ -91,7 +91,6 @@ def add_query_param(url,extras):
     )
     return url
     
-
 def iso_time(time: datetime) -> str:
     """
         Convert a datetime to an ISO format string if it's not None, otherwise return None.
