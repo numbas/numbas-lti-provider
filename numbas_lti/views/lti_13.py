@@ -581,6 +581,9 @@ class DeepLinkCreateResourceView(MustBeDeepLinkMixin, resource.CreateExamView):
 
         resource = Resource.objects.create(title = exam.title, exam=exam)
 
+        exam.resource = resource
+        exam.save()
+
         message_launch = self.get_message_launch()
 
         return deep_link_response(self.request, message_launch, resource)
