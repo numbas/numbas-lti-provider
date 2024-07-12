@@ -19,7 +19,7 @@ from numbas_lti import tasks
 from numbas_lti.forms import RemarkPartScoreForm
 from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement, RemarkPart, AttemptLaunch, resolve_diffed_scormelements, RemarkedScormElement
 from numbas_lti.save_scorm_data import save_scorm_data
-from numbas_lti.util import transform_part_hierarchy, add_query_param
+from numbas_lti.util import transform_part_hierarchy, add_query_param, iso_time
 import re
 import simplejson
 
@@ -94,10 +94,17 @@ class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstru
 
         return self.get(request,*args,**kwargs)
 
-class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
+class ReopenAttemptView(MustBeInstructorMixin,generic.edit.UpdateView):
     model = Attempt
 
-    def get(self, request, *args, **kwargs):
+    def check_allowed(self, request):
+        attempt = self.get_object()
+        if self.request.user == attempt.user and attempt.student_can_reopen():
+            return True
+
+        return super().check_allowed(request)
+
+    def post(self, request, *args, **kwargs):
         attempt = self.get_object()
 
         attempt.reopen(reopened_by=self.request.user)
@@ -189,10 +196,10 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
             resource = request.resource
             if not resource.is_available(request.user):
                 now = timezone.now()
-                available_from, available_until = resource.available_for_user(request.user)
-                if available_from is not None and now < available_from:
+                availability = resource.available_for_user(request.user)
+                if availability.from_time is not None and now < availability.from_time:
                     template = get_template('numbas_lti/not_available_yet.html')
-                    raise PermissionDenied(template.render({'available_from': available_from}))
+                    raise PermissionDenied(template.render({'available_from': availability.from_time}))
 
             return new_attempt(request)
         else:
@@ -202,10 +209,17 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
         context = super(ShowAttemptsView,self).get_context_data(*args,**kwargs)
 
         resource = self.request.resource
+        user = self.request.user
+
+        availability = resource.available_for_user(user)
+        now = timezone.now()
 
         context['resource'] = resource
-        context['can_start_new_attempt'] = self.request.resource.can_start_new_attempt(self.request.user)
+        context['can_start_new_attempt'] = resource.can_start_new_attempt(user)
+        context['due_date_passed'] = availability.due_date is not None and now >= availability.due_date
+        context['is_available'] = resource.is_available(user)
         context['exam_info'] = resource.exam.get_feedback_settings(completed=False,review_allowed=False)
+        context['review_allowed'] = resource.show_marks_when in ('always', 'completed') or (resource.show_marks_when == 'review' and (resource.allow_review_from is None or now >= resource.allow_review_from))
         
         return context
 
@@ -293,12 +307,13 @@ class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, LTIRoleOrSuper
         context['mode'] = self.mode
 
         user = attempt.user
-        available_from, available_until = attempt.resource.available_for_user(user)
+        availability = attempt.resource.available_for_user(user)
 
         context['support_name'] = getattr(settings,'SUPPORT_NAME',None)
         context['support_url'] = getattr(settings,'SUPPORT_URL',None)
 
-        context['available_until'] = available_until
+        context['available_until'] = availability.until_time
+        context['due_date'] = availability.due_date
 
         context['load_cmi'] = True
 
@@ -306,6 +321,9 @@ class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, LTIRoleOrSuper
         cmi_url = self.reverse_with_lti('run_attempt_scorm_cmi', args=(attempt.pk,))
         if at_time is not None:
             cmi_url = add_query_param(cmi_url, {'at_time': at_time.isoformat()})
+
+        now = timezone.now()
+        launched_after_due_date = availability.due_date is not None and now > availability.due_date
 
         context['js_vars'] = {
             'cmi_url': cmi_url,
@@ -316,8 +334,10 @@ class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, LTIRoleOrSuper
                 'fallback_url': self.reverse_with_lti('attempt_scorm_data_fallback', args=(attempt.pk,)),
                 'show_attempts_url': self.reverse_with_lti('show_attempts'),
                 'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
-                'available_from': available_from.isoformat() if available_from else None,
-                'available_until': available_until.isoformat() if available_until else None,
+                'available_from': iso_time(availability.from_time),
+                'available_until': iso_time(availability.until_time),
+                'due_date': iso_time(availability.due_date),
+                'launched_after_due_date': launched_after_due_date,
             }
         }
 

@@ -1,6 +1,7 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from collections import defaultdict
+from dataclasses import dataclass
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import signing
@@ -34,6 +35,7 @@ from pylti1p3.contrib.django.service_connector import DjangoServiceConnector
 import re
 import shutil
 import time
+from typing import Optional
 import uuid
 from zipfile import ZipFile
 
@@ -481,6 +483,15 @@ LINEITEM_CHOICES = [
     ('unwanted', _('Not wanted')),
 ]
 
+@dataclass
+class Availability:
+    """
+        A representation of the times when a resource is available.
+    """
+    from_time: Optional[datetime]
+    until_time: Optional[datetime]
+    due_date: Optional[datetime]
+
 class Resource(models.Model):
     exam = models.ForeignKey(Exam,blank=True,null=True,on_delete=models.SET_NULL,related_name='main_exam_of')
     title = models.CharField(max_length=300,default='')
@@ -493,7 +504,9 @@ class Resource(models.Model):
     show_marks_when = models.CharField(max_length=20, default='always', choices=SHOW_SCORES_MODES, verbose_name=_('When to show scores to students'))
     available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'), help_text=_('Before this time, students may not start or resume attempts.'))
     available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'), help_text=_('Attempts will end automatically at this time and students may not resume or start new attempts. Students may review existing attempts after this time.'))
+    due_date = models.DateTimeField(blank=True, null=True, verbose_name=_('Due date'), help_text=_('At this time, any open attempts will automatically end. Students may review existing attempts or re-open them while the resource is available.')
     allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
+    allow_student_reopen = models.BooleanField(default=True, verbose_name=_('Allow students to re-open attempts while the resource is available?'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
     email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
@@ -580,6 +593,7 @@ class Resource(models.Model):
     def available_for_user(self,user=None):
         afrom = self.available_from
         auntil = self.available_until
+        due_date = self.due_date
 
         deadline_extension = timedelta(0)
         if user is not None:
@@ -592,8 +606,13 @@ class Resource(models.Model):
                     afrom = change.available_from
                 if change.available_until is not None:
                     auntil = change.available_until
+                if change.due_date is not None:
+                    due_date = change.due_date
 
-        return (afrom, auntil + deadline_extension if auntil is not None else None)
+        if auntil is not None:
+            auntil += deadline_extension
+
+        return Availability(from_time=afrom, until_time=auntil, due_date=self.due_date)
 
     def duration_extension_for_user(self, user):
         duration = 0
@@ -616,15 +635,17 @@ class Resource(models.Model):
         return self.access_changes.for_user(user).filter(disable_duration=True).exists()
 
     def availability_json(self,user=None):
-        available_from, available_until = self.available_for_user(user)
+        availability = self.available_for_user(user)
+
         if user is not None:
             extension_amount, extension_units = self.duration_extension_for_user(user)
         else:
             extension_amount, extension_units = None, None
         data = {
-            'available_from': available_from.isoformat() if available_from else None,
-            'available_until': available_until.isoformat() if available_until else None,
-            'allow_review_from': self.allow_review_from.isoformat() if self.allow_review_from else None,
+            'available_from': iso_time(availability.from_time),
+            'available_until': iso_time(availability.until_time),
+            'due_date': iso_time(availability.due_date),
+            'allow_review_from': iso_time(self.allow_review_from),
             'duration_extension': {
                 'amount': extension_amount,
                 'units': extension_units,
@@ -637,20 +658,20 @@ class Resource(models.Model):
         if user is not None and user.is_anonymous:
             return False
 
-        available_from, available_until = self.available_for_user(user)
+        availability = self.available_for_user(user)
 
-        if available_from is None and available_until is None:
+        if availability.from_time is None and availability.until_time is None:
             return True
 
         now = timezone.now()
 
         available = False
-        if available_from is None or available_until is None:
-            available = (available_from is None or now >= available_from) and (available_until is None or now<=available_until)
-        elif available_from < available_until:
-            available = available_from <= now <= available_until
+        if availability.from_time is None or availability.until_time is None:
+            available = (availability.from_time is None or now >= availability.from_time) and (availability.until_time is None or now<=availability.until_time)
+        elif availability.from_time < availability.until_time:
+            available = availability.from_time <= now <= availability.until_time
         else:
-            available = now <= available_until or now >= available_from
+            available = now <= availability.until_time or now >= availability.from_time
 
         return available
 
@@ -962,6 +983,7 @@ class AccessChange(models.Model):
     resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='access_changes')
     available_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Available from'))
     available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'))
+    due_date = models.DateTimeField(blank=True, null=True, verbose_name=_('Due date'))
     extend_deadline = models.DurationField(blank=True, null=True, verbose_name=_('Extend deadline by'))
     max_attempts = models.PositiveIntegerField(blank=True, null=True, verbose_name=_('Maximum attempts per user'), help_text=_('Zero means unlimited attempts.'))
     extend_duration = models.FloatField(blank=True, null=True, verbose_name=_('Extend exam duration by'))
@@ -1298,6 +1320,15 @@ class Attempt(models.Model):
         if not self.resource.is_available(self.user):
             return True
         return self.completion_status=='completed'
+
+    def student_can_reopen(self):
+        if not self.completed():
+            return False
+
+        if not self.resource.is_available(self.user):
+            return False
+
+        return self.resource.allow_student_reopen
 
     def finalise(self):
         if self.end_time is None:
