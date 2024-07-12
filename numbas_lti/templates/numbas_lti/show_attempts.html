@@ -71,15 +71,9 @@
                     </td>
                     <td>
                         {% if attempt.completed %}
-                            {% if attempt.review_allowed %}
                             <a title="{% blocktranslate with start_time=attempt.start_time %}Review attempt started at {{start_time}}{% endblocktranslate %}" class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
-                                    {% icon 'play' %} {% translate "Review this attempt" %}
-                                </a>
-                            {% else %}
-                                {% if attempt.resource.allow_review_from %}
-                                    {% include "numbas_lti/review_not_allowed.html" with allow_review_from=attempt.resource.allow_review_from %}
-                                {% endif %}
-                            {% endif %}
+                                {% icon 'play' %} {% translate "Review this attempt" %}
+                            </a>
                         {% else %}
                             {% if attempt.resume_allowed %}
                                 <a title="{% blocktranslate with start_time=attempt.start_time %}Continue attempt started at {{start_time}}{% endblocktranslate %}" class="button {% if attempt.completed %}info{% else %}primary{% endif %}" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
@@ -87,6 +81,34 @@
                                 </a>
                             {% endif %}
                         {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if resource.show_marks_when == 'review' and resource.allow_review_from %}
+            <p class="warning">{% blocktranslate with time_iso=resource.allow_review_from|date:"c" time=resource.allow_review_from %}Full review will be available from <time datetime="{{time_iso}}">{{time}}</time>.{% endblocktranslate %}</p>
+        {% endif %}
+
+        <p>{% blocktranslate %}These are the feedback settings for this activity:{% endblocktranslate %}</p>
+
+        <table class="settings-table">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Feedback" %}</th>
+                    <th scope="col">{% translate "Available from" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, when in exam_info %}
+                <tr>
+                    <td scope="row">{{label}}</td>
+                    <td>
+                        {% if when == 'always' %}{% translate "The start of the attempt" %}{% endif %}
+                        {% if when == 'oncompletion' %}{% translate "Immediately after finishing" %}{% endif %}
+                        {% if when == 'inreview' %}{% translate "When full review is allowed" %}{% endif %}
+                        {% if when == 'never' %}{% translate "Never" %}{% endif %}
                     </td>
                 </tr>
                 {% endfor %}
