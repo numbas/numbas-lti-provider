@@ -218,6 +218,7 @@ a.button:not(:hover, :focus) {
     padding: var(--double-space);
     margin: var(--quad-space) 0;
     border: thin solid var(--alert-color);
+    max-width: max-content;
 }
 
 .alert > :is(h1,h2,h3,h4,h5,h6) {
@@ -629,6 +630,10 @@ body.manage-consumer .period {
 body.manage-consumer .period-name {
     position: sticky;
     top: 3em;
+}
+
+body.show-attempts table.attempts form {
+    display: inline;
 }
 
 .card-list {

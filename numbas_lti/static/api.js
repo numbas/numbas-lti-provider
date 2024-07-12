@@ -25,6 +25,10 @@ function SCORM_API(options) {
     this.fallback_url = options.fallback_url;
     this.show_attempts_url = options.show_attempts_url;
 
+    /** The time that this launch of the attempt started.
+     */
+    this.session_start_time = new Date();
+
     /** Key to save data under in localStorage
      */
     this.localstorage_key = 'numbas-lti-attempt-'+this.attempt_pk+'-scorm-data';
@@ -111,6 +115,10 @@ SCORM_API.prototype = {
      */
 	last_error: 0,
 
+    /** Was this attempt launched after the due date?
+     */
+    launched_after_due_date: false,
+
     /** Update the availability dates for the resource
      */
     update_availability_dates: function(data,first) {
@@ -118,9 +126,12 @@ SCORM_API.prototype = {
         this.allow_review_from = load_date(data.allow_review_from);
         var available_from = load_date(data.available_from);
         var available_until = load_date(data.available_until);
+        var due_date = load_date(data.due_date);
         var changed = !(dates_equal(available_from, this.available_from) && dates_equal(available_until, this.available_until));
         this.available_from = available_from;
         this.available_until = available_until;
+        this.due_date = due_date;
+        this.launched_after_due_date = data.launched_after_due_date;
 
         var unavailable_time = this.unavailable_time();
         if(unavailable_time) {
@@ -299,6 +310,7 @@ SCORM_API.prototype = {
     /** Force the exam to end.
      */
     end: function(reason) {
+        this.SetValue('cmi.completion_status','completed');
         if(reason!==undefined) {
             this.SetValue('x.reason ended',reason);
         }
@@ -381,6 +393,13 @@ SCORM_API.prototype = {
             if(!this.is_available()) {
                 this.end('not available');
             }
+
+            var now = get_now();
+            // Close the attempt when the due date passes, if the attempt wasn't launched after the due date.
+            if(this.due_date !== undefined && !this.launched_after_due_date && now >= this.due_date) {
+                this.end('due date passed');
+            }
+
         }
     },
     
@@ -439,12 +458,21 @@ SCORM_API.prototype = {
     /** The time that the attempt becomes unavailable.
      */
     unavailable_time: function() {
-        if(this.offline || this.available_until === undefined) {
+        if(this.offline) {
+            return;
+        }
+
+        if(this.due_date !== undefined && !this.launched_after_due_date) {
+            return this.due_date;
+        }
+
+        if(this.available_until === undefined) {
             return;
         }
         if(this.available_from===undefined || this.available_from < this.available_until) {
             return this.available_until;
         } else {
+            // available_from is after available_until, so this resource is available for all time except the interval between those times.
             return;
         }
     },
@@ -458,6 +486,7 @@ SCORM_API.prototype = {
             return true;
         }
         var now = get_now();
+
         if(this.available_from===undefined || this.available_until===undefined) {
             return (this.available_from===undefined || now >= this.available_from) && (this.available_until===undefined || now <= this.available_until);
         }
