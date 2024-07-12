@@ -201,8 +201,11 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
     def get_context_data(self,*args,**kwargs):
         context = super(ShowAttemptsView,self).get_context_data(*args,**kwargs)
 
-        context['resource'] = self.request.resource
+        resource = self.request.resource
+
+        context['resource'] = resource
         context['can_start_new_attempt'] = self.request.resource.can_start_new_attempt(self.request.user)
+        context['exam_info'] = resource.exam.get_feedback_settings(completed=False,review_allowed=False)
         
         return context
 
@@ -252,12 +255,6 @@ class AttemptAccessMixin:
                 raise PermissionDenied(gettext("You're not allowed to review this attempt."))
 
         if attempt.completed():
-            if not attempt.review_allowed():
-                if attempt.resource.allow_review_from:
-                    template = get_template('numbas_lti/review_not_allowed.html')
-                    raise PermissionDenied(template.render({'allow_review_from': attempt.resource.allow_review_from}))
-                else:
-                    raise PermissionDenied(_("You're not allowed to review this attempt."))
             return 'review'
         else:
             return 'normal'
@@ -374,6 +371,7 @@ class AttemptScormCMIView(JSONView, AttemptAccessMixin, LTIRoleOrSuperuserMixin,
             'numbas.user_role': 'instructor' if request_is_instructor(self.request) else 'student',
             'numbas.duration_extension.amount': duration_extension_amount,
             'numbas.duration_extension.units': duration_extension_units,
+            'numbas.review_allowed': attempt.review_allowed(),
         }
 
         now = datetime.datetime.now().timestamp()

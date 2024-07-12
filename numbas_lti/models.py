@@ -289,6 +289,34 @@ class Exam(ExtractPackage):
 
         return self._duration
 
+    def get_feedback_settings(self, completed, review_allowed):
+        content = self.source()
+
+        def get(node, attr, default=None):
+            return node.get(attr, node.get(attr.lower(), default))
+
+        feedback = get(content, 'feedback', {})
+
+        def resolve_feedback_setting(setting):
+            return {
+                'always': True,
+                'oncompletion': completed,
+                'inreview': review_allowed,
+                'never': False,
+            }[setting]
+
+        info = [
+            (_('Maximum available score'),  get(feedback,'showTotalMark', 'always')),
+            (_('Whether answers are correct'),  get(feedback,'showAnswerState', 'always')),
+            (_('Awarded scores'),  get(feedback,'showActualMark', 'always')),
+            (_('Feedback messages for each question part'), get(feedback, 'showPartFeedbackMessages', 'always')),
+            (_('Expected answers to each part'), get(feedback, 'revealExpectedAnswers', 'inreview')),
+            (_('Advice for each question'), get(feedback, 'revealAdvice', 'inreview')),
+        ]
+
+        return info
+
+
 GRADING_METHODS = [
     ('highest',_('Highest score')),
     ('last',_('Last attempt')),
