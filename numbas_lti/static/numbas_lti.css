@@ -304,6 +304,12 @@ fieldset {
     background: var(--th-bg);
 }
 
+fieldset legend {
+    background: var(--background-color);
+    padding: 0 var(--spacing);
+    border: thin solid var(--text-color);
+}
+
 form.big {
     margin: var(--double-space) 0;
     display: grid;
