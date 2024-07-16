@@ -97,7 +97,13 @@ class LTIConsumer(models.Model):
 
     def contexts_grouped_by_period(self):
         resources = Resource.objects.filter(Q(lti_13_links__context=OuterRef('pk')) | Q(lti_11_links__context=OuterRef('pk')))
-        contexts = self.contexts.exclude(name='').annotate(creation=Subquery(resources.order_by('creation_time').values('creation_time')[:1]),num_attempts=resources.annotate(n=Func(F('attempts'), function='COUNT')).values('n')).order_by('-creation')
+        contexts = self.contexts.exclude(name='').annotate(
+            creation=Subquery(resources.order_by('creation_time').values('creation_time')[:1]),
+            num_attempts= \
+                Count('lti_11_resource_links__resource__attempts', filter=Q(lti_11_resource_links__resource__attempts__broken=False), distinct=True) + \
+                Count('lti_13_resource_links__resource__attempts', filter=Q(lti_13_resource_links__resource__attempts__broken=False), distinct=True)
+        ).order_by('-creation')
+
         if not self.time_periods.exists():
             return [(None,contexts)]
         it = iter(self.time_periods.order_by('-end'))
