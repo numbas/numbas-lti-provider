@@ -26,6 +26,11 @@ The minimum required version of Python is now 3.10.
 
 There are changes to some values in :file:`settings.py`, and new settings ``CACHES`` and ``REQUESTS_USER_AGENT``.
 
+There are changes to the extra Python packages required for production environments.
+Run this command to install them::
+
+    pip install channels_redis==4.2.0 psycopg2==2.9.9 redis==5.0.4
+
 Add the following line to the top of :file:`numbasltiprovider/settings.py`::
 
     import pylti1p3.roles
