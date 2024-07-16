@@ -123,10 +123,10 @@ class ResourceSettingsForm(FieldsetFormMixin, ModelForm):
         model = Resource
         fields = ['grading_method','include_incomplete_attempts','max_attempts','show_marks_when','report_mark_time','allow_review_from','available_from','available_until','email_receipts','require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password']
         fieldsets = [
-            (_('Grading'), ('grading_method', 'include_incomplete_attempts',)),
-            (_('Attempts'), ('max_attempts',)),
-            (_('Feedback'), ('show_marks_when', 'report_mark_time', 'allow_review_from', 'email_receipts',)),
             (_('Availability'), ('available_from', 'available_until')),
+            (_('Feedback'), ('show_marks_when', 'report_mark_time', 'allow_review_from', 'email_receipts',)),
+            (_('Attempts'), ('max_attempts',)),
+            (_('Grading'), ('grading_method', 'include_incomplete_attempts',)),
             (_('Lockdown app'), ('require_lockdown_app', 'lockdown_app_password', 'seb_settings', 'show_lockdown_app_password')),
         ]
         widgets = {
