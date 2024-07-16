@@ -260,6 +260,7 @@ th {
 
 td {
     background: var(--td-bg);
+    --input-bg: var(--background-color);
 }
 
 td.empty {
