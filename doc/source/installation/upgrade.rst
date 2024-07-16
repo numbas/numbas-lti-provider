@@ -45,6 +45,18 @@ Copy the values of the following objects from :file:`numbasltiprovider/settings.
 * ``REQUESTS_USER_AGENT`` (new setting)
 * ``CANVAS_LTI_13_PRESETS`` (new setting)
 
+Blackboard
+^^^^^^^^^^
+
+If you have an existing Numbas LTI link with Blackboard, the process for upgrading to LTI 1.3 is a bit fiddly.
+
+When you register an LTI 1.3 connection, Blackboard will automatically upgrade all existing LTI 1.1 links to use it.
+However, it won't update the launch URL automatically, effectively breaking those links.
+
+So before registering the LTI 1.3 tool with Blackboard, you must edit the existing LTI 1.1 tool's placement and change the :guilabel:`target link URL`.
+The end of the URL should change from ``/entry`` to ``/lti13/launch/``.
+Note that the trailing slash on the end of the URL is important.
+
 v3.2
 ----
 
