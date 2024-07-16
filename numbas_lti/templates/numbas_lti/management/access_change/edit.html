@@ -23,7 +23,7 @@
     {% endif %}
     <p class="help-block">{% blocktranslate %}Only fill in the fields you wish to change. Fields left blank will not override the resource's normal settings.{% endblocktranslate %}</p>
 
-    <form method="POST" action="{% if create %}{% url_with_lti 'create_access_change' resource.pk %}{% else %}{% url_with_lti 'update_access_change' object.pk %}{% endif %}">
+    <form class="form-inline" method="POST" action="{% if create %}{% url_with_lti 'create_access_change' resource.pk %}{% else %}{% url_with_lti 'update_access_change' object.pk %}{% endif %}">
         {{form.resource}}
         {% csrf_token %}
         {% get_current_timezone as TIME_ZONE %}
