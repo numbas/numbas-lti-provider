@@ -34,6 +34,7 @@
             {% if due_date_passed %}
             <div class="alert info">
                 <p>{% blocktranslate %}The due date for this activity has passed, but it is still open. You can continue to attempt this activity, subject to any late work policy.{% endblocktranslate %}</p>
+                <p>{% blocktranslate %}Or, you can review your attempts without making any changes, for no penalty.{% endblocktranslate %}</p>
             </div>
             {% endif %}
         {% else %}
