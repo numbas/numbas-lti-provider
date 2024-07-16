@@ -532,6 +532,16 @@ class MustBeDeepLinkMixin(mixins.LTI_13_Mixin):
 class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
     template_name = "numbas_lti/lti_13/deep_link.html"
 
+    def get(self, *args, **kwargs):
+        if not self.get_resources().exists():
+            return redirect(self.reverse_with_lti('lti_13:deep_link_create_resource'))
+
+        return super().get(*args, **kwargs)
+
+    def get_resources(self):
+        lti_context, _ = self.get_lti_context()
+        return Resource.objects.filter(lti_13_links__context=lti_context).distinct()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -545,7 +555,7 @@ class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
         lti_context, _ = self.get_lti_context()
         context['lti_context'] = lti_context
 
-        context['resources'] = Resource.objects.filter(lti_13_links__context=lti_context).distinct()
+        context['resources'] = self.get_resources()
 
         return context
 
