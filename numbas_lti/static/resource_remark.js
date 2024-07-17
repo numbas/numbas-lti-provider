@@ -158,9 +158,14 @@ const app = createApp({
     },
 
     methods: {
+        beforeunload: function(e) {
+            if(this.attempts.some(a => a.is_changed)) {
+                e.preventDefault();
+            }
+        },
         stop_marking: function() {
             this.stopping_marking = true;
-            this.attempts.forEach(a=>a.await_remark=false);
+            this.attempts.forEach(a => a.await_remark=false);
         },
         fetch_all_attempt_data: async function() {
             let fetch_again = true;
@@ -527,3 +532,5 @@ app.component('ScoreChange', {
 });
 
 window.app = app.mount('#app');
+
+window.addEventListener('beforeunload', window.app.beforeunload);
