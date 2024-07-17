@@ -1,6 +1,6 @@
 {% load i18n %}{% load percentage %}
-{% blocktranslate with user_name=user.get_full_name resource_name=attempt.resource.title %}{{user_name}},
-This is a receipt confirming the completion of your attempt at {{resource_name}}.{% endblocktranslate %}
+{% blocktranslate with user_name=user.get_full_name resource_name=resource.title context_name=context.name %}{{user_name}},
+This is a receipt confirming the completion of your attempt at {{resource_name}}, in {{context_name}}.{% endblocktranslate %}
 
 {% blocktranslate with start_time=attempt.start_time end_time=attempt.end_time %}Receipt generated at: {{receipt_time}}
 Start time: {{start_time}}

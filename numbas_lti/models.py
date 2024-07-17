@@ -1469,6 +1469,8 @@ class Attempt(models.Model):
             'include_score': include_score,
             'receipt_time': now,
             'attempt': self,
+            'resource': self.resource,
+            'context': self.resource.lti_contexts().first(),
             'user': self.user,
             'signed_summary': signed_summary,
         }
@@ -1483,9 +1485,11 @@ class Attempt(models.Model):
         return message
 
     def send_completion_receipt(self):
+        resource = self.resource
+        context = resource.lti_contexts().first()
         message = self.completion_receipt()
         send_mail(
-            gettext('Numbas: Receipt for {resource_name}').format(resource_name=self.resource.title),
+            gettext('Numbas: Receipt for {resource_name} in {context_name}').format(resource_name=resource.title, context_name=context.name),
             message,
             settings.DEFAULT_FROM_EMAIL,
             [self.user.email],
