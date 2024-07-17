@@ -29,5 +29,5 @@ The processes to register a consumer with the Numbas LTI provider differ for the
 
     lti_13
     lti_11
+    testing
     management
-
