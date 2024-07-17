@@ -330,6 +330,12 @@ form.big p:is(.help-block, .submit-buttons) {
     grid-column: 1/-1;
 }
 
+form.big .help-block {
+    max-width: 20em;
+    margin-left: auto;
+    text-align: right;
+}
+
 form.big .fieldsets {
     display: flex;
     flex-wrap: wrap;
