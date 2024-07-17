@@ -1,5 +1,6 @@
 from django.views import generic
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django import http
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
@@ -46,7 +47,7 @@ def find_users(words):
     user_q |= Q(username__icontains=query)
     user_q |= Q(email__icontains=query)
 
-    users = User.objects.filter(user_q).distinct().order_by('first_name','last_name')
+    users = User.objects.filter(user_q).distinct().order_by(Lower('first_name'), Lower('last_name'))
     return users
 
 def find_contexts(words):
@@ -54,7 +55,7 @@ def find_contexts(words):
     for word in words:
         context_q &= (Q(name__icontains=word) | Q(label__icontains=word))
 
-    contexts = LTIContext.objects.filter(context_q).distinct().order_by('name')
+    contexts = LTIContext.objects.filter(context_q).distinct().order_by(Lower('name'), 'consumer')
     return contexts
 
 def find_resources(words):
@@ -62,7 +63,7 @@ def find_resources(words):
     for word in words:
         resource_q &= (Q(title__icontains=word) | Q(exam__title__icontains=word))
 
-    resources = Resource.objects.filter(resource_q).distinct().order_by('title','exam__title')
+    resources = Resource.objects.filter(resource_q).distinct().order_by(Lower('title'), Lower('exam__title'))
     return resources
 
 def may_global_search(user):

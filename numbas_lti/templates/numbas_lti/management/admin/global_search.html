@@ -46,6 +46,7 @@
 
                     {% if global_search_model == 'contexts' %}
                     <th scope="col">{% translate "Context" %}</th>
+                    <th scope="col">{% translate "Consumer" %}</th>
                     {% endif %}
 
                     {% if global_search_model == 'resources' %}
@@ -63,7 +64,8 @@
                     {% endif %}
 
                     {% if global_search_model == 'contexts' %}
-                    <td><a href="{{result.get_absolute_url}}">{{result.name}}</a></td>
+                    <td><a href="{{result.get_absolute_url}}">{{result.name}} <em>({{result.label}})</em></a></td>
+                    <td><a href="{{result.consumer.get_absolute_url}}">{{result.consumer.title}}</a></td>
                     {% endif %}
 
                     {% if global_search_model == 'resources' %}
