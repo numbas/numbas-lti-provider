@@ -40,7 +40,13 @@ def set_cookie_entry(request):
     request.session = engine.SessionStore(session_key)
     request.session.modified = True
     rotate_token(request)
-    return redirect(add_query_param(reverse('check_cookie_entry'),request.GET))
+    response = redirect(add_query_param(reverse('check_cookie_entry'),request.GET))
+
+    lti1p3_session_id = request.GET.get('lti1p3-session-id')
+    if lti1p3_session_id:
+        response.set_cookie('lti1p3-session-id', value=lti1p3_session_id, max_age=3600, secure=request.is_secure(), httponly='True', path='/', samesite='None')
+
+    return response
 
 def check_cookie_entry(request):
     sent_session_key = request.GET.get('session_key')
@@ -132,7 +138,7 @@ def show_seb_link(request):
 def seb_launch(request):
     session_key = request.GET.get('session_key')
 
-    if session_key is None or resource_link_id is None:
+    if session_key is None:
         if request.headers.get('X-Safeexambrowser-Configkeyhash'):
             return render(request, 'numbas_lti/launch_errors/seb_launch_without_params.html')
 

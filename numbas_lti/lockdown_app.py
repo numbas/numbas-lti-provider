@@ -10,6 +10,9 @@ import gzip
 import hashlib
 import hmac
 import json
+from pylti1p3.contrib.django import DjangoCacheDataStorage
+from pylti1p3.contrib.django.cookie import DjangoCookieService
+from pylti1p3.contrib.django.request import DjangoRequest
 import os
 import re
 import urllib.parse
@@ -28,12 +31,20 @@ def encrypt(password, message):
     encrypted = cipher.encrypt(pad(message.encode('utf-8'), AES.block_size))
     return iv, encrypted
 
+def get_ltip3_session_id(request):
+    lti1p3_request = DjangoRequest(request)
+    launch_data_storage = DjangoCacheDataStorage()
+    launch_data_storage.set_request(lti1p3_request)
+    cookie_service = DjangoCookieService(lti1p3_request)
+    return cookie_service.get_cookie(launch_data_storage.get_session_cookie_name())
 
 def make_link(request):
     params = request.GET.copy()
     params.update({
         'session_key': request.session.session_key,
+        'lti1p3-session-id': get_ltip3_session_id(request),
     })
+
 
     launch_url = add_query_param(
         request.build_absolute_uri(reverse('lockdown_launch')),
@@ -97,12 +108,13 @@ def is_numbas_lockdown_app(request, **kwargs):
     return True
 
 def make_seb_link(request):
-    query_args = {
+    params = request.GET.copy()
+    params.update({
         'session_key': request.session.session_key,
-        'resource_link_id': request.GET.get('resource_link_id'),
-    }
+        'lti1p3-session-id': get_ltip3_session_id(request),
+    })
 
-    query = '&'.join(f'{k}={urllib.parse.quote(v)}' for k,v in query_args.items())
+    query = '&'.join(f'{k}={urllib.parse.quote(v)}' for k,v in params.items() if v is not None)
 
     _, _, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
     settings_url = seb_settings.settings_file.url
