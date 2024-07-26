@@ -22,7 +22,7 @@ import json
 from lxml import etree
 import os
 from pathlib import Path
-from pylti1p3.assignments_grades import AssignmentsGradesService
+from pylti1p3.assignments_grades import AssignmentsGradesService, LineItem
 from pylti1p3.names_roles import NamesRolesProvisioningService
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.contrib.django.lti1p3_tool_config.models import LtiTool, LtiToolKey
@@ -38,15 +38,11 @@ import uuid
 from zipfile import ZipFile
 
 from . import requests_session
+from .exceptions import LineItemDoesNotExist
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
 from .util import parse_scorm_timeinterval
-
-class LineItemDoesNotExist(Exception):
-    def __init__(self, resource):
-        self.resource = resource
-
 
 requests = requests_session.get_session()
 
@@ -346,6 +342,9 @@ class LTI_13_Context(models.Model):
     ags_data = models.JSONField(blank=True, default=dict, null=True)
     nrps_data = models.JSONField(blank=True, default=dict, null=True)
 
+    cached_lineitems = models.JSONField(blank=True, default=dict, null=True)
+    lineitems_last_fetched = models.DateTimeField(blank=True, null=True, verbose_name=_('Last time line AGS items fetched'))
+
     def get_service_connector(self):
         tool = self.context.consumer.lti_13.tool
 
@@ -400,6 +399,15 @@ class LTI_13_Context(models.Model):
 
         return members
 
+    def ags_lineitems(self, force_fetch=False):
+        if force_fetch or not self.cached_lineitems:
+            ags = self.get_ags()
+            lineitems = list(ags.get_lineitems())
+            self.cached_lineitems = lineitems
+            self.lineitems_last_fetched = timezone.now()
+            self.save(update_fields=['cached_lineitems', 'lineitems_last_fetched'])
+
+        return self.cached_lineitems
 
 REQUIRE_LOCKDOWN_APP_CHOICES = [
     ('', _('No')),
@@ -716,8 +724,7 @@ class Resource(models.Model):
         process = ReportProcess.objects.create(resource=self)
 
         if self.lti_13_links.exists():
-            ags = self.lti_13_contexts().first().get_ags()
-            self.get_lti_13_lineitem(ags, create=True)
+            self.get_lti_13_lineitem(create=True)
 
         errors = []
         for user in User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct():
@@ -784,7 +791,7 @@ class Resource(models.Model):
         except Attempt.DoesNotExist:
             return 1
 
-    def get_lti_13_lineitem(self, ags, create = False):
+    def get_lti_13_lineitem(self, create = False):
         lineitem_dict = {
             "scoreMaximum": self.estimate_max_score(),
             "tag": "grade",
@@ -802,12 +809,20 @@ class Resource(models.Model):
 
         condition = lambda l: l.get('resourceLinkId') in resource_link_ids or (l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id())
 
-        if create:
-            saved_lineitem = ags.find_or_create_lineitem(lineitem, condition = condition)
-        else:
-            saved_lineitem = ags.find_lineitem_satisfying(condition)
-            if not saved_lineitem:
+        lti_13_context = self.lti_13_contexts().first()
+        lineitems = lti_13_context.ags_lineitems(force_fetch=create)
+        ags = lti_13_context.get_ags()
+
+        try:
+            saved_lineitem = next(l for l in lineitems if condition(l))
+        except StopIteration:
+            if create:
+                saved_lineitem = ags.create_lineitem(lineitem)
+                lti_13_context.ags_lineitems(force_fetch=True)
+            else:
                 raise LineItemDoesNotExist(self)
+
+        saved_lineitem = LineItem(saved_lineitem)
 
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
             or saved_lineitem.get_start_date_time() != lineitem.get_start_date_time()
@@ -830,11 +845,15 @@ class Resource(models.Model):
         """
 
         if lineitem is None:
-            lineitem = self.get_lti_13_lineitem(ags)
+            lineitem = self.get_lti_13_lineitem()
 
         scope = ags._service_data['scope']
 
         access_token = ags._service_connector.get_access_token(scope)
+
+        url = lineitem.get_id()
+        if url is None:
+            raise Exception("The line item does not have an ID.")
 
         ags._service_connector._requests_session.put(
             lineitem.get_id(),

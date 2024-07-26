@@ -14,7 +14,7 @@ from zipfile import ZipFile
 from . import tasks
 from .groups import group_for_resource, group_for_attempt
 from .report_outcome import report_outcome
-from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileReport, LTI_13_Context
+from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileReport, LTI_13_Context, LTI_13_ResourceLink
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,20 @@ def set_exam_name_from_package(sender,instance,**kwargs):
 @receiver(models.signals.post_save,sender=Resource)
 def resource_availability_changed(sender,instance,**kwargs):
     instance.send_access_changes()
+
+@receiver(models.signals.post_save,sender=LTI_13_ResourceLink)
+def fetch_context_lineitems(sender, instance, created, **kwargs):
+    """
+        When an LTI 1.3 resource link is created, update the context's list of line items.
+    """
+    if not created:
+        return
+
+    context = instance.context
+    if not hasattr(context, 'lti_13'):
+        return
+
+    tasks.fetch_lti_13_ags_lineitems(context)
 
 @receiver(models.signals.post_save,sender=ScormElement)
 def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):

@@ -195,9 +195,8 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
         if not resource.lineitem_unwanted and resource.lti_13_links.exists():
             lti_context = resource.lti_13_contexts().first()
             if lti_context:
-                ags = lti_context.get_ags()
                 try:
-                    lineitem = resource.get_lti_13_lineitem(ags)
+                    lineitem = resource.get_lti_13_lineitem()
                 except LineItemDoesNotExist:
                     context['no_lineitem'] = True
 
@@ -222,8 +221,7 @@ class CreateLineitemView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewM
         lti_context = resource.lti_13_contexts().first()
         if not lti_context:
             raise Exception(_("This resource is not linked to any LTI 1.3 contexts."))
-        ags = lti_context.get_ags()
-        resource.get_lti_13_lineitem(ags, create=True)
+        resource.get_lti_13_lineitem(create=True)
 
         return http.HttpResponseRedirect(self.get_success_url())
 
@@ -302,7 +300,7 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
         lti_context = resource.lti_13_contexts().first()
         if lti_context:
             ags = lti_context.get_ags()
-            lineitem = resource.get_lti_13_lineitem(ags)
+            lineitem = resource.get_lti_13_lineitem()
             ags_grades = context['grades'] = ags.get_grades(lineitem)
             nrps_members = [m for m in lti_context.nrps_members() if m['student']]
             if nrps_members:

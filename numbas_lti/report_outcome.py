@@ -1,4 +1,5 @@
 from . import requests_session
+from .exceptions import LineItemDoesNotExist
 import requests
 from requests_oauthlib import OAuth1
 import uuid
@@ -110,7 +111,10 @@ def report_outcome_lti_13(resource, user_data):
 
     ags = resource.lti_13_contexts().first().get_ags()
 
-    lineitem = resource.get_lti_13_lineitem(ags)
+    try:
+        lineitem = resource.get_lti_13_lineitem()
+    except LineItemDoesNotExist:
+        return
 
     ags.put_grade(grade, lineitem)
 

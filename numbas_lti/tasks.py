@@ -266,3 +266,10 @@ def resource_json_dump_report(fr,f,full=False):
 def delete_old_reports():
     expiry_date = timezone.make_aware(datetime.now() - timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS))
     FileReport.objects.filter(creation_time__lt=expiry_date).delete()
+
+@db_task(priority=1)
+def fetch_lti_13_ags_lineitems(context):
+    """
+        Update the cached list of AGS lineitems for an LTI 1.3 context.
+    """
+    context.lti_13.ags_lineitems(force_fetch=True)
