@@ -22,9 +22,9 @@
         <form class="form-inline">
             <p class="search">
                 <label for="query">{% translate "Search for an element:" %}</label> <input id="query" type="text" v-model="query">
-                <button class="button default quick-query" @click="set_query('learner_response|correct_responses')">{% translate "Answers" %}</button>
-                <button class="button default quick-query" @click="set_query('(result|weighting)$')">{% translate "Part scores" %}</button>
-                <button class="button default quick-query" @click="set_query('score.(raw|max)')">{% translate "Question scores" %}</button>
+                <button type="button" class="button default quick-query" @click="set_query('learner_response|correct_responses')">{% translate "Answers" %}</button>
+                <button type="button" class="button default quick-query" @click="set_query('(result|weighting)$')">{% translate "Part scores" %}</button>
+                <button type="button" class="button default quick-query" @click="set_query('score.(raw|max)')">{% translate "Question scores" %}</button>
             </p>
             <p>
                 <label><input type="checkbox" :checked="most_recent_only"> {% translate "Most recent value only" %}</label>
