@@ -95,6 +95,7 @@ class NumbasLTIResourceMiddleware(object):
         if resource_link_id is not None:
             context_id = request.LTI.get('context_id')
             context_id = context_id if context_id is not None else resource_link_id
+            instance_guid = request.LTI.get('tool_consumer_instance_guid', '')
             name = request.LTI.get('context_title')
             name = name if name is not None else context_id
             label = request.LTI.get('context_label')
@@ -105,12 +106,14 @@ class NumbasLTIResourceMiddleware(object):
 
             context, _ = LTIContext.objects.get_or_create(
                 context_id=context_id,
+                instance_guid=instance_guid,
                 consumer=consumer,
                 defaults = {
                     'name': name,
                     'label': label,
                 }
             )
+
             if (name,label) != (context.name,context.label):
                 context.name = name
                 context.label = label
