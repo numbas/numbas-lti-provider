@@ -57,6 +57,12 @@ So before registering the LTI 1.3 tool with Blackboard, you must edit the existi
 The end of the URL should change from ``/entry`` to ``/lti13/launch/``.
 Note that the trailing slash on the end of the URL is important.
 
+Once you have registered the LTI 1.3 tool, you should migrate the LTI 1.1 user aliases, so that user data for existing Numbas links is correct.
+
+Run the following management command::
+
+    python manage.py upgrade_blackboard_lti_13
+
 v3.2
 ----
 
