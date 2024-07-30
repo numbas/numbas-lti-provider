@@ -260,21 +260,26 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
         launch_id = message_launch.get_launch_id()
 
         is_instructor = mixins.request_is_instructor(self.request)
+        
 
         if message_launch.is_resource_launch():
             resource_pk = self.get_custom_param('resource')
             if resource_pk is not None:
                 resource = Resource.objects.get(pk=resource_pk)
 
-                resource_link = LTI_13_ResourceLink.objects.update_or_create(
+                launch_data = message_launch.get_launch_data()
+                resource_link_claim = launch_data.get("https://purl.imsglobal.org/spec/lti/claim/resource_link", {})
+
+                title = resource_link_claim.get('title', resource.title)
+
+                resource_link, _ = LTI_13_ResourceLink.objects.update_or_create(
                     resource_link_id=resource_link_id,
                     resource=resource,
                     context=lti_context,
                     defaults={
-                        "title": resource.title,
+                        "title": title,
                     }
                 )
-
 
         if is_instructor:
             if message_launch.is_deep_link_launch():
