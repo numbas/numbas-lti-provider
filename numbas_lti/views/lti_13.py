@@ -497,25 +497,6 @@ class TeacherLaunchView(ResourceLaunchView, View):
         else:
             return render(self.request, 'numbas_lti/launch_errors/no_resource.html', status=404)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        message_launch = self.get_message_launch()
-        message_launch_data = message_launch.get_launch_data()
-        context['message_launch_data'] = message_launch_data
-
-        lti_context, resource_link_id = self.get_lti_context()
-        context['lti_context'] = lti_context
-
-        context['resources'] = Resource.objects.filter(lti_13_links__context=lti_context).distinct()
-
-        resource_link_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/resource_link')
-        title = resource_link_claim.get('title')
-        description = resource_link_claim.get('description')
-        context['new_resource_form'] = numbas_lti.forms.LTI_13_LinkResourceForm(instance=LTI_13_ResourceLink(resource_link_id=resource_link_id, title=title, description=description, context=lti_context))
-
-        return context
-
 class StudentLaunchView(ResourceLaunchView, View):
     def get(self, request, *args, **kwargs):
         resource_link = self.get_resource_link()
