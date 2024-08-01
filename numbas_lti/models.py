@@ -1097,7 +1097,7 @@ class Attempt(models.Model):
 
     def scorm_cmi(self, include_remarked_elements=True, at_time=None):
         user_data = self.resource.user_data(self.user)
-        learner_id = '' if user_data is None else user_data.consumer_user_id
+        learner_id = '' if user_data is None else user_data.identifier()
 
         scorm_cmi = {
             'cmi.suspend_data': '',
