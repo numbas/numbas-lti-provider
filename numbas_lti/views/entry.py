@@ -50,10 +50,11 @@ def set_cookie_entry(request):
 
 def check_cookie_entry(request):
     sent_session_key = request.GET.get('session_key')
+    resource_link_id = request.GET.get('resource_link_id')
     if sent_session_key == request.session.session_key:
         return do_lti_entry(request)
     else:
-        url = add_query_param(reverse('set_cookie_entry'),{'session_key': sent_session_key})
+        url = add_query_param(reverse('set_cookie_entry'),{'session_key': sent_session_key, 'resource_link_id': resource_link_id})
         return render(request, 'numbas_lti/check_cookie_entry.html',{'url':url})
 
 def do_lti_entry(request):
