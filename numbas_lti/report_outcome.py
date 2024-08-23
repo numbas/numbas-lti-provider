@@ -58,10 +58,10 @@ def report_outcome_for_attempt(attempt):
 def report_outcome(resource, user):
     user_data = resource.user_data(user) 
     try:
-        if resource.lti_11_links.exists():
-            report_outcome_lti_11(resource, user_data)
         if resource.lti_13_links.exists():
             report_outcome_lti_13(resource, user_data)
+        elif resource.lti_11_links.exists():
+            report_outcome_lti_11(resource, user_data)
     except requests.exceptions.ConnectionError as e:
         raise ReportOutcomeConnectionError(e) from e
     except requests.exceptions.Timeout as e:
