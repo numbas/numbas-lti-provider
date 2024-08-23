@@ -913,6 +913,16 @@ class AccessChangeManager(models.Manager):
         if user.is_anonymous:
             return AccessChange.objects.none()
         query = Q(users=user) | Q(usernames__username=user.username) | Q(emails__email__iexact=user.email)
+
+        # When this is the RelatedManager for `Resource.access_changes`, check if there's an LTI 1.3 user alias whose sub field matches a username access change.
+        if hasattr(self, 'instance') and isinstance(self.instance, Resource):
+            resource = self.instance
+            try:
+                consumer = resource.lti_13_contexts().first().context.consumer
+                query = query | Q(usernames__username__in=user.lti_13_aliases.filter(consumer=consumer).values('sub'))
+            except AttributeError:
+                pass
+
         return self.get_queryset().filter(query).distinct()
 
 EXTEND_DURATION_UNITS = [
