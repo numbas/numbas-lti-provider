@@ -445,16 +445,30 @@ class ResourceLaunchView(mixins.LTI_13_Mixin):
 
         user_alias = user.lti_13_aliases.get(consumer=consumer)
 
+        consumer_user_id = user_alias.sub
+
+        message_launch = self.get_message_launch()
+        message_launch_data = message_launch.get_launch_data()
+        lis_claim = message_launch_data.get('https://purl.imsglobal.org/spec/lti/claim/lis')
+        if lis_claim:
+            person_sourcedid = lis_claim.get('person_sourcedid')
+            if person_sourcedid:
+                consumer_user_id = person_sourcedid
+
         is_instructor = mixins.request_is_instructor(self.request)
 
         user_data_args = {
             'user': user, 
             'resource': resource_link.resource, 
             'consumer': consumer, 
-            'consumer_user_id': user_alias.sub,
         }
 
-        user_data, _ = LTIUserData.objects.update_or_create(**user_data_args, defaults={"is_instructor": is_instructor})
+        defaults = {
+            'is_instructor': is_instructor,
+            'consumer_user_id': consumer_user_id,
+        }
+
+        user_data, _ = LTIUserData.objects.update_or_create(**user_data_args, defaults=defaults)
 
 
     def get_resource_link(self):
