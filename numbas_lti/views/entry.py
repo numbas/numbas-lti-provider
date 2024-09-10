@@ -95,14 +95,14 @@ def student_launch(request, resource):
     if not resource.exam:
         return render(request,'numbas_lti/exam_not_set_up.html',{})
 
-    require_lockdown_app, _, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
+    require_lockdown_app, _, seb_settings = resource.require_lockdown_app_for_user(request.user)
     if require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
         return show_lockdown_app(request)
 
     if require_lockdown_app=='seb' and not lockdown_app.is_seb(request, seb_settings):
         return show_seb_link(request)
 
-    if not request.resource.exam:
+    if not resource.exam:
         return render(request,'numbas_lti/exam_not_set_up.html',{})
     else:
         return redirect(reverse_with_lti(request, 'show_attempts'))
