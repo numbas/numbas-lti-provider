@@ -1,6 +1,8 @@
-function initialise_api(scorm_cmi) {
+function initialise_api(data) {
     var scorm_api_data = js_vars.scorm_api_data;
-    scorm_api_data.scorm_cmi = scorm_cmi;
+
+    Object.assign(scorm_api_data, data);
+
     try {
         var sc = new SCORM_API(scorm_api_data);
         window.API_1484_11 = sc.API_1484_11;

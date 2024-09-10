@@ -325,12 +325,14 @@ class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, LTIRoleOrSuper
 
         return context
 
-class AttemptScormCMIView(JSONView, AttemptAccessMixin, generic.detail.DetailView):
+class AttemptScormCMIView(JSONView, AttemptAccessMixin, LTIRoleOrSuperuserMixin, generic.detail.DetailView):
     download = False
     model = Attempt
 
     def get_data(self):
         attempt = self.get_object()
+
+        broken_attempt = None
 
         scorm_cmi = attempt.scorm_cmi(at_time=self.get_at_time())
 
@@ -362,7 +364,7 @@ class AttemptScormCMIView(JSONView, AttemptAccessMixin, generic.detail.DetailVie
                 user = broken_attempt.user
             )
             entry = 'ab-initio'
-            context['attempt'] = attempt
+            scorm_cmi = attempt.scorm_cmi(at_time=self.get_at_time())
 
         duration_extension_amount, duration_extension_units = attempt.resource.duration_extension_for_user(user)
         dynamic_cmi = {
@@ -383,7 +385,12 @@ class AttemptScormCMIView(JSONView, AttemptAccessMixin, generic.detail.DetailVie
             mode = mode
         )
 
-        return scorm_cmi
+        return {
+            'attempt_pk': attempt.pk,
+            'fallback_url': self.reverse_with_lti('attempt_scorm_data_fallback', args=(attempt.pk,)),
+            'scorm_cmi': scorm_cmi,
+            'broken_attempt': broken_attempt.pk if broken_attempt is not None else None,
+        }
 
     def render_to_response(self, context, **kwargs):
         response = super().render_to_response(context, **kwargs)
