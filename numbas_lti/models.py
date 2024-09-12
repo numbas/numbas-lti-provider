@@ -829,7 +829,9 @@ class Resource(models.Model):
             or saved_lineitem.get_end_date_time() != lineitem.get_end_date_time()
             or saved_lineitem.get_tag() != lineitem.get_tag()
             ):
-            saved_lineitem.set_score_maximum(lineitem.get_score_maximum())
+            max_score = lineitem.get_score_maximum()
+            if max_score is not None and max_score > 0:
+                saved_lineitem.set_score_maximum(max_score)
             saved_lineitem.set_start_date_time(lineitem.get_start_date_time())
             saved_lineitem.set_end_date_time(lineitem.get_end_date_time())
             saved_lineitem.set_tag(lineitem.get_tag())
