@@ -42,7 +42,8 @@ from .exceptions import LineItemDoesNotExist
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
-from .util import parse_scorm_timeinterval
+from .util import parse_scorm_timeinterval, iso_time
+from .examparser import numbasobject
 
 requests = requests_session.get_session()
 
@@ -263,9 +264,10 @@ class Exam(ExtractPackage):
     def source(self):
         try:
             with open(str(Path(self.extracted_path) / 'source.exam')) as f:
-                content = json.loads(re.sub(r'^// Numbas version: .*\n','',f.read()))
-                return content
-        except (FileNotFoundError,json.JSONDecodeError):
+                content = f.read()
+                obj = numbasobject.NumbasObject(source=content)
+                return obj.data
+        except (FileNotFoundError,json.JSONDecodeError, numbasobject.VersionError):
             return {}
 
     def has_duration(self):
