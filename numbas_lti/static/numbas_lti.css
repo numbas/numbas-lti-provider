@@ -334,6 +334,8 @@ form.big fieldset .help-block {
     max-width: 20em;
     margin-left: auto;
     text-align: right;
+    margin-top: calc(-1 * var(--double-space));
+    margin-bottom: var(--quad-space);
 }
 
 form.big fieldset legend + .help-block {
