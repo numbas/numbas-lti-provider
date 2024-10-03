@@ -609,8 +609,8 @@ class Resource(models.Model):
                 if change.due_date is not None:
                     due_date = change.due_date
 
-        if auntil is not None:
-            auntil += deadline_extension
+        if due_date is not None:
+            due_date += deadline_extension
 
         return Availability(from_time=afrom, until_time=auntil, due_date=self.due_date)
 
