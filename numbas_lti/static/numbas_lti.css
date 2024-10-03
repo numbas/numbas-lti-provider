@@ -336,6 +336,10 @@ form.big fieldset .help-block {
     text-align: right;
 }
 
+form.big fieldset legend + .help-block {
+    margin-top: 0;
+}
+
 form.big .fieldsets {
     display: flex;
     flex-wrap: wrap;

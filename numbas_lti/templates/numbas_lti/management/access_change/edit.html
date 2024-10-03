@@ -23,135 +23,150 @@
     {% endif %}
     <p class="help-block">{% blocktranslate %}Only fill in the fields you wish to change. Fields left blank will not override the resource's normal settings.{% endblocktranslate %}</p>
 
-    <form class="form-inline" method="POST" action="{% if create %}{% url_with_lti 'create_access_change' resource.pk %}{% else %}{% url_with_lti 'update_access_change' object.pk %}{% endif %}">
+    <form class="big" method="POST" action="{% if create %}{% url_with_lti 'create_access_change' resource.pk %}{% else %}{% url_with_lti 'update_access_change' object.pk %}{% endif %}">
         {{form.resource}}
         {% csrf_token %}
         {% get_current_timezone as TIME_ZONE %}
 
-        <fieldset>
-            <legend>{% translate "About this access change" %}</legend>
-            {{form.description.label_tag}}
-            {{form.description}}
-        </fieldset>
+        <div class="fieldsets">
+            <fieldset>
+                <legend>{% translate "About this access change" %}</legend>
+                {{form.description.label_tag}}
+                {{form.description}}
+            </fieldset>
 
-        <fieldset>
-            <legend>{% translate "Availability dates" %}</legend>
-            <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone <strong>{{TIME_ZONE}}</strong>.{% endblocktranslate %}</p>
+            <fieldset>
+                <legend>{% translate "Availability dates" %}</legend>
+                <p class="help-block">{% blocktranslate with TIME_ZONE=TIME_ZONE %}All times are in the timezone <strong>{{TIME_ZONE}}</strong>.{% endblocktranslate %}</p>
 
-            {{form.available_from.label_tag}}
-            {{form.available_from}}
-            <p class="help-block">
-                {% translate "Instead of" %} {% time_tag resource.available_from %}.
-            </p>
-
-            {{form.available_until.label_tag}}
-            {{form.available_until}}
-            <p class="help-block">
-                {% translate "Instead of" %} {% time_tag resource.available_until %}.
-            </p>
-
-            <label>{% translate "Extend the deadline by" %}</label>
-            {{form.extend_deadline_days}}
-            <label for="{{form.extend_deadline_days.auto_id}}">{{form.extend_deadline_days.label}}</label>
-            {% translate "and" %}
-            {{form.extend_deadline_minutes}}
-            <label for="{{form.extend_deadline_minutes.auto_id}}">{{form.extend_deadline_minutes.label}}</label>
-
-            <p class="help-block">
-                {% blocktranslate %}Use "Extend the deadline by" to move the resource's normal "Available until" date.{% endblocktranslate %}
-            </p>
-        </fieldset>
-
-        {% if resource.exam.has_duration %}
-        <fieldset>
-            <legend>{% translate "Exam duration" %}</legend>
-            <p>
-                <label for="{{form.extend_duration.id_for_label}}">{{form.extend_duration.label}}</label>
-                {{form.extend_duration}}
-                {{form.extend_duration_units}}
-            </p>
-            <p>
-                <label for="{{form.disable_duration.id_for_label}}">{{form.disable_duration.label}}</label>
-                {{form.disable_duration}}
-            </p>
-            <p class="help-block">
-                {% blocktranslate %}Change the length of time the student has to complete an attempt after starting it.{% endblocktranslate %}
-            </p>
-        </fieldset>
-        {% endif %}
-        <fieldset>
-            <legend>{% translate "Number of attempts" %}</legend>
-
-            {{form.max_attempts.label_tag}}
-            {{form.max_attempts}}
-            <p class="help-block">
-                {% blocktranslate with value=resource.max_attempts %}Instead of {{value}}.{% endblocktranslate %}
-            </p>
-        </fieldset>
-        <fieldset>
-            <legend>{% trans "Lockdown app" %}</legend>
-            {{form.require_lockdown_app}}
-            {{form.lockdown_app_password}}
-            {{form.seb_settings}}
-        </fieldset>
-        <fieldset>
-            <legend>{% translate "Applies to" %}</legend>
-
-            {% if nrps_members %}
-                <label for="nrps-member-search">Search for a student by name:</label>
-                <input id="nrps-member-search" type="search" list="nrps_members_list" placeholder="{% translate "Enter a student's name" %}">
-                <datalist id="nrps_members_list">
-                    {% for member in nrps_members %}
-                    <option value="{{member.user_id}}">{{member.name}}</option>
-                    {% endfor %}
-                </datalist>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">{% translate "Apply?" %}</th>
-                            <th scope="col">{% translate "Name" %}</th>
-                            <th scope="col">{% translate "Username" %}</th>
-                            <th scope="col">{% translate "Email address" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for member in nrps_members %}
-                    {% if member.student %}
-                    {% with id="nrps_applies_to-"|add:member.user_id %}
-                    <tr>
-                        <td><input id="{{id}}" type="checkbox" name="nrps_applies_to" value="{{member.user_id}}" {% if member.user_id in form.nrps_applies_to.value %}checked{% endif %}></td>
-                        <td><label for="{{id}}">{{member.name}}</label></td>
-                        {% if member.ext_user_username %}
-                        <td><code>{% if member.ext_user_username %}{{member.ext_user_username}}{% else %}{{member.user_id}}{% endif %}</code></td>
-                        {% endif %}
-                        <td>
-                            {% if member.email %}
-                            <code>{{member.email}}</code>
-                            {% endif %}
-                        </td>
-                    </li>
-                    {% endwith %}
-                    {% endif %}
-                    {% endfor %}
-                </table>
-
-            {% else %}
-
-                {{form.usernames}}
-                <p class="help-block">
-                    {% blocktranslate with username=user.username %}Your username is <code>{{username}}</code>.{% endblocktranslate %}
+                <p>
+                    {{form.available_from.label_tag}}
+                    {{form.available_from}}
                 </p>
-                {{form.emails}}
                 <p class="help-block">
-                    {% if user.email %}
-                        {% blocktranslate with email=user.email %}Your email address is <code>{{email}}</code>.{% endblocktranslate %}
-                    {% else %}
-                        {% translate "The LTI connection doesn't seem to share email addresses. You might not be able to identify students by email address." %}
-                    {% endif %}
+                    {% translate "Instead of" %} {% time_tag resource.available_from %}.
                 </p>
+
+                <p>
+                    {{form.available_until.label_tag}}
+                    {{form.available_until}}
+                </p>
+                <p class="help-block">
+                    {% translate "Instead of" %} {% time_tag resource.available_until %}.
+                </p>
+
+                <p>
+                    <label>{% translate "Extend the deadline by" %}</label>
+                    {{form.extend_deadline_days}}
+                    <label for="{{form.extend_deadline_days.auto_id}}">{{form.extend_deadline_days.label}}</label>
+                    {% translate "and" %}
+                    {{form.extend_deadline_minutes}}
+                    <label for="{{form.extend_deadline_minutes.auto_id}}">{{form.extend_deadline_minutes.label}}</label>
+                </p>
+                <p class="help-block">
+                    {% blocktranslate %}Use "Extend the deadline by" to move the resource's normal "available until" date.{% endblocktranslate %}
+                </p>
+            </fieldset>
+
+            {% if resource.exam.has_duration %}
+            <fieldset>
+                <legend>{% translate "Exam duration" %}</legend>
+                <p>
+                    <label for="{{form.extend_duration.id_for_label}}">{{form.extend_duration.label}}</label>
+                    {{form.extend_duration}}
+                    {{form.extend_duration_units}}
+                </p>
+                <p>
+                    <label for="{{form.disable_duration.id_for_label}}">{{form.disable_duration.label}}</label>
+                    {{form.disable_duration}}
+                </p>
+                <p class="help-block">
+                    {% blocktranslate %}Change the length of time the student has to complete an attempt after starting it.{% endblocktranslate %}
+                </p>
+            </fieldset>
             {% endif %}
-        </fieldset>
+            <fieldset>
+                <legend>{% translate "Number of attempts" %}</legend>
+
+                <p>
+                    {{form.max_attempts.label_tag}}
+                    {{form.max_attempts}}
+                </p>
+                <p class="help-block">
+                    {% blocktranslate with value=resource.max_attempts %}Instead of {{value}}.{% endblocktranslate %}
+                </p>
+            </fieldset>
+            <fieldset>
+                <legend>{% trans "Lockdown app" %}</legend>
+                {{form.require_lockdown_app}}
+                <p>
+                    {{form.lockdown_app_password.label_tag}}
+                    {{form.lockdown_app_password}}
+                </p>
+                <p>
+                    {{form.seb_settings.label_tag}}
+                    {{form.seb_settings}}
+                </p>
+            </fieldset>
+            <fieldset>
+                <legend>{% translate "Applies to" %}</legend>
+
+                {% if nrps_members %}
+                    <label for="nrps-member-search">Search for a student by name:</label>
+                    <input id="nrps-member-search" type="search" list="nrps_members_list" placeholder="{% translate "Enter a student's name" %}">
+                    <datalist id="nrps_members_list">
+                        {% for member in nrps_members %}
+                        <option value="{{member.user_id}}">{{member.name}}</option>
+                        {% endfor %}
+                    </datalist>
+
+                    <table id="nrps-member-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">{% translate "Apply?" %}</th>
+                                <th scope="col">{% translate "Name" %}</th>
+                                <th scope="col">{% translate "Username" %}</th>
+                                <th scope="col">{% translate "Email address" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for member in nrps_members %}
+                        {% if member.student %}
+                        {% with id="nrps_applies_to-"|add:member.user_id %}
+                        <tr class="member" data-user-id="{{member.user_id}}" data-name="{{member.name}}" data-username="{{member.ext_user_username}}" data-email="{{member.email}}">
+                            <td><input id="{{id}}" type="checkbox" name="nrps_applies_to" value="{{member.user_id}}" {% if member.user_id in form.nrps_applies_to.value %}checked{% endif %}></td>
+                            <td><label for="{{id}}" class="name">{{member.name}}</label></td>
+                            {% if member.ext_user_username %}
+                            <td><code class="username">{% if member.ext_user_username %}{{member.ext_user_username}}{% else %}{{member.user_id}}{% endif %}</code></td>
+                            {% endif %}
+                            <td>
+                                {% if member.email %}
+                                <code>{{member.email}}</code>
+                                {% endif %}
+                            </td>
+                        </li>
+                        {% endwith %}
+                        {% endif %}
+                        {% endfor %}
+                    </table>
+
+                {% else %}
+
+                    {{form.usernames}}
+                    <p class="help-block">
+                        {% blocktranslate with username=user.username %}Your username is <code>{{username}}</code>.{% endblocktranslate %}
+                    </p>
+                    {{form.emails}}
+                    <p class="help-block">
+                        {% if user.email %}
+                            {% blocktranslate with email=user.email %}Your email address is <code>{{email}}</code>.{% endblocktranslate %}
+                        {% else %}
+                            {% translate "The LTI connection doesn't seem to share email addresses. You might not be able to identify students by email address." %}
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </fieldset>
+        </div>
         <p><button class="button large primary" type="submit">{% translate "Save" %}</button> <a class="button link" href="{% url_with_lti 'resource_access_changes' resource.pk %}">{% translate "Cancel" %}</a></p>
     </form>
 {% endblock management_content %}
@@ -160,6 +175,7 @@
 {{block.super}}
 {{form.media}}
 <script src="{% static 'lockdown_settings_form.js' %}" defer></script>
+<script src="{% static 'nrps_form.js' %}" defer></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

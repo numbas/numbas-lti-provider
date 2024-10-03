@@ -8,7 +8,11 @@ function toggle_lockdown_fields() {
     Object.entries(lockdown_fields).forEach(([value, fields]) => {
         for(let f of fields) {
             const show = shown_fields.indexOf(f) >= 0;
-            let group = document.getElementById(`id_${f}`).parentElement;
+            const input = document.getElementById(`id_${f}`);
+            if(!input) {
+                continue;
+            }
+            let group = input.parentElement;
             group.classList.toggle('hidden',!show);
         }
     });
