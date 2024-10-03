@@ -847,8 +847,8 @@ class Resource(models.Model):
 
         if self.available_from is not None:
             lineitem.set_start_date_time(self.available_from.isoformat())
-        if self.available_until is not None:
-            lineitem.set_end_date_time(self.available_until.isoformat())
+        if self.due_date is not None:
+            lineitem.set_end_date_time(self.due_date.isoformat())
 
         resource_link_ids = self.lti_13_links.values_list('resource_link_id', flat=True)
 
