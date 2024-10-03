@@ -340,6 +340,7 @@ form.big fieldset .help-block {
 
 form.big fieldset legend + .help-block {
     margin-top: 0;
+    max-width: none;
 }
 
 form.big .fieldsets {
