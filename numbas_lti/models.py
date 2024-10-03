@@ -612,7 +612,7 @@ class Resource(models.Model):
         if due_date is not None:
             due_date += deadline_extension
 
-        return Availability(from_time=afrom, until_time=auntil, due_date=self.due_date)
+        return Availability(from_time=afrom, until_time=auntil, due_date=due_date)
 
     def duration_extension_for_user(self, user):
         duration = 0
