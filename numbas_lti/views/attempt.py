@@ -106,7 +106,7 @@ class ReopenAttemptView(MustBeInstructorMixin,generic.detail.DetailView):
             messages.add_message(self.request,messages.SUCCESS,_('{}\'s attempt has been reopened.'.format(attempt.user.get_full_name())))
             next_url = self.reverse_with_lti('manage_attempts',args=(attempt.resource.pk,)) 
         else:
-            next_url = self.reverse_with_lti('show_attempts')
+            next_url = self.reverse_with_lti('run_attempt', args=(attempt.pk,))
 
         return redirect(next_url)
 
