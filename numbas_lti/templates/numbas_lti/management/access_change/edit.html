@@ -56,6 +56,14 @@
                 </p>
 
                 <p>
+                    {{form.due_date.label_tag}}
+                    {{form.due_date}}
+                </p>
+                <p class="help-block">
+                    {% translate "Instead of" %} {% time_tag resource.due_date %}.
+                </p>
+
+                <p>
                     <label>{% translate "Extend the deadline by" %}</label>
                     {{form.extend_deadline_days}}
                     <label for="{{form.extend_deadline_days.auto_id}}">{{form.extend_deadline_days.label}}</label>
@@ -64,7 +72,7 @@
                     <label for="{{form.extend_deadline_minutes.auto_id}}">{{form.extend_deadline_minutes.label}}</label>
                 </p>
                 <p class="help-block">
-                    {% blocktranslate %}Use "Extend the deadline by" to move the resource's normal "available until" date.{% endblocktranslate %}
+                    {% blocktranslate %}Use "Extend the deadline by" to move the resource's normal due date.{% endblocktranslate %}
                 </p>
             </fieldset>
 
