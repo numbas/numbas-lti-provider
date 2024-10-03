@@ -14,7 +14,7 @@ from zipfile import ZipFile
 from . import tasks
 from .groups import group_for_resource, group_for_attempt
 from .report_outcome import report_outcome
-from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileReport, LTI_13_Context, LTI_13_ResourceLink
+from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileReport, LTI_13_Context, LTI_13_ResourceLink, AccessChange
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,14 @@ def set_exam_name_from_package(sender,instance,**kwargs):
 @receiver(models.signals.post_save,sender=Resource)
 def resource_availability_changed(sender,instance,**kwargs):
     instance.send_access_changes()
+
+@receiver(models.signals.post_save,sender=AccessChange)
+def access_change_changes(sender,instance,**kwargs):
+    instance.resource.send_access_changes()
+
+@receiver(models.signals.post_delete,sender=AccessChange)
+def access_change_deleted(sender,instance,**kwargs):
+    instance.resource.send_access_changes()
 
 @receiver(models.signals.post_save,sender=LTI_13_ResourceLink)
 def fetch_context_lineitems(sender, instance, created, **kwargs):
