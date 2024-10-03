@@ -131,7 +131,9 @@ SCORM_API.prototype = {
         this.available_from = available_from;
         this.available_until = available_until;
         this.due_date = due_date;
-        this.launched_after_due_date = data.launched_after_due_date;
+        if(data.launched_after_due_date !== undefined) {
+            this.launched_after_due_date = data.launched_after_due_date;
+        }
 
         var unavailable_time = this.unavailable_time();
         if(unavailable_time) {
