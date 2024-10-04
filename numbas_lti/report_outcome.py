@@ -78,13 +78,10 @@ def report_outcome_lti_13(resource, user_data):
 
     attempt, completion_status = resource.grade_user(user)
 
-    if attempt.end_time is not None:
-        time = attempt.end_time
-    else:
-        try:
-            time = attempt.scormelements.first().time
-        except ObjectDoesNotExist:
-            time = attempt.start_time
+    try:
+        time = attempt.scormelements.first().time
+    except ObjectDoesNotExist:
+        time = attempt.start_time
 
     time_offset = getattr(settings,'REPORT_SCORE_SUBTRACT_MINUTES',1) * timedelta(minutes=1)
     time -= time_offset
