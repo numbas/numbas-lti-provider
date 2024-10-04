@@ -1,6 +1,7 @@
 from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required, reverse_with_lti
 from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
+from numbas_lti.exceptions import LineItemDoesNotExist
 from numbas_lti.models import \
         Resource, LTI_13_ResourceLink, AccessToken, Exam, Attempt, \
         ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, \
@@ -25,6 +26,7 @@ from django.utils.text import slugify
 from django.views import generic
 from django_auth_lti.decorators import lti_role_required
 from pathlib import Path
+from pylti1p3.exception import LtiException
 import csv
 import datetime
 import json
@@ -289,19 +291,27 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
                 'access_tokens': AccessToken.objects.filter(user=student,resource=resource).count(),
             }
 
-        message_launch = self.get_message_launch()
-        if message_launch:
-            is_lti_13 = context['is_lti_13'] = True
-        else:
-            is_lti_13 = context['is_lti_13'] = False
+        is_lti_13 = False
+        try:
+            message_launch = self.get_message_launch()
+            if message_launch:
+                is_lti_13 = True
+        except LtiException:
+            pass
+
+        context['is_lti_13'] = is_lti_13
 
         extra_students = []
         ags_grades = None
         lti_context = resource.lti_13_contexts().first()
         if lti_context:
             ags = lti_context.get_ags()
-            lineitem = resource.get_lti_13_lineitem()
-            ags_grades = context['grades'] = ags.get_grades(lineitem)
+            try:
+                lineitem = resource.get_lti_13_lineitem()
+                ags_grades = context['grades'] = ags.get_grades(lineitem)
+            except LineItemDoesNotExist:
+                pass
+
             nrps_members = [m for m in lti_context.nrps_members() if m['student']]
             if nrps_members:
                 got_ids = [s for student in students for s in student.lti_13_aliases.all().values_list('sub', flat=True)]
