@@ -1323,7 +1323,7 @@ class Attempt(models.Model):
             True if:
                 * completion_status = 'completed'
                 * or the resource is not available to the student
-                * or the student has not re-opened the attempt
+                * or the due date has passed and the student has not re-opened the attempt
         """
 
         if self.completion_status == 'completed':
@@ -1331,6 +1331,10 @@ class Attempt(models.Model):
 
         if not self.resource.is_available(self.user):
             return True
+
+        availability = self.resource.available_for_user(self.user)
+        if availability.due_date is None or availability.due_date > timezone.now():
+            return False
 
         return not self.student_has_reopened()
 
