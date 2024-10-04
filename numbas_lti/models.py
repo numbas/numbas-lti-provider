@@ -1317,9 +1317,40 @@ class Attempt(models.Model):
         return data
 
     def completed(self):
+        r"""
+            Should this attempt be considered as completed?
+
+            True if:
+                * completion_status = 'completed'
+                * or the resource is not available to the student
+                * or the student has not re-opened the attempt
+        """
+
+        if self.completion_status == 'completed':
+            return True
+
         if not self.resource.is_available(self.user):
             return True
-        return self.completion_status=='completed'
+
+        return not self.student_has_reopened()
+
+    def student_has_reopened(self):
+        """
+            Has the student re-opened this attempt?
+
+            True if the most recent completion status element was created after the due date and is 'incomplete'.
+        """
+
+        availability = self.resource.available_for_user(self.user)
+        if availability.due_date is None:
+            return False
+
+        try:
+            e = self.scormelements.current('cmi.completion_status')
+        except ScormElement.DoesNotExist:
+            return True
+
+        return e.value == 'incomplete' and e.time > availability.due_date
 
     def student_can_reopen(self):
         if not self.completed():
