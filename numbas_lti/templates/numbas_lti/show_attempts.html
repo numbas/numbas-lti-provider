@@ -70,7 +70,12 @@
                 {% for attempt in object_list %}
                 <tr>
                     <td>{% time_tag attempt.start_time %}</td>
-                    <td>{{attempt.get_completion_status_display}}</td>
+                    <td>
+                        {{attempt.get_completion_status_display}}
+                        {% if attempt.student_has_reopened %}
+                        <small>({% translate "Re-opened" %})</small>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if attempt.should_show_scores %}
                             {{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}})
