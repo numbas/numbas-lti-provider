@@ -1,11 +1,12 @@
 from . import requests_session
 from .exceptions import LineItemDoesNotExist
+from datetime import timedelta
 import requests
 from requests_oauthlib import OAuth1
 import uuid
-from django.utils.timezone import now
-from django.utils.translation import gettext as _
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext as _
 
 from hashlib import sha1
 from base64 import b64encode
@@ -77,7 +78,14 @@ def report_outcome_lti_13(resource, user_data):
 
     attempt, completion_status = resource.grade_user(user)
 
-    time = now()
+    if attempt.end_time is not None:
+        time = attempt.end_time
+    else:
+        try:
+            time = attempt.scormelements.first().time
+        except ObjectDoesNotExist:
+            time = attempt.start_time
+
     time_offset = getattr(settings,'REPORT_SCORE_SUBTRACT_MINUTES',1) * timedelta(minutes=1)
     time -= time_offset
 
@@ -96,16 +104,18 @@ def report_outcome_lti_13(resource, user_data):
 
     user_alias = user.lti_13_aliases.first()
 
-    from django.utils.timezone import now
-
     # TODO - save the last time the score changed. This could be due to a "cmi.score.raw" element being saved, or a Remark/DiscountPart object being created/updated/deleted.
     grade = Grade()\
         .set_score_given(attempt.raw_score)\
         .set_score_maximum(attempt.max_score)\
-        .set_timestamp(now().strftime('%Y-%m-%dT%H:%M:%S+0000'))\
+        .set_timestamp(time)\
+        .set_started_at(attempt.start_time)\
         .set_activity_progress(activity_progress)\
         .set_grading_progress(grading_progress)\
         .set_user_id(user_alias.sub)
+
+    if attempt.end_time:
+        grade = grade.set_submitted_at(attempt.end_time - time_offset)
 
     consumer = user_data.consumer
 
