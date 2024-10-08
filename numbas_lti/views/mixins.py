@@ -176,7 +176,7 @@ def lti_role_or_superuser_required(allowed_roles, redirect_url=reverse_lazy('not
             if request.user.is_superuser or is_allowed(request, allowed_roles, raise_exception):
                 return view_func(request, *args, **kwargs)
             
-            return redirect(redirect_url+'?originalurl='+urllib.parse.quote(self.request.path+'?'+self.request.META.get('QUERY_STRING','')))
+            return redirect(redirect_url+'?originalurl='+urllib.parse.quote(request.path+'?'+request.META.get('QUERY_STRING','')))
         return _wrapped_view
     return decorator
 
