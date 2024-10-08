@@ -274,7 +274,12 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
                 subs = student.lti_13_aliases.all().values_list('sub', flat=True)
                 grades = [g for g in ags_grades if g['userId'] in subs]
                 grade = grades[0] if grades else None
-                reported_score = (grade['resultScore'] / grade['resultMaximum']) if grade else None
+                if grade:
+                    score = grade.get('resultScore', 0)
+                    max_score = grade.get('resultMaximum', 0)
+                    reported_score = (score / max_score) if max_score > 0 else 0
+                else:
+                    reported_score = 0
                 score_not_reported = reported_score != score
             else:
                 reported_score = lti_data.last_reported_score
