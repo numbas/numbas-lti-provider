@@ -173,7 +173,18 @@ def lti_role_or_superuser_required(allowed_roles, redirect_url=reverse_lazy('not
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            if request.user.is_superuser or is_allowed(request, allowed_roles, raise_exception):
+            def check_allowed():
+                try:
+                    message_launch = request.lti_13_message_launch
+                    jwt_body = message_launch._get_jwt_body()
+                    for role in allowed_roles['lti_13']:
+                        if role(jwt_body).check():
+                            return True
+                except (AttributeError, LtiException):
+                    if is_allowed(request, allowed_roles['lti_11'], raise_exception=False):
+                        return True
+
+            if request.user.is_superuser or check_allowed():
                 return view_func(request, *args, **kwargs)
             
             return redirect(redirect_url+'?originalurl='+urllib.parse.quote(request.path+'?'+request.META.get('QUERY_STRING','')))
