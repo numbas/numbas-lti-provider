@@ -472,7 +472,9 @@ def grant_access_token(request,resource_id,user_id):
 def remove_access_token(request,resource_id,user_id):
     resource = Resource.objects.get(pk=resource_id)
     user = User.objects.get(id=user_id)
-    AccessToken.objects.filter(user=user,resource=resource).first().delete()
+    token = AccessToken.objects.filter(user=user,resource=resource).first()
+    if token:
+        token.delete()
 
     return redirect(reverse_with_lti(request, 'resource_dashboard',args=(resource.pk,)))
 
