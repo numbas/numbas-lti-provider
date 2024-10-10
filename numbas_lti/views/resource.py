@@ -313,7 +313,7 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
             ags = lti_context.get_ags()
             try:
                 lineitem = resource.get_lti_13_lineitem()
-                ags_grades = context['grades'] = ags.get_grades(lineitem)
+                ags_grades = context['grades'] = list(ags.get_grades(lineitem))
             except LineItemDoesNotExist:
                 pass
 
