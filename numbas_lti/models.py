@@ -306,12 +306,12 @@ class Exam(ExtractPackage):
             }[setting]
 
         info = [
-            (_('Maximum available score'),  get(feedback,'showTotalMark', 'always')),
-            (_('Whether answers are correct'),  get(feedback,'showAnswerState', 'always')),
-            (_('Awarded scores'),  get(feedback,'showActualMark', 'always')),
-            (_('Feedback messages for each question part'), get(feedback, 'showPartFeedbackMessages', 'always')),
-            (_('Expected answers to each part'), get(feedback, 'revealExpectedAnswers', 'inreview')),
-            (_('Advice for each question'), get(feedback, 'revealAdvice', 'inreview')),
+            (_('Maximum available score'),  get(feedback,'showTotalMarkWhen', 'always')),
+            (_('Whether answers are correct'),  get(feedback,'showAnswerStateWhen', 'always')),
+            (_('Awarded scores'),  get(feedback,'showActualMarkWhen', 'always')),
+            (_('Feedback messages for each question part'), get(feedback, 'showPartFeedbackMessagesWhen', 'always')),
+            (_('Expected answers to each part'), get(feedback, 'showExpectedAnswersWhen', 'inreview')),
+            (_('Advice for each question'), get(feedback, 'showAdviceWhen', 'inreview')),
         ]
 
         return info

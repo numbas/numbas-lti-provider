@@ -1,5 +1,6 @@
 :root {
     --readable-width: 80ch;
+    --readable-label-width: 30ch;
     --font-size: 18px;
     --font-family: sans-serif;
     --spacing: 0.5rem;

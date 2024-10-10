@@ -131,6 +131,13 @@ input:not([type="hidden"]), select, textarea {
     width: 100%;
 }
 
+input[type="number"] {
+    width: 5em;
+    text-align: center;
+}
+
+
+
 textarea {
     resize: vertical;
 }
@@ -229,8 +236,18 @@ table.fixed {
 }
 
 table.sticky-header thead th {
-  position: sticky;
-  top: 0;
+    position: sticky;
+    top: 0;
+}
+
+th {
+    max-width: var(--readable-label-width);
+}
+
+caption {
+    font-weight: bold;
+    padding: var(--spacing);
+    font-size: 1.2em;
 }
 
 
@@ -353,6 +370,7 @@ form.big .fieldsets {
 
 form.big label {
     margin: 0;
+    max-width: var(--readable-label-width);
 }
 
 dl {

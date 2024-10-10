@@ -150,6 +150,7 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
         showResultsPage = get(nav,'showResultsPage', 'oncompletion')
         duration = get(content,'duration', 0)
         percentPass = get(content,'percentPass', 0)
+
         info = {
             'hasPercentPass': percentPass and percentPass != '0',
             'percentPass':  percentPass,
@@ -172,15 +173,31 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
 
             'allowPause':  get(timing,'allowPause', False),
 
-            'showActualMark':  get(feedback,'showActualMark', False),
-            'showTotalMark':  get(feedback,'showTotalMark', False),
-            'showAnswerState':  get(feedback,'showAnswerState', False),
+            'showActualMarkWhen':  get(feedback,'showActualMarkWhen', 'always'),
+            'showTotalMarkWhen':  get(feedback,'showTotalMarkWhen', 'always'),
+            'showAnswerStateWhen':  get(feedback,'showAnswerStateWhen', 'always'),
+            'showPartFeedbackMessagesWhen': get(feedback, 'showPartFeedbackMessagesWhen', 'always'),
             'allowRevealAnswer':  get(feedback,'allowRevealAnswer', False),
-            'reviewShowScore':  get(feedback,'reviewShowScore', True),
-            'reviewShowFeedback':  get(feedback,'reviewShowFeedback', True),
-            'reviewShowAdvice':  get(feedback,'reviewShowAdvice', True),
-            'reviewShowExpectedAnswer': get(feedback,'reviewShowExpectedAnswer', True),
+            'enterReviewModeImmediately': get(feedback, 'enterReviewModeImmediately', True),
+            'showExpectedAnswersWhen': get(feedback, 'showExpectedAnswersWhen', 'inreview'),
+            'showAdviceWhen': get(feedback, 'showAdviceWhen', 'inreview'),
         }
+        enterReviewModeImmediately = info['enterReviewModeImmediately']
+        feedback_stages = {
+            'always': (True, True, True),
+            'oncompletion': (False, True, True),
+            'inreview': (False, enterReviewModeImmediately, True),
+            'never': (False, False, False),
+        }
+        info['feedback_info'] = [
+            (_('Answer correctness'), feedback_stages[info['showAnswerStateWhen']]),
+            (_('Awarded scores'), feedback_stages[info['showActualMarkWhen']]),
+            (_('Maximum scores'), feedback_stages[info['showTotalMarkWhen']]),
+            (_('Part feedback messages'), feedback_stages[info['showPartFeedbackMessagesWhen']]),
+            (_('Expected answers'), feedback_stages[info['showExpectedAnswersWhen']]),
+            (_('Question advice'), feedback_stages[info['showAdviceWhen']]),
+        ]
+
         return info
 
     def get_context_data(self,*args,**kwargs):
