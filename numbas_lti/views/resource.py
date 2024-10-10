@@ -275,9 +275,9 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
                 grades = [g for g in ags_grades if g['userId'] in subs]
                 grade = grades[0] if grades else None
                 if grade:
-                    score = grade.get('resultScore', 0)
-                    max_score = grade.get('resultMaximum', 0)
-                    reported_score = (score / max_score) if max_score > 0 else 0
+                    resultScore = grade.get('resultScore', 0)
+                    resultMaximum = grade.get('resultMaximum', 0)
+                    reported_score = (resultScore / resultMaximum) if resultMaximum > 0 else 0
                 else:
                     reported_score = 0
                 score_not_reported = reported_score != score
