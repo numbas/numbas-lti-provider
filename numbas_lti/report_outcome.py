@@ -79,7 +79,8 @@ def report_outcome_lti_13(resource, user_data):
     if attempt.end_time is not None:
         time = attempt.end_time
     else:
-        time = attempt.scormelements.first().time
+        time_element = attempt.scormelements.first()
+        time = time_element.time if time_element is not None else None
 
     activity_progress = {
         'not attempted': 'Initialized',
