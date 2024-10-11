@@ -1,6 +1,6 @@
 import string
 import re
-from datetime import timedelta
+from datetime import timedelta, datetime
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from django.http import QueryDict
 
@@ -86,3 +86,9 @@ def add_query_param(url,extras):
     )
     return url
     
+
+def iso_time(time: datetime) -> str:
+    """
+        Convert a datetime to an ISO format string if it's not None, otherwise return None.
+    """
+    return time.isoformat() if time else None
