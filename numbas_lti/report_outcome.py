@@ -4,9 +4,10 @@ from datetime import timedelta
 import requests
 from requests_oauthlib import OAuth1
 import uuid
+from django.utils.timezone import now
+from django.utils.translation import gettext as _
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.translation import gettext as _
 
 from hashlib import sha1
 from base64 import b64encode
@@ -78,11 +79,7 @@ def report_outcome_lti_13(resource, user_data):
 
     attempt, completion_status = resource.grade_user(user)
 
-    try:
-        time = attempt.scormelements.first().time
-    except ObjectDoesNotExist:
-        time = attempt.start_time
-
+    time = now()
     time_offset = getattr(settings,'REPORT_SCORE_SUBTRACT_MINUTES',1) * timedelta(minutes=1)
     time -= time_offset
 
