@@ -84,14 +84,14 @@ def report_outcome_lti_13(resource, user_data):
 
     activity_progress = {
         'not attempted': 'Initialized',
-        'incomplete': 'InProgress',
+        'incomplete': 'Initialized',
         'completed': 'Completed',
     }[completion_status]
 
     if completion_status == 'completed':
         grading_progress = 'FullyGraded'
     elif completion_status == 'incomplete':
-        grading_progress = 'Pending'
+        grading_progress = 'PendingManual'
     else:
         grading_progress = 'NotReady'
 
