@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('numbas_lti', '0094_lti_13_context_cached_lineitems_and_more'),
+        ('numbas_lti', '0095_alter_attempt_completion_status'),
     ]
 
     operations = [
@@ -24,10 +24,5 @@ class Migration(migrations.Migration):
             model_name='resource',
             name='due_date',
             field=models.DateTimeField(blank=True, help_text='At this time, any open attempts will automatically end. Students may review existing attempts or re-open them while the resource is available.', null=True, verbose_name='Due date'),
-        ),
-        migrations.AlterField(
-            model_name='attempt',
-            name='completion_status',
-            field=models.CharField(choices=[('not attempted', 'Not started'), ('incomplete', 'In progress'), ('completed', 'Complete')], default='not attempted', max_length=20),
         ),
     ]
