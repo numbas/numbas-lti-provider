@@ -3,6 +3,7 @@ from .exceptions import LineItemDoesNotExist
 import requests
 from requests_oauthlib import OAuth1
 import uuid
+from django.utils.timezone import now
 from django.utils.translation import gettext as _
 from django.conf import settings
 
@@ -76,11 +77,9 @@ def report_outcome_lti_13(resource, user_data):
 
     attempt, completion_status = resource.grade_user(user)
 
-    if attempt.end_time is not None:
-        time = attempt.end_time
-    else:
-        time_element = attempt.scormelements.first()
-        time = time_element.time if time_element is not None else None
+    time = now()
+    time_offset = getattr(settings,'REPORT_SCORE_SUBTRACT_MINUTES',1) * timedelta(minutes=1)
+    time -= time_offset
 
     activity_progress = {
         'not attempted': 'Initialized',
