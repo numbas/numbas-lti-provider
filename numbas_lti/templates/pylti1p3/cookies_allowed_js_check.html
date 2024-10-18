@@ -1,0 +1,87 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Checking for cookie access" %} - {{block.super}}{% endblock title %}
+
+{% block stylesheets %}
+{{block.super}}
+<style>
+    body:not([data-lti1p3-status="success"]) #lti1p3-success-msg,
+    body:not([data-lti1p3-status="failure"]) #lti1p3-failure-msg,
+    body:not([data-lti1p3-status="opened"]) #lti1p3-opened-msg {
+        display: none;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block javascripts %}
+    {{params|json_script:"urlParams"}}
+
+    <script type="text/javascript" defer>
+        const urlParams = JSON.parse(document.getElementById('urlParams').textContent)
+        var siteProtocol = '{{protocol}}';
+            var htmlEntities = {
+                "&lt;": "<",
+                "&gt;": ">",
+                "&amp;": "&",
+                "&quot;": '"',
+                "&#x27;": "'"
+            };
+
+            function getUpdatedUrl() {
+                const url = new URL(window.location);
+                for (var key in urlParams) {
+                    url.searchParams.set(key, urlParams[key]);
+                }
+                return url.toString();
+            }
+
+            function set_status(status) {
+                document.body.dataset.lti1p3Status = status;
+            }
+
+            function checkCookiesAllowed() {
+                var cookie = "lti1p3_test_cookie=1; path=/";
+                if (siteProtocol === 'https') {
+                    cookie = cookie + '; SameSite=None; secure';
+                }
+                document.cookie = cookie;
+                var cookie_set = document.cookie.indexOf("lti1p3_test_cookie") !== -1;
+
+                if (cookie_set) {
+                    set_status('success');
+                    document.cookie = "lti1p3_test_cookie=1; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+                    window.location.href = getUpdatedUrl();
+                } else {
+                    set_status('failure');
+                }
+            }
+
+            var newTabLink = document.getElementById("lti1p3-new-tab-link");
+            newTabLink.href = getUpdatedUrl();
+            newTabLink.onclick = function() {
+                set_status('opened');
+            };
+
+            checkCookiesAllowed();
+    </script>
+{% endblock javascripts %}
+
+{% block content %}
+    <header>
+        <h1>{% translate "Checking for cookie access" %}</h1>
+    </header>
+    <main>
+        <div id="lti1p3-success-msg">
+            {% translate "Your browser can set cookies here. Loading the content..." %}
+        </div>
+        <div id="lti1p3-failure-msg">
+            <p>{% translate "Your browser does not allow cookies to be set in this page." %}</p>
+            <p><a target="_blank" id="lti1p3-new-tab-link">{% translate "Click here to try opening the content in a new tab." %}</a></p>
+        </div>
+        <div id="lti1p3-opened-msg">
+            <p>{% translate "The content has been opened in a new tab." %}</p>
+            <p>{% translate "You can now close this page." %}</p>
+        </div>
+    </main>
+{% endblock content %}
