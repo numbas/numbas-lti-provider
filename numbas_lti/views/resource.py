@@ -289,6 +289,8 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
             score = attempt.scaled_score if attempt else 0
             lti_data = student.lti_data.filter(resource=resource).last()
 
+            last_report = student.reported_scores.filter(resource=resource).last()
+
             if ags_grades is not None:
                 subs = student.lti_13_aliases.all().values_list('sub', flat=True)
                 grades = [g for g in ags_grades if g['userId'] in subs]
@@ -309,6 +311,7 @@ class StudentProgressView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementView
                 'first_name': student.first_name,
                 'full_name': student.get_full_name(),
                 'reported_score': reported_score,
+                'last_report': last_report,
                 'score': score,
                 'lti_data': lti_data,
                 'attempts': Attempt.objects.filter(user=student,resource=resource).exclude(broken=True).count(),

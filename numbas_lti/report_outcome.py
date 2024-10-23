@@ -20,6 +20,8 @@ from pylti1p3.grade import Grade
 
 from lxml import etree
 
+from .models import ReportProcess, UserScoreReported, User
+
 class ReportOutcomeException(Exception):
     def __init__(self,user_data,error):
         self.error = error
@@ -55,24 +57,78 @@ class ReportOutcomeFailure(ReportOutcomeException):
         }
         self.message = _('Outcome report for user {user_name} failed; the LTI consumer said: {consumer_message}').format(**ctx)
 
+def report_all_resource_scores(resource):
+    if ReportProcess.objects.filter(resource=resource,status='reporting').exists():
+        return
+
+    process = ReportProcess.objects.create(resource=resource)
+
+    errors = []
+
+    try:
+        if resource.lti_13_links.exists():
+            resource.get_lti_13_lineitem(create=True)
+
+        for user in User.objects.filter(attempts__resource=resource, attempts__deleted=False).distinct():
+            try:
+                request = report_outcome(resource, user, report_process=process)
+            except ReportOutcomeException as e:
+                errors.append(e)
+
+    except Exception as e:
+        errors.append(e)
+
+    if len(errors):
+        process.status = 'error'
+        process.response = '\n'.join(str(e) for e in errors)
+    else:
+        process.status = 'complete'
+    process.dismissed = False
+    process.save(update_fields=['status','response','dismissed'])
+
+    return process
+
 def report_outcome_for_attempt(attempt):
     return report_outcome(attempt.resource,attempt.user)
 
-def report_outcome(resource, user):
+def report_outcome(resource, user, report_process=None) -> UserScoreReported:
+    """
+        Report the outcome of a student on a particular resource.
+        Returns a UserScoreReported object containing details about the report.
+        Calls either ``report_outcome_lti_13`` or ``report_outcome_lti_11`` depending on how the resource is linked to.
+        Those methods should fill in the UserScoreReported object.
+    """
     user_data = resource.user_data(user) 
+
+    score_report = UserScoreReported(
+        user=user,
+        resource=resource,
+        report_process=report_process
+    )
+
     try:
         if resource.lti_13_links.exists():
-            report_outcome_lti_13(resource, user_data)
+            report_outcome_lti_13(resource, user_data, score_report=score_report)
         elif resource.lti_11_links.exists():
-            report_outcome_lti_11(resource, user_data)
+            report_outcome_lti_11(resource, user_data, score_report=score_report)
     except requests.exceptions.ConnectionError as e:
-        raise ReportOutcomeConnectionError(e) from e
+        conn_err = ReportOutcomeConnectionError(e)
+        score_report.error = str(conn_err)
+        raise conn_err from e
     except requests.exceptions.Timeout as e:
-        raise ReportOutcomeTimeoutError(e) from e
+        timeout_err = ReportOutcomeTimeoutError(e)
+        score_report.error = str(timeout_err)
+        raise timeout_err from e
     except Exception as e:
-        raise ReportOutcomeException(user_data,e) from e
+        outcome_err = ReportOutcomeException(user_data,e)
+        score_report.error = str(e)
+        raise outcome_err from e
+    finally:
+        score_report.save()
 
-def report_outcome_lti_13(resource, user_data):
+    return score_report
+
+def report_outcome_lti_13(resource, user_data, score_report):
     tool_conf = DjangoDbToolConf()
 
     user = user_data.user
@@ -98,18 +154,32 @@ def report_outcome_lti_13(resource, user_data):
 
     user_alias = user.lti_13_aliases.first()
 
+    raw_score = attempt.raw_score
+    max_score = attempt.max_score
+    start_time = attempt.start_time
+    submitted_time = None
+
     # TODO - save the last time the score changed. This could be due to a "cmi.score.raw" element being saved, or a Remark/DiscountPart object being created/updated/deleted.
     grade = Grade()\
-        .set_score_given(attempt.raw_score)\
-        .set_score_maximum(attempt.max_score)\
+        .set_score_given(raw_score)\
+        .set_score_maximum(max_score)\
         .set_timestamp(time)\
-        .set_started_at(attempt.start_time)\
+        .set_started_at(start_time)\
         .set_activity_progress(activity_progress)\
         .set_grading_progress(grading_progress)\
         .set_user_id(user_alias.sub)
 
     if attempt.end_time:
-        grade = grade.set_submitted_at(attempt.end_time - time_offset)
+        submitted_time = attempt.end_time - time_offset
+        grade = grade.set_submitted_at(submitted_time)
+
+    score_report.attempt = attempt
+    score_report.time = time
+    score_report.raw_score = raw_score
+    score_report.max_score = max_score
+    score_report.completion_status = completion_status
+    score_report.start_time = start_time
+    score_report.submitted_time = submitted_time
 
     consumer = user_data.consumer
 
@@ -122,7 +192,7 @@ def report_outcome_lti_13(resource, user_data):
 
     ags.put_grade(grade, lineitem)
 
-def report_outcome_lti_11(resource,user_data):
+def report_outcome_lti_11(resource,user_data, score_report):
 
     template = """<?xml version = "1.0" encoding = "UTF-8"?>
     <imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0">
@@ -157,6 +227,13 @@ def report_outcome_lti_11(resource,user_data):
     message_identifier = uuid.uuid4().int & (1<<64)-1
     attempt, completion_status = resource.grade_user(user)
     result = attempt.scaled_score
+
+    score_report.attempt = attempt
+    score_report.time = now()
+    score_report.raw_score = attempt.raw_score
+    score_report.max_score = attempt.max_score
+    score_report.completion_status = completion_status
+    score_report.start_time = attempt.start_time
 
     if user_data.lti_11.lis_result_sourcedid:
         request_xml = template.format(message_identifier=message_identifier,sourcedId=user_data.lti_11.lis_result_sourcedid,result=result)

@@ -42,7 +42,6 @@ from zipfile import ZipFile
 from . import requests_session
 from .exceptions import LineItemDoesNotExist
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
-from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
 from .util import parse_scorm_timeinterval, iso_time, time_from_iso
 from .examparser import numbasobject
@@ -761,30 +760,6 @@ class Resource(models.Model):
 
     def receipt_salt(self):
         return 'numbas_lti:resource:'+str(self.pk)
-
-    def report_scores(self):
-        if ReportProcess.objects.filter(resource=self,status='reporting').exists():
-            return
-
-        process = ReportProcess.objects.create(resource=self)
-
-        if self.lti_13_links.exists():
-            self.get_lti_13_lineitem(create=True)
-
-        errors = []
-        for user in User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct():
-            try:
-                request = report_outcome(self,user)
-            except ReportOutcomeException as e:
-                errors.append(e)
-
-        if len(errors):
-            process.status = 'error'
-            process.response = '\n'.join(e.message for e in errors)
-        else:
-            process.status = 'complete'
-        process.dismissed = False
-        process.save(update_fields=['status','response','dismissed'])
 
     def task_report_scores(self):
         from . import tasks
@@ -1638,10 +1613,6 @@ class Attempt(models.Model):
         self.sent_receipt = True
         self.save(update_fields=['sent_receipt'])
  
-    def report_outcome(self):
-        report_outcome(self.resource,self.user)
-
-
 class AttemptLaunch(models.Model):
     attempt = models.ForeignKey(Attempt,related_name='launches', on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
@@ -1948,3 +1919,29 @@ class FileReport(models.Model):
 
     def expiry_date(self):
         return self.creation_time + timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)
+
+
+class UserScoreReported(models.Model):
+    """
+        A record of the fact that a student's score for a resource was reported back to the consumer.
+    """
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='reported_scores')
+    resource = models.ForeignKey(Resource,on_delete=models.CASCADE,related_name='user_scores_reported')
+    attempt = models.ForeignKey(Attempt, on_delete=models.SET_NULL, null=True, help_text=_('Attempt whose score was used for this report.'))
+    report_process = models.ForeignKey(ReportProcess, on_delete=models.SET_NULL, null=True, help_text=_('Resource score reporting process that this was a part of.'), related_name='user_score_reports')
+    time = models.DateTimeField(auto_now_add=True, help_text=_('The time that the score was reported.'))
+    error = models.TextField(blank=True, null=True, verbose_name=_('Error message'), help_text=_('The text of any error message returned by the consumer.'))
+    raw_score = models.FloatField()
+    max_score = models.FloatField()
+    completion_status = models.CharField(max_length=20,choices=COMPLETION_STATUSES)
+    start_time = models.DateTimeField()
+    submitted_time = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('time',)
+
+    def __str__(self):
+        s = _('Score of {raw_score}/{max_score} ({completion_status}) by {user_name} on {resource} reported at {time}').format(raw_score=self.raw_score, max_score=self.max_score, completion_status=self.completion_status, user_name=self.user.get_full_name(), resource=str(self.resource), time=self.time)
+        if self.error:
+            s += _(' failed: {error_msg}').format(error_msg=self.error)
+        return s

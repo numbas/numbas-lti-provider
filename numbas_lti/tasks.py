@@ -10,7 +10,7 @@ from huey import crontab
 from huey.contrib.djhuey import periodic_task, task, db_periodic_task, db_task
 import json
 import logging
-from numbas_lti.report_outcome import ReportOutcomeException
+from numbas_lti.report_outcome import ReportOutcomeException, report_outcome, report_all_resource_scores
 from numbas_lti.models import Attempt, ScormElement, diff_scormelements, FileReport, EditorLink, Resource
 import re
 
@@ -33,14 +33,14 @@ def send_attempt_completion_receipt(attempt):
 def resource_report_scores(resource):
     logger.debug(f"Report scores for resource {resource}")
     resource = Resource.objects.get(pk=resource.pk)
-    resource.report_scores()
+    report_all_resource_scores(resource)
 
 @db_task(priority=200)
 def attempt_report_outcome(attempt):
     logger.debug(f"Report score for attempt {attempt}")
     attempt = Attempt.objects.get(pk=attempt.pk)
     try:
-        attempt.report_outcome()
+        report_outcome(attempt.resource, attempt.user)
     except ReportOutcomeException:
         pass
 
@@ -62,7 +62,9 @@ def diff_suspend_data():
 
 @db_task(priority=10)
 def scorm_set_score(element, fetch=False):
-    attempt = element.attempt
+    attempt = Attempt.objects.get(pk=element.attempt.pk)
+
+    logger.debug(f"Set score for attempt {attempt}")
 
     if fetch:
         try:
@@ -70,13 +72,12 @@ def scorm_set_score(element, fetch=False):
         except ScormElement.DoesNotExist:
             return
 
-    logger.debug(f"Set score for attempt {attempt}")
     try:
         score = float(element.value)
     except ValueError:
         return
 
-    if score == attempt.scaled_score:
+    if element == attempt.scaled_score_element:
         return
 
     attempt.scaled_score_element = element
@@ -103,7 +104,7 @@ def scorm_set_completion_status(element):
         update_fields.append('end_time')
     attempt.save(update_fields=update_fields)
 
-    if attempt.resource.report_mark_time == 'oncompletion' and attempt.completion_status=='completed':
+    if attempt.resource.report_mark_time in ('oncompletion', 'immediately') and attempt.completion_status=='completed':
         attempt_report_outcome.schedule((attempt,),delay=0.1)
 
 @db_task(priority=9)
