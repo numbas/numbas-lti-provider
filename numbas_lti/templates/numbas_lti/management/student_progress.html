@@ -3,6 +3,9 @@
 {% load icon %}
 {% load percentage %}
 {% load querystring %}
+{% load time_tag %}
+
+{% block body_class %}student-progress {{block.super}}{% endblock %}
 
 {% block title %}{% translate "Student progress" %} - {{block.super}}{% endblock title %}
 
@@ -23,39 +26,49 @@
                     {% if not unlimited_attempts %}
                     <th scope="col" colspan="2">{% translate "Access tokens" %}</th>
                     {% endif %}
+                    <th scope="col">{% translate "Comments" %}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for data in student_summary %}
                 <tr data-student="{{data.full_name}}">
-                    <td>{{data.full_name}}</td>
+                    <td class="name">{{data.full_name}}</td>
                     {% if data.attempts > 0 %}
-                    <td>
+                    <td class="score">
                         {{data.score|percentage}}
                     </td>
-                    <td class="{% if data.reported_score != data.score %}warning{% endif %}">
+                    <td class="reported-score {% if data.reported_score != data.score %}warning{% endif %}">
                         {% if data.reported_score is not None %}
                             {{data.reported_score|percentage}}
                         {% endif %}
                         {% if data.reported_score != data.score %}
                         {% icon 'warning-sign' %} <span class="sr-only">{% translate "This score has not been reported to the grade book yet." %}</span>
                         {% endif %}
+
+                        {% if data.last_report %}
+                        {% blocktranslate with time=data.last_report.time|time_tag|safe %}at {{time}}{% endblocktranslate %}
+                        {% endif %}
                     </td>
                     {% else %}
-                    <td colspan="2">
+                    <td colspan="2" class="not-attempted">
                         {% translate "Not attempted" %}
                     </td>
                     {% endif %}
-                    <td>{{data.attempts}}</td>
+                    <td class="attempts">{{data.attempts}}</td>
                     {% if not unlimited_attempts %}
-                    <td>{{data.access_tokens}}</td>
-                    <td>
+                    <td class="access-tokens">{{data.access_tokens}}</td>
+                    <td class="access-token-buttons">
                         {% if data.pk %}
                         <a class="button warning" href="{% url_with_lti 'grant_access_token' resource.pk data.pk %}" title="{% blocktranslate with user_name=data.full_name %}Grant an access token to {{user_name}}{% endblocktranslate %}">{% icon 'plus' %}</a>
                         {% if data.access_tokens %}<a class="button danger" href="{% url_with_lti 'remove_access_token' resource.pk data.pk %}" title="{% translate "Remove an access token" %}">{% icon 'minus-sign' %}</a>{% endif %}
                         {% endif %}
                     </td>
                     {% endif %}
+                    <td class="comment">
+                        {% if data.last_report and data.last_report.error %}
+                        <p class="warning">{% blocktranslate with error=data.last_report.error %}There was an error reporting the student's score back to the LTI consumer: <code>{{error}}</code>{% endblocktranslate %}</p>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

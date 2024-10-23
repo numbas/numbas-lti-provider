@@ -636,6 +636,10 @@ body.show-attempts table.attempts form {
     display: inline;
 }
 
+body.student-progress #students td.comment {
+    max-width: 20em;
+}
+
 .card-list {
     display: flex;
     flex-wrap: wrap;
