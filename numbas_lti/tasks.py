@@ -205,7 +205,7 @@ def resource_scores_csv_report(fr):
     for student in resource.students().all():
         user_data = resource.user_data(student)
         username = '' if user_data is None else user_data.get_source_id()
-        attempt, completion_status = resource.grade_user(student)
+        attempt, completion_status, submitted_at = resource.grade_user(student)
         scaled_score = attempt.scaled_score
         student_attempts = resource.attempts.filter(user=student)
         max_score = max(a.max_score for a in student_attempts) if student_attempts.exists() else 0
