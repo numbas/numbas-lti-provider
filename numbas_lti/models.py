@@ -582,9 +582,11 @@ class Resource(models.Model):
 
         attempt = attempts.order_by(methods[self.grading_method]).first()
 
-        completion_status = attempt.completion_status if self.is_available(user) else 'completed'
+        completion_status = 'completed' if attempt.completed() else attempt.completion_status
 
-        return attempt, completion_status
+        submitted_at = attempt.get_end_time()
+
+        return attempt, completion_status, submitted_at
 
     def students(self):
         return User.objects.filter(attempts__resource=self, attempts__deleted=False).distinct().order_by('last_name','first_name')
@@ -1340,9 +1342,42 @@ class Attempt(models.Model):
 
         return self.resource.allow_student_reopen
 
+    def get_end_time(self):
+        """ When did this attempt end? Either explicitly set, or computed based on the availability and due dates for attempts which weren't ended by the student.
+        """
+
+        if not self.completed():
+            return None
+
+        # If attempt was automatically ended by the client, use the time it set.
+        try:
+            end_time_element = self.scormelements.current('x.end_time')
+            return datetime.fromisoformat(end_time_element.value)
+        except ScormElement.DoesNotExist:
+            pass
+
+        # If attempt was ended by the student, use the time that they did that.
+        try:
+            completion_element = self.scormelements.current('cmi.completion_status')
+            if completion_element.value == 'completed':
+                return completion_element.time
+        except ScormElement.DoesNotExist:
+            pass
+
+        # If the attempt has implicitly ended because the due date has passed or it's unavailable, use those times.
+        now = timezone.now()
+        resource = self.resource
+        # If the due date hasn't passed, or the student has since reopened the attempt, use available_until
+        if self.student_has_reopened() or resource.due_date is None or now < resource.due_date:
+            return resource.available_until
+        elif resource.due_date is not None:
+            return resource.due_date
+
+        return now
+
     def finalise(self):
         if self.end_time is None:
-            self.end_time = timezone.now()
+            self.end_time = self.get_end_time()
 
             self.save(update_fields=['end_time'])
 
@@ -1370,9 +1405,10 @@ class Attempt(models.Model):
             RemarkedScormElement.objects.create(element=e, user=reopened_by)
 
         self.completion_status = 'incomplete'
+        self.end_time = None
         self.sent_receipt = False
         self.receipt_time = None
-        self.save(update_fields=('completion_status', 'sent_receipt', 'receipt_time',))
+        self.save(update_fields=('completion_status', 'end_time', 'sent_receipt', 'receipt_time',))
 
     @property
     def raw_score(self):
@@ -1942,6 +1978,8 @@ class UserScoreReported(models.Model):
 
     def __str__(self):
         s = _('Score of {raw_score}/{max_score} ({completion_status}) by {user_name} on {resource} reported at {time}').format(raw_score=self.raw_score, max_score=self.max_score, completion_status=self.completion_status, user_name=self.user.get_full_name(), resource=str(self.resource), time=self.time)
+        if self.submitted_time is not None:
+            s += _(' submitted at {submitted_time}').format(submitted_time=self.submitted_time)
         if self.error:
             s += _(' failed: {error_msg}').format(error_msg=self.error)
         return s

@@ -192,9 +192,9 @@ SCORM_API.prototype = {
         }
         var try_final_ajax_again_button = document.getElementById('try-final-ajax-again');
         if(try_final_ajax_again_button) {
-            try_final_ajax_again_button.addEventListener('click', function() {
+            try_final_ajax_again_button.addEventListener('click', () => {
                 try_final_ajax_again_button.disabled = true;
-                sc.send_ajax(true).finally(function() {
+                this.send_ajax(true).finally(function() {
                     try_final_ajax_again_button.disabled = false;
                 });
             });
@@ -311,7 +311,8 @@ SCORM_API.prototype = {
 
     /** Force the exam to end.
      */
-    end: function(reason) {
+    end: function(reason, end_time) {
+        this.SetValue('x.end_time', end_time.toISO());
         this.SetValue('cmi.completion_status','completed');
         if(reason!==undefined) {
             this.SetValue('x.reason ended',reason);
@@ -393,13 +394,13 @@ SCORM_API.prototype = {
 
         if(this.mode=='normal') {
             if(!this.is_available()) {
-                this.end('not available');
+                this.end('not available', this.when_availability_changed());
             }
 
             var now = get_now();
             // Close the attempt when the due date passes, if the attempt wasn't launched after the due date.
             if(this.due_date !== undefined && !this.launched_after_due_date && now >= this.due_date) {
-                this.end('due date passed');
+                this.end('due date passed', this.due_date);
             }
 
         }
@@ -497,6 +498,19 @@ SCORM_API.prototype = {
         } else {
             return now <= this.available_until || now >= this.available_from;
         }
+    },
+
+    /** If the attempt is unavailable, when did it become unavailable?
+     *  Returns undefined if the attempt is currently available.
+     *
+     * @returns {Date}
+     */
+    when_availability_changed: function() {
+        if(this.offline) {
+            return true;
+        }
+
+        return this.available_until;
     },
 
     /** Call when we send a batch of elements

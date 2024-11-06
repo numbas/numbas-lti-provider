@@ -133,10 +133,14 @@ def report_outcome_lti_13(resource, user_data, score_report):
 
     user = user_data.user
 
-    attempt, completion_status = resource.grade_user(user)
+    attempt, completion_status, submitted_at = resource.grade_user(user)
+
+    time_offset = getattr(settings,'REPORT_SCORE_SUBTRACT_MINUTES',1) * timedelta(minutes=1)
+
+    if submitted_at is not None:
+        submitted_at -= time_offset
 
     time = now()
-    time_offset = getattr(settings,'REPORT_SCORE_SUBTRACT_MINUTES',1) * timedelta(minutes=1)
     time -= time_offset
 
     activity_progress = {
@@ -157,7 +161,6 @@ def report_outcome_lti_13(resource, user_data, score_report):
     raw_score = attempt.raw_score
     max_score = attempt.max_score
     start_time = attempt.start_time
-    submitted_time = None
 
     # TODO - save the last time the score changed. This could be due to a "cmi.score.raw" element being saved, or a Remark/DiscountPart object being created/updated/deleted.
     grade = Grade()\
@@ -169,9 +172,8 @@ def report_outcome_lti_13(resource, user_data, score_report):
         .set_grading_progress(grading_progress)\
         .set_user_id(user_alias.sub)
 
-    if attempt.end_time:
-        submitted_time = attempt.end_time - time_offset
-        grade = grade.set_submitted_at(submitted_time)
+    if submitted_at is not None:
+        grade = grade.set_submitted_at(submitted_at)
 
     score_report.attempt = attempt
     score_report.time = time
@@ -179,7 +181,7 @@ def report_outcome_lti_13(resource, user_data, score_report):
     score_report.max_score = max_score
     score_report.completion_status = completion_status
     score_report.start_time = start_time
-    score_report.submitted_time = submitted_time
+    score_report.submitted_time = submitted_at
 
     consumer = user_data.consumer
 
@@ -225,7 +227,7 @@ def report_outcome_lti_11(resource,user_data, score_report):
     if user.is_anonymous:
         raise ReportOutcomeException(None,'User is anonymous')
     message_identifier = uuid.uuid4().int & (1<<64)-1
-    attempt, completion_status = resource.grade_user(user)
+    attempt, completion_status, submitted_at = resource.grade_user(user)
     result = attempt.scaled_score
 
     score_report.attempt = attempt
