@@ -316,6 +316,24 @@ class Exam(ExtractPackage):
 
         return info
 
+    def part_hierarchy(self):
+        data = self.source()
+
+        hierarchy = {}
+        qn = 0
+        for qg in data.get('question_groups',[]):
+            for q in qg.get('questions',[]):
+                qd = hierarchy[qn] = {}
+                for i,part in enumerate(q.get('parts',[])):
+                    p = {'gaps': [], 'steps': []}
+                    if part['type'] == 'gapfill':
+                        p['gaps'] = list(range(len(part.get('gaps',[]))))
+                    p['steps'] = list(range(len(part.get('steps',[]))))
+                    qd[i] = p
+                qn += 1
+        
+        return hierarchy
+
 
 GRADING_METHODS = [
     ('highest',_('Highest score')),
@@ -672,33 +690,9 @@ class Resource(models.Model):
         return LTIUserData.objects.filter(resource=self,user=user).last()
 
     def part_hierarchy(self):
-        """
-            Returns an object
-                {
-                    question_num: {
-                        part_num: {
-                            gaps: [list of gap indices],
-                            steps: [list of step indices]
-                        }
-                    }
-                }
-        """
-        paths = sorted(set(e['value'] for e in ScormElement.objects.filter(attempt__resource=self,key__regex=r'cmi.interactions.[0-9]+.id').values('value')),key=lambda x:(len(x),x))
-        re_path = re.compile(r'q([0-9]+)p([0-9]+)(?:g([0-9]+)|s([0-9]+))?')
-        out = defaultdict(lambda: defaultdict(lambda: {'gaps':[],'steps':[]}))
-        for path in paths:
-            m = re_path.match(path)
-            question_index = m.group(1)
-            part_index = m.group(2)
-            gap_index = m.group(3)
-            step_index = m.group(4)
-            p = out[question_index][part_index]
-            if m.group(3):
-                p['gaps'].append(gap_index)
-            elif m.group(4):
-                p['steps'].append(step_index)
-    
-        return out
+        if self.exam is None:
+            return {}
+        return self.exam.part_hierarchy()
 
     def last_activity(self):
         if self.attempts.exists():
@@ -1362,6 +1356,7 @@ class Attempt(models.Model):
         return self.resource.discounted_parts.filter(part=part).first()
 
     def part_paths(self):
+        """ Paths to all parts in this attempt. """
         return set(e['value'] for e in self.scormelements.filter(key__regex='cmi.interactions.[0-9]+.id').values('value').distinct())
 
     def part_hierarchy(self):

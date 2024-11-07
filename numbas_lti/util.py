@@ -24,6 +24,11 @@ def hierarchy_key(x):
         return key
 
 def transform_part_hierarchy(hierarchy,transform,hierarchy_key=hierarchy_key):
+    """ 
+        Transform the part hierarchy of an exam.
+        ``hierarchy`` is a dictionary Dict[question_number:int -> Dict[part_number:int -> Dict["gaps" -> list[int], "steps" -> list[int]]]].
+        For each part in the hierarchy, the function ``transform`` is called with information about that part.
+    """
     out = []
 
     def row(q,p=None,g=None,parent=None,has_gaps=False):

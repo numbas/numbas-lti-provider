@@ -211,6 +211,8 @@ class DashboardView(HelpLinkMixin, MustHaveExamMixin,ResourceManagementViewMixin
 
         context['num_unbroken_attempts'] = resource.attempts.exclude(broken=True).count()
 
+        context['has_attempts'] = resource.attempts.exists()
+
         if not resource.lineitem_unwanted and resource.lti_13_links.exists():
             lti_context = resource.lti_13_contexts().first()
             if lti_context:

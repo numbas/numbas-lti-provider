@@ -37,7 +37,7 @@
         {% endif %}
     </section>
 
-    {% if resource.attempts.count %}
+    {% if has_attempts %}
 
         <section id="attempts-count">
             <p><strong>{{resource.unbroken_attempts.count}}</strong> {% blocktranslate count counter=resource.unbroken_attempts.count %}attempt{% plural %}attempts{% endblocktranslate %} {% translate "by" %} <strong>{{students.count}}</strong> {% blocktranslate count counter=students.count %}student{% plural %}students{% endblocktranslate %}.</p>
@@ -66,8 +66,15 @@
         </section>
         {% endif %}
 
-        <section>
-            <ul class="list-unstyled actions">
+    {% else %}
+        <section id="attempts-count">
+            <p>{% translate "No students have attempted this exam yet. Information about scores will appear here once a student attempts this exam." %}</p>
+        </section>
+    {% endif %}
+
+    <section>
+        <ul class="list-unstyled actions">
+            {% if has_attempts %}
                 <li><form method="POST" action="{% url_with_lti 'scores_csv' resource.pk %}">{% csrf_token %}<button type="submit" class="button info">{% icon 'save' %} {% translate "Download scores as CSV" %}</button></form></li>
                 {% if not last_report_process %}
                 <li>
@@ -77,22 +84,19 @@
                     {% endif %}
                 </li>
                 {% endif %}
-                <li><a class="button" href="{% url_with_lti 'student_progress' resource.pk %}">{% icon 'user' %} {% translate "View individual student progress and grant access tokens" %}</a></li>
-                <li>
-                    <a class="button danger" href="{% url_with_lti 'discount_parts' resource.pk %}">{% icon 'minus-sign' %} {% translate "Discount question parts" %}</a>
-                    <span class="help-block">{% translate "You can remark individual attempts on the attempts page." %}</span>
-                </li>
-                <li>
-                    <a class="button info" href="{% url_with_lti 'validate_receipt' resource.pk %}">{% icon 'ok' %} {% translate "Validate a receipt code" %}</a>
-                </li>
-            </ul>
-        </section>
-
-    {% else %}
-        <section id="attempts-count">
-            <p>{% translate "No students have attempted this exam yet. Information about scores will appear here once a student attempts this exam." %}</p>
-        </section>
-    {% endif %}
+            {% endif %}
+            <li><a class="button" href="{% url_with_lti 'student_progress' resource.pk %}">{% icon 'user' %} {% translate "View individual student progress and grant access tokens" %}</a></li>
+            <li>
+                <a class="button danger" href="{% url_with_lti 'discount_parts' resource.pk %}">{% icon 'minus-sign' %} {% translate "Discount question parts" %}</a>
+                <span class="help-block">{% translate "You can remark individual attempts on the attempts page." %}</span>
+            </li>
+            {% if has_attempts %}
+            <li>
+                <a class="button info" href="{% url_with_lti 'validate_receipt' resource.pk %}">{% icon 'ok' %} {% translate "Validate a receipt code" %}</a>
+            </li>
+            {% endif %}
+        </ul>
+    </section>
 
     {% if exam_info %}
     <hr>
