@@ -1,9 +1,11 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
+from huey.contrib.djhuey import HUEY
 import logging
 from lxml import etree
 import os
@@ -19,6 +21,7 @@ from .models import Exam, ScormElement, Resource, Attempt, ExtractPackage, FileR
 
 logger = logging.getLogger(__name__)
 
+AUTOMATIC_SCORE_REPORT_DELAY_MINUTES = timedelta(minutes=getattr(settings,'AUTOMATIC_SCORE_REPORT_DELAY_MINUTES', 5))
 
 @receiver(models.signals.post_save)
 def extract_package(sender,instance,**kwargs):
@@ -43,6 +46,59 @@ def set_exam_name_from_package(sender,instance,**kwargs):
                 instance.retrieve_url = f.read().strip().decode('utf-8')
         except KeyError:
             pass
+
+def cancel_tasks(predicate):
+    for t in HUEY.scheduled():
+        if predicate(t) and not HUEY.is_revoked(t):
+            HUEY.revoke(t)
+
+def schedule_report_for_access_change(ac):
+    # Cancel any previously scheduled tasks to report scores for this access change.
+    cancel_tasks(lambda t: t.name == 'access_change_report_scores' and t.kwargs['access_change'].pk == ac.pk)
+
+    # If the access change changes the due date, schedule a task to report scores for affected users.
+    due_date = ac.get_due_date()
+    if due_date is not None and due_date != ac.resource.due_date:
+        tasks.access_change_report_scores.schedule(kwargs={'access_change': ac, 'resource': ac.resource}, eta=due_date + AUTOMATIC_SCORE_REPORT_DELAY_MINUTES)
+
+    # If an "available until" date is set, schedule the task.
+    if ac.available_until is not None:
+        tasks.access_change_report_scores.schedule(kwargs={'access_change': ac, 'resource': ac.resource}, eta=due_date + AUTOMATIC_SCORE_REPORT_DELAY_MINUTES)
+
+
+@receiver(models.signals.post_save, sender=AccessChange)
+def access_change_changed(sender, instance, **kwargs):
+    schedule_report_for_access_change(instance)
+
+@receiver(models.signals.pre_delete, sender=AccessChange)
+def access_change_changed(sender, instance, **kwargs):
+    cancel_tasks(lambda t: t.name == 'access_change_report_scores' and t.kwargs['access_change'].pk == instance.pk)
+
+@receiver(models.signals.post_save,sender=Resource)
+def resource_settings_changed(sender,instance,**kwargs):
+    """
+        Schedule a task to report all scores for this resource when the due date passes.
+    """
+    resource = instance
+
+    # Cancel any previously scheduled resources of this task.
+    cancel_tasks(lambda t: t.name == 'resource_report_scores' and t.kwargs['resource'].pk == resource.pk and t.kwargs.get('automatic'))
+
+    # Only do this for resources whose scores are automatically reported back.
+    if resource.report_mark_time not in ('immediately', 'oncompletion'):
+        return
+
+    # If a due date is set, schedule the task.
+    if resource.due_date is not None:
+        tasks.resource_report_scores.schedule(kwargs={'resource':resource, 'automatic': True}, eta=resource.due_date + AUTOMATIC_SCORE_REPORT_DELAY_MINUTES)
+
+    # If an "available until" date is set, schedule the task.
+    if resource.available_until is not None:
+        tasks.resource_report_scores.schedule(kwargs={'resource':resource, 'automatic': True}, eta=resource.available_until + AUTOMATIC_SCORE_REPORT_DELAY_MINUTES)
+
+    # Schedule tasks to report scores for any users with changed due dates.
+    for ac in resource.access_changes.all():
+        schedule_report_for_access_change(ac)
 
 
 @receiver(models.signals.post_save,sender=Resource)

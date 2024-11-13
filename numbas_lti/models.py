@@ -999,7 +999,15 @@ class AccessChange(models.Model):
             return _('Nobody')
 
     def affected_users(self):
-        return User.objects.filter(Q(pk__in=self.users.all()) | Q(username__in=Subquery(self.usernames.values('username'))) | Q(email__in=Subquery(self.emails.values('email'))))
+        query_explicit_users = Q(pk__in=self.users.all())
+
+        consumers = self.resource.lti_contexts().values('consumer')
+        query_usernames = Q(lti_13_aliases__sub__in=self.usernames.values('username'), lti_13_aliases__consumer__in=consumers) | Q(lti_11_aliases__consumer_user_id__in=self.usernames.values('username'), lti_11_aliases__consumer__in=consumers)
+
+        query_emails = Q(email__in=Subquery(self.emails.values('email')))
+
+        return User.objects.filter(query_usernames)
+
 
     def extend_duration_string(self):
         if self.extend_duration_units == 'percent':
@@ -1012,6 +1020,20 @@ class AccessChange(models.Model):
             return self.extend_duration * initial_duration / 100
         else:
             return self.extend_duration
+
+    def get_due_date(self):
+        """
+            Get the effective due date for users affected by this access change.
+        """
+
+        due_date = self.due_date if self.due_date is not None else self.resource.due_date
+        if due_date is None:
+            return None
+
+        if self.extend_deadline is not None:
+            due_date += self.extend_deadline
+
+        return due_date
 
 class UsernameAccessChange(models.Model):
     access_change = models.ForeignKey(AccessChange, on_delete=models.CASCADE, related_name='usernames')
