@@ -30,10 +30,17 @@ def send_attempt_completion_receipt(attempt):
     attempt.send_completion_receipt()
 
 @db_task(priority=200)
-def resource_report_scores(resource):
+def resource_report_scores(resource, automatic=False):
     logger.debug(f"Report scores for resource {resource}")
     resource = Resource.objects.get(pk=resource.pk)
     report_all_resource_scores(resource)
+
+@db_task(priority=200)
+def access_change_report_scores(access_change, resource):
+    logger.debug(f"Report scores for users affected by access change {access_change}")
+    access_change = AccessChange.objects.get(pk=access_change.pk)
+    for user in access_change.affected_users():
+        report_outcome(access_change.resource, user)
 
 @db_task(priority=200)
 def attempt_report_outcome(attempt):
