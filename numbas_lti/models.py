@@ -848,12 +848,18 @@ class Resource(models.Model):
 
         saved_lineitem = LineItem(saved_lineitem)
 
+        def parse_isoformat(time: str):
+            if time is None:
+                return None
+            return datetime.fromisoformat(time)
+
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
-            or saved_lineitem.get_start_date_time() != lineitem.get_start_date_time()
-            or saved_lineitem.get_end_date_time() != lineitem.get_end_date_time()
+            or parse_isoformat(saved_lineitem.get_start_date_time()) != parse_isoformat(lineitem.get_start_date_time())
+            or parse_isoformat(saved_lineitem.get_end_date_time()) != parse_isoformat(lineitem.get_end_date_time())
             or saved_lineitem.get_tag() != lineitem.get_tag()
             ):
             max_score = lineitem.get_score_maximum()
+
             if max_score is not None and max_score > 0:
                 saved_lineitem.set_score_maximum(max_score)
             saved_lineitem.set_start_date_time(lineitem.get_start_date_time())
