@@ -30,7 +30,7 @@ from pylti1p3.dynamic_registration import generate_key_pair
 from pylti1p3.exception import LtiException
 from pylti1p3.lineitem import LineItem
 import pylti1p3.roles
-from pylti1p3.service_connector import ServiceConnector, REQUESTS_USER_AGENT
+from pylti1p3.contrib.django.service_connector import DjangoServiceConnector
 import re
 import shutil
 import time
@@ -398,7 +398,7 @@ class LTI_13_Context(models.Model):
 
         registration = self.tool_conf.find_registration_by_params(iss=tool.issuer, client_id=tool.client_id)
 
-        service_connector = ServiceConnector(registration, requests_session.get_session())
+        service_connector = DjangoServiceConnector(registration, requests_session.get_session())
     
         return service_connector
 
