@@ -116,7 +116,7 @@ function remark_session(options) {
     options = options || {};
     const promise = new Promise((resolve,reject) => {
         load_exam().then(exam => {
-            const pre_submit_promises = [];
+            const pre_submit_promises = exam.questionList.map(q => q.signals.on('resume'));
             exam.questionList.forEach(function(q) {
                 q.store.saveQuestion(q);
                 q.allParts().forEach(function(p) {
@@ -132,7 +132,7 @@ function remark_session(options) {
                         p.submit();
                     });
                 }
-                q.parts.forEach(function(p) {
+                q.allParts().forEach(function(p) {
                     if(p.waiting_for_pre_submit) {
                         pre_submit_promises.push(p.waiting_for_pre_submit);
                     }
@@ -140,11 +140,13 @@ function remark_session(options) {
             });
 
             Promise.all(pre_submit_promises).then(results => {
-                exam.store.saveExam(exam);
+                setTimeout(() => {
+                    exam.store.saveExam(exam);
 
-                reset(exam);
+                    reset(exam);
 
-                resolve({success: true});
+                    resolve({success: true});
+                }, 100);
             });
         }).catch(err=>{
             resolve({success: false, error: err});
