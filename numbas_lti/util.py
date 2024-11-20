@@ -97,3 +97,9 @@ def iso_time(time: datetime) -> str:
         Convert a datetime to an ISO format string if it's not None, otherwise return None.
     """
     return time.isoformat() if time else None
+
+def time_from_iso(time: str) -> datetime:
+    """
+        Parse an ISO format datetime string if the argument is not None, otherwise return None.
+    """
+    return datetime.fromisoformat(time) if time is not None else None

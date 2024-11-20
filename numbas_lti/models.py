@@ -42,7 +42,7 @@ from .exceptions import LineItemDoesNotExist
 from .groups import group_for_attempt, group_for_resource_stats, group_for_resource
 from .report_outcome import report_outcome, report_outcome_for_attempt, ReportOutcomeException
 from .diff import make_diff, apply_diff
-from .util import parse_scorm_timeinterval, iso_time
+from .util import parse_scorm_timeinterval, iso_time, time_from_iso
 from .examparser import numbasobject
 
 requests = requests_session.get_session()
@@ -848,14 +848,9 @@ class Resource(models.Model):
 
         saved_lineitem = LineItem(saved_lineitem)
 
-        def parse_isoformat(time: str):
-            if time is None:
-                return None
-            return datetime.fromisoformat(time)
-
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
-            or parse_isoformat(saved_lineitem.get_start_date_time()) != parse_isoformat(lineitem.get_start_date_time())
-            or parse_isoformat(saved_lineitem.get_end_date_time()) != parse_isoformat(lineitem.get_end_date_time())
+            or time_from_iso(saved_lineitem.get_start_date_time()) != time_from_iso(lineitem.get_start_date_time())
+            or time_from_iso(saved_lineitem.get_end_date_time()) != time_from_iso(lineitem.get_end_date_time())
             or saved_lineitem.get_tag() != lineitem.get_tag()
             ):
             max_score = lineitem.get_score_maximum()
