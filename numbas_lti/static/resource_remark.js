@@ -430,7 +430,7 @@ const app = createApp({
 
             const search = this.name_search.trim().toLowerCase();
             if(search != '') {
-                list = list.filter(attempt => `${attempt.user.full_name} ${attempt.user.identifier}`.includes(search));
+                list = list.filter(attempt => `${attempt.user.full_name} ${attempt.user.identifier}`.toLowerCase().includes(search));
             }
             return list;
         },
