@@ -8,4 +8,41 @@
 
 {% block main %}
     <p>{{exception}}</p>
+
+    <dl>
+        <dt>Cache</dt>
+        <dd><code>{{cache}}</code></dd>
+
+        <dt>Cache servers</dt>
+        <dd><code>{{cache_servers}}</code></dd>
+
+        <dt>Nonce key</dt>
+        <dd><code>{{nonce_key}}</code></dd>
+
+        <dt>Cached nonce key</dt>
+        <dd><code>{{cached_nonce_key}}</code></dd>
+
+        <dt>Cached nonce</dt>
+        <dd><code>{{cached_nonce}}</code></dd>
+
+        <dt>Received nonce</dt>
+        <dd><code>{{received_nonce}}</code></dd>
+    </dl>
+
+    <h2>JWT body</h2>
+    <dl>
+        {% for k,v in jwt_body.items %}
+        <dt>{{k}}</dt><dd><code>{{v}}</code></dd>
+        {% endfor %}
+    </dl>
+
+
+    <h2>POST data</h2>
+    <dl>
+        {% for k,v in request.POST.items %}
+        <dt>{{k}}</dt><dd><code>{{v}}</code></dd>
+        {% endfor %}
+    </dl>
+
+
 {% endblock main %}

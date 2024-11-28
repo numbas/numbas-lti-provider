@@ -100,7 +100,30 @@ class LTI_13_Mixin:
         try:
             self.check_message_launch()
         except LtiMessageValidationException as exception:
-            return render(self.request, 'numbas_lti/launch_errors/message_validation_error.html', {'exception': exception})
+            context = {'exception': exception}
+            try:
+                message_launch = self.message_launch_cls(self.request, self.tool_conf, launch_data_storage = self.launch_data_storage, requests_session=requests_session.get_session())
+                message_launch._auto_validation = False
+                (message_launch.validate_state()
+                .validate_jwt_format()
+                .validate_registration()
+                .validate_jwt_signature()
+                .validate_deployment()
+                .validate_message()
+                .save_launch_data()
+                )
+                session_service = message_launch._session_service
+                data_storage = session_service.data_storage
+                cache = context['cache'] = data_storage._get_cache()
+                context['cache_servers'] = cache._servers
+                context['message_launch'] = message_launch
+                received_nonce = context['received_nonce'] = message_launch._get_jwt_body().get('nonce')
+                nonce_key = context['nonce_key'] = session_service._get_key('nonce', received_nonce)
+                cached_nonce_key = context['cached_nonce_key'] = data_storage._prepare_key(nonce_key)
+                cached_nonce = context['cached_nonce'] = cache.get(cached_nonce_key)
+            except Exception as e:
+                context['exception'] = e
+            return render(self.request, 'numbas_lti/launch_errors/message_validation_error.html', context)
         except Exception as exception:
             return render(self.request, self.launch_error_template, {'exception': exception, 'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 
