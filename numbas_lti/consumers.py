@@ -108,7 +108,7 @@ class ResourceStatsConsumer(ModelWebsocketConsumer):
         group = group_for_resource_stats(resource)
         async_to_sync(self.channel_layer.group_add)(group, self.channel_name)
 
-    def disconnect(self):
+    def disconnect(self, close_code):
         resource = self.get_object()
         group = group_for_resource_stats(resource)
         async_to_sync(self.channel_layer.group_discard)(group, self.channel_name)
