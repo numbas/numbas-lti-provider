@@ -102,4 +102,9 @@ def time_from_iso(time: str) -> datetime:
     """
         Parse an ISO format datetime string if the argument is not None, otherwise return None.
     """
-    return datetime.fromisoformat(time) if time is not None else None
+    if time is None:
+        return
+
+    if time.endswith('Z'):
+        time = time[:-1] + '+00:00'
+    return datetime.fromisoformat(time)
