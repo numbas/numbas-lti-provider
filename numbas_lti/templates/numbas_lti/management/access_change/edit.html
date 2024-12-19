@@ -76,9 +76,9 @@
                 </p>
             </fieldset>
 
-            {% if resource.exam.has_duration %}
             <fieldset>
-                <legend>{% translate "Exam duration" %}</legend>
+                <legend>{% translate "Exam settings" %}</legend>
+                {% if resource.exam.has_duration %}
                 <p>
                     <label for="{{form.extend_duration.id_for_label}}">{{form.extend_duration.label}}</label>
                     {{form.extend_duration}}
@@ -91,8 +91,16 @@
                 <p class="help-block">
                     {% blocktranslate %}Change the length of time the student has to complete an attempt after starting it.{% endblocktranslate %}
                 </p>
+                {% endif %}
+
+                <p>
+                    {{form.initial_seed.label_tag}}
+                    {{form.initial_seed}}
+                </p>
+                <p class="help-block">
+                    {% blocktranslate %}Leave blank to use a different seed for each attempt.{% endblocktranslate %}
+                </p>
             </fieldset>
-            {% endif %}
             <fieldset>
                 <legend>{% translate "Number of attempts" %}</legend>
 

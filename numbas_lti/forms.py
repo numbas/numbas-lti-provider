@@ -67,6 +67,7 @@ class AccessChangeForm(ModelForm):
             'require_lockdown_app',
             'lockdown_app_password',
             'seb_settings',
+            'initial_seed',
         ]
         widgets = {
             'description': forms.TextInput(),

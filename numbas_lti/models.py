@@ -971,6 +971,8 @@ class AccessChange(models.Model):
     lockdown_app_password = models.CharField(max_length=30, blank=True, verbose_name=_('Password for the Numbas lockdown app'))
     seb_settings = models.ForeignKey(SebSettings, blank=True, null=True, on_delete=models.SET_NULL, related_name='access_changes')
 
+    initial_seed = models.CharField(max_length=20, default='', blank=True, verbose_name = _('Initial seed for the random number generator'))
+
     users = models.ManyToManyField(User, blank=True, related_name='access_changes')
 
     objects = AccessChangeManager()
@@ -1172,6 +1174,13 @@ class Attempt(models.Model):
             'cmi.success_status': '',
             'cmi.completion_status': self.completion_status,
         }
+
+        changes = self.resource.access_changes.for_user(self.user)
+
+        for change in changes:
+            if change.initial_seed:
+                scorm_cmi['numbas.initial_seed'] = change.initial_seed
+
         scorm_cmi = {k: {'value':v,'time':self.start_time.timestamp()} for k,v in scorm_cmi.items()}
 
         # TODO only fetch the latest values of elements from the DB, somehow
