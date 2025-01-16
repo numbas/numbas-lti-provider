@@ -269,6 +269,8 @@ class AttemptAccessMixin:
                 raise PermissionDenied(gettext("You're not allowed to review this attempt."))
 
         if attempt.completed():
+            if not attempt.review_allowed():
+                raise PermissionDenied(gettext("You're not allowed to review this attempt."))
             return 'review'
         else:
             return 'normal'

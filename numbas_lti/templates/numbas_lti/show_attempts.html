@@ -87,9 +87,11 @@
                     </td>
                     <td>
                         {% if attempt.completed %}
+                            {% if review_allowed %}
                             <a title="{% blocktranslate with start_time=attempt.start_time %}Review attempt started at {{start_time}}{% endblocktranslate %}" class="button info" href="{% url_with_lti 'run_attempt' pk=attempt.pk %}">
                                 {% icon 'play' %} {% translate "Review this attempt" %}
                             </a>
+                            {% endif %}
 
                             {% if attempt.student_can_reopen %}
                             <form action="{% url_with_lti 'reopen_attempt' attempt.pk %}" method="POST">
