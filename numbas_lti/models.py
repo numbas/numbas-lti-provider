@@ -505,7 +505,7 @@ class Resource(models.Model):
     available_until = models.DateTimeField(blank=True, null=True, verbose_name=_('Available until'), help_text=_('Attempts will end automatically at this time and students may not resume or start new attempts. Students may review existing attempts after this time.'))
     due_date = models.DateTimeField(blank=True, null=True, verbose_name=_('Due date'), help_text=_('At this time, any open attempts will automatically end. Students may review existing attempts or re-open them while the resource is available.'))
     allow_review_from = models.DateTimeField(blank=True, null=True, verbose_name=_('Allow students to review attempts from'))
-    allow_student_reopen = models.BooleanField(default=True, verbose_name=_('Allow students to re-open attempts while the resource is available?'))
+    allow_student_reopen = models.BooleanField(default=False, verbose_name=_('Allow students to re-open attempts while the resource is available?'))
     report_mark_time = models.CharField(max_length=20,choices=REPORT_TIMES,default='immediately',verbose_name=_('When to report scores back'))
     email_receipts = models.BooleanField(default=False,verbose_name=_('Email attempt receipts to students on completion?'))
 
