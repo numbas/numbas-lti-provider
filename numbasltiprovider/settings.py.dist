@@ -305,3 +305,6 @@ CANVAS_LTI_13_PRESETS = {
 
 # The number of minutes to subtract from submission times reported to the consumer, to avoid slightly passing a deadline.
 REPORT_SCORE_SUBTRACT_MINUTES = 1
+
+# The number of minutes to wait before automatically reporting scores when the due date passes.
+AUTOMATIC_SCORE_REPORT_DELAY_MINUTES = 5
