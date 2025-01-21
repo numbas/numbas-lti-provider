@@ -349,127 +349,150 @@ All attempts using the old package will be updated to use the new one.
 
 If the new version of the exam fixes problems with marking, you can try :ref:`automatically re-marking existing attempts <auto-remark>`.
 
-.. _grading-method:
+.. _availability:
 
-Grading method
-^^^^^^^^^^^^^^
+Availability
+^^^^^^^^^^^^
 
-Specify how a student's score for the activity is calculated.
+Available from and available until
+    Specify when students are allowed to access the resource.
 
-* "Highest score" will use the highest total score from any of the student's attempts.
-* "Last attempt" will use the total score from the attempt which the student began last.
+    You can set none, one or both of the options :guilabel:`Available from` and :guilabel:`Available until`.
 
-Include incomplete attempts in grading?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    If :guilabel:`Available from` is before :guilabel:`Available until`, the resource will be available only between those two times.
+    Use this for a resource which should only be available for a certain period, such as an exam.
 
-If ticked, incomplete attempts will be included when calculating the student's score for the activity.
+    If :guilabel:`Available from` is after :guilabel:`Available until`, the resource will be *unavailable* between those two times, but available any time before :guilabel:`Available until` and any time after :guilabel:`Available from`.
+    Use this for a resource which should be made unavailable for a certain period, such as a bank of practice material which students should not have access to during a summative assessment period.
 
-It's normally good to leave this on, so that students who forget to click the :guilabel:`End Exam` button won't be penalised.
+    Any students who have the resource open when it becomes unavailable will be forced to quit.
 
-.. _maximum-attempts:
+Due date
+    At this time, any open attempts will automatically end.
 
-Maximum attempts per user
-^^^^^^^^^^^^^^^^^^^^^^^^^
+    Any students who have the resource open when it becomes unavailable will be forced to quit.
 
-How many :term:`attempts <Attempt>` at the resource can each user take?
+    Students may review existing attempts or re-open them while the resource is available, depending on the settings :ref:`allow-students-to-review-attempts-from` and :ref:`allow-students-to-reopen`.
 
-If set to 0, then there is no limit.
+.. _feedback:
 
-You can grant extra attempts to individual students with :ref:`access tokens <access-tokens>`.
+Feedback
+^^^^^^^^
 
 .. _when-to-show-scores:
 
 When to show scores to students
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    When a student reopens an activity, they are shown a summary of their attempts.
+    You might not want to immediately show students their scores on this screen.
 
-When a student reopens an activity, they are shown a summary of their attempts.
-You might not want to immediately show students their scores on this screen.
+    * "Always" means the student will see scores for all attempts, including incomplete attempts.
+    * "When attempt is complete" means the student will only see their score for an attempt once it is complete.
+    * "When review is allowed" means the student will only see their score after the date specified in the :ref:`allow-students-to-review-attempts-from` setting.
+    * "Never" means that no scores are shown to the student, even after they've completed their attempt.
 
-* "Always" means the student will see scores for all attempts, including incomplete attempts.
-* "When attempt is complete" means the student will only see their score for an attempt once it is complete.
-* "When review is allowed" means the student will only see their score after the date specified in the :ref:`allow-students-to-review-attempts-from` setting.
-* "Never" means that no scores are shown to the student, even after they've completed their attempt.
-
-.. warning::
-    This only controls the display of scores by the LTI provider.
-    If you want to hide scores from the students, you must also turn off the score feedback options in the exam editor.
+    .. warning::
+        This only controls the display of scores by the LTI provider.
+        If you want to hide scores from the students, you must also turn off the score feedback options in the exam editor.
 
 .. _when-to-report-scores-back:
 
 When to report scores back
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Specify when students' scores are reported back to the :term:`consumer <Tool consumer>`.
+    Some VLEs make reported scores available to students immediately, which you may not want.
 
-Specify when students' scores are reported back to the :term:`consumer <Tool consumer>`.
-Some VLEs make reported scores available to students immediately, which you may not want.
-
-* "Immediately" - scores are reported as soon as they change, i.e. whenever a student submits an answer.
-* "On completion" - a student's score is reported when they complete an attempt.
-* "Manually, by instructor" - Scores are only reported when an instructor clicks the :guilabel:`Report scores back to VLE` button on the dashboard.
+    * "Immediately" - scores are reported as soon as they change, i.e. whenever a student submits an answer.
+    * "On completion" - a student's score is reported when they complete an attempt.
+    * "Manually, by instructor" - Scores are only reported when an instructor clicks the :guilabel:`Report scores back to VLE` button on the dashboard.
 
 .. _allow-students-to-review-attempts-from:
 
 Allow students to review attempts from
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Specify when students are allowed to re-enter completed attempts in review mode.
 
-Specify when students are allowed to re-enter completed attempts in review mode.
+    If left blank, students can review their attempts at any time.
 
-If left blank, students can review their attempts at any time.
+    If a date and time are set, students may only review their attempts after that time.
 
-If a date and time are set, students may only review their attempts after that time.
-
-Instructors may always review students' attempts, from the :guilabel:`Attempts` tab.
-
-.. _availability:
-
-Available from and available until
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Specify when students are allowed to access the resource.
-
-You can set none, one or both of the options :guilabel:`Available from` and :guilabel:`Available until`.
-
-If :guilabel:`Available from` is before :guilabel:`Available until`, the resource will be available only between those two times.
-Use this for a resource which should only be available for a certain period, such as an exam.
-
-If :guilabel:`Available from` is after :guilabel:`Available until`, the resource will be *unavailable* between those two times, but available any time before :guilabel:`Available until` and any time after :guilabel:`Available from`.
-Use this for a resource which should be made unavailable for a certain period, such as a bank of practice material which students should not have access to during a summative assessment period.
-
-Any students who have the resource open when it becomes unavailable will be forced to quit.
+    Instructors may always review students' attempts, from the :guilabel:`Attempts` tab.
 
 .. _email-receipts-option:
 
 Email attempt receipts to students on completion?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    If ticked, then when a student completes an attempt at this resource they will be emailed a receipt summarising their attempt.
 
-If ticked, then when a student completes an attempt at this resource they will be emailed a receipt summarising their attempt.
+    The receipt contains a code which instructors can use to confirm the receipt's contents.
+    See :ref:`validate-receipt`.
 
-The receipt contains a code which instructors can use to confirm the receipt's contents.
-See :ref:`validate-receipt`.
+.. _attempts:
+
+Attempts
+^^^^^^^^
+
+.. _maximum-attempts:
+
+Maximum attempts per user
+    How many :term:`attempts <Attempt>` at the resource can each user take?
+
+    If set to 0, then there is no limit.
+
+    You can grant extra attempts to individual students with :ref:`access tokens <access-tokens>`.
+
+.. _allow-students-to-reopen:
+
+Allow students to re-open attempts while the resource is available?
+    If this is ticked, then students can re-open completed attempts without any penalty, as long as the resource is available.
+    The submission time for re-opened attempts will be the time of the student’s last activity.
+
+    .. warning::
+        Note that if students can see feedback after they complete an attempt, allowing them to re-open their attempt would let them change their answers based on the feedback or expected answers they’ve seen.
+
+        It’s usually sensible to turn this option off if you allow students to review their attempts while the resource is still available.
+
+.. _grading:
+
+Grading
+^^^^^^^
+
+.. _grading-method:
+
+Grading method
+    Specify how a student's score for the activity is calculated.
+
+    * "Highest score" will use the highest total score from any of the student's attempts.
+    * "Last attempt" will use the total score from the attempt which the student began last.
+
+Include incomplete attempts in grading?
+    If ticked, incomplete attempts will be included when calculating the student's score for the activity.
+
+    It's normally good to leave this on, so that students who forget to click the :guilabel:`End Exam` button won't be penalised.
+
+.. _lockdown-app-settings:
+
+Lockdown app
+^^^^^^^^^^^^
 
 .. _require-lockdown-app:
 
 Require a lockdown app?
-^^^^^^^^^^^^^^^^^^^^^^^
+    You can require that students access this resource through the Numbas lockdown app or, if configured, Safe Exam Browser.
+    See :ref:`the documentation on lockdown-apps <lockdown-apps>`.
 
-You can require that students access this resource through the Numbas lockdown app or, if configured, Safe Exam Browser.
-See :ref:`the documentation on lockdown-apps <lockdown-apps>`.
+    If you select :guilabel:`Numbas lockdown app`, you can give a password that the student must submit to launch the resource, or leave the field empty to use the LTI provider's default password.
 
-If you select :guilabel:`Numbas lockdown app`, you can give a password that the student must submit to launch the resource, or leave the field empty to use the LTI provider's default password.
+    If you select :guilabel:`Safe Exam Browser`, you must select a settings file to use; these must be installed by a server administrator.
 
-If you select :guilabel:`Safe Exam Browser`, you must select a settings file to use; these must be installed by a server administrator.
+    Whichever app you use, you can choose whether or not to show the password to the student before the app launches.
 
-Whichever app you use, you can choose whether or not to show the password to the student before the app launches.
+    When a student launches a resource requiring a lockdown app, they will be shown a button to launch the app, along with a link to install it if they haven't already.
 
-When a student launches a resource requiring a lockdown app, they will be shown a button to launch the app, along with a link to install it if they haven't already.
+    .. figure:: _static/lockdown-launch.png
+       :alt: Screenshot of the "Launch in the Numbas lockdown app" screen. The resource's name and context above a button to install the app, and a button to launch in the Numbas lockdown app.
 
-.. figure:: _static/lockdown-launch.png
-   :alt: Screenshot of the "Launch in the Numbas lockdown app" screen. The resource's name and context above a button to install the app, and a button to launch in the Numbas lockdown app.
+       This is what a student sees when they launch a resource which requires the Numbas lockdown app.
 
-   This is what a student sees when they launch a resource which requires the Numbas lockdown app.
+    .. raw:: html
 
-.. raw:: html
-
-    <iframe src="https://player.vimeo.com/video/778056290?h=18a23970ca" width="640" height="564" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        <iframe src="https://player.vimeo.com/video/778056290?h=18a23970ca" width="640" height="564" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
 
 
 .. _auto-remark:
