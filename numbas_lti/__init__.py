@@ -1,3 +1,3 @@
 default_app_config = 'numbas_lti.apps.NumbasLtiConfig'
 
-version = 'v4.1'
+version = 'v4.2'

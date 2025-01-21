@@ -9,6 +9,40 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v4.2
+----
+
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
+There are no special upgrade steps for Docker installations for this version.
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Copy the following line from :file:`numbasltiprovider/settings.py.dist` to :file:`numbasltiprovider/settings.py`::
+
+    # The number of minutes to wait before automatically reporting scores when the due date passes.
+    AUTOMATIC_SCORE_REPORT_DELAY_MINUTES = 5
+
+
+
+v4.1
+----
+
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
+There are no special upgrade steps for Docker installations for this version.
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Copy the following line from :file:`numbasltiprovider/settings.py.dist` to :file:`numbasltiprovider/settings.py`::
+
+    # The number of minutes to subtract from submission times reported to the consumer, to avoid slightly passing a deadline.
+    REPORT_SCORE_SUBTRACT_MINUTES = 1
+
 v4.0
 ----
 
