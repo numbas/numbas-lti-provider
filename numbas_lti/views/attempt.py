@@ -219,7 +219,7 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
         context['due_date_passed'] = availability.due_date is not None and now >= availability.due_date
         context['is_available'] = resource.is_available(user)
         context['exam_info'] = resource.exam.get_feedback_settings(completed=False,review_allowed=False)
-        context['review_allowed'] = resource.show_marks_when in ('always', 'completed') or (resource.show_marks_when == 'review' and (resource.allow_review_from is None or now >= resource.allow_review_from))
+        context['review_allowed'] = resource.show_marks_when in ('always', 'complete') or (resource.show_marks_when == 'review' and (resource.allow_review_from is None or now >= resource.allow_review_from))
         
         return context
 
