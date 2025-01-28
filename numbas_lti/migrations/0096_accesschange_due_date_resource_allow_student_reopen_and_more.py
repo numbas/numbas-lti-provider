@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resource',
             name='allow_student_reopen',
-            field=models.BooleanField(default=True, verbose_name='Allow students to re-open attempts while the resource is available?'),
+            field=models.BooleanField(default=False, verbose_name='Allow students to re-open attempts while the resource is available?'),
         ),
         migrations.AddField(
             model_name='resource',
