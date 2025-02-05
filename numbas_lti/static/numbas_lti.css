@@ -131,6 +131,11 @@ input:not([type="hidden"]), select, textarea {
     width: 100%;
 }
 
+input.inline {
+    width: revert;
+    margin: 0 var(--spacing);
+}
+
 input[type="number"] {
     width: 5em;
     text-align: center;
@@ -308,7 +313,6 @@ hr {
 
 form label {
     font-weight: bold;
-    display: block;
     margin-top: var(--double-space);
 }
 

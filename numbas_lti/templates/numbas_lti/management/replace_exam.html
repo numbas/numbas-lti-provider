@@ -11,37 +11,14 @@
 {% endblock management_header %}
 
 {% block management_content %}
-    {% with edit_url=current_exam.manifest.edit_url %}
-        {% if edit_url %}
-            <p><a class="button primary" href="{{edit_url}}" target="_blank">{% icon 'pencil' %} {% translate "Edit this exam" %}</a></p>
-            <hr>
-        {% endif %}
-    {% endwith %}
-
-    {% if current_exam.retrieve_url %}
-    <section id="retrieve-from-editor">
-        {% blocktranslate %}
-        <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
-        {% endblocktranslate %}
-
-        <form method="POST" action="{% url_with_lti 'replace_exam' resource.pk %}">
-            {% csrf_token %}
-
-            <input type="hidden" name="retrieve_url" value="{{current_exam.retrieve_url}}">
-            <input type="hidden" name="rest_url" value="{{current_exam.rest_url}}">
-            {{form.safe_replacement.label_tag}}
-            {{form.safe_replacement}}
-            <p><button class="button danger" type="submit">{% icon 'refresh' %} {% translate "Update from editor" %}</button></p>
-        </form>
-        
-        <p>{% translate "Alternately, you can upload a new exam package below." %}</p>
-    </section>
-
-    <hr>
-    {% endif %}
-
-
     <section id="upload-exam">
+        {% if current_exam.retrieve_url %}
+            {% blocktranslate %}
+            <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
+            <p>Alternately, you can upload a new exam package below.</p>
+            {% endblocktranslate %}
+        {% endif %}
+
         <form method="POST" enctype="multipart/form-data" action="{% url_with_lti 'replace_exam' resource.pk %}">
             {% csrf_token %}
             {% if form.non_field_errors %}
@@ -53,7 +30,7 @@
             {% endif %}
 
             {% for field in form.hidden_fields %}
-            <p>{{ field }}
+                {{ field }}
             {% endfor %}
 
             <input type="hidden" name="retrieve_url" value="">
@@ -69,7 +46,11 @@
                     {% endif %}
                 </p>
             {% endfor %}
-            <p><button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace" %}</button></p>
+        
+            <p>
+                <button class="button danger" type="submit" name="retrieve_url" value="{{current_exam.retrieve_url}}">{% icon 'refresh' %} {% translate "Update from editor" %}</button>
+                <button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace with uploaded package" %}</button>
+            </p>
         </form>
     </section>
 

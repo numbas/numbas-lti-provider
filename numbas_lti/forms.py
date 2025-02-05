@@ -270,7 +270,11 @@ class CreateExamForm(ModelForm):
         return cleaned_data
 
 class ReplaceExamForm(CreateExamForm):
-    safe_replacement = forms.BooleanField(required=False,label=_('Make existing attempts use this version'))
+    safe_replacement = forms.BooleanField(
+        required=False,
+        label=_('Make existing attempts use this version'),
+        widget=forms.CheckboxInput(attrs={'class': 'inline'})
+    )
 
 class RestoreExamForm(ModelForm):
     class Meta:

@@ -15,7 +15,7 @@
     <nav>
         <a class="button warning" href="{% url_with_lti 'replace_exam' resource.pk %}">{% icon 'refresh' %} {% translate "Replace exam package" %}</a>
 
-        {% with edit_url=current_exam.manifest.edit_url %}
+        {% with edit_url=resource.exam.manifest.edit_url %}
             {% if edit_url %}
                 <a class="button primary" href="{{edit_url}}" target="_blank">{% icon 'pencil' %} {% translate "Edit this exam" %}</a>
             {% endif %}
