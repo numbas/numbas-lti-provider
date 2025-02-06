@@ -131,7 +131,7 @@ const app = createApp({
             save_url: parameters['save_url'],
             saving: false,
             save_error: null,
-            sort_by: 'name',
+            sort_by: 'last_name',
             sort_direction: 'ascending',
             page_number: 0,
             num_attempts_per_page: 100,
@@ -396,7 +396,8 @@ const app = createApp({
             const direction = {'ascending': 1, 'descending': -1}[this.sort_direction] || 1;
 
             const [sort_key,sort_dir] = {
-                'name': [a => a.user.full_name, 1],
+                'last_name': [a => a.user.last_name, 1],
+                'full_name': [a => a.user.full_name, 1],
                 'identifier': [a => a.user.identifier, 1],
                 'start_time': [a => a.start_time, -1],
                 'original_score': [a => a.original_raw_score, 1],

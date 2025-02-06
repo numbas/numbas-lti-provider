@@ -118,7 +118,8 @@
                 <form class="form-inline">
                     <label for="sort-by">{% translate "Sort by:" %}</label> 
                     <select id="sort-by" v-model="sort_by">
-                        <option value="name">{% translate "Student name" %}</option>
+                        <option value="last_name">{% translate "Student's last name" %}</option>
+                        <option value="full_name">{% translate "Student's full name" %}</option>
                         <option value="identifier">{% translate "Student identifier" %}</option>
                         <option value="start_time">{% translate "Start time" %}</option>
                         <option value="completion_status">{% translate "Completion status" %}</option>
