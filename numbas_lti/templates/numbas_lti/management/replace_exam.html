@@ -12,15 +12,11 @@
 
 {% block management_content %}
     <section id="upload-exam">
-        {% if current_exam.retrieve_url %}
-            {% blocktranslate %}
-            <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
-            <p>Alternately, you can upload a new exam package below.</p>
-            {% endblocktranslate %}
-        {% endif %}
 
-        <form method="POST" enctype="multipart/form-data" action="{% url_with_lti 'replace_exam' resource.pk %}">
+        <!--
+        <form method="POST" enctype="multipart/form-data" action="{% url_with_lti 'replace_exam' resource.pk %}" class="{% if current_exam.retrieve_url %}two-column{% endif %}">
             {% csrf_token %}
+
             {% if form.non_field_errors %}
                 <div class="alert danger">
                     {% for non_field_error in form.non_field_errors %}
@@ -29,28 +25,66 @@
                 </div>
             {% endif %}
 
-            {% for field in form.hidden_fields %}
-                {{ field }}
-            {% endfor %}
+            <p class="both-columns">{{form.safe_replacement.as_field_group}}</p>
 
-            <input type="hidden" name="retrieve_url" value="">
+            {% if current_exam.retrieve_url %}
+            <div class="column">
+                {% blocktranslate %}
+                <p>This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
+                {% endblocktranslate %}
 
-            {% for field in form.visible_fields %}
-                <p>
-                    {{field.label_tag}}
-                    {{field}}
-                    {% if field.errors %}
-                    <div class="alert danger">
-                        {{field.errors}}
-                    </div>
-                    {% endif %}
-                </p>
-            {% endfor %}
-        
-            <p>
-                <button class="button danger" type="submit" name="retrieve_url" value="{{current_exam.retrieve_url}}">{% icon 'refresh' %} {% translate "Update from editor" %}</button>
-                <button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace with uploaded package" %}</button>
-            </p>
+                <p><button class="button danger" type="submit" name="retrieve_url" value="{{current_exam.retrieve_url}}">{% icon 'refresh' %} {% translate "Update from editor" %}</button></p>
+            </div>
+            {% endif %}
+            <div class="column">
+                {% if current_exam.retrieve_url %}
+                <p>Alternately, you can upload a new exam package.</p>
+                {% endif %}
+                {{form.package.as_field_group}}
+            
+                <p><button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace with uploaded package" %}</button></p>
+            </div>
+        </form>
+        -->
+
+        <form method="POST" enctype="multipart/form-data" action="{% url_with_lti 'replace_exam' resource.pk %}" class="two-column">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert danger">
+                    {% for non_field_error in form.non_field_errors %}
+                         {{ non_field_error|safe }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <fieldset class="both-columns">
+                <legend>{% translate "Update existing attempts?" %}</legend>
+                <p>{{form.safe_replacement.as_field_group}}</p>
+            </fieldset>
+
+            {% if current_exam.retrieve_url %}
+            <fieldset>
+                <legend>{% translate "Fetch from the editor" %}</legend>
+
+                {% blocktranslate %}
+                <p class="help-block">This exam was imported from the Numbas editor. Click the button below to fetch the latest version of the exam from the editor.</p>
+                {% endblocktranslate %}
+
+                <p><button class="button danger" type="submit" name="retrieve_url" value="{{current_exam.retrieve_url}}">{% icon 'refresh' %} {% translate "Update from editor" %}</button></p>
+            </fieldset>
+            {% endif %}
+
+            <fieldset>
+                <legend>{% translate "Upload a new exam package" %}</legend>
+
+                {% if current_exam.retrieve_url %}
+                <p class="help-block">Alternately, you can upload a new exam package.</p>
+                {% endif %}
+                {{form.package.as_field_group}}
+            
+                <p><button class="button danger" type="submit">{% icon 'upload' %} {% translate "Replace with uploaded package" %}</button></p>
+            </fieldset>
         </form>
     </section>
 

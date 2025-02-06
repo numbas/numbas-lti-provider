@@ -332,6 +332,35 @@ fieldset legend {
     border: thin solid var(--text-color);
 }
 
+form.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 var(--double-space);
+    justify-items: center;
+}
+
+form.two-column > fieldset {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: start;
+    max-width: 30em;
+}
+
+form.two-column > fieldset > p:last-child {
+    margin-bottom: 0;
+}
+
+form.two-column button[type="submit"] {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+form.two-column > .both-columns {
+    grid-column: span 2;
+    justify-self: center;
+}
+
 form.big {
     margin: var(--double-space) 0;
     display: grid;
@@ -715,4 +744,15 @@ body.student-progress #students td.comment {
         grid-auto-flow: row;
     }
 
+}
+
+@media (max-width: 40rem) {
+    form.two-column {
+        grid-template-columns: 1fr;
+        gap: var(--double-space);
+    }
+
+    form.two-column > .both-columns {
+        grid-column: 1;
+    }
 }

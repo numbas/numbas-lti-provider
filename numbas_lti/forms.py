@@ -272,7 +272,7 @@ class CreateExamForm(ModelForm):
 class ReplaceExamForm(CreateExamForm):
     safe_replacement = forms.BooleanField(
         required=False,
-        label=_('Make existing attempts use this version'),
+        label=_('Make existing attempts use the new version'),
         widget=forms.CheckboxInput(attrs={'class': 'inline'})
     )
 

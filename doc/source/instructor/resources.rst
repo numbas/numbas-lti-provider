@@ -344,7 +344,7 @@ If you discover an error in your exam, you can update it by downloading it again
 
 Any new attempts will use the latest version of the exam package.
 Because the new version might have changed in a way that is incompatible with existing attempts, for example by removing or rearranging question parts, any attempts started with the old package will by default continue to use the old package.
-If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`Make existing attempts use this version`.
+If you know that the new package is compatible with the old one, for example if you've just corrected some text or fixed a bug in some code rather than changing the structure of the exam, tick :guilabel:`Make existing attempts use the new version`.
 All attempts using the old package will be updated to use the new one.
 
 If the new version of the exam fixes problems with marking, you can try :ref:`automatically re-marking existing attempts <auto-remark>`.

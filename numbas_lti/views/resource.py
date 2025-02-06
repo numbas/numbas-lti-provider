@@ -91,6 +91,9 @@ class ReplaceExamView(CreateExamView):
 
         return context
 
+    def get_success_url(self):
+        return self.reverse_with_lti('replace_exam', args=(self.object.resource.pk,))
+
     def form_valid(self,form):
         resource = self.get_resource()
         old_exam = resource.exam
@@ -100,9 +103,6 @@ class ReplaceExamView(CreateExamView):
 
         resource.exam = new_exam
         resource.save(update_fields=['exam'])
-
-        if form.cleaned_data['safe_replacement']:
-            resource.attempts.filter(exam=old_exam).update(exam=new_exam)
 
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
