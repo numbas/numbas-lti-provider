@@ -109,7 +109,7 @@ def student_launch(request, resource):
     if not resource.exam:
         return render(request,'numbas_lti/exam_not_set_up.html',{})
     else:
-        return redirect(reverse_with_lti(request, 'show_attempts'))
+        return redirect(reverse_with_lti(request, 'show_attempts', args=(resource.pk,)))
 
 def lockdown_launch(request):
     return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))

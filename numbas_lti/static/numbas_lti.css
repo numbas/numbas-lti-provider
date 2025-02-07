@@ -332,6 +332,22 @@ fieldset legend {
     border: thin solid var(--text-color);
 }
 
+fieldset.has-table > table {
+    width: 100%;
+    margin: 0;
+}
+
+fieldset.has-table td > label {
+    width: 100%;
+    display: block;
+    margin: 0;
+    padding: var(--spacing);
+}
+
+fieldset.has-table td.label {
+    padding: 0;
+}
+
 form.two-column {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -550,6 +566,10 @@ body > header {
     padding: var(--spacing);
     margin: var(--double-space) 0;
 }
+body.compact header {
+    margin-bottom: 0;
+}
+
 body > main {
     padding: var(--spacing);
 }
@@ -677,6 +697,86 @@ body.show-attempts table.attempts form {
 
 body.student-progress #students td.comment {
     max-width: 20em;
+}
+
+body.context-summary h1 {
+    font-size: 1.2rem;
+    margin: var(--spacing);
+    text-align: center;
+}
+
+body.context-summary dl {
+    margin: var(--spacing) var(--double-space);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: var(--spacing);
+}
+
+body.context-summary dl dt {
+    font-weight: bold;
+}
+body.context-summary dl dd {
+    grid-row: 2;
+}
+body.context-summary dl :is(dt,dd) {
+    margin-left: 0;
+}
+
+body.context-summary dl progress {
+    width: 5em;
+}
+
+body.context-summary #resources {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    gap: var(--spacing);
+    padding: 0;
+    margin: 0;
+}
+
+body.context-summary #resources li {
+    --background-color: var(--info-alert-bg);
+    --text-color: var(--info-alert-color);
+    background: var(--background-color);
+    color: var(--text-color);
+    border-radius: var(--button-radius);
+    padding: var(--spacing);
+    accent-color: var(--info-color);
+    flex-grow: 1;
+    max-width: 10em;
+}
+
+body.context-summary #resources li.completed {
+    --background-color: var(--success-alert-bg);
+    --text-color: var(--success-alert-color);
+    accent-color: var(--success-color);
+}
+
+
+body.context-summary #resources a {
+    text-decoration: none;
+    display: flex;
+    color: var(--text-color);
+}
+
+body.context-summary #resources .name {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    overflow: hidden;
+    max-width: 100%;
+    flex-grow: 1;
+}
+
+body.context-summary #resources progress {
+    width: 1em;
+}
+
+body.context-summary #resources .completion_status {
+    text-decoration: none;
+    color: var(--text-color);
 }
 
 .card-list {

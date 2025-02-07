@@ -530,7 +530,7 @@ class Resource(models.Model):
 
     def __str__(self):
         if self.exam:
-            return "Resource {}: {}".format(self.pk, self.exam)
+            return str(self.exam)
         elif self.lti_11_links.exists():
             link = self.lti_11_links.first()
             return _('Resource linked to "{context}"').format(context=link.context)
@@ -2036,3 +2036,34 @@ class UserScoreReported(models.Model):
         if self.error:
             s += _(' failed: {error_msg}').format(error_msg=self.error)
         return s
+
+SUMMARY_SCORE_TOTALS = [
+    ('none', _("Don't show a total score")),
+    ('scaled', _("Add scaled scores")),
+    ('raw', _("Add raw scores")),
+    ('completion', _("Number of resources completed")),
+    ('max_scores', _("Number of resources with maximum score")),
+]
+
+class ContextSummary(models.Model):
+    name = models.CharField(max_length=500)
+    context = models.ForeignKey(LTIContext, on_delete=models.CASCADE, related_name='summaries')
+    resources = models.ManyToManyField(Resource, blank=True, related_name='context_summaries', through='ContextSummaryResource')
+    show_total_score = models.CharField(max_length=10, default='none', choices=SUMMARY_SCORE_TOTALS, verbose_name=_('Show a total score?'))
+
+    def ordered_resources(self):
+        return self.resources.order_by('contextsummaryresource')
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('context_summary', args=(self.pk,))
+
+class ContextSummaryResource(models.Model):
+    context_summary = models.ForeignKey(ContextSummary, on_delete=models.CASCADE)
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ('order', 'resource',)

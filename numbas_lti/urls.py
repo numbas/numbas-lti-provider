@@ -92,9 +92,11 @@ urlpatterns = [
 
     path('report-process/<int:pk>/dismiss', views.resource.DismissReportProcessView.as_view(), name='dismiss_report_process'),
 
-    # Student views: should be authneticated through LTI, carrying role information.
-    path('show_attempts', views.attempt.ShowAttemptsView.as_view(), name='show_attempts'),
+    # Student views: should be authenticated through LTI, carrying role information.
+    path('show_attempts/<int:resource_pk>', views.attempt.ShowAttemptsView.as_view(), name='show_attempts'),
     path('new_attempt', views.attempt.new_attempt, name='new_attempt'),
+    path('context_summary/<int:pk>', views.context.ContextSummaryView.as_view(), name='context_summary'),
+    path('context_summary/<int:pk>/edit', views.context.UpdateContextSummaryView.as_view(), name='update_context_summary'),
     path('run_attempt/<int:pk>', views.attempt.RunAttemptView.as_view(), name='run_attempt'),
     path('run_attempt/<int:pk>/scorm_cmi', views.attempt.AttemptScormCMIView.as_view(), name='run_attempt_scorm_cmi'),
     path('lockdown/launch', views.entry.lockdown_launch, name='lockdown_launch'),
