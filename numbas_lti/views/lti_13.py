@@ -13,10 +13,10 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _, gettext
-from . import mixins, resource
+from . import mixins, resource, context
 from .consumer import ConsumerManagementMixin
 from numbas_lti.backends import new_lti_user
-from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData, LTIConsumerRegistrationToken
+from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData, LTIConsumerRegistrationToken, ContextSummary
 import numbas_lti.forms
 import numbas_lti.views.entry
 from pathlib import PurePath
@@ -261,7 +261,6 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
 
         is_instructor = mixins.request_is_instructor(self.request)
         
-
         if message_launch.is_resource_launch():
             resource_pk = self.get_custom_param('resource')
             if resource_pk is not None:
@@ -438,6 +437,25 @@ class UseRegistrationTokenView(edit.DeleteView):
 class ResourceLaunchView(mixins.LTI_13_Mixin):
     must_have_message_launch = True
 
+    def get(self, request, *args, **kwargs):
+        view = self.get_custom_param('view', 'resource')
+
+        handlers = {
+            'resource': self.resource_launch,
+            'context_summary': self.context_summary,
+        }
+
+        try:
+            handler = handlers[view]
+        except KeyError:
+            raise Exception(f"Invalid launch view parameter: {view}")
+
+        return handler()
+
+    def context_summary(self):
+        summary_pk = self.get_custom_param('context_summary')
+        return redirect(self.reverse_with_lti('context_summary', args=(summary_pk,)))
+
     def record_user_data(self, resource_link):
         user = self.request.user
 
@@ -501,7 +519,7 @@ def do_lti_entry(request):
 
 class TeacherLaunchView(ResourceLaunchView, View):
 
-    def get(self, request, *args, **kwargs):
+    def resource_launch(self, request, *args, **kwargs):
         resource_link = self.get_resource_link()
 
         if resource_link:
@@ -512,7 +530,7 @@ class TeacherLaunchView(ResourceLaunchView, View):
             return render(self.request, 'numbas_lti/launch_errors/no_resource.html', status=404)
 
 class StudentLaunchView(ResourceLaunchView, View):
-    def get(self, request, *args, **kwargs):
+    def resource_launch(self):
         resource_link = self.get_resource_link()
     
         self.record_user_data(resource_link)
@@ -528,6 +546,26 @@ class MustBeDeepLinkMixin(mixins.LTI_13_Mixin):
 
         if not message_launch.is_deep_link_launch():
             raise SuspiciousOperation(_("This action can only be performed as part of a deep-link launch."))
+
+    def get_deep_link_resource(self, **kwargs):
+        launch_url = self.request.build_absolute_uri(reverse('lti_13:launch'))
+
+        resource = DeepLinkResource()\
+            .set_url(launch_url)\
+
+        return resource
+
+    def deep_link_response(self, **kwargs):
+        """
+            Return a response which ends the deep-link flow, with a link to the given resource
+        """
+        message_launch = self.get_message_launch()
+
+        resource = self.get_deep_link_resource(**kwargs)
+
+        html = message_launch.get_deep_link().output_response_form([resource])
+        return HttpResponse(html)
+
 
 class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
     template_name = "numbas_lti/lti_13/deep_link.html"
@@ -559,33 +597,24 @@ class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
 
         return context
 
-def deep_link_response(request, message_launch, resource):
-    """
-        Return a response which ends the deep-link flow, with a link to the given resource
-    """
-    launch_url = request.build_absolute_uri(reverse('lti_13:launch'))
+class DeepLinkResourceView(MustBeDeepLinkMixin):
+    def get_deep_link_resource(self, resource, **kwargs):
+        return super().get_deep_link_resource(**kwargs)\
+            .set_custom_params({
+                'view': 'resource',
+                'resource': resource.pk,
+            })\
+            .set_title(resource.exam.title)
 
-    resource = DeepLinkResource()\
-        .set_url(launch_url)\
-        .set_custom_params({
-            'resource': resource.pk,
-        })\
-        .set_title(resource.exam.title)
-
-    html = message_launch.get_deep_link().output_response_form([resource])
-    return HttpResponse(html)
-
-class DeepLinkUseResourceView(MustBeDeepLinkMixin, View):
+class DeepLinkUseResourceView(DeepLinkResourceView, View):
     http_method_names = ['post',]
 
     def post(self, *args, **kwargs):
         resource = Resource.objects.get(pk=self.request.POST['resource_pk'])
 
-        message_launch = self.get_message_launch()
+        return self.deep_link_response(resource=resource)
 
-        return deep_link_response(self.request, message_launch, resource)
-
-class DeepLinkCreateResourceView(MustBeDeepLinkMixin, resource.CreateExamView):
+class DeepLinkCreateResourceView(DeepLinkResourceView, resource.CreateExamView):
     def form_valid(self, form):
         exam = self.object = form.save(commit=True)
 
@@ -594,6 +623,35 @@ class DeepLinkCreateResourceView(MustBeDeepLinkMixin, resource.CreateExamView):
         exam.resource = resource
         exam.save()
 
-        message_launch = self.get_message_launch()
+        return self.deep_link_response(resource=resource)
 
-        return deep_link_response(self.request, message_launch, resource)
+class DeepLinkContextSummaryView(MustBeDeepLinkMixin):
+    def get_deep_link_resource(self, summary, **kwargs):
+        return super().get_deep_link_resource(**kwargs)\
+            .set_custom_params({
+                'view': 'context_summary',
+                'context_summary': summary.pk,
+            })\
+            .set_title(summary.name)
+
+class DeepLinkUseContextSummaryView(DeepLinkContextSummaryView, View):
+    http_method_names = ['post',]
+
+    def post(self, *args, **kwargs):
+        summary = ContextSummary.objects.get(pk=self.request.POST['summary_pk'])
+
+        return self.deep_link_response(summary=summary)
+
+class DeepLinkCreateContextSummaryView(DeepLinkContextSummaryView, context.CreateContextSummaryView):
+    def get_initial(self):
+        initial = super().get_initial()
+
+        lti_context, _ = self.get_lti_context()
+        initial['context'] = lti_context
+
+        return initial
+
+    def form_valid(self, form):
+        summary = self.object = form.save(commit=True)
+
+        return self.deep_link_response(summary=summary)
