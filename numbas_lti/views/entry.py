@@ -105,7 +105,7 @@ def student_launch(request, resource):
     if not resource.exam:
         return render(request,'numbas_lti/exam_not_set_up.html',{})
     else:
-        return redirect(reverse_with_lti(request, 'show_attempts'))
+        return redirect(reverse_with_lti(request, 'show_attempts', args=(resource.pk,)))
 
 def show_lockdown_app(request):
     lockdown_url = lockdown_app.make_link(request)
