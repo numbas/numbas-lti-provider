@@ -8,7 +8,7 @@ from django import forms, utils
 from django.utils.translation import gettext_lazy as _
 
 from . import requests_session
-from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTIConsumerRegistrationToken, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink, register_lti_13_tool
+from .models import Exam, Resource, DiscountPart, RemarkPart, LTIConsumer, LTIConsumerRegistrationToken, LTI_11_Consumer, EditorLink, EditorLinkProject, ConsumerTimePeriod, AccessChange, UsernameAccessChange, EmailAccessChange, SebSettings, LTI_13_ResourceLink, register_lti_13_tool, ContextSummary
 from .test_exam import test_zipfile, ExamTestException
 
 from django.core.files import File
@@ -268,6 +268,35 @@ class CreateExamForm(ModelForm):
                 raise forms.ValidationError(_("There was an error while testing this exam package:") + "<pre>{}</pre>".format(utils.html.escape(e)))
 
         return cleaned_data
+
+class CreateContextSummaryForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        context = self.get_initial_for_field(self.fields['context'], 'context')
+        self.fields['resources'].queryset = context.resources
+
+    class Meta:
+        model = ContextSummary
+        fields = ('name', 'context', 'resources', 'show_total_score',)
+        widgets = {
+            'context': forms.HiddenInput(),
+            'resources': forms.CheckboxSelectMultiple(),
+        }
+
+class UpdateContextSummaryForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        context = kwargs['instance'].context
+        self.fields['resources'].queryset = context.resources
+
+    class Meta:
+        model = ContextSummary
+        fields = ('name', 'resources', 'show_total_score',)
+        widgets = {
+            'resources': forms.CheckboxSelectMultiple(),
+        }
 
 class ReplaceExamForm(CreateExamForm):
     safe_replacement = forms.BooleanField(
