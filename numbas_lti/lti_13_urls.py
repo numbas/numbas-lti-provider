@@ -24,4 +24,6 @@ urlpatterns = [
     path(r'deep-link/', views.DeepLinkView.as_view(), name='deep_link'),
     path(r'deep-link/use-resource/', views.DeepLinkUseResourceView.as_view(), name='deep_link_use_resource'),
     path(r'deep-link/create-resource/', views.DeepLinkCreateResourceView.as_view(), name='deep_link_create_resource'),
+    path(r'deep-link/use-context=summary/', views.DeepLinkUseContextSummaryView.as_view(), name='deep_link_use_context_summary'),
+    path(r'deep-link/create-context-summary/', views.DeepLinkCreateContextSummaryView.as_view(), name='deep_link_create_context_summary'),
 ]

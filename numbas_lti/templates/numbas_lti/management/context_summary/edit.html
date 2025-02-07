@@ -1,0 +1,65 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load icon %}
+{% load helplink %}
+{% load querystring %}
+{% load static %}
+
+{% block title %}{% translate "New summary page" %} - {{block.super}}{% endblock title %}
+
+{% block body_class %}{{block.super}} create-context-summary{% endblock %}
+
+{% block content %}
+    <header>
+        {% helplink page_helplink %}
+        <h1>{% translate "New summary page" %}</h1>
+    </header>
+
+    <main>
+        <form method="POST">
+            {% csrf_token %}
+
+            {{form.context}}
+
+            {% if form.non_field_errors %}
+                <div class="alert danger">
+                    {% for non_field_error in form.non_field_errors %}
+                         {{ non_field_error|safe }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {{form.errors}}
+
+            <p>{{form.name.as_field_group}}</p>
+
+            <p>{{form.show_total_score.as_field_group}}</p>
+
+            <fieldset class="has-table">
+                <legend>{% translate "Resources" %}</legend>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">{% translate "Resource" %}</th>
+                            <th scope="col"></th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for widget in form.resources %}
+                        <tr>
+                            <td><label for="{{widget.id_for_label}}">{{widget.choice_label}}</label></td>
+                            <td>{{widget.tag}}</td>
+                            <td><a target="preview" href="{% url_with_lti 'resource_dashboard' widget.data.value %}">{% translate "Preview" %}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </fieldset>
+
+            <p><button type="submit" class="button primary">{% translate "Save" %}</button></p>
+        </form>
+    </main>
+
+    {% include "numbas_lti/footer.html" %}
+{% endblock content %}

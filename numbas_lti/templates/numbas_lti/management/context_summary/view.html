@@ -1,0 +1,31 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load icon %}
+{% load helplink %}
+{% load querystring %}
+{% load static %}
+
+{% block title %}{{summary.name}} - {{block.super}}{% endblock title %}
+
+{% block body_class %}{{block.super}} create-context-summary{% endblock %}
+
+{% block content %}
+    <header>
+        {% helplink page_helplink %}
+        <h1>{{summary.name}} - <small>{{summary.context}}</small></h1>
+    </header>
+
+    <main>
+        <p><a class="btn primary" href="{% url_with_lti 'update_context_summary' summary.pk %}">{% translate "Edit this summary page" %}</a></p>
+
+        <p><strong>{% translate "Score shown:" %}</strong> {{summary.get_show_total_score_display}}</p>
+
+        <ul>
+            {% for resource in summary.ordered_resources %}
+            <li><a href="{% url_with_lti 'resource_dashboard' resource.pk %}">{{resource}}</a></li>
+            {% endfor %}
+        </ul>
+    </main>
+
+    {% include "numbas_lti/footer.html" %}
+{% endblock content %}

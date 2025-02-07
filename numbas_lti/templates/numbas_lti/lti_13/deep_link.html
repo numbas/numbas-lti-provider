@@ -9,39 +9,80 @@
     <p>{% blocktranslate %}Select an existing resource to link to, or create a new one.{% endblocktranslate %}</p>
 </div>
 
-<p>Context: {{lti_context}}</p>
 
 <section id="new-resource">
     <a class="button primary large" href="{% url_with_lti 'lti_13:deep_link_create_resource' %}">{% translate "Create a new resource" %}</a>
+    <a class="button primary large" href="{% url_with_lti 'lti_13:deep_link_create_context_summary' %}">{% translate "Create a new summary page" %}</a>
 </section>
+
+<ul id="table-of-contents">
+    <li><a href="#existing-resources">{% translate "Use an existing resource" %}</a></li>
+    <li><a href="#existing-context-summaries">{% translate "Use an existing summary page" %}</a></li>
+</ul>
 
 <hr>
 
 <section id="existing-resources">
     <h2>{% translate "Existing resources" %}</h2>
 
-    <ul>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">{% translate "Resource" %}</th>
+                <th scope="col">{% translate "Preview" %}</th>
+            </tr>
+        </thead>
+        <tbody>
         {% for resource in resources %}
-        <li>
-            <p>
-            <a href="{% url_with_lti 'resource_dashboard' resource.pk %}" target="resource">{% if resource.exam %}{{resource.exam.title}}{% else %}{{resource.title}}{% endif %}</a>
-                ({% blocktranslate count num_attempts=resource.attempts.count %}1 attempt{% plural %}{{num_attempts}} attempts{% endblocktranslate %})
-            </p>
-            <form method="POST" action="{% url_with_lti 'lti_13:deep_link_use_resource' %}">
-                {% csrf_token %}
-                <input type="hidden" name="resource_pk" value="{{resource.pk}}">
-                <button class="button default" type="submit">{% translate "Use this resource" %}</button>
-            </form>
-            {% if resource.lti_13_links.exists %}
-                <p>{% blocktranslate %}Existing links:{% endblocktranslate %}</p>
-                <ul>
-                    {% for link in resource.lti_13_links.all %}
-                    <li>{{link.title}}</li>
+        <tr>
+            <td>
+                <form method="POST" action="{% url_with_lti 'lti_13:deep_link_use_resource' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="resource_pk" value="{{resource.pk}}">
+                    <button class="button link" type="submit">{% if resource.exam %}{{resource.exam.title}}{% else %}{{resource.title}}{% endif %}</button>
+                </form>
+            </td>
+            <td>
+                <a href="{% url_with_lti 'resource_dashboard' resource.pk %}" target="resource">{% translate "Preview" %}</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<hr>
+
+<section id="existing-context-summaries">
+    <h2>{% translate "Existing summary pages" %}</h2>
+    {{lti_context}}
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">{% translate "Name" %}</th>
+                <th scope="col">{% translate "Resources" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for summary in lti_context.summaries.all %}
+        <tr>
+            <td>
+                <form method="POST" action="{% url_with_lti 'lti_13:deep_link_use_context_summary' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="summary_pk" value="{{summary.pk}}">
+                    <button class="button link" type="submit">{{summary.name}}</button>
+                </form>
+            </td>
+            <td>
+                <ul class="inline">
+                    {% for resource in summary.ordered_resources %}
+                    <li>{{resource}}</li>
                     {% endfor %}
                 </ul>
-            {% endif %}
-        </li>
+            </td>
+        </tr>
         {% endfor %}
-    </ul>
+        </tbody>
+    </table>
 </section>
 {% endblock main %}
