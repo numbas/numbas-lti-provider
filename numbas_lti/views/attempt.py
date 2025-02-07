@@ -182,21 +182,28 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
 
     ordering = ['start_time']
 
+    def get_resource(self):
+        if 'resource_pk' in self.kwargs:
+            return Resource.objects.get(pk=self.kwargs['resource_pk'])
+        else:
+            if not hasattr(request,'resource'):
+                raise http.Http404("There's no resource attached to this request.")
+            return self.request.resource
+
     def get_queryset(self):
-        return Attempt.objects.filter(resource=self.request.resource,user=self.request.user).exclude(broken=True)
+        resource = self.get_resource()
+        return Attempt.objects.filter(resource=self.resource,user=self.request.user).exclude(broken=True)
 
     def dispatch(self,request,*args,**kwargs):
+        self.resource = self.get_resource()
         if request.GET.get('back_from_unsaved_complete_attempt'):
             messages.add_message(self.request,messages.INFO,_('The attempt was completed, but not all data had been saved. All data has now been saved, and review is not available yet.'))
 
-        if not hasattr(request,'resource'):
-            raise http.Http404("There's no resource attached to this request.")
-
         if not self.get_queryset().exists():
-            resource = request.resource
-            if not resource.is_available(request.user):
+            # If no attempts at this resource exist, start a new attempt automatically.
+            if not self.resource.is_available(request.user):
                 now = timezone.now()
-                availability = resource.available_for_user(request.user)
+                availability = self.resource.available_for_user(request.user)
                 if availability.from_time is not None and now < availability.from_time:
                     template = get_template('numbas_lti/not_available_yet.html')
                     raise PermissionDenied(template.render({'available_from': availability.from_time}))
@@ -208,7 +215,7 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
     def get_context_data(self,*args,**kwargs):
         context = super(ShowAttemptsView,self).get_context_data(*args,**kwargs)
 
-        resource = self.request.resource
+        resource = self.resource
         user = self.request.user
 
         availability = resource.available_for_user(user)
@@ -329,10 +336,9 @@ class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, LTIRoleOrSuper
             'cmi_url': cmi_url,
             'exam_url': attempt.exam.extracted_url+'/index.html',
             'scorm_api_data': {
-                'show_attempts_url': self.reverse_with_lti('show_attempts'),
+                'show_attempts_url': self.reverse_with_lti('show_attempts', args=(attempt.resource.pk,)),
                 'attempt_pk': attempt.pk,
                 'fallback_url': self.reverse_with_lti('attempt_scorm_data_fallback', args=(attempt.pk,)),
-                'show_attempts_url': self.reverse_with_lti('show_attempts'),
                 'allow_review_from': attempt.resource.allow_review_from.isoformat() if attempt.resource.allow_review_from else None,
                 'available_from': iso_time(availability.from_time),
                 'available_until': iso_time(availability.until_time),
