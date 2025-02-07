@@ -1,0 +1,77 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load percentage %}
+
+{% block title %}{{summary.name}} - {{block.super}}{% endblock %}
+
+{% block body_class %}context-summary compact {{block.super}}{% endblock %}
+
+{% block content %}
+<header>
+
+    <h1>{{summary.name}}</h1>
+</header>
+<main>
+    {% if summary.show_total_score != 'none' %}
+    <p>
+        <strong>{% translate "Progress:" %}</strong>
+        <progress min="0" max="{{max_score}}" value="{{total_score}}"></progress>
+        {{total_score}} / {{max_score}} ({{scaled_score|percentage}})
+    </p>
+    {% endif %}
+
+
+    <ul id="resources">
+        {% for r in resources %}
+        <li class="{% if r.completed %}completed{% endif %}">
+            <a target="_blank" href="{% url 'show_attempts' r.resource.pk %}" title="{{r.resource.title}}">
+                <small class="name">{{r.resource.title}}</small>
+                <progress min="0" max="{{r.max_score}}" value="{{r.raw_score}}"></progress>
+                <span class="completion_status">{% if r.completed %}✔{% endif %}</span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</main>
+{% endblock content %}
+
+{% block acontent %}
+<header>
+    <h1>{{summary.name}}</h1>
+</header>
+<main>
+
+    <dl>
+        {% if summary.show_total_score != 'none' %}
+        <dt>{% translate "Total score" %}</dt>
+        <dd>
+            <progress min="0" max="{{max_score}}" value="{{total_score}}"></progress>
+            {{total_score}} / {{max_score}} ({{scaled_score|percentage}})
+        </dd>
+        {% endif %}
+    </dl>
+
+    <table>
+        <thead>
+            <tr>
+                <th>{% translate "Resource" %}</th>
+                <th>{% translate "Completion status" %}</th>
+                <th>{% translate "Score" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in resources %}
+            <tr class="{% if r.completion_status == 'completed' %}success{% endif %}">
+                <td><a target="_blank" href="{% url 'show_attempts' r.resource.pk %}">{{r.resource.title}}</a></td>
+                {% if r.attempt %}
+                <td>{{r.completion_status_display}}</td>
+                <td>{{r.attempt.raw_score}} / {{r.attempt.max_score}} ({{r.attempt.scaled_score|percentage}})</td>
+                {% else %}
+                <td colspan="2">{% translate "Not attempted" %}</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock acontent %}
