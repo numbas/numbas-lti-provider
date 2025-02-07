@@ -131,12 +131,12 @@ class LTI_13_Mixin:
             self.lti_context = get_lti_13_context(self.get_message_launch())
         return self.lti_context
 
-    def get_custom_param(self, param_name):
+    def get_custom_param(self, param_name, default=None):
         message_launch_data = self.get_message_launch().get_launch_data()
 
         return message_launch_data\
             .get('https://purl.imsglobal.org/spec/lti/claim/custom', {})\
-            .get(param_name)
+            .get(param_name, default)
 
     def reverse_with_lti(self, *args, **kwargs):
         return reverse_with_lti(self.request, *args, **kwargs)
