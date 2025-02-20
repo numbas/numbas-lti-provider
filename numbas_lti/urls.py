@@ -81,6 +81,7 @@ urlpatterns = [
     path('resource/<int:resource_id>/access_change/create', views.resource.CreateAccessChangeView.as_view(), name='create_access_change'),
     path('access_change/<int:pk>', views.resource.UpdateAccessChangeView.as_view(), name='update_access_change'),
     path('access_change/<int:pk>/delete', views.resource.DeleteAccessChangeView.as_view(), name='delete_access_change'),
+    path('resource/<int:pk>/student_launch', views.resource.StudentLaunchView.as_view(), name='student_launch_resource'),
 
     path('attempt/<int:pk>/remark_parts', views.attempt.RemarkPartsView.as_view(), name='remark_parts'),
     path('attempt/<int:pk>/scorm-listing', views.attempt.AttemptSCORMListing.as_view(), name='attempt_scorm_listing'),
@@ -93,8 +94,8 @@ urlpatterns = [
     path('report-process/<int:pk>/dismiss', views.resource.DismissReportProcessView.as_view(), name='dismiss_report_process'),
 
     # Student views: should be authenticated through LTI, carrying role information.
-    path('show_attempts/<int:resource_pk>', views.attempt.ShowAttemptsView.as_view(), name='show_attempts'),
-    path('new_attempt', views.attempt.new_attempt, name='new_attempt'),
+    path('resource/<int:resource_pk>/show_attempts', views.attempt.ShowAttemptsView.as_view(), name='show_attempts'),
+    path('resource/<int:resource_pk>/new_attempt', views.attempt.new_attempt, name='new_attempt'),
     path('context_summary/<int:pk>', views.context.ContextSummaryView.as_view(), name='context_summary'),
     path('context_summary/<int:pk>/edit', views.context.UpdateContextSummaryView.as_view(), name='update_context_summary'),
     path('run_attempt/<int:pk>', views.attempt.RunAttemptView.as_view(), name='run_attempt'),

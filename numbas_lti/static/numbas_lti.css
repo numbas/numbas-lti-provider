@@ -568,6 +568,7 @@ body > header {
 }
 body.compact header {
     margin-bottom: 0;
+	padding: 0;
 }
 
 body > main {
@@ -727,12 +728,15 @@ body.context-summary dl progress {
     width: 5em;
 }
 
+body.context-summary #total-score {
+    text-align: center;
+}
 body.context-summary #resources {
     display: flex;
     flex-wrap: wrap;
     list-style: none;
     gap: var(--spacing);
-    padding: 0;
+    padding: 0 var(--spacing);
     margin: 0;
 }
 
@@ -742,10 +746,10 @@ body.context-summary #resources li {
     background: var(--background-color);
     color: var(--text-color);
     border-radius: var(--button-radius);
-    padding: var(--spacing);
+    padding: 0 var(--spacing);
     accent-color: var(--info-color);
     flex-grow: 1;
-    max-width: 10em;
+    flex-basis: 10em;
 }
 
 body.context-summary #resources li.completed {
@@ -754,24 +758,43 @@ body.context-summary #resources li.completed {
     accent-color: var(--success-color);
 }
 
+body.context-summary #resources li.failed {
+    --background-color: var(--danger-alert-bg);
+    --text-color: var(--danger-alert-color);
+    accent-color: var(--danger-color);
+}
+
 
 body.context-summary #resources a {
     text-decoration: none;
-    display: flex;
+    display: grid;
+    gap: 0 var(--half-space);
     color: var(--text-color);
+    grid-template:
+        "name completed" auto
+        "due due" auto
+        "progress progress" min-content
+        / 1fr auto;
+    height: 100%;
 }
 
 body.context-summary #resources .name {
     text-overflow: ellipsis;
+    text-decoration: underline;
     white-space: nowrap;
     display: inline-block;
     overflow: hidden;
     max-width: 100%;
-    flex-grow: 1;
+    grid-area: name;
 }
 
+body.context-summary #resources .due-date {
+    grid-area: due;
+}
 body.context-summary #resources progress {
-    width: 1em;
+    margin: 0;
+    width: 100%;
+    grid-area: progress;
 }
 
 body.context-summary #resources .completion_status {
