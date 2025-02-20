@@ -2045,11 +2045,19 @@ SUMMARY_SCORE_TOTALS = [
     ('max_scores', _("Number of resources with maximum score")),
 ]
 
+SUMMARY_LAYOUTS = [
+    ('compact', _('Compact')),
+    ('table', _('Table')),
+]
+
 class ContextSummary(models.Model):
     name = models.CharField(max_length=500)
     context = models.ForeignKey(LTIContext, on_delete=models.CASCADE, related_name='summaries')
     resources = models.ManyToManyField(Resource, blank=True, related_name='context_summaries', through='ContextSummaryResource')
     show_total_score = models.CharField(max_length=10, default='none', choices=SUMMARY_SCORE_TOTALS, verbose_name=_('Show a total score?'))
+    layout = models.CharField(max_length=10, default='compact', choices = SUMMARY_LAYOUTS, verbose_name=_('Layout'))
+    show_due_dates = models.BooleanField(default=False, verbose_name=_('Show due dates?'))
+    show_header = models.BooleanField(default=True, verbose_name=_('Show header?'))
 
     def ordered_resources(self):
         return self.resources.order_by('contextsummaryresource')
