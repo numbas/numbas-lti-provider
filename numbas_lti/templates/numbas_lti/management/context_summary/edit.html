@@ -16,7 +16,7 @@
     </header>
 
     <main>
-        <form method="POST">
+        <form method="POST" class="big">
             {% csrf_token %}
 
             {{form.context}}
@@ -31,9 +31,17 @@
 
             {{form.errors}}
 
-            <p>{{form.name.as_field_group}}</p>
+            <fieldset>
+                <p>{{form.name.as_field_group}}</p>
 
-            <p>{{form.show_total_score.as_field_group}}</p>
+                <p>{{form.layout.as_field_group}}</p>
+
+                <p>{{form.show_total_score.as_field_group}}</p>
+
+                <p>{{form.show_due_dates.as_field_group}}</p>
+
+                <p>{{form.show_header.as_field_group}}</p>
+            </fieldset>
 
             <fieldset class="has-table">
                 <legend>{% translate "Resources" %}</legend>

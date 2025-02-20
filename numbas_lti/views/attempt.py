@@ -208,7 +208,7 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
                     template = get_template('numbas_lti/not_available_yet.html')
                     raise PermissionDenied(template.render({'available_from': availability.from_time}))
 
-            return new_attempt(request)
+            return new_attempt(request, self.resource.pk)
         else:
             return super(ShowAttemptsView,self).dispatch(request,*args,**kwargs)
 
@@ -230,28 +230,29 @@ class ShowAttemptsView(RequireLockdownAppMixin, generic.list.ListView):
         
         return context
 
-def new_attempt(request):
-    if not request.resource.can_start_new_attempt(request.user):
+def new_attempt(request, resource_pk):
+    resource = Resource.objects.get(pk=resource_pk)
+
+    if not resource.can_start_new_attempt(request.user):
         raise PermissionDenied(gettext("You can't start a new attempt at this exam."))
 
-    resource = request.resource
     user = request.user
 
     max_attempts = resource.max_attempts_for_user(user)
 
-    num_attempts = Attempt.objects.filter(resource=request.resource,user=request.user).count()
+    num_attempts = Attempt.objects.filter(resource=resource,user=request.user).count()
 
     if num_attempts >= max_attempts:
-        tokens = AccessToken.objects.filter(resource=request.resource,user=request.user)
+        tokens = AccessToken.objects.filter(resource=resource,user=request.user)
         if tokens.exists():
             tokens.first().delete()
         else:
-            if not request.resource.can_start_new_attempt(request.user):
+            if not resource.can_start_new_attempt(request.user):
                 raise PermissionDenied(gettext("You can't start a new attempt at this exam."))
 
     attempt = Attempt.objects.create(
-        resource = request.resource,
-        exam = request.resource.exam,
+        resource = resource,
+        exam = resource.exam,
         user = request.user
     )
     return redirect(reverse_with_lti(request, 'run_attempt',args=(attempt.pk,)))

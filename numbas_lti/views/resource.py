@@ -1,4 +1,5 @@
-from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required, reverse_with_lti
+from . import entry
+from .mixins import HelpLinkMixin, ResourceManagementViewMixin, MustBeInstructorMixin, MustHaveExamMixin, INSTRUCTOR_ROLES, lti_role_or_superuser_required, reverse_with_lti, LTIRoleOrSuperuserMixin
 from .generic import CreateFileReportView, JSONView
 from numbas_lti import forms, save_scorm_data, tasks
 from numbas_lti.exceptions import LineItemDoesNotExist
@@ -869,3 +870,10 @@ class DeleteAccessChangeView(HelpLinkMixin,ResourceManagementViewMixin, MustBeIn
 
     def get_success_url(self):
         return self.reverse_with_lti('resource_access_changes',args=(self.get_resource().pk,))
+
+class StudentLaunchView(LTIRoleOrSuperuserMixin, generic.detail.DetailView):
+    model = Resource
+
+    def get(self, request, *args, **kwargs):
+        request.resource = self.get_object()
+        return entry.student_launch(request, request.resource)
