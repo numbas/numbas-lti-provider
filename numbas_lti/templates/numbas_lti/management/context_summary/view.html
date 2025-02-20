@@ -7,7 +7,7 @@
 
 {% block title %}{{summary.name}} - {{block.super}}{% endblock title %}
 
-{% block body_class %}{{block.super}} create-context-summary{% endblock %}
+{% block body_class %}{{block.super}} compact context-summary{% endblock %}
 
 {% block content %}
     <header>
@@ -22,7 +22,7 @@
 
         <ul>
             {% for resource in summary.ordered_resources %}
-            <li><a href="{% url_with_lti 'resource_dashboard' resource.pk %}">{{resource}}</a></li>
+            <li><a target="resource" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{{resource}}</a></li>
             {% endfor %}
         </ul>
     </main>
