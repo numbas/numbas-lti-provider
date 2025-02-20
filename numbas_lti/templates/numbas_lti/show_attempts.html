@@ -76,7 +76,7 @@
                 <tr>
                     <td colspan="3">
                     <td>
-                        <a class="button warning" href="{% url_with_lti 'new_attempt' %}">{% icon 'plus' %} {% translate "Start a new attempt" %}</a>
+                        <a class="button warning" href="{% url_with_lti 'new_attempt' resource.pk %}">{% icon 'plus' %} {% translate "Start a new attempt" %}</a>
                     </td>
                 </tr>
                 {% endif %}

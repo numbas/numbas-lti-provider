@@ -57,42 +57,46 @@ class ContextSummaryView(generic.detail.DetailView):
 
         completion_status_displays = dict(COMPLETION_STATUSES)
 
-        def resource_summary(resource):
-            res = resource.grade_user(self.request.user)
+        user = self.request.user
 
-            if res is None:
-                return {
-                    'resource': resource,
-                    'attempt': None,
-                    'scaled_score': 0,
-                    'completion_status': 'not attempted',
-                    'raw_score': 0,
-                    'max_score': resource.estimate_max_score(),
-                }
-            else:
+        def resource_summary(resource):
+            res = resource.grade_user(user)
+
+            r = {
+                'resource': resource,
+                'attempt': None,
+                'scaled_score': 0,
+                'completion_status': 'not attempted',
+                'raw_score': 0,
+                'max_score': resource.estimate_max_score(),
+                'is_available': resource.is_available(user)
+            }
+
+            if res:
                 attempt, completion_status, submitted_at = res
 
-                r = {
+                r.update({
                     'resource': resource,
                     'attempt': attempt,
                     'scaled_score': attempt.scaled_score,
                     'raw_score': attempt.raw_score,
                     'max_score': attempt.max_score,
                     'completion_status': completion_status,
-                    'completion_status_display': completion_status_displays[completion_status],
                     'submitted_at': submitted_at,
-                }
+                })
 
-            if cs.show_total_score in ('scaled', 'raw', 'max_scores'):
-                r['completed'] = r['scaled_score'] == 1
-            elif cs.show_total_score == 'completed':
-                r['completed'] = r['completion_status'] == 'completed'
+            r['completed'] = r['scaled_score'] == 1
+
+            if cs.show_total_score == 'completion':
+                r['completed'] = r['completed'] or r['completion_status'] == 'completed'
+
+            r['completion_status_display'] = completion_status_displays[r['completion_status'] if not r['completed'] else 'completed']
 
             return r
 
         resources = [resource_summary(r) for r in cs.ordered_resources().all()]
 
-        num_completed = len([r for r in resources if r.get('completion_status') == 'completed'])
+        num_completed = len([r for r in resources if r['completed']])
 
         proportion_completed = num_completed / len(resources)
 
@@ -103,7 +107,7 @@ class ContextSummaryView(generic.detail.DetailView):
             context['total_score'] = sum(r['raw_score'] for r in resources)
             context['max_score'] = sum(r['max_score'] for r in resources)
         elif cs.show_total_score == 'completion':
-            context['total_score'] = len([r for r in resources if r['completion_status'] == 'completed'])
+            context['total_score'] = len([r for r in resources if r['completed']])
             context['max_score'] = len(resources)
         elif cs.show_total_score == 'max_scores':
             context['total_score'] = len([r for r in resources if r['scaled_score'] == 1])
