@@ -450,9 +450,9 @@ class ResourceLaunchView(mixins.LTI_13_Mixin):
         except KeyError:
             raise Exception(f"Invalid launch view parameter: {view}")
 
-        return handler()
+        return handler(*args, **kwargs)
 
-    def context_summary(self):
+    def context_summary(self, *args, **kwargs):
         summary_pk = self.get_custom_param('context_summary')
         return redirect(self.reverse_with_lti('context_summary', args=(summary_pk,)))
 
@@ -519,23 +519,23 @@ def do_lti_entry(request):
 
 class TeacherLaunchView(ResourceLaunchView, View):
 
-    def resource_launch(self, request, *args, **kwargs):
+    def resource_launch(self, *args, **kwargs):
         resource_link = self.get_resource_link()
 
         if resource_link:
             self.record_user_data(resource_link)
-            numbas_lti.views.entry.record_launch(request, role='teacher', lti_13_resource_link=resource_link)
+            numbas_lti.views.entry.record_launch(self.request, role='teacher', lti_13_resource_link=resource_link)
             return redirect(self.reverse_with_lti('resource_dashboard', args=(resource_link.resource.pk,)))
         else:
             return render(self.request, 'numbas_lti/launch_errors/no_resource.html', status=404)
 
 class StudentLaunchView(ResourceLaunchView, View):
-    def resource_launch(self):
+    def resource_launch(self, *args, **kwargs):
         resource_link = self.get_resource_link()
     
         self.record_user_data(resource_link)
-        numbas_lti.views.entry.record_launch(request, role='student', lti_13_resource_link=resource_link)
-        return numbas_lti.views.entry.student_launch(request, resource_link.resource)
+        numbas_lti.views.entry.record_launch(self.request, role='student', lti_13_resource_link=resource_link)
+        return numbas_lti.views.entry.student_launch(self.request, resource_link.resource)
 
 class MustBeDeepLinkMixin(mixins.LTI_13_Mixin):
     must_have_message_launch = True
