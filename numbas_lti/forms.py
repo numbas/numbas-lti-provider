@@ -274,11 +274,11 @@ class CreateContextSummaryForm(ModelForm):
         super().__init__(*args, **kwargs)
 
         context = self.get_initial_for_field(self.fields['context'], 'context')
-        self.fields['resources'].queryset = context.resources
+        self.fields['resources'].queryset = context.resources.distinct()
 
     class Meta:
         model = ContextSummary
-        fields = ('name', 'context', 'resources', 'show_total_score',)
+        fields = ('name', 'context', 'layout', 'resources', 'show_total_score', 'show_due_dates', 'show_header',)
         widgets = {
             'context': forms.HiddenInput(),
             'resources': forms.CheckboxSelectMultiple(),
@@ -289,11 +289,11 @@ class UpdateContextSummaryForm(ModelForm):
         super().__init__(*args, **kwargs)
 
         context = kwargs['instance'].context
-        self.fields['resources'].queryset = context.resources
+        self.fields['resources'].queryset = context.resources.distinct()
 
     class Meta:
         model = ContextSummary
-        fields = ('name', 'resources', 'show_total_score',)
+        fields = ('name', 'layout', 'resources', 'show_total_score', 'show_due_dates', 'show_header',)
         widgets = {
             'resources': forms.CheckboxSelectMultiple(),
         }
