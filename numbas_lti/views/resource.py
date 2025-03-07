@@ -105,6 +105,9 @@ class ReplaceExamView(CreateExamView):
         resource.exam = new_exam
         resource.save(update_fields=['exam'])
 
+        if form.cleaned_data['safe_replacement']:
+            resource.attempts.filter(exam=old_exam).update(exam=new_exam)
+
         messages.add_message(self.request,messages.INFO,_('The exam package has been updated.'))
 
         return http.HttpResponseRedirect(self.get_success_url())
