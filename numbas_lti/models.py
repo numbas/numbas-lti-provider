@@ -192,6 +192,7 @@ class LTI_13_UserAlias(models.Model):
     consumer = models.ForeignKey(LTIConsumer, related_name='lti_13_user_aliases', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='lti_13_aliases', on_delete=models.CASCADE)
     sub = models.CharField(max_length=255) # The platform's identifier for the user
+    lis_person_sourcedid = models.CharField(max_length=255, blank=True, null=True) # Another identifier for the user from the platform.
 
     full_name = models.CharField(max_length=1000, blank=True, default='')
     given_name = models.CharField(max_length=1000, blank=True, default='')
@@ -1064,6 +1065,8 @@ class LTIUserData(models.Model):
         try:
             if self.lti_11 and self.lti_11.lis_person_sourcedid:
                 return self.lti_11.lis_person_sourcedid
+            elif self.lti_13 and self.lti_13.lis_person_sourcedid:
+                return self.lti_13.lis_person_sourcedid
             else:
                 return self.consumer_user_id
         except LTI_11_UserData.DoesNotExist:

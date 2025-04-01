@@ -200,7 +200,11 @@ class LTI_13_AuthBackend(ModelBackend):
         if locale:
             user_alias.locale = locale
 
-        user_alias.save(update_fields=('full_name', 'given_name', 'family_name', 'email', 'locale'))
+        lis_claim = launch_data.get('https://purl.imsglobal.org/spec/lti/claim/lis')
+        if lis_claim:
+            user_alias.lis_person_sourcedid = lis_claim.get('person_sourcedid')
+
+        user_alias.save(update_fields=('full_name', 'given_name', 'family_name', 'email', 'locale', 'lis_person_sourcedid'))
         user.save(update_fields=('first_name', 'last_name', 'email'))
 
         return user

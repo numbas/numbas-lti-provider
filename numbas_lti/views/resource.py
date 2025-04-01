@@ -580,6 +580,7 @@ class AllAttemptsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixi
         context = super(AllAttemptsView,self).get_context_data(*args,**kwargs)
         resource = self.get_resource()
         context['resource'] = resource
+        context['context'] = resource.lti_contexts().first()
         context['query'] = self.query
 
         return context

@@ -50,14 +50,14 @@
             </nav>
         {% endif %}
 
-        {% with identifier_field=resource.context.consumer.identifier_field %}
+        {% with identifier_field=context.consumer.identifier_field %}
         <div class="scrolling-table">
             <table id="attempts" class="table-striped">
                 <thead>
                     <tr>
                         <th scope="col">{% translate "Student" %}</th>
                         {% if identifier_field %}
-                        <th scope="col">{{resource.context.consumer.get_identifier_field_display}}</th>
+                        <th scope="col">{{context.consumer.get_identifier_field_display}}</th>
                         {% endif %}
                         <th scope="col">{% translate "Start time" %}</th>
                         <th scope="col" aria-label="{% translate "Controls" %}"></th>
