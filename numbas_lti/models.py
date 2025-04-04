@@ -1402,8 +1402,9 @@ class Attempt(models.Model):
         now = timezone.now()
         resource = self.resource
         # If the due date hasn't passed, or the student has since reopened the attempt, use the time of the last suspend data change, or the available_until, whichever is earliest
-        if self.student_has_reopened() or resource.due_date is None or now < resource.due_date:
-            return min(resource.available_until, self.scormelements.filter(remarked=None, key='cmi.suspend_data').first().time)
+        suspend_data_elements = self.scormelements.filter(remarked=None, key='cmi.suspend_data')
+        if (self.student_has_reopened() or resource.due_date is None or now < resource.due_date) and suspend_data_elements.exists():
+            return min(resource.available_until, suspend_data_elements.first().time)
         # If the due date has passed, use that
         elif resource.due_date is not None:
             return resource.due_date
