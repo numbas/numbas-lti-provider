@@ -1620,6 +1620,8 @@ class Attempt(models.Model):
     def review_allowed(self,ignore_show_scores=False):
         if not (ignore_show_scores or self.should_show_scores()):
             return False
+        if self.resource.show_marks_when in ('always', 'complete'):
+            return True
         return self.resource.allow_review_from is None or timezone.now() >= self.resource.allow_review_from
 
     def should_show_scores(self):
