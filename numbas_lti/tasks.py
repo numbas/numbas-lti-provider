@@ -11,7 +11,7 @@ from huey.contrib.djhuey import periodic_task, task, db_periodic_task, db_task
 import json
 import logging
 from numbas_lti.report_outcome import ReportOutcomeException, report_outcome, report_all_resource_scores
-from numbas_lti.models import Attempt, ScormElement, diff_scormelements, FileReport, EditorLink, Resource
+from numbas_lti.models import Attempt, ScormElement, diff_scormelements, FileReport, EditorLink, Resource, AccessChange
 import re
 
 logger = logging.getLogger(__name__)
