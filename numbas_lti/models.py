@@ -1390,9 +1390,15 @@ class Attempt(models.Model):
         except ScormElement.DoesNotExist:
             pass
 
-        # If attempt was ended by the student, use the time that they did that.
+        # If attempt was ended by the student, use the first time that the attempt was ended after the last suspend data change.
         try:
-            completion_element = self.scormelements.current('cmi.completion_status')
+            completion_status_elements = self.scormelements.filter(key='cmi.completion_status', value='completed')
+            x_end_time_elements = self.scormelements.filter(key='x.end_time')
+            last_score_change = self.scormelements.current('cmi.suspend_data')
+            if last_score_change is not None:
+                completion_status_elements = completion_status_elements.filter(time__gte=last_score_change.time)
+                x_end_time_elements = x_end_time_elements.filter(time__gte=last_score_change.time)
+            completion_element = completion_status_elements.last()
             if completion_element.value == 'completed':
                 return completion_element.time
         except ScormElement.DoesNotExist:
@@ -1404,7 +1410,11 @@ class Attempt(models.Model):
         # If the due date hasn't passed, or the student has since reopened the attempt, use the time of the last suspend data change, or the available_until, whichever is earliest
         suspend_data_elements = self.scormelements.filter(remarked=None, key='cmi.suspend_data')
         if (self.student_has_reopened() or resource.due_date is None or now < resource.due_date) and suspend_data_elements.exists():
-            return min(resource.available_until, suspend_data_elements.first().time)
+            last_suspend_data_time = suspend_data_elements.first().time
+            if resource.available_until is None:
+                return last_suspend_data_time
+            else:
+                return min(resource.available_until, last_suspend_data_time)
         # If the due date has passed, use that
         elif resource.due_date is not None:
             return resource.due_date
