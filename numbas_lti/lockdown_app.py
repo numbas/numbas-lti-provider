@@ -96,7 +96,10 @@ class LockdownApp:
         """ 
             Raises an OldVersionException if the user's version of the app is older than the minimum specified in settings.LOCKDOWN_APP['minimum_version'][this.app_name][platform]
         """
-        version, platform = self.get_app_version()
+        try:
+            version, platform = self.get_app_version()
+        except Exception:
+            raise OldVersionException('unknown', min_version)
 
         min_version = settings.LOCKDOWN_APP.get('minimum_version',{}).get(self.app_name,{}).get(platform)
         if min_version is not None:
@@ -206,6 +209,9 @@ class SEBApp(LockdownApp):
     app_name_display = 'Safe Exam Browser'
     launch_link_template = 'numbas_lti/lockdown_launch/seb_link.html'
 
+    def get_install_url(self):
+        return settings.LOCKDOWN_APP['seb_install_url']
+
     def is_lockdown_app(self):
         """
             Check that the request has come from SEB.
@@ -226,6 +232,17 @@ class SEBApp(LockdownApp):
         expected_hash = hashlib.sha256((uri + key).encode('utf-8')).hexdigest()
 
         return header_hash == expected_hash
+
+    def get_app_version(self):
+        user_agent = self.request.META['HTTP_USER_AGENT']
+        version = re.match(r'.*SEB/(\S+)', user_agent).group(1)
+        platform = None
+        if 'Windows' in user_agent:
+            platform = 'win32'
+        elif 'Macintosh' in user_agent:
+            platform = 'mac'
+
+        return (version, platform)
 
     def make_launch_url(self):
         params = self.request.GET.copy()

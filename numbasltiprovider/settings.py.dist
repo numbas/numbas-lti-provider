@@ -270,6 +270,21 @@ LOCKDOWN_APP = {
 
     # The URL to download the Safe Exam Browser app from.
     'seb_install_url': 'https://safeexambrowser.org/download_en.html',
+
+    # The minimum allowed version of the lockdown app
+    'minimum_version': {
+        'numbas': {
+            'linux': '3.1',
+            'win32': '3.1',
+            'mac': '3.1',
+            'android': '100',
+            'ios': '100',
+        },
+        'seb': {
+            'win32': '3.6',
+            'mac': '3.3',
+        }
+    }
 }
 
 # The User-Agent header string to use for any requests made by this tool. The version of the software is appended to the string given here.

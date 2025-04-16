@@ -665,6 +665,12 @@ body.manage-consumer .period-name {
     top: 3em;
 }
 
+body.show-attempts header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 body.show-attempts table.attempts form {
     display: inline;
 }

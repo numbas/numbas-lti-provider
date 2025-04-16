@@ -300,7 +300,7 @@ class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, LTIRoleOrSuper
         return response
 
     def get_context_data(self,*args,**kwargs):
-        context = super(RunAttemptView,self).get_context_data(*args,**kwargs)
+        context = super().get_context_data(*args,**kwargs)
 
         attempt = self.get_object()
 
@@ -308,9 +308,6 @@ class RunAttemptView(RequireLockdownAppMixin, AttemptAccessMixin, LTIRoleOrSuper
 
         user = attempt.user
         availability = attempt.resource.available_for_user(user)
-
-        require_lockdown_app, _, _ = attempt.resource.require_lockdown_app_for_user(user)
-        context['require_lockdown_app'] = require_lockdown_app
 
         context['support_name'] = getattr(settings,'SUPPORT_NAME',None)
         context['support_url'] = getattr(settings,'SUPPORT_URL',None)
