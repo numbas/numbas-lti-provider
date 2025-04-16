@@ -250,3 +250,11 @@ class RequireLockdownAppMixin(object):
             return http.HttpResponseForbidden(_('This resource can only be accessed through {app_name}').format(controller.app_name_display))
         else:
             return super().dispatch(*args,**kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        require_lockdown_app, _, _ = self.request.resource.require_lockdown_app_for_user(self.request.user)
+        context['require_lockdown_app'] = require_lockdown_app
+
+        return context
