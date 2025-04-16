@@ -1,0 +1,23 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load icon %}
+
+{% block title %}{% blocktranslate with app=app %}Please upgrade {{app}}{% endblocktranslate %} - {{block.super}}{% endblock title %}
+
+{% block content %}
+    <header>
+        <h1>
+            {% blocktranslate with app=app %}Please upgrade {{app}}{% endblocktranslate %}
+        </h1>
+    </header>
+
+    <main>
+        <p>{% blocktranslate with app_name=app_name %}The version of {{app_name}} that you are using is out of date.{% endblocktranslate %}</p>
+        <p>{% blocktranslate with version=version min_version=min_version %}You have version {{version}} but version {{min_version}} or newer is required.{% endblocktranslate %}</p>
+        <p>{% blocktranslate %}Please install the latest version, and then open this link again.{% endblocktranslate %}</p>
+
+        <p><a class="button info" href="{{install_url}}" target="_blank">{% icon 'download' %} {% translate "Install the app" %}</a></p>
+    </main>
+</div>
+{% endblock content %}
+

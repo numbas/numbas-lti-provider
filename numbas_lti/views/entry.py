@@ -14,6 +14,7 @@ from importlib import import_module
 from ipware import get_client_ip
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -95,46 +96,23 @@ def student_launch(request, resource):
     if not resource.exam:
         return render(request,'numbas_lti/exam_not_set_up.html',{})
 
-    require_lockdown_app, _, seb_settings = resource.require_lockdown_app_for_user(request.user)
-    if require_lockdown_app=='numbas' and not lockdown_app.is_lockdown_app(request):
-        return show_lockdown_app(request)
-
-    if require_lockdown_app=='seb' and not lockdown_app.is_seb(request, seb_settings):
-        return show_seb_link(request)
+    controller = lockdown_app.lockdown_app_controller(request)
+    if not controller.is_lockdown_app():
+        return controller.show_lockdown_link()
 
     if not resource.exam:
         return render(request,'numbas_lti/exam_not_set_up.html',{})
     else:
         return redirect(reverse_with_lti(request, 'show_attempts'))
 
-def show_lockdown_app(request):
-    lockdown_url = lockdown_app.make_link(request)
-    password = request.resource.get_lockdown_app_password(user=request.user)
-    return render(
-        request,
-        'numbas_lti/lockdown_launch/numbas_app_link.html', 
-        {
-            'lockdown_url': lockdown_url,
-            'install_url': settings.LOCKDOWN_APP.get('install_url'),
-            'password': password,
-        }
-    )
-
 def lockdown_launch(request):
-    return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
+    controller = lockdown_app.lockdown_app_controller(request)
+    try:
+        controller.check_version()
+    except lockdown_app.OldVersionException as err:
+        return controller.old_version_response(err)
 
-def show_seb_link(request):
-    seb_url = lockdown_app.make_seb_link(request)
-    password = request.resource.get_lockdown_app_password(user=request.user)
-    return render(
-        request,
-        'numbas_lti/lockdown_launch/seb_link.html',
-        {
-            'seb_url': seb_url,
-            'install_url': settings.LOCKDOWN_APP.get('seb_install_url'),
-            'password': password,
-        }
-    )
+    return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
 
 def seb_launch(request):
     session_key = request.GET.get('session_key')
@@ -145,5 +123,18 @@ def seb_launch(request):
 
         return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
 
+    controller = lockdown_app.lockdown_app_controller(request)
+    try:
+        controller.check_version()
+    except lockdown_app.OldVersionException as err:
+        return controller.old_version_response(err)
+
     return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
 
+
+"""
+TODO:
+
+    * Check version numbers on the iOS and Android Numbas apps
+    * Check how SEB puts its version number in the user agent
+"""

@@ -1,0 +1,39 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load icon %}
+
+{% block meta %}
+    {{block.super}}
+    <meta http-equiv="refresh" content="0;URL='{{launch_url}}'" />
+{% endblock meta %}
+
+{% block title %}{{request.resource.title}} - {{block.super}}{% endblock title %}
+
+{% block content %}
+    <header>
+        <h1>
+            {{request.resource.title}}
+        </h1>
+    </header>
+
+    <main>
+        <p>{% blocktranslate with app_name=app_name %}This resource must run in {{app_name}}.{% endblocktranslate %}</p>
+        <p>{% blocktranslate with app_name=app_name %}{{app_name}} will open automatically, if you have it installed.{% endblocktranslate %}</p>
+
+        {% if install_url %}
+        <p><a class="button info" href="{{install_url}}" target="_blank">{% icon 'download' %} {% blocktranslate with app_name=app_name %}Install {{app_name}}{% endblocktranslate %}</a></p>
+        {% endif %}
+
+        {% if request.resource.show_lockdown_app_password and password %}
+        <div class="alert info">
+            <p>{% translate "The password to open the exam is" %}</p>
+            <pre class="lockdown-app-password">{{password}}</pre>
+        </div>
+        {% endif %}
+
+        <p>{% blocktranslate with app_name=app_name %}Or, click the link below to open this resource in {{app_name}}{% endblocktranslate %}</p>
+        <p><a class="button large primary" href="{{launch_url}}">{% blocktranslate with app_name=app_name %}Launch in {{app_name}}{% endblocktranslate %}</a></p>
+    </main>
+</div>
+{% endblock content %}
+

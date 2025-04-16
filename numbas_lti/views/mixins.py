@@ -245,7 +245,8 @@ def needs_lockdown_app(request):
 
 class RequireLockdownAppMixin(object):
     def dispatch(self,*args,**kwargs):
-        if needs_lockdown_app(self.request) and not lockdown_app.is_lockdown_app(self.request):
-            return http.HttpResponseForbidden(_('This resource can only be accessed through the Numbas lockdown app'))
+        controller = lockdown_app.lockdown_app_controller(self.request)
+        if not controller.is_lockdown_app():
+            return http.HttpResponseForbidden(_('This resource can only be accessed through {app_name}').format(controller.app_name_display))
         else:
             return super().dispatch(*args,**kwargs)
