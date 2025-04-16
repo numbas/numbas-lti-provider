@@ -5,6 +5,7 @@ from Crypto.Util.Padding import pad
 from django_auth_lti.patch_reverse import reverse
 from django.conf import settings
 from django.core import signing
+from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 import gzip
 import hashlib
@@ -36,33 +37,8 @@ def get_ltip3_session_id(request):
     launch_data_storage = DjangoCacheDataStorage()
     launch_data_storage.set_request(lti1p3_request)
     cookie_service = DjangoCookieService(lti1p3_request)
-    return cookie_service.get_cookie(launch_data_storage.get_session_cookie_name())
-
-def make_link(request):
-    params = request.GET.copy()
-    params.update({
-        'session_key': request.session.session_key,
-        'lti1p3-session-id': get_ltip3_session_id(request),
-    })
-
-
-    launch_url = add_query_param(
-        request.build_absolute_uri(reverse('lockdown_launch')),
-        params
-    )
-
-    token = token_for_request(request)
-
-    link_settings = {
-        'url': launch_url,
-        'token': token,
-    }
-
-    password = request.resource.get_lockdown_app_password(user=request.user)
-
-    iv, encrypted = encrypt(password, json.dumps(link_settings))
-    url = f'numbas://{request.get_host()}/'+binascii.hexlify(iv+encrypted).decode('ascii')
-    return url
+    cookie_name = launch_data_storage.get_session_cookie_name() or ''
+    return cookie_service.get_cookie(cookie_name)
 
 def token_for_request(request):
     return signing.dumps({
@@ -74,73 +50,215 @@ def validate_token(request, token):
     d = signing.loads(token)
     return isinstance(d,dict) and d.get('resource') == request.resource.pk and d.get('user') == request.user.pk
 
-def is_lockdown_app(request):
-    required, lockdown_app_password, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
+class OldVersionException(Exception):
+    def __init__(self, version, min_version):
+        self.version = version
+        self.min_version = min_version
 
-    checker = {
-        'numbas': is_numbas_lockdown_app,
-        'seb': is_seb,
+def parse_version(version_string: str):
+    try:
+        return [int(x) for x in version_string.split('.')]
+    except ValueError:
+        raise ValueError(f"{version_string} is not a valid version number.")
+
+def compare_versions(a: str, b: str) -> int:
+    a = parse_version(a)
+    b = parse_version(b)
+    return 1 if a > b else -1 if a < b else 0
+
+class LockdownApp:
+    app_name = ''
+    app_name_display = ''
+
+    def __init__(self, request):
+        self.request = request
+
+    def is_lockdown_app(self) -> bool:
+        raise NotImplementedError
+
+    def get_app_version(self):
+        """ Return (version: str, platform: str)
+        """
+        raise NotImplementedError
+
+    def get_install_url(self) -> str:
+        raise NotImplementedError
+
+    def show_lockdown_link(self):
+        """
+            Show the link to open the lockdown app.
+        """
+
+        raise NotImplementedError
+
+
+    def check_version(self):
+        """ 
+            Raises an OldVersionException if the user's version of the app is older than the minimum specified in settings.LOCKDOWN_APP['minimum_version'][this.app_name][platform]
+        """
+        version, platform = self.get_app_version()
+
+        min_version = settings.LOCKDOWN_APP.get('minimum_version',{}).get(self.app_name,{}).get(platform)
+        if min_version is not None:
+            if compare_versions(version, min_version) < 0:
+                raise OldVersionException(version, min_version)
+
+    def old_version_response(self, err: OldVersionException):
+        return render(
+            self.request,
+            'numbas_lti/lockdown_launch/must_upgrade_app.html',
+            {
+                'app_name': self.app_name_display,
+                'version': err.version,
+                'min_version': err.min_version,
+                'install_url': self.get_install_url(),
+                'client_version': err.version,
+            }
+        )
+
+    def show_lockdown_link(self):
+        launch_url = self.make_launch_url()
+        password = self.request.resource.get_lockdown_app_password(user=self.request.user)
+        return render(
+            self.request,
+            'numbas_lti/lockdown_launch/app_link.html',
+            {
+                'launch_url': launch_url,
+                'install_url': settings.LOCKDOWN_APP.get('seb_install_url'),
+                'password': password,
+                'app_name': self.app_name_display,
+            }
+        )
+
+
+class NoLockdownApp(LockdownApp):
+    def is_lockdown_app(self):
+        return True
+
+    def check_version(self):
+        pass
+
+
+class NumbasLockdownApp(LockdownApp):
+    app_name = 'numbas'
+    app_name_display = _('Numbas lockdown app')
+
+    def get_install_url(self):
+        return settings.LOCKDOWN_APP.get('install_url')
+
+    def is_lockdown_app(self):
+        _, lockdown_app_password, _ = self.request.resource.require_lockdown_app_for_user(self.request.user)
+
+        header = self.request.META.get('HTTP_AUTHORIZATION')
+        if header is None:
+            return False
+
+        m = re.match(r'^Basic (?P<token>.*)$',header)
+        if not m:
+            return False
+        
+        token = m.group('token')
+
+        try:
+            validate_token(self.request, token)
+        except signing.BadSignature:
+            return False
+
+        return True
+
+    def get_app_version(self):
+        user_agent = self.request.META['HTTP_USER_AGENT']
+        info = dict(re.findall(r'\((?P<key>.*?): (?P<value>.*?)\)', user_agent))
+        version = info.get('Version')
+        platform = info.get('Platform')
+
+        return (version, platform)
+
+    def make_launch_url(self):
+        params = self.request.GET.copy()
+        params.update({
+            'session_key': self.request.session.session_key,
+            'lti1p3-session-id': get_ltip3_session_id(self.request),
+        })
+
+
+        launch_url = add_query_param(
+            self.request.build_absolute_uri(reverse('lockdown_launch')),
+            params
+        )
+
+        token = token_for_request(self.request)
+
+        link_settings = {
+            'url': launch_url,
+            'token': token,
+        }
+
+        password = self.request.resource.get_lockdown_app_password(user=self.request.user)
+
+        iv, encrypted = encrypt(password, json.dumps(link_settings))
+        url = f'numbas://{self.request.get_host()}/'+binascii.hexlify(iv+encrypted).decode('ascii')
+        return url
+
+
+class SEBApp(LockdownApp):
+    app_name = 'seb'
+    app_name_display = 'Safe Exam Browser'
+    launch_link_template = 'numbas_lti/lockdown_launch/seb_link.html'
+
+    def is_lockdown_app(self):
+        """
+            Check that the request has come from SEB.
+            The Mac and iOS apps don't send this header any more, so this only works for Windows SEB.
+
+            There's a description of how this is supposed to work at https://safeexambrowser.org/developer/seb-config-key.html
+        """
+
+        _, _, seb_settings = self.request.resource.require_lockdown_app_for_user(self.request.user)
+
+        if seb_settings is None:
+            return False
+
+        header_hash = self.request.headers.get('X-Safeexambrowser-Configkeyhash')
+        uri = self.request.build_absolute_uri()
+        key = seb_settings.config_key_hash
+
+        expected_hash = hashlib.sha256((uri + key).encode('utf-8')).hexdigest()
+
+        return header_hash == expected_hash
+
+    def make_launch_url(self):
+        params = self.request.GET.copy()
+        params.update({
+            'session_key': self.request.session.session_key,
+            'lti1p3-session-id': get_ltip3_session_id(self.request),
+        })
+
+        query = '&'.join(f'{k}={urllib.parse.quote(v)}' for k,v in params.items() if v is not None)
+
+        _, _, seb_settings = self.request.resource.require_lockdown_app_for_user(self.request.user)
+        settings_url = seb_settings.settings_file.url
+
+        scheme = 'sebs' if self.request.is_secure() else 'seb'
+        url = urllib.parse.urlunparse((scheme, self.request.get_host(), settings_url, '', '', ''))+'??'+query
+        return url
+
+
+def lockdown_app_controller(request):
+    """ 
+        Get the appropriate subclass of LockdownApp for the resource associated with the request.
+    """
+    required, _, _ = request.resource.require_lockdown_app_for_user(request.user)
+
+    controllers = {
+        'numbas': NumbasLockdownApp,
+        'seb': SEBApp,
     }
 
-    try:
-        fn = checker[required]
-    except KeyError:
-        return False
+    controller_cls = controllers.get(required, NoLockdownApp)
 
-    return fn(request, lockdown_app_password=lockdown_app_password, seb_settings=seb_settings)
+    return controller_cls(request)
 
-def is_numbas_lockdown_app(request, **kwargs):
-    header = request.META.get('HTTP_AUTHORIZATION')
-    if header is None:
-        return False
-
-    m = re.match(r'^Basic (?P<token>.*)$',header)
-    if not m:
-        return False
-    
-    token = m.group('token')
-
-    try:
-        validate_token(request, token)
-    except signing.BadSignature:
-        return False
-
-    return True
-
-def make_seb_link(request):
-    params = request.GET.copy()
-    params.update({
-        'session_key': request.session.session_key,
-        'lti1p3-session-id': get_ltip3_session_id(request),
-    })
-
-    query = '&'.join(f'{k}={urllib.parse.quote(v)}' for k,v in params.items() if v is not None)
-
-    _, _, seb_settings = request.resource.require_lockdown_app_for_user(request.user)
-    settings_url = seb_settings.settings_file.url
-
-    scheme = 'sebs' if request.is_secure() else 'seb'
-    url = urllib.parse.urlunparse((scheme, request.get_host(), settings_url, '', '', ''))+'??'+query
-    return url
-
-def is_seb(request, seb_settings=None, **kwargs):
-    """
-        Check that the request has come from SEB.
-        The Mac and iOS apps don't send this header any more, so this only works for Windows SEB.
-
-        There's a description of how this is supposed to work at https://safeexambrowser.org/developer/seb-config-key.html
-    """
-
-    if seb_settings is None:
-        return False
-
-    header_hash = request.headers.get('X-Safeexambrowser-Configkeyhash')
-    uri = request.build_absolute_uri()
-    key = seb_settings.config_key_hash
-
-    expected_hash = hashlib.sha256((uri + key).encode('utf-8')).hexdigest()
-
-    return header_hash == expected_hash
 
 SaltBitSize = 64
 KeyBitSize = 256
