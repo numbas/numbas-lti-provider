@@ -1939,7 +1939,10 @@ class EditorLink(models.Model):
             from . import tasks
             tasks.editorlink_update_cache(self)
         if self.cached_available_exams:
-            return json.loads(self.cached_available_exams)
+            try:
+                return json.loads(self.cached_available_exams)
+            except json.JSONDecodeError:
+                return []
         else:
             return []
 
