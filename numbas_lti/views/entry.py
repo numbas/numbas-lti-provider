@@ -100,18 +100,18 @@ def student_launch(request, resource):
     if not controller.is_lockdown_app():
         return controller.show_lockdown_link()
 
-    if not resource.exam:
-        return render(request,'numbas_lti/exam_not_set_up.html',{})
-    else:
-        return redirect(reverse_with_lti(request, 'show_attempts'))
-
-def lockdown_launch(request):
     controller = lockdown_app.lockdown_app_controller(request)
     try:
         controller.check_version()
     except lockdown_app.OldVersionException as err:
         return controller.old_version_response(err)
 
+    if not resource.exam:
+        return render(request,'numbas_lti/exam_not_set_up.html',{})
+    else:
+        return redirect(reverse_with_lti(request, 'show_attempts'))
+
+def lockdown_launch(request):
     return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
 
 def seb_launch(request):
@@ -122,12 +122,6 @@ def seb_launch(request):
             return render(request, 'numbas_lti/launch_errors/seb_launch_without_params.html')
 
         return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
-
-    controller = lockdown_app.lockdown_app_controller(request)
-    try:
-        controller.check_version()
-    except lockdown_app.OldVersionException as err:
-        return controller.old_version_response(err)
 
     return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
 
