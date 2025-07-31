@@ -5,6 +5,8 @@ function die(e) {
 
 const exam_data_json = document.getElementById('exam-data-json').textContent;
 const exam_data = JSON.parse(exam_data_json);
+const {manifest} = exam_data;
+const numbas_version = parseInt((manifest?.Numbas_version || '8').split('.')[0]);
 
 const numbas_ready = new Promise((resolve,reject) => {
     try {
@@ -27,7 +29,9 @@ const numbas_ready = new Promise((resolve,reject) => {
     }
 });
 
-function load_exam() {
+/** Load a Numbas exam compiled with a version earlier than 9.0.
+ */
+function load_exam_pre_v9() {
     return numbas_ready.then(Numbas => {
         if(Numbas.schedule.unhalt) {
             Numbas.schedule.unhalt();
@@ -95,6 +99,23 @@ function load_exam() {
 
         return p;
     });
+}
+
+/** Load a Numbas exam compiled with version 9.0 or later.
+ */
+async function load_exam_v9() {
+    const {exam} = await Numbas.load_exam({
+        exam_url: exam_data['extracted_url']+'/source.exam'
+    });
+    return exam;
+}
+
+function load_exam() {
+    if(numbas_version < 9) {
+        return load_exam_pre_v9();
+    } else {
+        return load_exam_v9();
+    }
 }
 
 function reset(exam) {

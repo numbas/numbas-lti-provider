@@ -736,10 +736,13 @@ class RemarkIframeView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstr
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args,**kwargs)
         resource = self.object
+        manifest = resource.exam.manifest()
         context['exam_data'] = {
             'extracted_url': resource.exam.extracted_url,
+            'manifest': manifest,
         }
-        context['scripts_url'] = resource.exam.extracted_url +'/scripts.js'
+        scripts_filename = manifest.get('features',{}).get('js','scripts.js')
+        context['scripts_url'] = resource.exam.extracted_url + '/' + scripts_filename
         return context
 
 class ValidateReceiptView(HelpLinkMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.SingleObjectMixin,generic.FormView):
