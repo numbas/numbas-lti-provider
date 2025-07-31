@@ -124,11 +124,3 @@ def seb_launch(request):
         return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
 
     return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
-
-
-"""
-TODO:
-
-    * Check version numbers on the iOS and Android Numbas apps
-    * Check how SEB puts its version number in the user agent
-"""

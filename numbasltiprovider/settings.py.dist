@@ -277,8 +277,8 @@ LOCKDOWN_APP = {
             'linux': '3.1',
             'win32': '3.1',
             'mac': '3.1',
-            'android': '100',
-            'ios': '100',
+            'android': '2.03',
+            'ios': '1.1',
         },
         'seb': {
             'win32': '3.6',
