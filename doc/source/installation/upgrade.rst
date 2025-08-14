@@ -9,6 +9,11 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v4.3
+----
+
+There are no special upgrade steps for this version.
+
 v4.2
 ----
 
@@ -55,6 +60,9 @@ Non-Docker installation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 The stable git branch for this version is ``v4_STABLE``.
+Switch to that branch::
+
+    git switch v4_STABLE
 
 The minimum required version of Python is now 3.10.
 
