@@ -804,15 +804,13 @@ class Resource(models.Model):
             Estimate the maximum score for this resource.
             Because the maximum score for a question can't be determined without running it, and might be different for different attempts, we can only estimate the maximum score by looking at an attempt at the exam.
             If no attempts exist, return 1.
-            LTI platforms only store the scaled score, so this can only help readability and shouldn't affect any automated decisions.
+            This is used by the LTI 1.3 line item, so hopefully it's correct!
         """
-        try:
-            attempt = self.attempts.first()
-            if attempt is None:
-                return 1
-            return attempt.max_score
-        except Attempt.DoesNotExist:
-            return 1
+        for a in self.attempts.all():
+            score = a.max_score
+            if score > 0:
+                return score
+        return 1
 
     def get_lti_13_lineitem(self, create = False):
         lineitem_dict = {
