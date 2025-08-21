@@ -237,6 +237,10 @@ class HelpLinkMixin(object):
 def needs_lockdown_app(request):
     if not hasattr(request,'resource'):
         return False
+
+    if request.user.is_superuser:
+        return False
+
     if request_is_instructor(request):
         return False
 
@@ -245,16 +249,16 @@ def needs_lockdown_app(request):
 
 class RequireLockdownAppMixin(object):
     def dispatch(self,*args,**kwargs):
-        controller = lockdown_app.lockdown_app_controller(self.request)
-        if needs_lockdown_app(self.request) and not controller.is_lockdown_app():
-            return http.HttpResponseForbidden(_('This resource can only be accessed through {app_name}.').format(app_name=controller.app_name_display))
+        if needs_lockdown_app(self.request):
+            controller = lockdown_app.lockdown_app_controller(self.request)
+            if not controller.is_lockdown_app():
+                return http.HttpResponseForbidden(_('This resource can only be accessed through {app_name}.').format(app_name=controller.app_name_display))
 
         return super().dispatch(*args,**kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        require_lockdown_app, _, _ = self.request.resource.require_lockdown_app_for_user(self.request.user)
-        context['require_lockdown_app'] = require_lockdown_app
+        context['require_lockdown_app'] = needs_lockdown_app(self.request)
 
         return context
