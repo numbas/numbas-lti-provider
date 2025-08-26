@@ -2016,10 +2016,10 @@ class UserScoreReported(models.Model):
     report_process = models.ForeignKey(ReportProcess, on_delete=models.SET_NULL, null=True, help_text=_('Resource score reporting process that this was a part of.'), related_name='user_score_reports')
     time = models.DateTimeField(auto_now_add=True, help_text=_('The time that the score was reported.'))
     error = models.TextField(blank=True, null=True, verbose_name=_('Error message'), help_text=_('The text of any error message returned by the consumer.'))
-    raw_score = models.FloatField()
-    max_score = models.FloatField()
-    completion_status = models.CharField(max_length=20,choices=COMPLETION_STATUSES)
-    start_time = models.DateTimeField()
+    raw_score = models.FloatField(blank=True, null=True)
+    max_score = models.FloatField(blank=True, null=True)
+    completion_status = models.CharField(max_length=20, choices=COMPLETION_STATUSES, blank=True, null=True)
+    start_time = models.DateTimeField(blank=True, null=True)
     submitted_time = models.DateTimeField(null=True, blank=True)
 
     class Meta:
