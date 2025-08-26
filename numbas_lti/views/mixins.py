@@ -19,7 +19,7 @@ from numbas_lti.middleware import get_lti_13_context
 import pylti1p3.roles
 from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
-from pylti1p3.exception import LtiException, LtiMessageValidationException
+from pylti1p3.exception import LtiException, LtiMessageValidationException, LtiInvalidNonceException
 import urllib.parse
 
 INSTRUCTOR_ROLES = getattr(settings,'LTI_INSTRUCTOR_ROLES', {})
@@ -100,7 +100,10 @@ class LTI_13_Mixin:
         try:
             self.check_message_launch()
         except LtiMessageValidationException as exception:
-            return render(self.request, 'numbas_lti/launch_errors/message_validation_error.html', {'exception': exception})
+            hint = None
+            if isinstance(exception, LtiInvalidNonceException):
+                hint = '''This might be due to a misconfiguration of the cache. The administrator should check the server's <code>CACHES</code> setting.'''
+            return render(self.request, 'numbas_lti/launch_errors/message_validation_error.html', {'exception': exception, 'hint': hint})
         except Exception as exception:
             return render(self.request, self.launch_error_template, {'exception': exception, 'debug':settings.DEBUG, 'post_data': sorted(request.POST.items(),key=lambda x:x[0])})
 

@@ -8,4 +8,8 @@
 
 {% block main %}
     <p>{{exception}}</p>
+
+    {% if hint %}
+    <p class="help-text">{{hint|safe}}</p>
+    {% endif %}
 {% endblock main %}
