@@ -12,7 +12,18 @@ For such releases, this page lists the changes that must be made.
 v4.3
 ----
 
-There are no special upgrade steps for this version.
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
+There are no special upgrade steps for Docker installations for this version.
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+There is a new addition to the ``LOCKDOWN_APP`` setting.
+
+Copy the ``'minimum_version'`` key from :file:`numbasltiprovider/settings.py.dist` into :file:`numbasltiprovider/settings.py`, inside the ``LOCKDOWN_APP`` object.
+
 
 v4.2
 ----
