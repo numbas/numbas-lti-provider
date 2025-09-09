@@ -11,7 +11,7 @@ const numbas_version = parseInt((manifest?.Numbas_version || '8').split('.')[0])
 const numbas_ready = new Promise((resolve,reject) => {
     try {
         Numbas.getStandaloneFileURL = function(extension, path) {
-		return exam_data['extracted_url']+'/extensions/'+extension+'/standalone_scripts/'+path;
+            return exam_data['extracted_url']+'/extensions/'+extension+'/standalone_scripts/'+path;
         }
         Numbas.queueScript('web-remarking',['start-exam'],function() {
             try {
