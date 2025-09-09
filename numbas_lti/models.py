@@ -1397,7 +1397,7 @@ class Attempt(models.Model):
                 completion_status_elements = completion_status_elements.filter(time__gte=last_score_change.time)
                 x_end_time_elements = x_end_time_elements.filter(time__gte=last_score_change.time)
             completion_element = completion_status_elements.last()
-            if completion_element.value == 'completed':
+            if completion_element is not None and completion_element.value == 'completed':
                 return completion_element.time
         except ScormElement.DoesNotExist:
             pass
