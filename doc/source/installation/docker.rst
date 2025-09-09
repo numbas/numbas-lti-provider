@@ -77,7 +77,7 @@ Remake the container image::
 
     docker build . --no-cache -t numbas/numbas-lti-provider
 
-Then run the installation script again:
+Then run the installation script again::
 
     docker compose run --rm numbas-setup python ./install
 
