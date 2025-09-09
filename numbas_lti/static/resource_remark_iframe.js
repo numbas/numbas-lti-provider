@@ -105,7 +105,8 @@ function load_exam_pre_v9() {
  */
 async function load_exam_v9() {
     const {exam} = await Numbas.load_exam({
-        exam_url: exam_data['extracted_url']+'/source.exam'
+        exam_url: exam_data['extracted_url']+'/source.exam',
+        storage: 'scorm',
     });
     return exam;
 }
@@ -137,37 +138,39 @@ function remark_session(options) {
     options = options || {};
     const promise = new Promise((resolve,reject) => {
         load_exam().then(exam => {
-            const pre_submit_promises = exam.questionList.map(q => q.signals.on('resume'));
-            exam.questionList.forEach(function(q) {
-                q.store.saveQuestion(q);
-                q.allParts().forEach(function(p) {
-                    p.store.partAnswered(p);
-                    p.revealed = false;
-                    if(options.use_unsubmitted) {
-                        p.stagedAnswer = p.resume_stagedAnswer || p.stagedAnswer;
-                    }
-                });
-                if(options.use_unsubmitted) {
-                    q.parts.forEach(function(p) {
+            exam.signals.on('ready', () => {
+                const pre_submit_promises = exam.questionList.map(q => q.signals.on('resume'));
+                exam.questionList.forEach(function(q) {
+                    q.store.saveQuestion(q);
+                    q.allParts().forEach(function(p) {
+                        p.store.partAnswered(p);
                         p.revealed = false;
-                        p.submit();
+                        if(options.use_unsubmitted) {
+                            p.stagedAnswer = p.resume_stagedAnswer || p.stagedAnswer;
+                        }
                     });
-                }
-                q.allParts().forEach(function(p) {
-                    if(p.waiting_for_pre_submit) {
-                        pre_submit_promises.push(p.waiting_for_pre_submit);
+                    if(options.use_unsubmitted) {
+                        q.parts.forEach(function(p) {
+                            p.revealed = false;
+                            p.submit();
+                        });
                     }
+                    q.allParts().forEach(function(p) {
+                        if(p.waiting_for_pre_submit) {
+                            pre_submit_promises.push(p.waiting_for_pre_submit);
+                        }
+                    });
                 });
-            });
 
-            Promise.all(pre_submit_promises).then(results => {
-                setTimeout(() => {
-                    exam.store.saveExam(exam);
+                Promise.all(pre_submit_promises).then(results => {
+                    setTimeout(() => {
+                        exam.store.saveExam(exam);
 
-                    reset(exam);
+                        reset(exam);
 
-                    resolve({success: true});
-                }, 100);
+                        resolve({success: true});
+                    }, 100);
+                });
             });
         }).catch(err=>{
             resolve({success: false, error: err});
