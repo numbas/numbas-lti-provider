@@ -227,6 +227,11 @@ const app = createApp({
                     offline: true,
                     scorm_cmi: attempt.cmi
                 });
+                if(!attempt.cmi['cmi.suspend_data']?.value) {
+                    attempt.await_remark = false;
+                    this.get_remarking_results({pk: attempt.pk, success: true});
+                    return;
+                }
                 api.allow_set = true;
                 attempt.status = 'remarking';
                 attempt.await_remark = false;
