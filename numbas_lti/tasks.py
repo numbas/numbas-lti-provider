@@ -136,9 +136,9 @@ def scorm_set_start_time(element):
     attempt.save(update_fields=['start_time'])
 
 @db_task(priority=9)
-def scorm_set_num_questions(resource,number):
+def scorm_set_num_questions(resource, number):
     logger.debug(f"Set num questions for resource {resource} to {number}")
-    if number>resource.num_questions:
+    if number > resource.num_questions:
         resource.num_questions = number
         resource.save(update_fields=['num_questions'])
 

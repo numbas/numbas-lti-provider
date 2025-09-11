@@ -127,13 +127,6 @@ def fetch_context_lineitems(sender, instance, created, **kwargs):
 
     tasks.fetch_lti_13_ags_lineitems(context)
 
-@receiver(models.signals.post_save,sender=ScormElement)
-def send_scorm_element_to_dashboard(sender,instance,created,**kwargs):
-    if not created:
-        return
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(group_for_attempt(instance.attempt), {'type': 'scorm.new.element','element':instance.as_json()})
-
 @receiver(models.signals.post_save,sender=Attempt)
 def send_score_on_attempt_creation(sender, instance, created, **kwargs):
     if not created:
@@ -151,43 +144,6 @@ def send_receipt_on_completion(sender,instance, **kwargs):
         if attempt.all_data_received and attempt.end_time is not None and attempt.completion_status=='completed' and not attempt.sent_receipt:
             tasks.send_attempt_completion_receipt.schedule((attempt,), delay=0.1)
 
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_score(sender,instance,created,**kwargs):
-    if instance.key!='cmi.score.scaled' or not created:
-        return
-
-    if not instance.newer_than(instance.attempt.scaled_score_element):
-        return
-
-    tasks.scorm_set_score.schedule((instance,), delay=0.1)
-    tasks.scorm_set_score.schedule((instance, True), delay=10)
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_completion_status(sender,instance,created,**kwargs):
-    if instance.key!='cmi.completion_status' or not created:
-        return
-
-    if not instance.newer_than(instance.attempt.completion_status_element):
-        return
-
-    tasks.scorm_set_completion_status.schedule((instance,), delay=0.1)
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_start_time(sender,instance,created,**kwargs):
-    if instance.key != 'cmi.suspend_data' or not created:
-        return
-
-    tasks.scorm_set_start_time.schedule((instance,), delay=0.1)
-
-@receiver(models.signals.post_save,sender=ScormElement)
-def scorm_set_num_questions(sender,instance,created,**kwargs):
-    """ Set the number of questions for this resource - can only work this out once the exam has been run! """
-    if not re.match(r'^cmi.objectives.([0-9]+).id$',instance.key) or not created:
-        return
-
-    number = int(re.match(r'q(\d+)',instance.value).group(1))+1
-    tasks.scorm_set_num_questions.schedule((instance.attempt.resource, number,), delay=0.1)
 
 @receiver(models.signals.pre_delete, sender=FileReport)
 def delete_file_report(sender,instance,**kwargs):
