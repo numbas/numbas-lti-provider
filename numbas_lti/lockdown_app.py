@@ -127,7 +127,7 @@ class LockdownApp:
             'numbas_lti/lockdown_launch/app_link.html',
             {
                 'launch_url': launch_url,
-                'install_url': settings.LOCKDOWN_APP.get('seb_install_url'),
+                'install_url': self.get_install_url(),
                 'password': password,
                 'app_name': self.app_name_display,
             }
