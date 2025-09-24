@@ -104,11 +104,30 @@ function load_exam_pre_v9() {
 /** Load a Numbas exam compiled with version 9.0 or later.
  */
 async function load_exam_v9() {
+    const {extracted_url} = exam_data;
+
     const {exam} = await Numbas.load_exam({
-        exam_url: exam_data['extracted_url']+'/source.exam',
+        exam_url: extracted_url + '/source.exam',
         storage: 'scorm',
     });
-    return exam;
+
+    const extension_data = await (await fetch(extracted_url + '/extensions/extensions.json')).json();
+
+    for(const [extension, data] of Object.entries(extension_data)) {
+        const root = extracted_url + '/' + data.root;
+        Numbas.extension_url_root[extension] = root;
+        for(const js of data.javascripts) {
+            const src = `${root}/${js}`;
+            if(!document.head.querySelector(`script[data-numbas-extension="${extension}"][src="${src}"]`)) {
+                const script = document.createElement('script');
+                script.src = src;
+                script.dataset.numbasExtension = extension;
+                document.head.appendChild(script);
+            }
+        }
+    }
+
+    return (await exam);
 }
 
 function load_exam() {
@@ -137,6 +156,14 @@ function reset(exam) {
 function remark_session(options) {
     options = options || {};
     const promise = new Promise((resolve,reject) => {
+        const ohalt = Numbas.schedule.halt.bind(Numbas.schedule);
+
+        Numbas.schedule.halt = function(error) {
+            ohalt(...arguments);
+            Numbas.schedule.halt = ohalt;
+            resolve({success: false, error});
+        }
+
         load_exam().then(exam => {
             exam.signals.on('ready', () => {
                 const pre_submit_promises = exam.questionList.map(q => q.signals.on('resume'));
