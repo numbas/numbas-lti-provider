@@ -3,7 +3,7 @@ daphne==4.1.2
 diff-match-patch==20230430
 Django==5.1.4
 git+https://github.com/christianp/django-auth-lti@v3.1.3#egg=django_auth_lti
-git+https://github.com/christianp/pylti1.3@numbas#egg=pylti1p3
+git+https://github.com/christianp/pylti1p3next@numbas
 django-ipware==4.0.0
 django-statici18n==2.0.1
 huey==2.5.0
