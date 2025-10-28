@@ -32,7 +32,12 @@ const app = createApp({
     computed: {
         show_elements() {
             var query = this.query.toLowerCase();
-            var re = new RegExp(query);
+            var re;
+            try {
+                re = new RegExp(query);
+            } catch(e) {
+                return [];
+            }
             var keys = this.keys.filter(k => re.test(k));
             keys.sort();
             var out = [];
