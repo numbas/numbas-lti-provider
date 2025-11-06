@@ -1325,6 +1325,12 @@ class Attempt(models.Model):
 
         return data
 
+    def get_completion_status_display(self):
+        if self.completed():
+            return dict(COMPLETION_STATUSES)['completed']
+    
+        return self._get_FIELD_display(self._meta.get_field('completion_status'))
+
     def completed(self):
         r"""
             Should this attempt be considered as completed?
