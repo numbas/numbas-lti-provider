@@ -457,7 +457,7 @@ class LTI_13_Context(models.Model):
             self.lineitems_last_fetched = timezone.now()
             self.save(update_fields=['cached_lineitems', 'lineitems_last_fetched'])
 
-        return self.cached_lineitems
+        return (LineItem(x) for x in self.cached_lineitems)
 
 REQUIRE_LOCKDOWN_APP_CHOICES = [
     ('', _('No')),
@@ -828,7 +828,7 @@ class Resource(models.Model):
 
         resource_link_ids = self.lti_13_links.values_list('resource_link_id', flat=True)
 
-        condition = lambda l: l.get('resourceLinkId') in resource_link_ids or (l.get('tag')==lineitem.get_tag() and l.get('resourceId')==lineitem.get_resource_id())
+        condition = lambda l: l.get_resource_link_id() in resource_link_ids or (l.get_tag() == lineitem.get_tag() and l.get_resource_id() == lineitem.get_resource_id())
 
         lti_13_context = self.lti_13_contexts().first()
         lineitems = lti_13_context.ags_lineitems(force_fetch=create)
@@ -842,8 +842,6 @@ class Resource(models.Model):
                 lti_13_context.ags_lineitems(force_fetch=True)
             else:
                 raise LineItemDoesNotExist(self)
-
-        saved_lineitem = LineItem(saved_lineitem)
 
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
             or time_from_iso(saved_lineitem.get_start_date_time()) != time_from_iso(lineitem.get_start_date_time())
