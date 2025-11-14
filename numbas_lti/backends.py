@@ -10,6 +10,7 @@ from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 import uuid
 
+from . import requests_session
 logger = logging.getLogger(__name__)
 
 def new_lti_user():
@@ -148,7 +149,7 @@ class LTI_13_AuthBackend(ModelBackend):
     message_launch_cls = DjangoMessageLaunch
 
     def get_message_launch(self, request):
-        message_launch = self.message_launch = self.message_launch_cls(request, self.tool_conf, launch_data_storage = self.launch_data_storage)
+        message_launch = self.message_launch = self.message_launch_cls(request, self.tool_conf, launch_data_storage = self.launch_data_storage, requests_session=requests_session.get_session())
         return message_launch
 
     def get_lti_tool(self, request):
