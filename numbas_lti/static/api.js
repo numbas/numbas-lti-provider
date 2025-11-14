@@ -19,6 +19,8 @@ function SCORM_API(options) {
 
     this.callbacks = new CallbackHandler();
 
+    this.committed = false;
+
     this.offline = options.offline;
 
     this.attempt_pk = options.attempt_pk;
@@ -230,6 +232,12 @@ SCORM_API.prototype = {
                     data[e.key] = {value: e.value,time: e.time};
                 }
             });
+        }
+
+        // If the attempt was previously initialised but that wasn't successfully saved to the server, and the entry is 'ab-initio', change it to a 'resume' entry.
+        // This is only safe when the data from localstorage was fully initialised, so look for cmi.exit and cmi.suspend_data
+        if(stored_data.current !== undefined && stored_data.current['cmi.exit'] == 'suspend' && stored_data.current['cmi.suspend_data'] && data['cmi.entry'] && data['cmi.entry'].value == 'ab-initio') {
+            data['cmi.entry'] = {value: 'resume', time: get_now()};
         }
 
         // create the data model
@@ -522,7 +530,9 @@ SCORM_API.prototype = {
             elements: elements,
             time: get_now()
         };
-        this.set_localstorage();
+        if(this.committed) {
+            this.set_localstorage();
+        }
         this.callbacks.trigger('batch_sent',elements,id);
     },
 
@@ -840,6 +850,8 @@ SCORM_API.prototype = {
 	},
 
     Commit: function(s) {
+        this.committed = true;
+
         this.callbacks.trigger('Commit');
         return true;
     }
