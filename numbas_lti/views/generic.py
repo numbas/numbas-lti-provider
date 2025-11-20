@@ -38,7 +38,7 @@ class CreateFileReportView(object):
         filename = Path(self.get_filename())
         filename = '{stem}-{date}-{uuid}{suffix}'.format(
                 stem = filename.stem,
-                date = datetime.now().strftime('%Y-%d-%m-%H_%M_%S'),
+                date = datetime.now().strftime('%Y-%m-%d-%H_%M_%S'),
                 uuid = str(uuid.uuid4())[:8],
                 suffix = filename.suffix
         )
