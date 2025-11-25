@@ -571,6 +571,9 @@ class AllAttemptsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixi
             query = self.query = self.request.GET.get('query')
             for word in query.split():
                 attempts = attempts.filter(Q(user__first_name__icontains=word) | Q(user__last_name__icontains=word))
+        if 'sort' in self.request.GET:
+            sort = self.request.GET['sort']
+            attempts = attempts.order_by(sort)
         return attempts
 
     def get_resource(self):
@@ -582,6 +585,14 @@ class AllAttemptsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixi
         context['resource'] = resource
         context['context'] = resource.lti_contexts().first()
         context['query'] = self.query
+
+        sort_by = self.request.GET.get('sort','-start_time')
+        sort_direction = 'ascending'
+        if sort_by.startswith('-'):
+            sort_by = sort_by[1:]
+            sort_direction = 'descending'
+        context['sort_by'] = sort_by
+        context['sort_direction'] = sort_direction
 
         return context
 

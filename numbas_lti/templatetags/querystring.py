@@ -90,3 +90,21 @@ def lti_launch_fields(context):
         out['param_value'] = context.request.GET.get('resource_link_id')
 
     return out
+
+@register.simple_tag(takes_context=True)
+def sort_query(context, key):
+    sort = context.request.GET.get('sort','')
+    ascending = True
+    if sort.startswith('-'):
+        ascending = False
+        sort=sort[1:]
+
+    if sort == key:
+        ascending = not ascending
+
+    query_dict = context.request.GET.copy()
+
+    query_dict['sort'] = ('' if ascending else '-') + key
+
+    return '?'+query_dict.urlencode()
+

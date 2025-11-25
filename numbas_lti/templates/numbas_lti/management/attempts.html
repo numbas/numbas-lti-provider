@@ -52,17 +52,17 @@
 
         {% with identifier_field=context.consumer.identifier_field %}
         <div class="scrolling-table">
-            <table id="attempts" class="table-striped">
+            <table id="attempts" class="table-striped sortable">
                 <thead>
                     <tr>
-                        <th scope="col">{% translate "Student" %}</th>
+                        {% include "numbas_lti/table_sort_header.html" with key="user__last_name" label="Student" %}
                         {% if identifier_field %}
-                        <th scope="col">{{context.consumer.get_identifier_field_display}}</th>
+                            {% include "numbas_lti/table_sort_header.html" with key="user__"|add:identifier_field label=context.consumer.get_identifier_field_display %}
                         {% endif %}
-                        <th scope="col">{% translate "Start time" %}</th>
+                        {% include "numbas_lti/table_sort_header.html" with key="start_time" label="Start time" %}
                         <th scope="col" aria-label="{% translate "Controls" %}"></th>
-                        <th scope="col">{% translate "Completion status" %}</th>
-                        <th scope="col">{% translate "Score" %}</th>
+                        {% include "numbas_lti/table_sort_header.html" with key="completion_status" label="Completion status" %}
+                        {% include "numbas_lti/table_sort_header.html" with key="scaled_score" label="Score" %}
                     </tr>
                 </thead>
                 <tbody>

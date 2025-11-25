@@ -1,0 +1,9 @@
+{% load i18n %}
+{% load querystring %}
+<th scope="col"
+    {% if sort_by == key %} aria-sort="{{sort_direction}}"{% endif %}
+>
+    <a href="{% sort_query key %}">{% translate label %}</a>
+    {% if sort_by == key %}<span aria-hidden="true">{% if sort_direction == "ascending" %}↓{% else %}↑{% endif %}</span>{% endif %}
+</th>
+
