@@ -166,21 +166,24 @@
                         {% endfor %}
                     </table>
 
-                {% else %}
-
-                    {{form.usernames}}
-                    <p class="help-block">
-                        {% blocktranslate with username=user.username %}Your username is <code>{{username}}</code>.{% endblocktranslate %}
-                    </p>
-                    {{form.emails}}
-                    <p class="help-block">
-                        {% if user.email %}
-                            {% blocktranslate with email=user.email %}Your email address is <code>{{email}}</code>.{% endblocktranslate %}
-                        {% else %}
-                            {% translate "The LTI connection doesn't seem to share email addresses. You might not be able to identify students by email address." %}
-                        {% endif %}
-                    </p>
+                <p>Or write usernames or email addresses directly.</p>
                 {% endif %}
+
+                <label for="{{form.usernames.auto_id}}">{{form.usernames.label}}</label>
+                {{form.usernames}}
+                <p class="help-block">
+                    {% blocktranslate with username=user.username %}Your username is <code>{{username}}</code>.{% endblocktranslate %}
+                </p>
+
+                <label for="{{form.emails.auto_id}}">{{form.emails.label}}</label>
+                {{form.emails}}
+                <p class="help-block">
+                    {% if user.email %}
+                        {% blocktranslate with email=user.email %}Your email address is <code>{{email}}</code>.{% endblocktranslate %}
+                    {% else %}
+                        {% translate "The LTI connection doesn't seem to share email addresses. You might not be able to identify students by email address." %}
+                    {% endif %}
+                </p>
             </fieldset>
         </div>
         <p><button class="button large primary" type="submit">{% translate "Save" %}</button> <a class="button link" href="{% url_with_lti 'resource_access_changes' resource.pk %}">{% translate "Cancel" %}</a></p>

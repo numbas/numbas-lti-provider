@@ -385,7 +385,7 @@ form.big fieldset .help-block {
     max-width: 20em;
     margin-left: auto;
     text-align: right;
-    margin-top: calc(-1 * var(--double-space));
+    margin-top: calc(-1 * var(--spacing));
     margin-bottom: var(--quad-space);
 }
 
