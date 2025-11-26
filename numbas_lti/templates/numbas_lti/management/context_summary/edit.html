@@ -5,14 +5,19 @@
 {% load querystring %}
 {% load static %}
 
-{% block title %}{% translate "New summary page" %} - {{block.super}}{% endblock title %}
+{% block title %}{% translate "Edit summary page" %} - {{block.super}}{% endblock title %}
 
 {% block body_class %}{{block.super}} create-context-summary{% endblock %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script src="{% static 'group-sorter.js' %}"></script>
+{% endblock javascripts %}
 
 {% block content %}
     <header>
         {% helplink page_helplink %}
-        <h1>{% translate "New summary page" %}</h1>
+        <h1>{% translate "Edit summary page" %}</h1>
     </header>
 
     <main>
@@ -45,24 +50,30 @@
 
             <fieldset class="has-table">
                 <legend>{% translate "Resources" %}</legend>
-                <table>
+                <table id="items-fallback">
                     <thead>
                         <tr>
                             <th scope="col">{% translate "Resource" %}</th>
-                            <th scope="col"></th>
-                            <th scope="col"></th>
+                            <th scope="col">{% translate "Include?" %}</th>
+                            <th scope="col">{% translate "Group name" %}</th>
+                            <th scope="col">{% translate "Group index" %}</th>
+                            <th scope="col">{% translate "Index" %}</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for widget in form.resources %}
+                        {% for resource, through in resources %}
                         <tr>
-                            <td><label for="{{widget.id_for_label}}">{{widget.choice_label}}</label></td>
-                            <td>{{widget.tag}}</td>
-                            <td><a target="preview" href="{% url_with_lti 'resource_dashboard' widget.data.value %}">{% translate "Preview" %}</a></td>
+                            <td><a target="preview" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{{resource.title}}</a></td>
+                            <td><input type="checkbox" name="resource_pk" value="{{resource.pk}}" {% if through.pk %}checked{% endif %}></td>
+                            <td><input type="text" name="resource-{{resource.pk}}-group" value="{{through.group}}"></td>
+                            <td><input type="number" name="resource-{{resource.pk}}-group_order" value="{{through.group_order}}"></td>
+                            <td><input type="number" name="resource-{{resource.pk}}-order" value="{{through.order}}"></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <div id="sorter"></div>
             </fieldset>
 
             <p><button type="submit" class="button primary">{% translate "Save" %}</button></p>

@@ -1,0 +1,1 @@
+A component to select items from a list into any number of groups.

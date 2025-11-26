@@ -19,6 +19,7 @@ from django.core import validators
 from django.utils import timezone
 from datetime import timedelta,datetime
 from django_auth_lti.patch_reverse import reverse
+from itertools import groupby
 import json
 from lxml import etree
 import os
@@ -2063,7 +2064,7 @@ class ContextSummary(models.Model):
     show_header = models.BooleanField(default=True, verbose_name=_('Show header?'))
 
     def ordered_resources(self):
-        return self.resources.order_by('contextsummaryresource')
+        return groupby(ContextSummaryResource.objects.filter(context_summary=self), key=lambda x: (x.group, x.group_order))
 
     def __str__(self):
         return self.name
@@ -2075,6 +2076,8 @@ class ContextSummaryResource(models.Model):
     context_summary = models.ForeignKey(ContextSummary, on_delete=models.CASCADE)
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     order = models.IntegerField(default=0)
+    group_order = models.IntegerField(default=0)
+    group = models.CharField(max_length=100, default='')
 
     class Meta:
-        ordering = ('order', 'resource',)
+        ordering = ('group_order', 'order', 'resource',)
