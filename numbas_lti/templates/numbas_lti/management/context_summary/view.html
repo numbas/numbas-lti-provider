@@ -20,11 +20,14 @@
 
         <p><strong>{% translate "Score shown:" %}</strong> {{summary.get_show_total_score_display}}</p>
 
+        {% for group in resource_groups %}
+        <h2>{{group.name}}</h2>
         <ul>
-            {% for resource in summary.ordered_resources %}
-            <li><a target="resource" href="{% url_with_lti 'resource_dashboard' resource.pk %}">{{resource}}</a></li>
+            {% for r in group.resources %}
+            <li><a target="resource" href="{% url_with_lti 'resource_dashboard' r.resource.pk %}">{{r.resource}}</a></li>
             {% endfor %}
         </ul>
+        {% endfor %}
     </main>
 
     {% include "numbas_lti/footer.html" %}

@@ -1,6 +1,8 @@
 from django.views import generic
-from django.shortcuts import render, redirect
-from numbas_lti.models import LTIContext, ContextSummary, COMPLETION_STATUSES
+from django.shortcuts import render
+from django.http import HttpResponseRedirect
+from django.utils.text import slugify
+from numbas_lti.models import LTIContext, ContextSummary, ContextSummaryResource, COMPLETION_STATUSES, Resource
 from .consumer import ConsumerManagementMixin
 from .mixins import MustBeInstructorMixin, request_is_instructor
 from numbas_lti import forms
@@ -31,6 +33,32 @@ class UpdateContextSummaryView(MustBeInstructorMixin, generic.edit.UpdateView):
     model = ContextSummary
     template_name = 'numbas_lti/management/context_summary/edit.html'
     form_class = forms.UpdateContextSummaryForm
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        summary = self.get_object()
+        throughs = {cs.resource.pk: cs for cs in summary.contextsummaryresource_set.all()}
+
+        context['resources'] = [(r, throughs.get(r.pk, ContextSummaryResource(context_summary=summary, resource=r))) for r in summary.context.resources.all()]
+
+        return context
+
+    def form_valid(self, form):
+        self.object = form.save()
+        print(self.request.POST)
+        pks = self.request.POST.getlist('resource_pk')
+        resources = Resource.objects.filter(pk__in=pks)
+        csrs = ContextSummaryResource.objects.bulk_create(
+        [ContextSummaryResource(
+            context_summary=self.object,
+            resource=r,
+            order=self.request.POST.get(f'resource-{r.pk}-order'),
+            group=self.request.POST.get(f'resource-{r.pk}-group'),
+            group_order=self.request.POST.get(f'resource-{r.pk}-group_order'),
+        ) for r in resources])
+        self.object.contextsummaryresource_set.set(csrs)
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return self.reverse_with_lti('context_summary',args=(self.object.pk,))
@@ -94,11 +122,32 @@ class ContextSummaryView(generic.detail.DetailView):
 
             return r
 
-        resources = [resource_summary(r) for r in cs.ordered_resources().all()]
+        def group_summary(gi, name, resources):
+            resources = list(resources)
+            resource_summaries = [resource_summary(r.resource) for r in resources]
+
+            if cs.show_total_score in ('scaled', 'raw'):
+                progress = sum(r['scaled_score'] for r in resource_summaries)/sum(r['max_score'] for r in resource_summaries)
+            elif cs.show_total_score == 'completion':
+                progress = len([r for r in resource_summaries if r['completed']]) / len(resources)
+            elif cs.show_total_score == 'max_scores':
+                progress = len([r for r in resource_summaries if r['scaled_score'] == 1]) / len(resources)
+            else:
+                progress = 0
+
+            return {
+                'name': name,
+                'progress': progress,
+                'slug': f'group-{gi}-{slugify(name)}',
+                'resources': resource_summaries,
+            }
+
+        resource_groups = [group_summary(i,name,resources) for (i,((name,_),resources)) in enumerate(cs.ordered_resources())]
+        resources = sum((g['resources'] for g in resource_groups),[])
 
         num_completed = len([r for r in resources if r['completed']])
 
-        proportion_completed = num_completed / len(resources)
+        proportion_completed = num_completed / max(1,len(resources))
 
         if cs.show_total_score == 'scaled':
             context['total_score'] = sum(r['scaled_score'] for r in resources)
@@ -119,7 +168,7 @@ class ContextSummaryView(generic.detail.DetailView):
         context['scaled_score'] = context['total_score'] / context['max_score'] if context['max_score'] != 0 else 0
 
         context.update({
-            'resources': resources,
+            'resource_groups': resource_groups,
             'num_completed': num_completed,
             'proportion_completed': proportion_completed,
         })
