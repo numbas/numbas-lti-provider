@@ -3,6 +3,7 @@
 {% load percentage %}
 {% load querystring %}
 {% load time_tag %}
+{% load data_science %}
 
 {% block title %}{{summary.name}} - {{block.super}}{% endblock %}
 
@@ -26,65 +27,91 @@
     </p>
     {% endif %}
 
-    {% if summary.layout == 'compact' %}
+    <ul class="groups">
+        {% for group in resource_groups %}
+        {% with progress_class=group.progress|classify_progress %}
+        <li id="{{group.slug}}" class="group" data-progress="{{progress_class}}">
+            {% if summary.layout == 'compact' %}
+                <h2>{{group.name}}</h2>
+                <ul class="resources">
+                    {% for r in group.resources %}
+                    <li class="{% if r.completed %}completed{% elif r.is_available %}available{% else %}failed{% endif %}">
+                        <a target="_blank" href="{% url_with_lti 'student_launch_resource' r.resource.pk %}" title="{{r.resource.title}}">
+                            <small class="name">{{r.resource.title}}</small>
+                            <span class="completion_status" title="{{r.completion_status_display}}">
+                                {% if r.completed %}
+                                    ✔
+                                {% elif r.is_available %}
+                                    ✏
+                                {% else %}
+                                    ✗
+                                {% endif %}
+                            </span>
+                            {% if summary.show_due_dates and r.resource.due_date and r.is_available %}
+                            <small class="due-date">
+                                <strong>{% translate "Due:" %}</strong>
+                                {% time_tag r.resource.due_date %}
+                            </small>
+                            {% endif %}
+                            <progress min="0" max="{{r.max_score}}" value="{{r.raw_score}}"></progress>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
 
+            {% if summary.layout == 'table' %}
+                <details{% if progress_class != 'completed' %} open{% endif %}>
+                <summary>
+                    <h2>{{group.name}}</h2>
+                    <span class="progress-description">{{group.progress|progress_text}}</span>
+                    <progress max="1" value="{{group.progress}}"></progress>
+                </summary>
 
-        <ul id="resources">
-            {% for r in resources %}
-            <li class="{% if r.completed %}completed{% elif r.is_available %}available{% else %}failed{% endif %}">
-                <a target="_blank" href="{% url_with_lti 'student_launch_resource' r.resource.pk %}" title="{{r.resource.title}}">
-                    <small class="name">{{r.resource.title}}</small>
-                    <span class="completion_status" title="{{r.completion_status_display}}">
-                        {% if r.completed %}
-                            ✔
-                        {% elif r.is_available %}
-                            ✏
-                        {% else %}
-                            ✗
+                <table>
+                    <colgroup>
+                        <col class="subgroup"/>
+                        <col class="completion-status"/>
+                        <col class="progress"/>
+                        {% if summary.show_due_dates %}
+                        <col class="due-date"/>
                         {% endif %}
-                    </span>
-                    {% if summary.show_due_dates and r.resource.due_date and r.is_available %}
-                    <small class="due-date">
-						<strong>{% translate "Due:" %}</strong>
-						{% time_tag r.resource.due_date %}
-					</small>
-                    {% endif %}
-                    <progress min="0" max="{{r.max_score}}" value="{{r.raw_score}}"></progress>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if summary.layout == 'table' %}
-        <table>
-            <thead>
-                <tr>
-                    <th scope="col">{% translate "Resource" %}</th>
-                    <th scope="col">{% translate "Completion status" %}</th>
-                    <th scope="col">{% translate "Score" %}</th>
-                    {% if summary.show_due_dates %}
-                    <th scope="col">{% translate "Due date" %}</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-            {% for r in resources %}
-                <tr class="{% if r.completed %}success{% endif %}">
-                    <td><a target="_blank" href="{% url_with_lti 'show_attempts' r.resource.pk %}">{{r.resource.title}}</a></td>
-                    {% if r.attempt %}
-                    <td>{{r.completion_status_display}}</td>
-                    <td>{{r.attempt.raw_score|floatformat}} / {{r.attempt.max_score|floatformat}} ({{r.attempt.scaled_score|percentage}})</td>
-                    {% else %}
-                    <td colspan="2">{% translate "Not attempted" %}</td>
-                    {% endif %}
-                    {% if summary.show_due_dates %}
-                    <td>{% if r.resource.due_date %}{% time_tag r.resource.due_date %}{% else %}{% translate "None" %}{% endif %}</td>
-                    {% endif %}
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope="col">{% translate "Resource" %}</th>
+                            <th scope="col">{% translate "Completion status" %}</th>
+                            <th scope="col">{% translate "Score" %}</th>
+                            {% if summary.show_due_dates %}
+                            <th scope="col">{% translate "Due date" %}</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in group.resources %}
+                        <tr data-progress="{{r.scaled_score|classify_progress}}">
+                            <td><a target="_blank" id="{{group.slug}}-{{forloop.counter0}}" href="{% url_with_lti 'show_attempts' r.resource.pk %}">{{r.resource.title}}</a></td>
+                            {% if r.attempt %}
+                            <td>{{r.completion_status_display}}</td>
+                            <td>
+                                <progress max="{{r.max_score}}" aria-labelledby="{{group.slug}}-{{forloop.counter0}}" value="{{r.raw_score}}"></progress>
+                                <span class="score-text">{{r.attempt.raw_score|floatformat}} / {{r.attempt.max_score|floatformat}} ({{r.attempt.scaled_score|percentage}})</span>
+                            </td>
+                            {% else %}
+                            <td colspan="2">{% translate "Not attempted" %}</td>
+                            {% endif %}
+                            {% if summary.show_due_dates %}
+                            <td>{% if r.resource.due_date %}{% time_tag r.resource.due_date %}{% else %}{% translate "None" %}{% endif %}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </details>
+            {% endif %}
+        </li>
+        {% endwith %}
+        {% endfor %}
+    </ul>
 </main>
 {% endblock content %}

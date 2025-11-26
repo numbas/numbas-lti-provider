@@ -1,0 +1,138 @@
+Foundations
+    Arithmetic operations
+    Numerical fractions
+    Percentages
+    Powers and indices
+    Surds
+    Rounding and estimating
+    Ratio and proportion
+    Sequences and series
+Algebra
+    Brackets
+        Grouping like terms
+        Expanding single brackets
+        Factorising single brackets
+        Expanding double (or more) brackets
+    Equations
+        Solving linear equations
+        Finding equations of straight lines/ parallel lines/ perpendicular lines
+        Sketching linear equations
+        Linear simultaneous equations
+        Solving linear inequalities
+        Simplifying and solving algebraic fractions with linear terms
+    Quadratics
+        Solving quadratics by factorising
+        Solving quadratics by completing the square
+        Solving quadratics using quadratic formula
+        Creating (and solving) algebraic equations from word problems
+        Simplifying and solving algebraic fractions with quadratic terms
+        Quadratic simultaneous equations
+        Solving quadratic inequalities
+    Functions
+        What is a function?
+        Composite functions
+        Inverse functions
+        Domain and range of functions
+    Logarithms
+        Solving higher order polynomials (inc. algebraic division)
+        Solving exponential equations
+        Using exponentials to solve log equations and vice versa
+        Rules of logarithms
+    Trigonometry
+        Trig identities
+        Solving trigonometric equations
+    Graphs
+        Graphing exponentials
+        Graphing logs
+        Graphing trig
+        Graphing complex polynomials
+        Graphing reciprocals and fractional functions (inc. finding assymptotes)
+    Sets
+        Set notation
+        Operations
+        Subsets
+        Permutations
+        Combinations
+        Factorial
+    Vectors and matrices
+        Vectors - scalar multiplication, addition, subtraction
+        Magnitude
+        Dot product
+        Cross product
+        Matrix notation
+        Matrices - scalar multiplication, addition, subtraction
+        Matrix multiplication
+        Transpose matrix
+        Determinants
+        Identity and inverse matrices
+        Solving systems of linear equations with matrices
+Calculus
+    Function approaching a value
+    Infinite limits
+    First principles
+    Standard functions
+    Chain rule
+    Product rule
+    Quotient rule
+    Finding gradient at a given point
+    Tangents
+    Finding and classifying maxima/minima/points of inflection using derivatives
+    Fundamental theorem of calculus
+    Definite integration/area under curve
+Probability
+    Probability fundamentals
+        Matching notation to words
+        Axioms
+        Events
+        Sample space
+        Venn diagrams
+    Combining probabilities
+        Addition rule
+        Multiplication rule
+        Permutations
+        Combinations
+    Conditional probability
+        Independence
+        Bayes' Theorem (reversing conditional probability)
+    Distributions
+        Probability Density Function
+        Cumulative Distribution Function
+        Common distributions (uniform, exponential, normal)
+        Expectation and variance
+Statistics
+    Summary statistics
+    Basic visualisation
+    Statistical inference
+Programming
+    Programming foundations (language agnostic)
+        Data types
+        Concept of a function
+        Logic
+        Algorithms
+    R
+        Motivation for using R
+        Ways to use R
+        Basics
+    Python
+        Motivation for using Python
+        Ways to use Python
+        Basics
+    Broader landscape of programming languages
+    Comparison of programming languages
+Data handling and visualisation
+    Data types
+        Qual, quant, categorical etc
+        integers, booleans etc
+    Data visualisation
+        Types of graphs
+        Basic interpetation, e.g. correlation, outliers, time series trends
+        interactive visualisation using Altaire
+    Data quality/wrangling
+        Missing data, duplicates
+        XS: data transformation
+        Idea of merging data sets
+        sampling methods
+    Data storage
+        Portable data file formats e.g. CSV
+        Databases (e.g. SQL, NoSQL)
+        Other ways data is shared (JSON, APIs. etc)

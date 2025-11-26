@@ -46,4 +46,15 @@
             <p>{% translate "This context is not associated with any resources." %}</p>
         {% endif %}
     </section>
+
+    <section id="summaries">
+        <h2>{% translate "Context summaries" %}</h2>
+
+        <ul>
+            {% for summary in context.summaries.all %}
+            <li><a href="{% url 'update_context_summary' summary.pk %}">{{summary.name}}</a></li>
+            {% endfor %}
+        </ul>
+    </section>
+    </section>
 {% endblock management_content %}
