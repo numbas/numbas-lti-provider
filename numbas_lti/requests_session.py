@@ -4,7 +4,8 @@ import requests
 
 class Session(requests.Session):
     def send(self, request, **kwargs):
-        kwargs.setdefault('timeout', (5,30))
+        if kwargs.get('timeout') is None:
+            kwargs['timeout'] = (5,30)
         return super().send(request, **kwargs)
 
 def get_session():
