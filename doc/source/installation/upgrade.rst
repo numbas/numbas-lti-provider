@@ -15,6 +15,35 @@ v4.3
 Docker installation
 ^^^^^^^^^^^^^^^^^^^
 
+The database storage has changed; you will have to migrate the database to the new storage.
+
+Before fetching the latest code, take a dump of the database::
+
+    docker exec numbas-lti-provider-docker-postgres-1 pg_dumpall -U numbas_lti > backup.sql
+
+Fetch the latest code::
+
+    git pull
+
+Delete the old volume::
+
+    docker volume rm numbas-lti-provider-docker_pgdata   
+
+Restore the dump::
+
+    docker exec -i numbas-lti-provider-docker-postgres-1 psql -U numbas_lti -d numbas_lti < backup.sql
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+There are no special upgrade steps for non-Docker installations for this version.
+
+v4.3
+----
+
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
 There are no special upgrade steps for Docker installations for this version.
 
 Non-Docker installation
