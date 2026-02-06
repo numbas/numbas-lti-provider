@@ -51,7 +51,13 @@ class UpdateEditorLinkView(EditorLinkManagementMixin,generic.edit.UpdateView):
     def get_projects_data(self):
         try:
             link = self.get_object()
-            projects_data = requests_session.get_session().get('{}/api/projects'.format(link.url), timeout=getattr(settings,'REQUEST_TIMEOUT',60)).json()
+            session = requests_session.get_session()
+            url = '{}/api/projects'.format(link.url)
+            projects_data = []
+            while url:
+                data = session.get(url, timeout=getattr(settings,'REQUEST_TIMEOUT',60)).json()
+                projects_data += data.get('results', [])
+                url = data.get('next')
             return projects_data
         except (json.JSONDecodeError, requests.exceptions.RequestException) as e:
             raise GettingProjectDataException(str(e))
