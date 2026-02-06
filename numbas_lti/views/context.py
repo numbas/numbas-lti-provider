@@ -116,7 +116,7 @@ class ContextSummaryView(generic.detail.DetailView):
             context['total_score'] = 0
             context['max_score'] = 1
 
-        context['scaled_score'] = context['total_score'] / context['max_score']
+        context['scaled_score'] = context['total_score'] / context['max_score'] if context['max_score'] != 0 else 0
 
         context.update({
             'resources': resources,
