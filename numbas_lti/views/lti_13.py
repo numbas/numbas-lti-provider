@@ -414,8 +414,8 @@ class UseRegistrationTokenView(edit.DeleteView):
 
         return context
 
-    def show_error(self, message):
-        return render(self.request,'numbas_lti/launch_errors/registration_error.html',{'error': message})
+    def show_error(self, error):
+        return render(self.request,'numbas_lti/launch_errors/registration_error.html',{'error': error})
 
     def form_valid(self, form):
         token = self.object
@@ -425,7 +425,7 @@ class UseRegistrationTokenView(edit.DeleteView):
 
             lti_tool = registration.register()
 
-            token.delete()
+            #token.delete()
 
         except LtiException as e:
             return self.show_error(e)

@@ -10,6 +10,10 @@
     <p>{% translate "There was an error during registration:" %}</p>
 
     <blockquote>
-        {{error}}
+        <p>{{error}}</p>
+
+        <p>Response body:</p>
+        
+        <pre>{{error.response.text}}</pre>
     </blockquote>
 {% endblock main %}
