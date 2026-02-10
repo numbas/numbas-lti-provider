@@ -336,6 +336,10 @@ class Exam(ExtractPackage):
         
         return hierarchy
 
+class ExamAnalysis(models.Model):
+    exam = models.OneToOneField(Exam, on_delete=models.CASCADE, related_name='analysis')
+    answer_tags = models.JSONField(blank=True, default=dict, null=True)
+    time = models.DateTimeField(auto_now=True)
 
 GRADING_METHODS = [
     ('highest',_('Highest score')),
@@ -546,6 +550,9 @@ class Resource(models.Model):
             return slugify(self.exam.title)
         else:
             return 'resource'
+
+    def get_absolute_url(self):
+        return reverse('resource_dashboard',args=(self.pk,))
 
     def lti_contexts(self):
         """

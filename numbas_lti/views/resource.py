@@ -6,7 +6,8 @@ from numbas_lti.models import \
         Resource, LTI_13_ResourceLink, AccessToken, Exam, Attempt, \
         ReportProcess, DiscountPart, EditorLink, COMPLETION_STATUSES, \
         LTIUserData, ScormElement, RemarkedScormElement, AccessChange, \
-        DISCOUNT_BEHAVIOURS, LTIContext, LineItemDoesNotExist
+        DISCOUNT_BEHAVIOURS, LTIContext, LineItemDoesNotExist, \
+        ExamAnalysis
 from numbas_lti.util import transform_part_hierarchy
 from django import http
 from django.conf import settings
@@ -19,6 +20,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django.template.response import TemplateResponse
+from django.templatetags.static import static
 from django_auth_lti.patch_reverse import reverse
 from django.utils import timezone, dateparse
 from django.utils.translation import gettext_lazy as _
@@ -27,6 +29,7 @@ from django.views import generic
 from django_auth_lti.decorators import lti_role_required
 from pathlib import Path
 from pylti1p3.exception import LtiException
+from collections import defaultdict
 import csv
 import datetime
 import json
@@ -616,6 +619,102 @@ class StatsView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,Must
         context['data'] = resource.live_stats_data()
 
         return context
+
+class AnalysisView(HelpLinkMixin, MustHaveExamMixin, ResourceManagementViewMixin, MustBeInstructorMixin, generic.DetailView):
+    model = Resource
+    template_name = 'numbas_lti/management/resource_analysis.html'
+    management_tab = 'stats'
+    helplink = 'instructor/resources.html#analysis'
+    context_object_name = 'resource'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        resource = self.object
+
+        attempts = list(resource.attempts.prefetch_related('cached_question_scores'))
+
+        interactions = ScormElement.objects.filter(attempt__resource=resource, key__regex=r'^cmi\.interactions\.\d+\.(learner_response|id|weighting|result|correct_responses.*)$').order_by('attempt__id').values('attempt__id','key','value')
+
+        interactions_dict = {}
+        for pk, elements in itertools.groupby(interactions, key=lambda x: x['attempt__id']):
+            aints = defaultdict(dict)
+            for e in elements:
+                bits = e['key'].split('.')
+                n = bits[2]
+                key = bits[3]
+                aints[n][key] = e['value']
+            interactions_dict[pk] = {v['id']: [v.get(key,'') for key in ('weighting', 'result', 'learner_response', 'correct_responses')] for v in aints.values() if v.get('id')}
+
+        def attempt_context(a):
+            try:
+                suspend_data = json.loads(a.scormelements.current('cmi.suspend_data').value)
+            except (json.JSONDecodeError, ScormElement.DoesNotExist):
+                suspend_data = {}
+
+            return {
+                'pk': a.pk,
+                'user': {
+                    'pk': a.user.pk,
+                    'username': a.user.username,
+                    'first_name': a.user.first_name,
+                    'last_name': a.user.last_name,
+                },
+                'questionSubsets': suspend_data.get('questionSubsets',[]),
+                'scores': [
+                    {
+                        'number': aqs.number,
+                        'raw_score': aqs.raw_score,
+                        'max_score': aqs.max_score,
+                        'completion_status': aqs.completion_status,
+                    }
+                    for aqs in a.cached_question_scores.all()
+                ],
+                'interactions': interactions_dict.get(a.pk,{}),
+            }
+
+        try:
+            tags = resource.exam.analysis.answer_tags
+        except ExamAnalysis.DoesNotExist:
+            tags = {}
+
+        context['data'] = {
+            'exam_source': self.request.build_absolute_uri(resource.exam.extracted_url + '/source.exam'),
+            'attempts': [attempt_context(a) for a in attempts],
+            'tags': tags,
+        }
+
+        return context
+
+    def get(self, request, *args, **kwargs):
+        if 'application/json' in request.headers.get('accept', ''):
+            self.object = self.get_object()
+            return JsonResponse(self.get_context_data()['data'])
+
+
+        return super().get(request, *args, **kwargs)
+
+class AnalysisTagsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
+    model = Resource
+
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body.decode('utf-8'))
+        resource = self.get_object()
+        analysis, created = ExamAnalysis.objects.get_or_create(exam=resource.exam)
+        analysis.answer_tags = data
+        analysis.save()
+        return JsonResponse({'saved': analysis.pk})
+
+    def get(self, request, *args, **kwargs):
+        resource = self.object = self.get_object()
+        analysis = ExamAnalysis.objects.get(exam=resource.exam)
+        response = JsonResponse(analysis.answer_tags)
+        response.headers['Content-Disposition'] = f'attachment; filename={self.get_filename()}'
+        return response
+
+    def get_filename(self):
+        return _("{slug}-analysis-tags.json").format(slug=self.object.slug)
+        return response
 
 class RemarkView(HelpLinkMixin,MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.DetailView):
     model = Resource

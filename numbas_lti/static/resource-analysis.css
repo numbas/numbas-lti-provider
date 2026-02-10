@@ -1,0 +1,107 @@
+raw-html {
+  display: block;
+}
+
+.prompt {
+}
+
+h1 a:not(:hover,:focus,:active) {
+  text-decoration: none;
+  color: inherit;
+}
+
+nav {
+  display: flex;
+  gap: calc(2 * var(--spacing));
+}
+
+p:first-child {
+  margin-top: 0;
+}
+p:last-child {
+  margin-bottom: 0;
+}
+
+table {
+  border: thin solid;
+  margin-block: calc(2 * var(--spacing));
+  
+  & thead th {
+    border-bottom: medium solid;
+  }
+  
+  & td, th {
+    padding: calc(0.5 * var(--spacing)) var(--spacing);
+    vertical-align: top;
+  }
+  
+  & tr:not(:last-child) td {
+    border-bottom: thin dashed;
+  }
+}
+
+.tag-frequency:has(+details[open]) {
+  margin-left: auto;
+  margin-right: 0;
+  position: sticky;
+  top: 0;
+  background: Canvas;
+}
+
+
+.incorrect-answers .assigned-tags {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    column-gap: var(--spacing);
+    padding: 0;
+    margin-block: 0 var(--spacing);
+}
+
+#breadcrumbs {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  gap: calc(2 * var(--spacing));
+}
+
+#breadcrumbs [aria-current="step"] {
+  font-weight: bold;
+}
+
+nav.pager:first-child {
+  border-bottom: thin solid;
+  margin-bottom: calc(4 * var(--spacing));
+}
+nav.pager:last-child {
+  border-top: thin solid;
+  margin-top: calc(4 * var(--spacing));
+}
+
+.tag {
+  padding: calc(0.2 * var(--spacing)) var(--spacing);
+  margin: 0;
+}
+
+.tag:has(:checked) {
+  border-color: var(--text-color);
+}
+
+label.tag {
+  margin: 0;
+  width: 100%;
+  text-align: end;
+}
+
+.parts > li ~ li {
+    margin-top: calc(6 * var(--spacing));
+}
+
+.part-info > h3 > .type {
+    font-weight: normal;
+    font-style: italic;
+}
+
+.part-info > h3 > .status {
+    font-weight: normal;
+}

@@ -1,0 +1,96 @@
+{% extends "numbas_lti/management/base.html" %}
+{% load i18n %}
+{% load icon %}
+{% load querystring %}
+{% load static %}
+{% load statici18n %}
+
+{% block title %}{% translate "Analysis" %} - {{block.super}}{% endblock title %}
+
+{% block management_header %}
+    <h1>
+        {% blocktranslate with resource_name=resource.title %}Analysis of attempts at <strong>{{resource_name}}</strong>{% endblocktranslate %}
+    </h1>
+{% endblock management_header %}
+
+{% block management_content %}
+  <p>The analysis app is loading...</p>
+{% endblock management_content %}
+
+{% block stylesheets %}
+    {{block.super}}
+
+	<link rel="stylesheet" href="{% static 'resource-analysis.css' %}">
+{% endblock %}
+
+{% block javascripts %}
+{{block.super}}
+    {{data|json_script:"data-json"}}
+
+    {% include "numbas_lti/csrf_token_form.html" %}
+    <script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            packages: {'[+]': ['texhtml']},
+            allowTexHTML: true
+        },
+        loader: {
+            versionWarnings: false
+        }
+    };
+    </script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"></script>
+
+    <script src="{% static 'resource-analysis.js' %}" defer></script>
+
+    <script>
+        function extract_element(selector) {
+            const element = document.querySelector(selector);
+            const outerHTML = element.outerHTML;
+            return outerHTML;
+        }
+
+        const csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        (async () => {
+            const data = JSON.parse(document.getElementById('data-json').textContent);
+            const exam_source = await (await fetch(data.exam_source)).text();
+
+            const flags = {
+              exam_source,
+              data,
+              top_nav_html: extract_element('body > #top-nav'),
+              footer_html: extract_element('body >footer'),
+              run_attempt_url: '{% url_with_lti 'run_attempt' 12345 %}',
+            }
+
+            const app = init_app(flags);
+
+            document.body.classList.add('resource-management');
+
+            let last_tags;
+
+            app.ports.save_tags.subscribe(async (tags) => {
+                const stags = JSON.stringify(tags);
+                if(stags == last_tags) {
+                    return;
+                }
+                last_tags = stags;
+                await fetch(
+                    '{% url_with_lti 'resource_analysis_tags' resource.pk %}', 
+                    {
+                        method: 'POST', 
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: stags
+                    }
+                );
+            })
+        })();
+
+    </script>
+{% endblock %}

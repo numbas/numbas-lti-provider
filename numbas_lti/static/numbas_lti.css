@@ -30,11 +30,11 @@
     width: 1px;
 }
 
-:not(button,.button,.alert).success { color: var(--success-color); }
-:not(button,.button,.alert).warning { color: var(--warning-color); }
-:not(button,.button,.alert).danger { color: var(--danger-color); }
-:not(button,.button,.alert).muted { color: var(--muted-color); }
-:not(button,.button,.alert).info { color: var(--info-color); }
+:not(button,.pill,.button,.alert).success { color: var(--success-color); }
+:not(button,.pill,.button,.alert).warning { color: var(--warning-color); }
+:not(button,.pill,.button,.alert).danger { color: var(--danger-color); }
+:not(button,.pill,.button,.alert).muted { color: var(--muted-color); }
+:not(button,.pill,.button,.alert).info { color: var(--info-color); }
 
 html {
     font-size: var(--font-size);
@@ -64,7 +64,7 @@ body {
     line-height: 1.5em;
 }
 
-:is(button,.button).primary {
+:is(button,.button,.pill).primary {
     --button-color: var(--primary-button-color);
     --button-bg: var(--primary-button-bg);
     --button-hover-bg: var(--primary-button-hover-bg);
@@ -72,7 +72,7 @@ body {
     --button-border-color: var(--primary-button-border-color);
 }
 
-:is(button,.button).success {
+:is(button,.button,.pill).success {
     --button-color: var(--success-button-color);
     --button-bg: var(--success-button-bg);
     --button-hover-bg: var(--success-button-hover-bg);
@@ -80,7 +80,7 @@ body {
     --button-border-color: var(--success-button-border-color);
 }
 
-:is(button,.button).warning {
+:is(button,.button,.pill).warning {
     --button-color: var(--warning-button-color);
     --button-bg: var(--warning-button-bg);
     --button-hover-bg: var(--warning-button-hover-bg);
@@ -88,7 +88,7 @@ body {
     --button-border-color: var(--warning-button-border-color);
 }
 
-:is(button,.button).danger {
+:is(button,.button,.pill).danger {
     --button-color: var(--danger-button-color);
     --button-bg: var(--danger-button-bg);
     --button-hover-bg: var(--danger-button-hover-bg);
@@ -96,7 +96,7 @@ body {
     --button-border-color: var(--danger-button-border-color);
 }
 
-:is(button,.button).muted {
+:is(button,.button,.pill).muted {
     --button-color: var(--muted-button-color);
     --button-bg: var(--muted-button-bg);
     --button-hover-bg: var(--muted-button-hover-bg);
@@ -104,7 +104,7 @@ body {
     --button-border-color: var(--muted-button-border-color);
 }
 
-:is(button,.button).info {
+:is(button,.button,.pill).info {
     --button-color: var(--info-button-color);
     --button-bg: var(--info-button-bg);
     --button-hover-bg: var(--info-button-hover-bg);
@@ -112,7 +112,7 @@ body {
     --button-border-color: var(--info-button-border-color);
 }
 
-:is(button,.button).link {
+:is(button,.button,.pill).link {
     background: none;
     border: none;
     color: var(--link-color);
@@ -171,6 +171,19 @@ button, .button {
     background-color: var(--button-bg);
     border: thin solid var(--button-border-color);
 }
+.pill {
+    white-space: nowrap;
+    display: inline-block;
+    font-family: inherit;
+    font-size: smaller;
+    padding: var(--half-space) var(--half-space);
+    border-radius: var(--button-radius);
+    color: var(--button-color);
+    background-color: var(--button-bg);
+    border: thin solid var(--button-border-color);
+    line-height: 1;
+}
+
 button[disabled] {
     cursor: not-allowed;
 }
@@ -578,7 +591,7 @@ body.centered main {
     }
 }
 
-body.resource-management #top-nav .navbar-brand {
+#top-nav .navbar-brand {
     grid-column: 1/-1;
 }
 
