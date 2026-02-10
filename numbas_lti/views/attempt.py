@@ -21,7 +21,6 @@ from numbas_lti.models import Resource, AccessToken, Exam, Attempt, ScormElement
 from numbas_lti.save_scorm_data import save_scorm_data
 from numbas_lti.util import transform_part_hierarchy, add_query_param, iso_time
 import re
-import simplejson
 
 class RemarkPartsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstructorMixin,generic.detail.DetailView):
     model = Attempt
