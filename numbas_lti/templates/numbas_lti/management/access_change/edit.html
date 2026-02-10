@@ -150,10 +150,12 @@
                         {% if member.student %}
                         {% with id="nrps_applies_to-"|add:member.user_id %}
                         <tr class="member" data-user-id="{{member.user_id}}" data-name="{{member.name}}" data-username="{{member.ext_user_username}}" data-email="{{member.email}}">
-                            <td><input id="{{id}}" type="checkbox" name="nrps_applies_to" value="{{member.user_id}}" {% if member.user_id in form.nrps_applies_to.value %}checked{% endif %}></td>
+                            <td><input id="{{id}}" type="checkbox" name="nrps_applies_to" value="{{member.user_id}}" data-email="{{member.email}}" {% if member.checked %}checked{% endif %}></td>
                             <td><label for="{{id}}" class="name">{{member.name}}</label></td>
                             {% if member.ext_user_username %}
                             <td><code class="username">{% if member.ext_user_username %}{{member.ext_user_username}}{% else %}{{member.user_id}}{% endif %}</code></td>
+                            {% else %}
+                            <td></td>
                             {% endif %}
                             <td>
                                 {% if member.email %}

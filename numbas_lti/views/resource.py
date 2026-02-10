@@ -808,6 +808,11 @@ class AccessChangeEditView(HelpLinkMixin, ResourceManagementViewMixin, MustBeIns
         lti_context = self.get_resource().lti_13_contexts().first()
         if lti_context:
             context['nrps_members'] = lti_context.nrps_members()
+            if self.object:
+                usernames = self.object.usernames.values_list('username', flat=True)
+                emails = self.object.emails.values_list('email', flat=True)
+                for member in context['nrps_members']:
+                    member['checked'] = member['user_id'] in usernames or member['email'] in emails
 
         return context
 
