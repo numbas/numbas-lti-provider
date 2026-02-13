@@ -9068,7 +9068,7 @@ var $author$project$App$view_part_info = F5(
 							$elm$json$Json$Decode$map,
 							function (ans) {
 								return A2(
-									$elm$html$Html$code,
+									$elm$html$Html$pre,
 									_List_Nil,
 									_List_fromArray(
 										[
@@ -9276,7 +9276,7 @@ var $author$project$App$view_part_info = F5(
 																				_List_fromArray(
 																					[
 																						A2(
-																						$elm$html$Html$code,
+																						$elm$html$Html$pre,
 																						_List_Nil,
 																						_List_fromArray(
 																							[
@@ -9306,7 +9306,7 @@ var $author$project$App$view_part_info = F5(
 																					_List_fromArray(
 																						[
 																							A2(
-																							$elm$html$Html$code,
+																							$elm$html$Html$pre,
 																							_List_Nil,
 																							_List_fromArray(
 																								[

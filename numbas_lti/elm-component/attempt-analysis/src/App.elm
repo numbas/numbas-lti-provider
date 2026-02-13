@@ -556,7 +556,7 @@ view_part_info show_prompt examdata model path part =
       _ ->
         JD.decodeValue
           (JD.field "answer" JD.string
-           |> JD.map (\ans -> H.code [] [H.text ans])
+           |> JD.map (\ans -> H.pre [] [H.text ans])
           )
           part.source
         |> Result.withDefault (H.text "")
@@ -649,7 +649,7 @@ view_part_info show_prompt examdata model path part =
                               [ H.td
                                 [ HA.class "answer"
                                 , HA.rowspan <| if not show_attempts then 1 else List.length atts ]
-                                [ H.code [] [H.text answer] ]
+                                [ H.pre [] [H.text answer] ]
                               ]
                             else
                               []
@@ -661,7 +661,7 @@ view_part_info show_prompt examdata model path part =
                                 ]
                               , H.td
                                 [ HA.class "expected-answer" ]
-                                [H.code [] [H.text <| format_answer int.correct_answer]
+                                [H.pre [] [H.text <| format_answer int.correct_answer]
                                 ]
                               ]
                             else

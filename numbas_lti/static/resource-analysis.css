@@ -105,3 +105,7 @@ label.tag {
 .part-info > h3 > .status {
     font-weight: normal;
 }
+
+.incorrect-answers pre {
+  margin-block: 0;
+}
