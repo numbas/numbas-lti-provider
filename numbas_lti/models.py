@@ -828,41 +828,33 @@ class Resource(models.Model):
         }
         lineitem = LineItem(lineitem_dict)
 
-        if self.available_from is not None:
-            lineitem.set_start_date_time(self.available_from.isoformat())
-        if self.due_date is not None:
-            lineitem.set_end_date_time(self.due_date.isoformat())
-
         resource_link_ids = self.lti_13_links.values_list('resource_link_id', flat=True)
-
-        condition = lambda l: l.get_resource_link_id() in resource_link_ids or (l.get_tag() == lineitem.get_tag() and l.get_resource_id() == lineitem.get_resource_id())
 
         lti_13_context = self.lti_13_contexts().first()
         lineitems = lti_13_context.ags_lineitems(force_fetch=create)
         ags = lti_13_context.get_ags()
 
         try:
-            saved_lineitem = next(l for l in lineitems if condition(l))
+            saved_lineitem = next(l for l in lineitems if l.get_resource_link_id() in resource_link_ids)
         except StopIteration:
-            if create:
-                saved_lineitem = ags.create_lineitem(lineitem)
-                lti_13_context.ags_lineitems(force_fetch=True)
-            else:
-                raise LineItemDoesNotExist(self)
+            try:
+                saved_lineitem = next(l for l in lineitems if l.get_tag() == lineitem.get_tag() and l.get_resource_id() == lineitem.get_resource_id())
+            except StopIteration:
+                if create:
+                    saved_lineitem = ags.create_lineitem(lineitem)
+                    lti_13_context.ags_lineitems(force_fetch=True)
+                else:
+                    raise LineItemDoesNotExist(self)
 
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
-            or time_from_iso(saved_lineitem.get_start_date_time()) != time_from_iso(lineitem.get_start_date_time())
-            or time_from_iso(saved_lineitem.get_end_date_time()) != time_from_iso(lineitem.get_end_date_time())
             or saved_lineitem.get_tag() != lineitem.get_tag()
             ):
             max_score = lineitem.get_score_maximum()
 
             if max_score is not None and max_score > 0:
                 saved_lineitem.set_score_maximum(max_score)
-            saved_lineitem.set_start_date_time(lineitem.get_start_date_time())
-            saved_lineitem.set_end_date_time(lineitem.get_end_date_time())
-            saved_lineitem.set_tag(lineitem.get_tag())
-            self.update_lti_13_lineitem(ags, saved_lineitem)
+                saved_lineitem.set_tag(lineitem.get_tag())
+                self.update_lti_13_lineitem(ags, saved_lineitem)
 
         return saved_lineitem
 
