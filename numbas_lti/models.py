@@ -849,6 +849,10 @@ class Resource(models.Model):
         if (saved_lineitem.get_score_maximum() != lineitem.get_score_maximum()
             or saved_lineitem.get_tag() != lineitem.get_tag()
             ):
+
+            if not create:
+                return self.get_lti_13_lineitem(create = True)
+
             max_score = lineitem.get_score_maximum()
 
             if max_score is not None and max_score > 0:
