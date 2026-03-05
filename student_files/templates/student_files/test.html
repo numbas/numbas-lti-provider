@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <body>
+        <form method="POST" action="/student-files/upload" enctype="multipart/form-data">
+            <input type="hidden" name="attempt" value="7059">
+
+            <input type="text" name="part" value="q0p1">
+
+            <input type="file" multiple name="file">
+
+            <button type="submit">Submit</button>
+        </form>
+
+        <h2>FILES</h2>
+
+        <ul>
+            {% for file in files %}
+            <li>
+                {{file.attempt}} {{file.part}} <a href="{{file.file.url}}">{{file.file.name}}</a>
+                <form method="POST" action="{% url 'delete_student_file' file.pk %}"><button type="submit">x</button></form>
+            </li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
