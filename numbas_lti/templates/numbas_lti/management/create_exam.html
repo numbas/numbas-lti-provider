@@ -64,6 +64,9 @@
                 <label for="exam-search">
                     Search for an exam
                 </label>
+                {% for k,v in request.GET.items %}
+                <input type="hidden" name="{{k}}" value="{{v}}">
+                {% endfor %}
                 <input type="search" name="query" id="exam-search">
                 <label for="project-selector">{% translate "in" %}</label>
                 <select name="project" id="project-selector">

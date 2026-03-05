@@ -17,6 +17,8 @@ exam_search.addEventListener('input',function() {
     query = exam_search.value;
     filter_exams();
 });
+document.querySelector('#ready-made-exams form').addEventListener('submit', (e) => e.preventDefault());
+
 var project_selector = document.getElementById('project-selector');
 project_selector.addEventListener('change',function() {
     selected_project = project_selector.value || null;
