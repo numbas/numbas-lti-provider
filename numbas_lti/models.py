@@ -576,6 +576,9 @@ class Resource(models.Model):
             Depends on ``grading_method``.
         """
         
+        if user is None or user.is_anonymous:
+            return None, 'not attempted', None
+        
         methods = {
             'highest': '-scaled_score',
             'last': '-start_time',
