@@ -437,23 +437,34 @@ class UseRegistrationTokenView(edit.DeleteView):
 
         return HttpResponse(registration.complete_html())
 
+"""
+Handler functions for different kinds of resource launch.
+The key is the ``resource`` custom param from the LTI launch.
+The function is given the instance of the ResourceLaunchView object, and any args and kwargs.
+"""
+def handle_resource_launch(view, *args, **kwargs):
+    return view.resource_launch(*args, **kwargs)
+
+def handle_context_summary_launch(view, *args, **kwargs):
+    return view.context_summary(*args, **kwargs)
+
+resource_launch_handlers = {
+    'resource': handle_resource_launch,
+    'context_summary': handle_context_summary_launch,
+}
+
 class ResourceLaunchView(mixins.LTI_13_Mixin):
     must_have_message_launch = True
 
     def get(self, request, *args, **kwargs):
         view = self.get_custom_param('view', 'resource')
 
-        handlers = {
-            'resource': self.resource_launch,
-            'context_summary': self.context_summary,
-        }
-
         try:
-            handler = handlers[view]
+            handler = resource_launch_handlers[view]
         except KeyError:
             raise Exception(f"Invalid launch view parameter: {view}")
 
-        return handler(*args, **kwargs)
+        return handler(self, *args, **kwargs)
 
     def context_summary(self, *args, **kwargs):
         summary_pk = self.get_custom_param('context_summary')
