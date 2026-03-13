@@ -1,0 +1,27 @@
+{% extends "ncl_data_science/base.html" %}
+{% load static %}
+{% load querystring %}
+{% load ncl_data_science %}
+
+{% block body_class %}{{block.super}}{% endblock %}
+
+{% block data_science_content %}
+    <p>Welcome to the Data Science Pre-Entry Course!</p>
+
+    <section class="big-link" id="case-studies" style="--bg-image: url('{% get_media_prefix %}ncl_data_science/casestudies.jpg')">
+        <div class="alert info">
+            <a href="{% url_with_lti 'ncl_data_science:case_studies' %}">
+                <h2>Case Studies</h2>
+                <p>Refresh your skills within contextual examples at varying levels of mathematical difficulty.</p>
+            </a>
+        </div>
+    </section>
+    <section class="big-link" style="--bg-image: url('{% get_media_prefix %}ncl_data_science/maths.png')">
+        <div class="alert info">
+            <a href="{% url_with_lti 'ncl_data_science:topics' %}">
+                <h2>Questions by topic</h2>
+                <p>Practise specific topics.</p>
+            </a>
+        </div>
+    </section>
+{% endblock data_science_content %}

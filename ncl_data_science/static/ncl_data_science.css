@@ -1,0 +1,38 @@
+.card-list .card {
+    width: 20em;
+    
+    & img {
+        width: 100%;
+    }
+}
+
+
+.big-link {
+    background-image: var(--bg-image);
+    background-size: 150svw;
+    background-position: center;
+    min-height: 10lh;
+    display: grid;
+    align-content: end;
+    justify-content: start;
+    
+    margin-block: var(--double-space);
+    
+    & > .alert {
+        padding: var(--double-space);
+        margin: var(--double-space);
+        
+        & a:not(:active,:hover,:focus) {
+            text-decoration: none;
+        }
+        
+        & h2 {
+            margin-top: 0;
+        }
+        
+        & p:last-child {
+                    color: var(--text-color);
+            margin-bottom: 0;
+        }
+    }
+}

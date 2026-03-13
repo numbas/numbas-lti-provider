@@ -1,0 +1,26 @@
+{% extends "numbas_lti/base.html" %}
+{% load i18n %}
+{% load querystring %}
+{% load static %}
+{% load ncl_data_science %}
+
+{% block stylesheets %}
+{{block.super}}
+<link rel="stylesheet" href="{% static 'ncl_data_science.css' %}">
+{%endblock stylesheets %}
+
+{% block body_class %}ncl-data-science {{block.super}}{% endblock body_class %}
+
+{% block content %}
+    <header>
+        <h1>{% block data_science_header %}<a href="{% url_with_lti 'ncl_data_science:index' %}">Data Science Pre-Entry Course</a>{% endblock %}</h1>
+    </header>
+
+    <main>
+    {% block data_science_content %}
+    {% endblock %}
+    </main>
+
+    {% include "numbas_lti/footer.html" %}
+{% endblock content %}
+

@@ -1,0 +1,27 @@
+{% extends "ncl_data_science/base.html" %}
+{% load static %}
+{% load querystring %}
+{% load ncl_data_science %}
+
+{% block body_class %}questions-by-topic {{block.super}}{% endblock %}
+
+{% block data_science_header %}
+{{block.super}} - {{topic.name}} Topics
+{% endblock %}
+
+{% block data_science_content %}
+    <p>{{topic.description}}</p>
+
+    <h2>Pick a topic:</h2>
+    <ul id="subtopics" class="list-unstyled list-inline">
+    {% for subtopic in topic.subtopics %}
+    <li class="subtopic {{subtopic.completion_status|completion_class}}" data-completion-status="{{subtopic.completion_status}}">
+        <a href="{% url_with_lti 'show_attempts' subtopic.resource.pk %}">{{subtopic.name}}</a>
+        <small>{{subtopic.completion_status|completion_text}}</small>
+    </li>
+    {% endfor %}
+    </ul>
+
+    <a class="button" href="{% url_with_lti 'ncl_data_science:topics' %}">← Pick another topic</a>
+
+{% endblock data_science_content %}
