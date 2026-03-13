@@ -515,6 +515,11 @@ body:not(.admin, .resource-management) > header {
     list-style: none;
     padding-left: 0;
 }
+.list-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing);
+}
 
 .help-block, .helptext {
     font-style: italic;
@@ -699,6 +704,7 @@ body.student-progress #students td.comment {
     list-style: none;
     padding: 0;
     justify-content: center;
+    align-items: start;
 }
 
 .card {
