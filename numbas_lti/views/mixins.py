@@ -58,7 +58,8 @@ def request_is_instructor(request):
     # LTI 1.3
     if hasattr(request, 'lti_13_message_launch'):
         message_launch = request.lti_13_message_launch
-        return message_launch.check_teacher_access() or message_launch.check_teaching_assistant_access() or message_launch.check_staff_access()
+        jwt_body = message_launch._get_jwt_body()
+        return any(role(jwt_body).check() for role in INSTRUCTOR_ROLES['lti_13'])
 
     # LTI 1.1
     return bool(is_allowed(request,INSTRUCTOR_ROLES['lti_11'],False))

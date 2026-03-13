@@ -294,7 +294,10 @@ class LaunchView(mixins.LTI_13_Mixin, TemplateView):
             else:
                 return HttpResponseBadRequest("This launch type is not recognised.")
         else:
-            return HttpResponseBadRequest(f"You have an unknown role.")
+            roles = message_launch._get_jwt_body().get(
+                "https://purl.imsglobal.org/spec/lti/claim/roles", []
+            )
+            return HttpResponseBadRequest(f"You have an unknown role: {roles}.")
 
 class JWKSView(View):
     """
