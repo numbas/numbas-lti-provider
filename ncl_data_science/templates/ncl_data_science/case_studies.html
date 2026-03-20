@@ -14,27 +14,35 @@
 
     <h2>Pick a case study:</h2>
     <menu id="case-studies" class="card-list">
-    {% for case_study in case_studies %}
-    <li class="case-study card {{case_study.completion_status|completion_class}}" data-completion-status="{{case_study.completion_status}}">
+    {% for case_study, progress in case_studies %}
+    <li class="case-study card {{progress.completion_status|completion_class}}" data-completion-status="{{progress.completion_status}}">
+        {% if case_study.resource %}
         <a href="{% url_with_lti 'show_attempts' case_study.resource.pk %}">
-            <img alt="" src="{% get_media_prefix %}ncl_data_science/case_studies/{{case_study.id}}.webp">
+        {% endif %}
+            <img alt="" src="{{case_study.image.url}}">
+        {% if case_study.resource %}
         </a>
+        {% endif %}
         <h3>
+        {% if case_study.resource %}
             <a href="{% url_with_lti 'show_attempts' case_study.resource.pk %}">
+        {% endif %}
             {{case_study.name}}
+        {% if case_study.resource %}
             </a>
+        {% endif %}
         </h3>
         <p>{{case_study.description}}</p>
         <dl>
             <dt>Completion</dt>
-            <dd>{{case_study.completion_status|completion_text}}</dd>
+            <dd>{{progress.completion_status|completion_text}}</dd>
             <dt>Difficulty</dt>
             <dd>{% star_rating case_study.difficulty %}</dd>
             <dt>Topics</dt>
             <dd>
                 <ul class="list-inline list-unstyled topics">
-                    {% for topic in case_study.topics %}
-                    <li class="pill">{{topic}}</li>
+                    {% for topic in case_study.main_topics %}
+                    <li class="pill">{{topic.name}}</li>
                     {% endfor %}
                 </ul>
             </dd>
@@ -43,7 +51,7 @@
             <dd>
                 <ul class="list-inline list-unstyled topics">
                     {% for topic in case_study.extension_topics %}
-                    <li class="pill">{{topic}}</li>
+                    <li class="pill">{{topic.name}}</li>
                     {% endfor %}
                 </ul>
             </dd>

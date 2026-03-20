@@ -52,3 +52,7 @@ header :is(:any-link,a,link):not(:hover,:focus,:active) {
   grid-template-columns: repeat(auto-fit,20em);
   justify-content: center;
 }
+
+small.progress {
+    font-style: italic;
+}
