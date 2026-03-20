@@ -13,11 +13,11 @@
     <p>Case studies give you a chance to try out some of the mathematics required in a Data Science degree, within some interesting contexts.</p>
 
     <h2>Pick a case study:</h2>
-    <section id="case-studies" class="card-list">
+    <menu id="case-studies" class="card-list">
     {% for case_study in case_studies %}
-    <article class="case-study card {{case_study.completion_status|completion_class}}" data-completion-status="{{case_study.completion_status}}">
+    <li class="case-study card {{case_study.completion_status|completion_class}}" data-completion-status="{{case_study.completion_status}}">
         <a href="{% url_with_lti 'show_attempts' case_study.resource.pk %}">
-            <img alt="" src="{% get_media_prefix %}ncl_data_science/case_studies/{{case_study.image}}">
+            <img alt="" src="{% get_media_prefix %}ncl_data_science/case_studies/{{case_study.id}}.webp">
         </a>
         <h3>
             <a href="{% url_with_lti 'show_attempts' case_study.resource.pk %}">
@@ -49,8 +49,8 @@
             </dd>
             {% endif %}
         </dl>
-    </article>
+    </li>
     {% endfor %}
-    </section>
+    </menu>
 
 {% endblock data_science_content %}

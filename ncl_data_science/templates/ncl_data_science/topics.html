@@ -13,20 +13,19 @@
     <p>These pages give you the chance to practice specific topics.</p>
 
     <h2>Pick a topic:</h2>
-    <section id="topics" class="card-list">
+    <menu id="topics" class="card-list">
     {% for topic in topics %}
-    <article class="topic card {{topic.completion_status|completion_class}}" data-completion-status="{{topic.completion_status}}">
+    <li class="topic card {{topic.completion_status|completion_class}}" data-completion-status="{{topic.completion_status}}">
         <a href="{% url_with_lti 'ncl_data_science:topic' topic.id %}">
-            <img alt="" src="{% get_media_prefix %}ncl_data_science/topics/{{topic.image}}">
+            <img alt="" src="{% get_media_prefix %}ncl_data_science/topics/{{topic.id}}.webp">
         </a>
         <h3>
             <a href="{% url_with_lti 'ncl_data_science:topic' topic.id %}">
             {{topic.name}}
             </a>
         </h3>
+        <p class="completion">{{topic.completion_status|completion_text}}</p>
         <dl>
-            <dt>Completion</dt>
-            <dd>{{topic.completion_status|completion_text}}</dd>
             <dt>Subtopics</dt>
             <dd>
                 <ul class="list-inline list-unstyled topics">
@@ -36,8 +35,8 @@
                 </ul>
             </dd>
         </dl>
-    </article>
+    </li>
     {% endfor %}
-    </section>
+    </menu>
 
 {% endblock data_science_content %}

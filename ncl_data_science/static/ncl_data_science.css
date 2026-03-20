@@ -1,5 +1,14 @@
+header :is(:any-link,a,link):not(:hover,:focus,:active) {
+    color: var(--text-color);
+}
+.card-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 20em);
+    align-items: revert;
+}
+
 .card-list .card {
-    width: 20em;
+    border-width: medium;
     
     & img {
         width: 100%;
@@ -35,4 +44,11 @@
             margin-bottom: 0;
         }
     }
+}
+
+#subtopics {
+  display: grid;
+  gap: var(--double-space);
+  grid-template-columns: repeat(auto-fit,20em);
+  justify-content: center;
 }

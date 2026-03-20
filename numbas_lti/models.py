@@ -577,12 +577,14 @@ class Resource(models.Model):
             Depends on ``grading_method``.
         """
         
+        if user is None or user.is_anonymous:
+            return None, 'not attempted', None
+        
         methods = {
             'highest': '-scaled_score',
             'last': '-start_time',
         }
 
-        
         attempts = self.attempts.filter(user=user)
         if not self.include_incomplete_attempts:
             attempts = attempts.filter(completion_status='completed')

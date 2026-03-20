@@ -44,7 +44,6 @@ class CaseStudiesView(generic.TemplateView):
 status_values = ['not attempted', 'incomplete', 'completed']
 
 def max_completion_status(statuses):
-    print('statuses', statuses)
     try:
         return status_values[max(status_values.index(status) for status in statuses)]
     except ValueError:
@@ -59,20 +58,19 @@ class TopicsView(generic.TemplateView):
 
         for topic in topics:
             resources = Resource.objects.filter(pk__in=[s['resource_pk'] for s in topic['subtopics']])
-            attempts = Attempt.objects.filter(resource__in=resources)
+            attempts = Attempt.objects.filter(resource__in=resources, user=self.request.user)
             completions = []
             for r in resources:
-                print(r)
                 r_completion = max_completion_status(a.completion_status for a in attempts if a.resource==r)
                 completions.append(r_completion)
 
             topic['completions'] = completions
             if set(completions) == {'completed'}:
                 completion_status = 'completed'
-            elif 'incomplete' in completions:
-                completion_status = 'incomplete'
-            else:
+            elif set(completions) == {'not attempted'}:
                 completion_status = 'not attempted'
+            else:
+                completion_status = 'incomplete'
 
             topic['completion_status'] = completion_status
 
@@ -86,7 +84,6 @@ class TopicView(generic.TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         topic_id = kwargs['topic']
-        print(kwargs)
         try:
             topic = next(t for t in structure['topics'] if t['id']==topic_id)
         except StopIteration:
@@ -95,7 +92,8 @@ class TopicView(generic.TemplateView):
         for subtopic in topic['subtopics']:
             resource = Resource.objects.get(pk=subtopic['resource_pk'])
             subtopic['resource'] = resource
-            subtopic.update(progress_for_resource(resource, self.request.user))
+            progress = progress_for_resource(resource, self.request.user)
+            subtopic.update(progress)
 
         topic['completion_status'] = 'incomplete'
 
