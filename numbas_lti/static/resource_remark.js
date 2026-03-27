@@ -208,7 +208,7 @@ const app = createApp({
             }
         },
         remark_single_attempt: function(attempt) {
-            this.remarking_batch = false;
+            this.is_remarking_batch = false;
             this.remark_attempt(attempt);
         },
         remark_attempt: function(attempt) {
