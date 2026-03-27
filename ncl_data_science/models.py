@@ -34,7 +34,7 @@ def max_completion_status(statuses):
 
 
 class Topic(models.Model):
-    name = models.CharField()
+    name = models.CharField(max_length=500)
     description = models.TextField()
     image = models.ImageField(upload_to='ncl_data_science/topics')
 
@@ -69,7 +69,7 @@ class HasProgressMixin:
 
 
 class Subtopic(models.Model, HasProgressMixin):
-    name = models.CharField()
+    name = models.CharField(max_length=500)
     resource = models.ForeignKey(Resource, null=True, blank=True, related_name='data_science_subtopics', on_delete=models.SET_NULL)
     topic = models.ForeignKey(Topic, related_name='subtopics', on_delete=models.CASCADE)
 
@@ -78,7 +78,7 @@ class Subtopic(models.Model, HasProgressMixin):
 
 
 class CaseStudy(models.Model, HasProgressMixin):
-    name = models.CharField()
+    name = models.CharField(max_length=500)
     difficulty = models.IntegerField()
     description = models.TextField()
     image = models.ImageField(upload_to='ncl_data_science/case_studies')
