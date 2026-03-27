@@ -9,5 +9,11 @@ class CaseStudyTopicInline(admin.TabularInline):
 class CaseStudyAdmin(admin.ModelAdmin):
     inlines = [ CaseStudyTopicInline ]
 
-admin.site.register(Topic)
+class SubtopicInline(admin.TabularInline):
+    model = Subtopic
+
+@admin.register(Topic)
+class TopicAdmin(admin.ModelAdmin):
+    inlines = [ SubtopicInline ]
+
 admin.site.register(Subtopic)
