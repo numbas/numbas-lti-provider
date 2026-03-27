@@ -16,7 +16,7 @@ from django.utils.translation import gettext_lazy as _, gettext
 from . import mixins, resource
 from .consumer import ConsumerManagementMixin
 from numbas_lti.backends import new_lti_user
-from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData, LTIConsumerRegistrationToken
+from numbas_lti.models import LTI_13_Consumer, LTIConsumer, Resource, LTI_13_ResourceLink, LTI_11_ResourceLink, LTIUserData, LTIConsumerRegistrationToken, register_lti_13_tool
 import numbas_lti.forms
 import numbas_lti.views.entry
 from pathlib import PurePath
