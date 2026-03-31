@@ -6,6 +6,7 @@ def progress_for_resource(resource, user):
     blank_progress = {
         'completion_status': 'not attempted',
         'submitted_at': None,
+        'scaled_score': 0,
     }
 
     if resource is None:
@@ -20,6 +21,7 @@ def progress_for_resource(resource, user):
         return {
             'completion_status': completion_status,
             'submitted_at': submitted_at,
+            'scaled_score': attempt.scaled_score,
         }
 
 
@@ -42,11 +44,9 @@ class Topic(models.Model):
         return self.name
 
     def progress_for_user(self, user):
-        print(self)
         resources = Resource.objects.filter(data_science_subtopics__in=self.subtopics.all())
         attempts = Attempt.objects.filter(resource__in=resources, user=user)
         completions = []
-        print(resources)
         for r in resources:
             r_completion = max_completion_status(a.completion_status for a in attempts if a.resource == r)
             completions.append(r_completion)
@@ -58,8 +58,11 @@ class Topic(models.Model):
         else:
             completion_status = 'incomplete'
 
+        scaled_score = 1 if len(completions)==0 else len([x for x in completions if x=='cmpleted'])/len(completions)
+
         return {
             'completion_status': completion_status,
+            'scaled_score': scaled_score,
         }
 
 

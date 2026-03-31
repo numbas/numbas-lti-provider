@@ -24,7 +24,10 @@
             {{topic.name}}
             </a>
         </h3>
-        <p class="completion">{{progress.completion_status|completion_text}}</p>
+        <p class="completion">
+            {{progress.completion_status|completion_text}}
+            <progress max="1" value="{{progress.scaled_score}}"></progress>
+        </p>
         <dl>
             <dt>Subtopics</dt>
             <dd>

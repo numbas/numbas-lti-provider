@@ -1,0 +1,50 @@
+{% load static %}
+{% load querystring %}
+{% load ncl_data_science %}
+<li class="case-study card {{progress.completion_status|completion_class}}" data-completion-status="{{progress.completion_status}}">
+    {% if case_study.resource %}
+    <a href="{% url_with_lti 'show_attempts' case_study.resource.pk %}">
+    {% endif %}
+        <img alt="" src="{{case_study.image.url}}">
+    {% if case_study.resource %}
+    </a>
+    {% endif %}
+    <h3>
+    {% if case_study.resource %}
+        <a href="{% url_with_lti 'show_attempts' case_study.resource.pk %}">
+    {% endif %}
+        {{case_study.name}}
+    {% if case_study.resource %}
+        </a>
+    {% endif %}
+    </h3>
+    <p>{{case_study.description}}</p>
+    <dl>
+        <dt>Completion</dt>
+        <dd>
+            <progress max="1" value="{{progress.scaled_score}}"></progress>
+            {{progress.completion_status|completion_text}}
+        </dd>
+        <dt>Difficulty</dt>
+        <dd>{% star_rating case_study.difficulty %}</dd>
+        <dt>Topics</dt>
+        <dd>
+            <ul class="list-inline list-unstyled topics">
+                {% for topic in case_study.main_topics %}
+                <li class="pill">{{topic.name}}</li>
+                {% endfor %}
+            </ul>
+        </dd>
+        {% if case_study.extension_topics %}
+        <dt>Extension topics</dt>
+        <dd>
+            <ul class="list-inline list-unstyled topics">
+                {% for topic in case_study.extension_topics %}
+                <li class="pill">{{topic.name}}</li>
+                {% endfor %}
+            </ul>
+        </dd>
+        {% endif %}
+    </dl>
+</li>
+

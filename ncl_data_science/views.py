@@ -41,9 +41,14 @@ class TopicView(generic.DetailView):
 
         topic = self.object
 
+        context['topic_progress'] = topic.progress_for_user(self.request.user)
+
         context['completion_status'] = topic.progress_for_user(self.request.user)
 
         context['subtopics'] = [(subtopic, subtopic.progress_for_user(self.request.user)) for subtopic in topic.subtopics.all()]
+
+        case_studies = topic.case_studies.all()
+        context['case_studies'] = [(case_study, case_study.progress_for_user(self.request.user)) for case_study in case_studies]
 
         return context
 

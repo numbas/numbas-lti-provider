@@ -12,6 +12,8 @@
 {% block data_science_content %}
     <p>{{topic.description}}</p>
 
+    <p class="{{topic_progress.completion_status|completion_class}}"><progress max="1" value="{{topic_progress.scaled_score}}"></progress> {{topic_progress.completion_status|completion_text}}</p>
+
     <h2>Pick a topic:</h2>
     <menu id="subtopics" class="list-unstyled">
     {% for subtopic, progress in subtopics %}
@@ -23,10 +25,21 @@
         {% if subtopic.resource %}
         </a>
         {% endif %}
+        <br>
+        <progress max="1" value="{{progress.scaled_score}}"></progress>
         <small class="progress">{{progress.completion_status|completion_text}}</small>
     </li>
     {% endfor %}
     </menu>
+
+    {% if case_studies %}
+    <h2>Case studies related to <em>{{topic.name}}</em></h2>
+    <menu id="case-studies" class="card-list">
+    {% for case_study, progress in case_studies %}
+        {% include "ncl_data_science/case_study_card.html" %}
+    {% endfor %}
+    </menu>
+    {% endif %}
 
     <a class="button" href="{% url_with_lti 'ncl_data_science:topics' %}">← Pick another topic</a>
 
