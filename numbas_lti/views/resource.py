@@ -798,12 +798,19 @@ class RemarkGetAttemptDataView(MustHaveExamMixin,ResourceManagementViewMixin,Mus
             etime = datetime.datetime.now().timestamp()
             dynamic_cmi = {k: {'value':v,'time':etime} for k,v in dynamic_cmi.items()}
             cmi.update(dynamic_cmi)
+
+            remarked_elements = {}
+
+            for e in a.scormelements.exclude(remarked=None):
+                remarked_elements[e.key] = {'value': e.value, 'timee': e.time.timestamp()}
+
             cmis.append({
                 'pk': a.pk, 
                 'raw_score': a.raw_score,
                 'max_score': a.max_score,
-                'cmi': cmi
-                })
+                'cmi': cmi,
+                'remarked_elements': remarked_elements,
+            })
 
         return JsonResponse({'cmis': cmis})
 

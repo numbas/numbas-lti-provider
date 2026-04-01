@@ -142,6 +142,7 @@ const app = createApp({
         this.attempts.forEach(async attempt => {
             const data = await attempt.load_scorm_data;
             attempt.cmi = data.cmi;
+            attempt.remarked_elements = data.remarked_elements;
             attempt.status = 'loaded';
             attempt.max_score = parseFloat((attempt.cmi['cmi.score.max'] || {}).value || 0);
             attempt.original_raw_score = parseFloat((attempt.cmi['cmi.score.raw'] || {}).value || 0);
@@ -302,10 +303,11 @@ const app = createApp({
 
             const changed_keys = {};
             attempt.is_changed = false;
+            const remarked_cmi = Object.assign({}, attempt.cmi, attempt.remarked_elements);
             Object.keys(api.data).forEach(x=>{
-                if(!ignore_keys[x] && !x.match(/\._count$/) && (attempt.cmi[x]===undefined || api.data[x]!=attempt.cmi[x].value)) {
+                if(!ignore_keys[x] && !x.match(/\._count$/) && (attempt.cmi[x]===undefined || api.data[x]!=remarked_cmi[x].value)) {
                     attempt.is_changed = true;
-                    changed_keys[x] = [attempt.cmi[x] && attempt.cmi[x].value,api.data[x]];
+                    changed_keys[x] = [remarked_cmi[x]?.value, api.data[x]];
                 }
             })
             attempt.changed_keys = changed_keys;
