@@ -98,7 +98,7 @@
                         </td>
                         <td class="attempt-score">
                             {% score_doughnut attempt %}
-                            <p class="score-text">{{attempt.raw_score}} / {{attempt.max_score}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}</p>
+                            <p class="score-text">{{attempt.raw_score|nicenumber}} / {{attempt.max_score|nicenumber}} ({{attempt.scaled_score|percentage}}) {% if attempt.is_remarked %}{% translate "(remarked)" %}{% endif %}</p>
                         </td>
                     </tr>
                     {% endfor %}

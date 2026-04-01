@@ -1,5 +1,6 @@
 from django import template
-from math import floor,isclose
+from math import floor, isclose
+import re
 
 register = template.Library()
 
@@ -19,3 +20,9 @@ def percentage_bin(value,bins=3):
     else:
         n = floor(value*(bins-2))+1
     return n
+
+@register.filter
+def nicenumber(x):
+    s = '{:.3f}'.format(x)
+    s = re.sub(r'\.?0+$','',s)
+    return s
