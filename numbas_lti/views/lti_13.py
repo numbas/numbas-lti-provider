@@ -590,6 +590,9 @@ class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
 
         return super().get(*args, **kwargs)
 
+    # A list of generator functions that, given a DeepLinkView object, yield pairs ``(view_name, label)`` to use to make links on the deep link page.
+    extra_options = []
+
     def get_resources(self):
         lti_context, _ = self.get_lti_context()
         return Resource.objects.filter(lti_13_links__context=lti_context).distinct()
@@ -608,6 +611,11 @@ class DeepLinkView(MustBeDeepLinkMixin, TemplateView):
         context['lti_context'] = lti_context
 
         context['resources'] = self.get_resources()
+
+        extra_options = []
+        for fn in self.extra_options:
+            extra_options += fn(self)
+        context['extra_options'] = extra_options
 
         return context
 
@@ -638,6 +646,30 @@ class DeepLinkCreateResourceView(DeepLinkResourceView, resource.CreateExamView):
         exam.save()
 
         return self.deep_link_response(resource=resource)
+
+
+class DeepLinkUseCustomParamsView(MustBeDeepLinkMixin, View):
+    http_method_names = ['post',]
+
+    def get_deep_link_resource(self, **kwargs):
+        print(self.request.POST)
+
+        message_launch = self.get_message_launch()
+
+        param_names = self.request.POST.getlist('param-name')
+        param_values = self.request.POST.getlist('param-value')
+
+        params = {k:v for k,v in zip(param_names, param_values)}
+
+        title = self.request.POST.get('title')
+        
+        return super().get_deep_link_resource(**kwargs)\
+            .set_custom_params(params)\
+            .set_title(title)
+
+    def post(self, *args, **kwargs):
+        return self.deep_link_response()
+
 
 class DeepLinkContextSummaryView(MustBeDeepLinkMixin):
     def get_deep_link_resource(self, summary, **kwargs):
