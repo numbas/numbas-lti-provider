@@ -9,7 +9,7 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
-v4.3
+v4.4
 ----
 
 Docker installation
