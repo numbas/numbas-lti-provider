@@ -84,14 +84,6 @@ class LockdownApp:
     def get_install_url(self) -> str:
         raise NotImplementedError
 
-    def show_lockdown_link(self):
-        """
-            Show the link to open the lockdown app.
-        """
-
-        raise NotImplementedError
-
-
     def check_version(self):
         """ 
             Raises an OldVersionException if the user's version of the app is older than the minimum specified in settings.LOCKDOWN_APP['minimum_version'][this.app_name][platform]
@@ -119,8 +111,12 @@ class LockdownApp:
             }
         )
 
-    def show_lockdown_link(self):
-        launch_url = self.make_launch_url()
+    def show_lockdown_link(self, redirect_url=None):
+        """
+            Show the link to open the lockdown app.
+        """
+
+        launch_url = self.make_launch_url(redirect_url=redirect_url)
         password = self.request.resource.get_lockdown_app_password(user=self.request.user)
         return render(
             self.request,
@@ -177,12 +173,14 @@ class NumbasLockdownApp(LockdownApp):
 
         return (version, platform)
 
-    def make_launch_url(self):
+    def make_launch_url(self, redirect_url=None):
         params = self.request.GET.copy()
         params.update({
             'session_key': self.request.session.session_key,
             'lti1p3-session-id': get_ltip3_session_id(self.request),
         })
+        if redirect_url is not None:
+            params['redirect_url'] = redirect_url
 
 
         launch_url = add_query_param(

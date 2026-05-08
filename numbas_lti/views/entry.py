@@ -112,7 +112,8 @@ def student_launch(request, resource):
         return redirect(reverse_with_lti(request, 'show_attempts', args=(resource.pk,)))
 
 def lockdown_launch(request):
-    return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
+    redirect_url = request.GET.get('redirect_url', reverse('set_cookie_entry'))
+    return redirect(add_query_param(redirect_url, request.GET))
 
 def seb_launch(request):
     session_key = request.GET.get('session_key')
@@ -123,4 +124,4 @@ def seb_launch(request):
 
         return render(request, 'numbas_lti/launch_errors/not_seb_launch.html')
 
-    return redirect(add_query_param(reverse('set_cookie_entry'), request.GET))
+    return lockdown_launch(request)
