@@ -13,6 +13,12 @@ import uuid
 from . import requests_session
 logger = logging.getLogger(__name__)
 
+class MessageLaunch(DjangoMessageLaunch):
+    def __init__(self, *args, launch_data_storage=None, **kwargs):
+        super().__init__(*args, launch_data_storage=launch_data_storage, **kwargs)
+        if launch_data_storage:
+            self.set_public_key_caching(launch_data_storage, 3600)
+
 def new_lti_user():
     """
         Create a new User object during an LTI launch.
@@ -146,7 +152,7 @@ class LTI_11_AuthBackend(backends.LTIAuthBackend):
 class LTI_13_AuthBackend(ModelBackend):
     tool_conf = DjangoDbToolConf()
     launch_data_storage = DjangoCacheDataStorage()
-    message_launch_cls = DjangoMessageLaunch
+    message_launch_cls = MessageLaunch
 
     def get_message_launch(self, request):
         message_launch = self.message_launch = self.message_launch_cls(request, self.tool_conf, launch_data_storage = self.launch_data_storage, requests_session=requests_session.get_session())

@@ -14,10 +14,11 @@ from django_auth_lti.mixins import LTIRoleRestrictionMixin
 from django_auth_lti.verification import is_allowed
 from functools import wraps
 from numbas_lti import lockdown_app, requests_session
+from numbas_lti.backends import MessageLaunch
 from numbas_lti.models import Resource, Exam, LTIContext
 from numbas_lti.middleware import get_lti_13_context
 import pylti1p3.roles
-from pylti1p3.contrib.django import DjangoMessageLaunch, DjangoCacheDataStorage
+from pylti1p3.contrib.django import DjangoCacheDataStorage
 from pylti1p3.contrib.django.lti1p3_tool_config import DjangoDbToolConf
 from pylti1p3.exception import LtiException, LtiMessageValidationException, LtiInvalidNonceException
 import urllib.parse
@@ -85,7 +86,7 @@ class LTI_13_Mixin:
     tool_conf_cls = DjangoDbToolConf
     launch_data_storage_cls = DjangoCacheDataStorage
 
-    message_launch_cls = DjangoMessageLaunch
+    message_launch_cls = MessageLaunch
 
     must_have_message_launch = False    # If True, then an error will be shown if no LTI launch data can be found for this request.
 
