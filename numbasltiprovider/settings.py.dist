@@ -290,6 +290,16 @@ LOCKDOWN_APP = {
 # The User-Agent header string to use for any requests made by this tool. The version of the software is appended to the string given here.
 REQUESTS_USER_AGENT = 'Numbas LTI provider'
 
+# Settings for the requests cache.
+# `BACKEND` should be the import path of a cache class.
+# `SETTINGS` is a dictionary of keyword arguments to pass to the cache constructor.
+REQUESTS_CACHE = {
+    'BACKEND': 'requests_cache.RedisCache',
+    'SETTINGS': {
+        'host': 'localhost',
+    }
+}
+
 # The root URL of the documentation. If not set here, it's set based on the current version, relative to docs.numbas.org.uk.
 #HELP_URL = 'https://docs.numbas.org/uk/lti/latest/'
 
