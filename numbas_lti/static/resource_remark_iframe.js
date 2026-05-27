@@ -49,7 +49,6 @@ function load_exam_pre_v9() {
 
         var seed = Math.seedrandom(new Date().getTime());
         var job = Numbas.schedule.add;
-        Numbas.load_pre_submit_cache = false;
         Numbas.xml.loadXMLDocs();
         var store = Numbas.store = new Numbas.storage.scorm.SCORMStorage();
         var xml = Numbas.xml.examXML.selectSingleNode('/exam');
@@ -154,6 +153,7 @@ function reset(exam) {
 }
 
 function remark_session(options) {
+    Numbas.load_pre_submit_cache = false;
     options = options || {};
     const promise = new Promise((resolve,reject) => {
         const ohalt = Numbas.schedule.halt.bind(Numbas.schedule);
