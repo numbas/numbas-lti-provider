@@ -258,7 +258,10 @@ class CreateExamForm(ModelForm):
             query = parse_qs(qs)
             query.setdefault('scorm','')
             retrieve_url = urlunparse((scheme, netloc, path, params, urlencode(query,True), fragment))
-            package_bytes = requests_session.get_session().get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
+            
+            session = requests_session.get_session()
+            with session.cache_disabled():
+                package_bytes = session.get(retrieve_url,timeout=getattr(settings,'REQUEST_TIMEOUT',60)).content
             cleaned_data['package'] = File(BytesIO(package_bytes),name='exam.zip')
 
         if getattr(settings,'TEST_UPLOADED_EXAMS',False) and hasattr(settings,'NUMBAS_TESTING_FRAMEWORK_PATH'):
