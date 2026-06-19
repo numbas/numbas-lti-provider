@@ -9,6 +9,21 @@ Sometimes new versions of the LTI provider require changes that can't be made au
 
 For such releases, this page lists the changes that must be made.
 
+v4.5
+----
+
+Docker installation
+^^^^^^^^^^^^^^^^^^^
+
+There are no special upgrade steps for Docker installations for this version.
+
+Non-Docker installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+There is a new setting, ``REQUESTS_CACHE``.
+
+Copy this setting from :file:`numbasltiprovider/settings.py.dist` into :file:`numbasltiprovider/settings.py`.
+
 v4.4
 ----
 

@@ -26,9 +26,9 @@ copyright = '2018-2024, Newcastle University'
 author = 'Numbas'
 
 # The short X.Y version
-version = 'v4.4'
+version = 'v4.5'
 # The full version, including alpha/beta/rc tags
-release = 'v4.4'
+release = 'v4.5'
 
 
 # -- General configuration ---------------------------------------------------
