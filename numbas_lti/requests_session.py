@@ -15,6 +15,6 @@ def get_session():
     REQUESTS_CACHE = getattr(settings, 'REQUESTS_CACHE', {})
     backend_cls = import_string(REQUESTS_CACHE.get('BACKEND', 'requests_cache.RedisCache'))
     backend = backend_cls(**REQUESTS_CACHE.get('SETTINGS',{}))
-    session = Session('numbas_lti_requests', backend=backend)
+    session = Session('numbas_lti_requests', backend=backend, cache_control=True)
     session.headers['User-Agent'] = f'{REQUESTS_USER_AGENT} {version}'
     return session
