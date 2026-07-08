@@ -824,15 +824,16 @@ class Resource(models.Model):
         return 1
 
     def get_lti_13_lineitem(self, create = False):
+        resource_link_ids = self.lti_13_links.values_list('resource_link_id', flat=True)
+
         lineitem_dict = {
             "scoreMaximum": self.estimate_max_score(),
             "tag": "grade",
             "label": self.title,
             "resourceId": f"resource-{self.pk}",
+            "resourceLinkId": resource_link_ids[0] if len(resource_link_ids) else None
         }
         lineitem = LineItem(lineitem_dict)
-
-        resource_link_ids = self.lti_13_links.values_list('resource_link_id', flat=True)
 
         lti_13_context = self.lti_13_contexts().first()
         lineitems = lti_13_context.ags_lineitems(force_fetch=create)
