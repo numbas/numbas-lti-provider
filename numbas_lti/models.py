@@ -1067,10 +1067,8 @@ class LTIUserData(models.Model):
 
     def get_source_id(self):
         try:
-            if self.lti_11 and self.lti_11.lis_person_sourcedid:
+            if self.lti_11.lis_person_sourcedid:
                 return self.lti_11.lis_person_sourcedid
-            elif self.lti_13 and self.lti_13.lis_person_sourcedid:
-                return self.lti_13.lis_person_sourcedid
             else:
                 return self.consumer_user_id
         except LTI_11_UserData.DoesNotExist:
