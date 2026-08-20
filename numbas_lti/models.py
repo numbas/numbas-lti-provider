@@ -590,7 +590,7 @@ class Resource(models.Model):
         if not self.include_incomplete_attempts:
             attempts = attempts.filter(completion_status='completed')
         if not attempts.exists():
-            return None
+            return None, 'not attempted', None
 
         attempt = attempts.order_by(methods[self.grading_method]).first()
 

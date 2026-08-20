@@ -213,7 +213,7 @@ def resource_scores_csv_report(fr):
         user_data = resource.user_data(student)
         username = '' if user_data is None else user_data.get_source_id()
         attempt, completion_status, submitted_at = resource.grade_user(student)
-        scaled_score = attempt.scaled_score
+        scaled_score = attempt.scaled_score if attempt is not None else 0
         student_attempts = resource.attempts.filter(user=student)
         max_score = max(a.max_score for a in student_attempts) if student_attempts.exists() else 0
         raw_score = scaled_score * max_score    # This might introduce a rounding error
