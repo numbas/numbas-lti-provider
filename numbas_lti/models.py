@@ -897,6 +897,26 @@ class Resource(models.Model):
 
         return lineitem
 
+    def json_dump(self, f, full=False):
+        """ Dump data about this resource in JSON format to the given file object.
+
+            `full=True` means that all SCORM elements should be included, not just the current values.
+        """
+
+        f.write('''{{
+        "resource": {{
+            "pk": {pk},
+            "title": {title}
+        }},
+        "attempts": ['''.format(pk=self.pk,title=json.dumps(self.title)))
+
+        for i,a in enumerate(self.attempts.all()):
+            if i>0:
+                f.write(',')
+            f.write(json.dumps(a.data_dump(include_all_scorm=full)))
+
+        f.write(']\n}')
+
 
 class LTI_11_ResourceLink(models.Model):
     resource = models.ForeignKey(Resource, related_name='lti_11_links', on_delete=models.CASCADE)

@@ -260,19 +260,7 @@ def resource_attempts_csv_report(fr):
 def resource_json_dump_report(fr,f,full=False):
     resource = fr.resource
 
-    f.write('''{{
-    "resource": {{
-        "pk": {pk},
-        "title": {title}
-    }},
-    "attempts": ['''.format(pk=resource.pk,title=json.dumps(resource.title)))
-
-    for i,a in enumerate(resource.attempts.all()):
-        if i>0:
-            f.write(',')
-        f.write(json.dumps(a.data_dump(include_all_scorm=full)))
-
-    f.write(']\n}')
+    resource.json_dump(f, full=full)
 
     return fr
 
