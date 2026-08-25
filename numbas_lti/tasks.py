@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 @db_task(priority=1)
 def editorlink_update_cache(el):
     logger.debug(f"Update the editor link {el}")
+    import time
+    time.sleep(5)
+    
     el = EditorLink.objects.get(pk=el.pk)
     el.update_cache()
     el.save()
@@ -179,6 +182,7 @@ def report_task(writer):
             traceback.print_exception(e)
             fr.status = 'error'
             fr.save()
+        return fr
 
     return file_report
 
@@ -255,7 +259,7 @@ def resource_attempts_csv_report(fr):
 @report_task
 def resource_json_dump_report(fr,f,full=False):
     resource = fr.resource
-    
+
     f.write('''{{
     "resource": {{
         "pk": {pk},
@@ -269,6 +273,8 @@ def resource_json_dump_report(fr,f,full=False):
         f.write(json.dumps(a.data_dump(include_all_scorm=full)))
 
     f.write(']\n}')
+
+    return fr
 
 @db_periodic_task(crontab(hour='*'),priority=0)
 def delete_old_reports():
