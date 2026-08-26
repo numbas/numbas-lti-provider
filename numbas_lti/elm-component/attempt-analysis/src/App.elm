@@ -142,6 +142,7 @@ type alias Model =
   , view : View
   , nav_key : Browser.Navigation.Key
   , run_attempt_url : String
+  , download_tag_data_url: String
   , footer_html : ImportedHTML
   , top_nav_html : ImportedHTML
   }
@@ -207,6 +208,7 @@ type alias Flags =
   { exam_source : String
   , data : JE.Value
   , run_attempt_url : String
+  , download_tag_data_url : String
   , footer_html : ImportedHTML
   , top_nav_html : ImportedHTML
   }
@@ -316,6 +318,7 @@ init flags url nav_key =
       , view = nview
       , nav_key = nav_key
       , run_attempt_url = flags.run_attempt_url
+      , download_tag_data_url = flags.download_tag_data_url
       , footer_html = flags.footer_html
       , top_nav_html = flags.top_nav_html
       }
@@ -1061,7 +1064,7 @@ view_with_exam data model =
             , H.p
               []
               [ H.a
-                  [ HA.href "analysis/tags"
+                  [ HA.href model.download_tag_data_url
                   , HA.class "button info"
                   ]
                   [ icon "save"

@@ -58,11 +58,12 @@
             const exam_source = await (await fetch(data.exam_source)).text();
 
             const flags = {
-              exam_source,
-              data,
-              top_nav_html: extract_element('body > #top-nav'),
-              footer_html: extract_element('body >footer'),
-              run_attempt_url: '{% url_with_lti 'run_attempt' 12345 %}',
+                exam_source,
+                data,
+                top_nav_html: extract_element('body > #top-nav'),
+                footer_html: extract_element('body >footer'),
+                run_attempt_url: '{% url_with_lti 'run_attempt' 12345 %}',
+                download_tag_data_url: '{% url_with_lti 'resource_analysis_tags' resource.pk %}',
             }
 
             const app = init_app(flags);
