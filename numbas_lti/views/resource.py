@@ -711,7 +711,7 @@ class AnalysisTagsView(MustHaveExamMixin,ResourceManagementViewMixin,MustBeInstr
 
     def get(self, request, *args, **kwargs):
         resource = self.object = self.get_object()
-        analysis = ExamAnalysis.objects.get(exam=resource.exam)
+        analysis, created = ExamAnalysis.objects.get_or_create(exam=resource.exam)
         response = JsonResponse(analysis.answer_tags)
         response.headers['Content-Disposition'] = f'attachment; filename={self.get_filename()}'
         return response
