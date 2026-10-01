@@ -461,8 +461,9 @@ class JSONDumpView(MustBeInstructorMixin,JSONView,generic.detail.DetailView):
 
     def get_filename(self):
         attempt = self.get_object()
+        context = attempt.resource.lti_contexts().first()
         return '{context}--{resource}--attempt-{attempt}.json'.format(
-            context=slugify(attempt.resource.context.name),
+            context=slugify(context.name if context is not None else ''),
             resource=attempt.resource.slug,
             attempt=attempt.pk
         )
