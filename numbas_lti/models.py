@@ -831,7 +831,7 @@ class Resource(models.Model):
             "tag": "grade",
             "label": self.title,
             "resourceId": f"resource-{self.pk}",
-            "resourceLinkId": resource_link_ids[0] if len(resource_link_ids) else None
+            "resourceLinkId": resource_link_ids.last() if len(resource_link_ids) else None
         }
         lineitem = LineItem(lineitem_dict)
 
